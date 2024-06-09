@@ -35,7 +35,9 @@ export const Heading = () => {
 					</Link>
 				</Button>
 			) : (
-				<SignInButton mode="modal">
+				<SignInButton
+					mode="modal"
+					signUpForceRedirectUrl={"/projects"}>
 					<Button size="sm">
 						Log in <ArrowRight className="h-4 w-4 ml-2" />
 					</Button>
