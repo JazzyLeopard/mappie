@@ -1,48 +1,59 @@
 "use client";
 
-// import { useScrollTop } from "@/Hooks/use-scroll-top";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import {
 	SignInButton,
+	SignUpButton,
 	UserButton,
+	useUser,
 } from "@clerk/clerk-react";
-// import { Button } from "@/components/ui/button";
-// import { Spinner } from "@/components/spinner";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useConvexAuth } from "convex/react";
 
 export const Navbar = () => {
-	// const scrolled = useScrollTop();
+	const { user, isSignedIn } = useUser();
 
 	return (
-		<></>
-		// <div
-		// 	className={cn(
-		// 		"z-50 bg-background fixed top-0 flex items-center w-full p-6",
-		// 		scrolled && "border-b shadow-sm"
-		// 	)}>
-		// 	<Logo />
-		// 	<div className="md:ml-auto md:justify-end justify-between w-full flex items-center gap-x-2">
-		// 		<Spinner />(
-		// 		<>
-		// 			<SignInButton mode="modal">
-		// 				<Button variant="ghost" size="sm">
-		// 					Log in
-		// 				</Button>
-		// 			</SignInButton>
-		// 			<SignInButton mode="modal">
-		// 				<Button size="sm">Register</Button>
-		// 			</SignInButton>
-		// 		</>
-		// 		)
-		// 		<>
-		// 			<Button variant="ghost" size="sm" asChild>
-		// 				<Link href="/projects">Enter Listoriq</Link>
-		// 			</Button>
-		// 			<UserButton afterSignOutUrl="/" />
-		// 		</>
-		// 	</div>
-		// </div>
+		<>
+			<div
+				className={
+					"border-b shadow-sm z-50 bg-background fixed top-0 justify-between items-center flex  w-full p-6"
+				}>
+				<Logo />
+
+				{isSignedIn ? (
+					<div className=" flex items-center gap-x-6">
+						<Button
+							variant="default"
+							className="h-7 md:h-7 lg:h-9"
+							asChild>
+							<Link href="/projects">Enter Listoriq</Link>
+						</Button>
+
+						<UserButton afterSignOutUrl="/" />
+					</div>
+				) : (
+					<div className="md:ml-auto md:justify-end justify-between w-full flex items-center gap-x-2">
+						<>
+							<SignInButton
+								mode="modal"
+								forceRedirectUrl={"/projects"}>
+								<Button variant="ghost" size="sm">
+									Log in
+								</Button>
+							</SignInButton>
+							<SignUpButton
+								mode="modal"
+								forceRedirectUrl={"/projects"}>
+								<Button size="sm">Register</Button>
+							</SignUpButton>
+						</>
+					</div>
+				)}
+			</div>
+		</>
 	);
 };
 
