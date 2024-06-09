@@ -1,31 +1,46 @@
 "use client";
-// import { Button } from "@/components/ui/button";
+
+import { Button } from "@/components/ui/button";
+import { SignInButton, useUser } from "@clerk/clerk-react";
+import { useConvexAuth } from "convex/react";
 import { ArrowRight } from "lucide-react";
 // import { Spinner } from "@/components/spinner";
 
 import Link from "next/link";
 
 export const Heading = () => {
+	const { user, isSignedIn } = useUser();
+
 	return (
-		<div className="max-w-3xl space-y-4">
-			<h1 className="text-3xl sm:text-5xl md:text-4xl font-semi-bold">
-				Your Epics & Stories analysed. Superfast. <br />
-				Welcome to{" "}
-				<span className="underline font-bold">
-					Listoriq
-				</span>
-				.
+		<div className="pt-20 max-w-3xl space-y-4">
+			<h1 className="text-2xl sm:text-3xl md:text-4xl font-semi-bold">
+				Your Epics & Stories analysed. Superfast.
 			</h1>
-			<h3 className="text-base sm:text-xl md:text-2xl font-medium">
+
+			<h1 className="pt-2 text-2xl font-semi-bold">
+				Welcome to{" "}
+				<span className=" font-[800]">Listoriq</span>.
+			</h1>
+
+			<h3 className="pt-10 text-base sm:text-xl md:text-2xl font-medium">
 				Listoriq is the go-to tool for analysing Epics &
 				Stories, with AI.
 			</h3>
-			{/* <Button asChild> */}
-			<Link href="/projects">
-				Enter Listoriq
-				<ArrowRight className="h-4 w-4 ml-2" />
-			</Link>
-			{/* </Button> */}
+
+			{isSignedIn ? (
+				<Button asChild>
+					<Link href="/projects">
+						Enter Listoriq
+						<ArrowRight className="h-4 w-4 ml-2" />
+					</Link>
+				</Button>
+			) : (
+				<SignInButton mode="modal">
+					<Button size="sm">
+						Log in <ArrowRight className="h-4 w-4 ml-2" />
+					</Button>
+				</SignInButton>
+			)}
 		</div>
 	);
 };

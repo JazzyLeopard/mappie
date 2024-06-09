@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import ConvexClientProvider from "./ConvexClientProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
 	title: "Listoriq",
-	description: "Anlyse Epics & Stories on the fly",
+	description: "Analyse Epics & Stories on the fly",
 	icons: {
 		icon: [
 			{
@@ -24,19 +25,16 @@ export const metadata: Metadata = {
 	},
 };
 
-const publishableKey =
-	process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
-
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider publishableKey={publishableKey}>
+		<ConvexClientProvider>
 			<html lang="en">
 				<body className={inter.className}>{children}</body>
 			</html>
-		</ClerkProvider>
+		</ConvexClientProvider>
 	);
 }
