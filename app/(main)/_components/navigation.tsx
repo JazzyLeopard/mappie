@@ -1,7 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import {
+	ChevronsLeft,
+	MenuIcon,
+	MenuSquareIcon,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { ElementRef, useRef, useState } from "react";
@@ -21,6 +25,7 @@ export const Navigation = () => {
 
 	// If mobile view it will auto matically collapse "true"
 	const [isCollapsed, setIsCollapsed] = useState(isMobile);
+	console.log(isCollapsed);
 
 	// WHEN NAVBAR IS MOVED
 	const handleMouseMove = (event: MouseEvent) => {
@@ -139,7 +144,7 @@ export const Navigation = () => {
 				)}>
 				<nav className="bg-transparent w-full px-3 py-2">
 					{isCollapsed && (
-						<MenuIcon
+						<MenuSquareIcon
 							role="button"
 							className="h-6 w-6 text-muted-foreground"
 						/>
