@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { SignInButton, useUser } from "@clerk/clerk-react";
 import { useConvexAuth } from "convex/react";
 import { ArrowRight } from "lucide-react";
-// import { Spinner } from "@/components/spinner";
 
 import Link from "next/link";
 
@@ -37,7 +36,7 @@ export const Heading = () => {
 			) : (
 				<SignInButton
 					mode="modal"
-					signUpForceRedirectUrl={"/projects"}>
+					forceRedirectUrl={"/projects"}>
 					<Button size="sm">
 						Log in <ArrowRight className="h-4 w-4 ml-2" />
 					</Button>
