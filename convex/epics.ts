@@ -26,7 +26,8 @@ export const createUserStory = mutation({
 			functionalFlow: args.functionalFlow,
 			createdAt: BigInt(Date.now()),
 			updatedAt: BigInt(Date.now()),
-		});
+        });
+
 		return userStoryId;
 	},
 });
