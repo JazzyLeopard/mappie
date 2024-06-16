@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { SignInButton, useUser } from "@clerk/clerk-react";
-import { useConvexAuth } from "convex/react";
 import { ArrowRight } from "lucide-react";
 
 import Link from "next/link";

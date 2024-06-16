@@ -1,12 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-	ChevronsLeft,
-	MenuIcon,
-	MenuSquareIcon,
-} from "lucide-react";
-import { Ewert } from "next/font/google";
+import { ChevronsLeft, MenuIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -16,6 +11,7 @@ import {
 	useState,
 } from "react";
 import { useMediaQuery } from "usehooks-ts";
+import UserItems from "./UserItems";
 
 export const Navigation = () => {
 	const pathname = usePathname();
@@ -79,6 +75,7 @@ export const Navigation = () => {
 	// WHEN NAVBAR IS LEFT LOOSE
 	const handleMouseUp = () => {
 		isResizingRef.current = false;
+
 		document.removeEventListener(
 			"mousemove",
 			handleMouseMove
@@ -160,7 +157,9 @@ export const Navigation = () => {
 					<ChevronsLeft className="h-6 w-6" />
 				</div>
 
-				<div>Action Items</div>
+				<div>
+					<UserItems />
+				</div>
 
 				<div className="mt-4">Documents</div>
 
@@ -182,7 +181,7 @@ export const Navigation = () => {
 				)}>
 				<nav className="bg-transparent w-full px-3 py-2">
 					{isCollapsed && (
-						<MenuSquareIcon
+						<MenuIcon
 							onClick={resetWidth}
 							role="button"
 							className="h-6 w-6 text-muted-foreground"
