@@ -1,7 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronsLeft, MenuIcon } from "lucide-react";
+import {
+	ChevronsLeft,
+	MenuIcon,
+	PlusCircle,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -12,15 +16,37 @@ import {
 } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import UserItems from "./UserItems";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import Item from "./item";
+import { toast } from "sonner";
 
 export const Navigation = () => {
 	const pathname = usePathname();
+
+	const createProject = useMutation(
+		api.projects.createProject
+	);
+
+	const onCreate = () => {
+		const promise = createProject({
+			title: "Untitled Project",
+		});
+
+		toast.promise(promise, {
+			loading: "Creating new project...",
+			success: "New project created",
+			error: "Failed to create project",
+		});
+	};
+
+	const projects = useQuery(api.projects.getProjects);
 
 	// true if the query matches, false otherwise
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
 	const isResizingRef = useRef(false);
-	const sidebarRef = useRef<ElementRef<"aside">>(null);
+	const sidebarRef = useRef<ElementRef<"div">>(null);
 	const navbarRef = useRef<ElementRef<"div">>(null);
 
 	const [isResetting, setIsResetting] = useState(false);
@@ -138,7 +164,7 @@ export const Navigation = () => {
 
 	return (
 		<>
-			<aside
+			<div
 				ref={sidebarRef}
 				className={cn(
 					"group/sidebar h-full w-60 bg-secondary overflow-y-auto relative z-[100000] flex flex-col",
@@ -161,7 +187,19 @@ export const Navigation = () => {
 					<UserItems />
 				</div>
 
-				<div className="mt-4">Documents</div>
+				<div className="mt-4 h-[30rem] overflow-y-auto">
+					{projects?.map((proj) => (
+						<p key={proj._id}>{proj.title}</p>
+					))}
+				</div>
+
+				<div>
+					<Item
+						label="New Project"
+						onClick={onCreate}
+						icon={PlusCircle}
+					/>
+				</div>
 
 				<div
 					onClick={resetWidth}
@@ -169,7 +207,7 @@ export const Navigation = () => {
 					className="opacity-0 group-hover/sidebar:opacity-100 transition
                                 cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
 				/>
-			</aside>
+			</div>
 
 			<div
 				ref={navbarRef}

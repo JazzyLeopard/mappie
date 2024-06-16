@@ -1,24 +1,46 @@
-import { mutation } from "@/convex/_generated/server";
+import {
+	mutation,
+	query,
+} from "@/convex/_generated/server";
 import { v } from "convex/values";
+import { Doc, Id } from "./_generated/dataModel";
+import projects from "@/pages/api/projects";
+
+export const getProjects = query({
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+
+		if (!identity) {
+			throw new Error("Not Authenticated");
+		}
+
+		const projects = await ctx.db
+			.query("projects")
+			?.collect();
+
+		return projects;
+	},
+});
 
 export const createProject = mutation({
 	args: {
 		title: v.string(),
-		userId: v.string(),
-		description: v.string(),
-		isPublished: v.boolean(),
 	},
 	handler: async (ctx, args) => {
-		const projectId = await ctx.db.insert("projects", {
+		const identity = await ctx.auth.getUserIdentity();
+
+		if (!identity) {
+			throw new Error("Not Authenticated");
+		}
+
+		const project = await ctx.db.insert("projects", {
 			title: args.title,
-			userId: args.userId,
-			description: args.description,
-			isPublished: args.isPublished,
+			userId: identity?.subject,
 			isArchived: false,
 			createdAt: BigInt(Date.now()), // Use BigInt for timestamps
 			updatedAt: BigInt(Date.now()), // Use BigInt for timestamps
 		});
 
-		return projectId;
+		return project;
 	},
 });

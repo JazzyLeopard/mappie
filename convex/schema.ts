@@ -6,11 +6,10 @@ export default defineSchema({
 		title: v.string(),
 		userId: v.string(),
 		isArchived: v.boolean(),
-		parentProject: v.optional(v.id("projects")),
 		content: v.optional(v.string()),
 		icon: v.optional(v.string()),
-		isPublished: v.boolean(),
-		description: v.string(),
+		isPublished: v.optional(v.boolean()),
+		description: v.optional(v.string()),
 		createdAt: v.int64(), // Storing timestamp as bigint (milliseconds since Unix epoch)
 		updatedAt: v.int64(), // Storing timestamp as bigint
 	})
