@@ -7,10 +7,12 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useClerk } from "@clerk/clerk-react";
 import { useEffect } from "react";
+import Empty from "@/public/empty.png";
 
-// import { useMutation } from "convex/react";
-// import { api } from "@/convex/_generated/api";
-// import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
+import { createProject } from "@/convex/projects";
 
 const ProjectsPage = () => {
 	const { user, isSignedIn } = useUser();
@@ -35,25 +37,23 @@ const ProjectsPage = () => {
 	// };
 
 	return (
-		<div className="h-full flex flex-col items-center justify-center space-y-6">
-			{/* <Image
-				src="/empty.svg"
+		<div className="h-full w-full flex flex-col items-center justify-center space-y-6">
+			<Image
+				src={Empty}
 				alt="documents"
-				width={200}
-				height={200}
-			/> */}
+				width={100}
+				height={100}
+			/>
 
 			<h2 className="text-xl font-semibold">
-				Welcome to {user?.firstName}&apos;s DictaDoc
+				Welcome to {user?.fullName}&apos;s Listoriq
 			</h2>
 
 			<SignedIn>
 				<UserButton afterSignOutUrl="/" />
 			</SignedIn>
 
-			<Button
-			// onClick={onCreate}
-			>
+			<Button onClick={() => {}}>
 				<PlusCircle className="h-4 w-4 mr-2 " />
 				<p>Create a new project</p>
 			</Button>
