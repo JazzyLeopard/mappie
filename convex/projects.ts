@@ -16,6 +16,9 @@ export const getProjects = query({
 
 		const projects = await ctx.db
 			.query("projects")
+			.filter((q) =>
+				q.eq(q.field("userId"), identity.subject)
+			)
 			?.collect();
 
 		return projects;

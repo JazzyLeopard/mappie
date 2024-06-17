@@ -30,7 +30,7 @@ export const Navigation = () => {
 
 	const onCreate = () => {
 		const promise = createProject({
-			title: "Untitled Project",
+			title: "Cool Project",
 		});
 
 		toast.promise(promise, {
