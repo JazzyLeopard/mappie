@@ -17,7 +17,7 @@ export const getProjects = query({
 		const projects = await ctx.db
 			.query("projects")
 			.filter((q) =>
-				q.eq(q.field("userId"), identity.subject)
+				q.eq(q.field("userId"), identity?.subject)
 			)
 			?.collect();
 
@@ -38,7 +38,7 @@ export const createProject = mutation({
 
 		const project = await ctx.db.insert("projects", {
 			title: args.title,
-			userId: identity?.subject,
+			userId: identity.subject,
 			isArchived: false,
 			createdAt: BigInt(Date.now()), // Use BigInt for timestamps
 			updatedAt: BigInt(Date.now()), // Use BigInt for timestamps
