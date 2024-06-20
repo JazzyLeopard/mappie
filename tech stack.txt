@@ -1,0 +1,5 @@
+tech stack
+1. nextjs
+2. shadecn
+3. clerk auth
+4. convex DB

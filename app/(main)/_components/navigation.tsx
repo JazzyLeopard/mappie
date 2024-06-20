@@ -19,7 +19,10 @@ import UserItems from "./UserItems";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Item from "./item";
-import { toast } from "sonner";
+import { Toaster, toast } from "sonner";
+import DropdownIcon from "@/icons/DropdownIcon";
+import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
+import Link from "next/link";
 
 export const Navigation = () => {
 	const pathname = usePathname();
@@ -28,17 +31,42 @@ export const Navigation = () => {
 		api.projects.createProject
 	);
 
-	const onCreate = () => {
-		const promise = createProject({
-			title: "Cool Project",
-		});
+	// const onCreate = () => {
+	// 	const mypromise = createProject({
+	// 		title: "Cool Project",
+	// 	});
 
-		toast.promise(promise, {
-			loading: "Creating new project...",
-			success: "New project created",
-			error: "Failed to create project",
-		});
+	// 	toast.promise(mypromise, {
+	// 		loading: "Creating new project...",
+	// 		success: "New project created",
+	// 		error: "Failed to create project",
+	// 	});
+
+
+	// };
+
+
+	const onCreate = async () => {
+		try {
+			toast('Creating new project...', {
+				duration: 4000, // Duration for the loading message
+			});
+	
+			// delay of 4 seconds
+			await new Promise(resolve => setTimeout(resolve, 4000));
+	
+			const mypromise = createProject({
+				title: "Cool Project",
+			});
+	
+			await mypromise;
+	
+			toast.success('New project created');
+		} catch (error) {
+			toast.error('Failed to create project');
+		}
 	};
+	
 
 	const projects = useQuery(api.projects.getProjects);
 
@@ -189,7 +217,15 @@ export const Navigation = () => {
 
 				<div className="mt-4 h-[30rem] overflow-y-auto">
 					{projects?.map((proj) => (
-						<p key={proj._id}>{proj.title}</p>
+						<Link href={"/projects/1"} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
+							<div className="flex">
+							<DropdownIcon/>
+							{proj.title}
+							</div>
+							<div className="hidden group-hover:block px-2">
+								<ThreeDotMenuIcon/>
+							</div>
+							</Link>
 					))}
 				</div>
 
@@ -227,6 +263,7 @@ export const Navigation = () => {
 					)}
 				</nav>
 			</div>
+			<Toaster />
 		</>
 	);
 };
