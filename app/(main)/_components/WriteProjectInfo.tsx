@@ -1,6 +1,5 @@
 "use client";
-"use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -30,6 +29,7 @@ import RisksIcon from "@/icons/RisksIcon";
 const WriteProjectInfo = () => {
   const editorRef = useRef();
   const [data, setData] = useState("");
+  const [text, setText] = useState("Project1");
 
   // const components: { title: string; icon: any; description: string, active: boolean }[] = [
   //   {
@@ -84,62 +84,76 @@ const WriteProjectInfo = () => {
 
   const [components, setComponents] = useState([
     {
-      id: 1,
-      title: " Project Stakeholders",
+      title: " Project Description",
       icon: <StackHoldersIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: true,
     },
     {
-      id: 2,
-      title: "Project Scope",
-      icon: <ScopsIcon />,
+      title: " Project Objectives",
+      icon: <StackHoldersIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: true,
     },
     {
-      id: 3,
+      title: " Project Requirements",
+      icon: <StackHoldersIcon />,
+      description: "Add regular paragraphs to convey your main content.",
+      active: false,
+    },
+    {
+      title: " Project Stakeholders",
+      icon: <StackHoldersIcon />,
+      description: "Add regular paragraphs to convey your main content.",
+      active: false,
+    },
+    {
+      title: "Project Scope",
+      icon: <ScopsIcon />,
+      description: "Add regular paragraphs to convey your main content.",
+      active: false,
+    },
+    {
       title: "Project Target Audience",
       icon: <AudienceIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
     {
-      id: 4,
       title: "Project Constraints",
       icon: <AlertIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
     {
-      id: 5,
       title: "Project Budget",
       icon: <DolarIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
     {
-      id: 6,
       title: "Project Dependencies",
       icon: <DefendenciesIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
     {
-      id: 7,
       title: "Project Priorities",
       icon: <PriritiesIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
     {
-      id: 8,
       title: "Project Risks",
       icon: <RisksIcon />,
       description: "Add regular paragraphs to convey your main content.",
       active: false,
     },
   ]);
+  const divRef = useRef(null);
+
+  // Use a timeout to debounce the input changes
+  let typingTimeout: any = null;
 
   const handleEditorChange = (event, editor: any) => {
     const data = editor.getData();
@@ -156,14 +170,39 @@ const WriteProjectInfo = () => {
     setComponents(newComponents);
   };
 
-  console.log(components[0]);
+  const handleInputChange = () => {
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+      if (divRef.current) {
+        setText(divRef.current.innerText);
+      }
+    }, 300); // Adjust the debounce delay as needed
+  };
+
+  useEffect(() => {
+    // Set the div content when the text state changes
+    if (divRef.current && divRef.current.innerText !== text) {
+      divRef.current.innerText = text;
+    }
+  }, [text]);
 
   return (
     <div>
       <div className="flex justify-between items-center">
-        <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">
+        {/* <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">
           Project1
-        </h1>
+        </h1> */}
+
+        <div
+          ref={divRef}
+          contentEditable
+          className="text-3xl font-semibold"
+          onInput={handleInputChange}
+          suppressContentEditableWarning={true}
+        >
+          {text}
+        </div>
 
         <NavigationMenu className="mt-10">
           <NavigationMenuList>
@@ -218,103 +257,80 @@ const WriteProjectInfo = () => {
       </div>
 
       <div className="grid gap-3">
-        <div className="border p-3 mt-10">
-          <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-            Project Description
-          </h1>
-          {/* <Textarea placeholder="Enter a description..."  className="border-none outline-none focus:border-none"/> */}
+        {components[0].active === true && (
+          <div className="border p-3 mt-10">
+            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+              Project Description
+            </h1>
+            {/* <Textarea placeholder="Enter a description..."  className="border-none outline-none focus:border-none"/> */}
 
-          <div className="prose max-w-none">
-            <CKEditor
-              editor={InlineEditor}
-              data={data}
-              onChange={handleEditorChange}
-              config={{
-                placeholder: "Enter a description...",
-                toolbar: [
-                  "bold",
-                  "italic",
-                  "link",
-                  "bulletedList",
-                  "numberedList",
-                ],
-                removePlugins: [
-                  "BalloonToolbar",
-                  "BalloonToolbarUI",
-                  "EasyImage",
-                  "CKFinder",
-                ],
-              }}
-              attributes={{
-                "data-placeholder": "Enter a description...",
-              }}
-              className="ck-editor__editable_inline ck-focused"
-            />
-          </div>
-        </div>
-        <div className="border p-3">
-          <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-            Project Objectives
-          </h1>
-          <Textarea
-            placeholder={`
-        • What is the main thing you want to achieve with this project?
-        • What is another objective?
-        • Any other objectives?
-        `}
-            className="border-none outline-none focus:border-none min-h-32"
-          />
-        </div>
-        <div className="border p-3">
-          <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-            Project Requirements
-          </h1>
-          <Textarea
-            placeholder={`
-        • What is the main requirements? 
-        • What is another requirement?
-        • Any other requirements? 
-        `}
-            className="border-none outline-none focus:border-none min-h-32"
-          />
-        </div>
-        <div className="flex flex-wrap justify-between gap-3">
-          <div className="border p-3 w-[49%]">
-            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Stakeholders
-            </h1>
-            <Textarea
-              placeholder="Who are the stakeholders? "
-              className="border-none outline-none focus:border-none"
-            />
-          </div>
-          <div className="border p-3  w-[49%]">
-            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Scope
-            </h1>
-            <Textarea
-              placeholder="What is in/out of scope? "
-              className="border-none outline-none focus:border-none"
-            />
-          </div>
-          {components[2].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Target Audience
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
+            <div className="prose max-w-none">
+              <CKEditor
+                editor={InlineEditor}
+                data={data}
+                onChange={handleEditorChange}
+                config={{
+                  placeholder: "Enter a description...",
+                  toolbar: [
+                    "bold",
+                    "italic",
+                    "link",
+                    "bulletedList",
+                    "numberedList",
+                  ],
+                  removePlugins: [
+                    "BalloonToolbar",
+                    "BalloonToolbarUI",
+                    "EasyImage",
+                    "CKFinder",
+                  ],
+                }}
+                attributes={{
+                  "data-placeholder": "Enter a description...",
+                }}
+                className="ck-editor__editable_inline ck-focused"
               />
             </div>
-          )}
+          </div>
+        )}
+        {components[1].active === true && (
+          <div className="border p-3">
+            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+              Project Objectives
+            </h1>
+            <Textarea
+              placeholder={`
+      • What is the main thing you want to achieve with this project?
+      • What is another objective?
+      • Any other objectives?
+      `}
+              className="border-none outline-none focus:border-none min-h-32"
+            />
+          </div>
+        )}
+        {components[2].active === true && (
+          <div className="border p-3">
+            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+              Project Requirements
+            </h1>
+            <Textarea
+              placeholder={`
+      • What is the main requirements? 
+      • What is another requirement?
+      • Any other requirements? 
+      `}
+              className="border-none outline-none focus:border-none min-h-32"
+            />
+          </div>
+        )}
+        <div className="flex flex-wrap justify-between gap-3">
           {components[3].active === true && (
-            <div className="border p-3  w-[49%]">
+            <div className="border p-3 w-[49%]">
               <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Constraints
+                Project Stakeholders
               </h1>
               <Textarea
-                placeholder="What is in/out of scope? "
+                placeholder="Who are the stakeholders? "
                 className="border-none outline-none focus:border-none"
               />
             </div>
@@ -322,7 +338,7 @@ const WriteProjectInfo = () => {
           {components[4].active === true && (
             <div className="border p-3  w-[49%]">
               <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Budget
+                Project Scope
               </h1>
               <Textarea
                 placeholder="What is in/out of scope? "
@@ -333,7 +349,7 @@ const WriteProjectInfo = () => {
           {components[5].active === true && (
             <div className="border p-3  w-[49%]">
               <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Dependencies
+                Project Target Audience
               </h1>
               <Textarea
                 placeholder="What is in/out of scope? "
@@ -344,7 +360,7 @@ const WriteProjectInfo = () => {
           {components[6].active === true && (
             <div className="border p-3  w-[49%]">
               <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Priorities
+                Project Constraints
               </h1>
               <Textarea
                 placeholder="What is in/out of scope? "
@@ -355,7 +371,40 @@ const WriteProjectInfo = () => {
           {components[7].active === true && (
             <div className="border p-3  w-[49%]">
               <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Risks
+                Project Budget
+              </h1>
+              <Textarea
+                placeholder="What is in/out of scope? "
+                className="border-none outline-none focus:border-none"
+              />
+            </div>
+          )}
+          {components[8].active === true && (
+            <div className="border p-3  w-[49%]">
+              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+                Project Dependencies
+              </h1>
+              <Textarea
+                placeholder="What is in/out of scope? "
+                className="border-none outline-none focus:border-none"
+              />
+            </div>
+          )}
+          {components[9].active === true && (
+            <div className="border p-3  w-[49%]">
+              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+                Project Priorities
+              </h1>
+              <Textarea
+                placeholder="What is in/out of scope? "
+                className="border-none outline-none focus:border-none"
+              />
+            </div>
+          )}
+          {components[10].active === true && (
+            <div className="border p-3  w-[49%]">
+              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+                Project Risks
               </h1>
               <Textarea
                 placeholder="What is in/out of scope? "

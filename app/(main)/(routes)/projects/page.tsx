@@ -22,6 +22,8 @@ const ProjectsPage = () => {
 	const onCreate = () => {
 		const promise = createProject({
 			title: "Untitled Project",
+			description: "dummey description",
+			objectives: "dummy Objective",
 		});
 
 		toast.promise(promise, {
