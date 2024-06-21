@@ -31,44 +31,48 @@ export const Navigation = () => {
 		api.projects.createProject
 	);
 
-	// const onCreate = () => {
-	// 	const mypromise = createProject({
-	// 		title: "Cool Project",
-	// 	});
+	const onCreate = () => {
+		const mypromise = createProject({
+			title: "Untitled Project",
+			description: "dummey description",
+			objectives: "dummy Objective",
+		});
 
-	// 	toast.promise(mypromise, {
-	// 		loading: "Creating new project...",
-	// 		success: "New project created",
-	// 		error: "Failed to create project",
-	// 	});
+		toast.promise(mypromise, {
+			loading: "Creating new project...",
+			success: "New project created",
+			error: "Failed to create project",
+		});
 
 
-	// };
-
-
-	const onCreate = async () => {
-		try {
-			toast('Creating new project...', {
-				duration: 4000, // Duration for the loading message
-			});
-	
-			// delay of 4 seconds
-			await new Promise(resolve => setTimeout(resolve, 4000));
-	
-			const mypromise = createProject({
-				title: "Cool Project",
-			});
-	
-			await mypromise;
-	
-			toast.success('New project created');
-		} catch (error) {
-			toast.error('Failed to create project');
-		}
 	};
+
+
+	// const onCreate = async () => {
+	// 	try {
+	// 		toast('Creating new project...', {
+	// 			duration: 4000, // Duration for the loading message
+	// 		});
+	
+	// 		// delay of 4 seconds
+	// 		await new Promise(resolve => setTimeout(resolve, 4000));
+	
+	// 		const mypromise = createProject({
+	// 			title: "Cool Project",
+	// 		});
+	
+	// 		await mypromise;
+	
+	// 		toast.success('New project created');
+	// 	} catch (error) {
+	// 		toast.error('Failed to create project');
+	// 	}
+	// };
 	
 
 	const projects = useQuery(api.projects.getProjects);
+	console.log(projects?.map(it => it._id));
+	
 
 	// true if the query matches, false otherwise
 	const isMobile = useMediaQuery("(max-width: 768px)");
@@ -217,7 +221,7 @@ export const Navigation = () => {
 
 				<div className="mt-4 h-[30rem] overflow-y-auto">
 					{projects?.map((proj) => (
-						<Link href={"/projects/1"} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
+						<Link href={`/projects/${proj._id}`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
 							<div className="flex">
 							<DropdownIcon/>
 							{proj.title}
