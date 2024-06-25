@@ -12,7 +12,7 @@ import {
 
 const ProjectNavbar = ({ projectId, projectTitle }: { projectId: string, projectTitle: string }) => {
   return (
-    <div className="w-[100vw] flex justify-between px-3">
+    <div className="w-[calc(100vw-15rem)] flex justify-between px-3">
       {/* <div className="flex flex-row w-full justify-between space-x-96">
             <h1>Project1 /  </h1>
             <div className="flex justify-center items-center space-x-6">
