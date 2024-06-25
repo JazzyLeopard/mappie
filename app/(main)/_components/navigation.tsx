@@ -23,9 +23,11 @@ import { Toaster, toast } from "sonner";
 import DropdownIcon from "@/icons/DropdownIcon";
 import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export const Navigation = () => {
 	const pathname = usePathname();
+	const router = useRouter();
 
 	const createProject = useMutation(
 		api.projects.createProject
@@ -34,8 +36,6 @@ export const Navigation = () => {
 	const onCreate = () => {
 		const mypromise = createProject({
 			title: "Untitled Project",
-			description: "dummey description",
-			objectives: "dummy Objective",
 		});
 
 		toast.promise(mypromise, {
@@ -48,30 +48,7 @@ export const Navigation = () => {
 	};
 
 
-	// const onCreate = async () => {
-	// 	try {
-	// 		toast('Creating new project...', {
-	// 			duration: 4000, // Duration for the loading message
-	// 		});
-	
-	// 		// delay of 4 seconds
-	// 		await new Promise(resolve => setTimeout(resolve, 4000));
-	
-	// 		const mypromise = createProject({
-	// 			title: "Cool Project",
-	// 		});
-	
-	// 		await mypromise;
-	
-	// 		toast.success('New project created');
-	// 	} catch (error) {
-	// 		toast.error('Failed to create project');
-	// 	}
-	// };
-	
-
 	const projects = useQuery(api.projects.getProjects);
-	console.log(projects?.map(it => it._id));
 	
 
 	// true if the query matches, false otherwise

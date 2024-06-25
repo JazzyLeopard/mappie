@@ -59,17 +59,17 @@ export const getProjects = query({
 // export const getProjectById = query({
 // 	handler: async (ctx) => {
 // 	  const identity = await ctx.auth.getUserIdentity();
-  
+
 // 	  if (!identity) {
 // 		throw new Error("Not Authenticated");
 // 	  }
-  
+
 // 	  const { projectId } = ctx.params;
-  
+
 // 	  if (!projectId) {
 // 		throw new Error("Project ID is required");
 // 	  }
-  
+
 // 	  const project = await ctx.db
 // 		.query("projects")
 // 		.filter((q) =>
@@ -79,42 +79,70 @@ export const getProjects = query({
 // 		  )
 // 		)
 // 		.first();
-  
+
 // 	  if (!project) {
 // 		throw new Error("Project not found");
 // 	  }
-  
+
 // 	  return project;
 // 	},
 //   });
-  
+
 export const getProjectById = query({
-  args: { projectId: v.id("projects") },
-  handler: async (ctx, { projectId }) => {
-    const identity = await ctx.auth.getUserIdentity();
+	args: { projectId: v.id("projects") },
+	handler: async (ctx, { projectId }) => {
+		const identity = await ctx.auth.getUserIdentity();
 
-    if (!identity) {
-      throw new Error("Not Authenticated");
-    }
+		if (!identity) {
+			throw new Error("Not Authenticated");
+		}
 
-    if (!projectId) {
-      throw new Error("Project ID is required");
-    }
+		if (!projectId) {
+			throw new Error("Project ID is required");
+		}
 
-    const project = await ctx.db
-      .query("projects")
-      .filter((q) =>
-        q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
-      )
-      .first();
+		const project = await ctx.db
+			.query("projects")
+			.filter((q) =>
+				q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
+			)
+			.first();
 
-    if (!project) {
-      throw new Error("Project not found");
-    }
+		if (!project) {
+			throw new Error("Project not found");
+		}
 
-    return project;
-  },
+		return project;
+	},
 });
+
+export const getProjectNameById = query({
+	args: { projectId: v.id("projects") },
+	handler: async (ctx, { projectId }) => {
+		const identity = await ctx.auth.getUserIdentity();
+
+		if (!identity) {
+			throw new Error("Not Authenticated");
+		}
+
+		if (!projectId) {
+			throw new Error("Project ID is required");
+		}
+
+		const project = await ctx.db.get(projectId)
+			// .query("projects")
+			// .filter((q) =>
+			// 	q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
+			// )
+			// .();
+
+		if (!project) {
+			throw new Error("Project not found");
+		}
+
+		return project.title;
+	},
+})
 
 
 export const createProject = mutation({
@@ -132,13 +160,38 @@ export const createProject = mutation({
 		const project = await ctx.db.insert("projects", {
 			title: args.title,
 			userId: identity.subject,
-			description: args.description,
-			objectives: args.objectives,
+			description: '',
+			objectives: '',
 			isArchived: false,
 			createdAt: BigInt(Date.now()), // Use BigInt for timestamps
 			updatedAt: BigInt(Date.now()), // Use BigInt for timestamps
 		});
 
 		return project;
+	},
+});
+
+export const updateProject = mutation({
+	args: {
+		_id: v.id("projects"),
+		title: v.optional(v.string()),
+		description: v.optional(v.string()),
+		objectives: v.optional(v.string()),
+		stakeholders: v.optional(v.string()),
+		scope: v.optional(v.string()),
+		targetAudience: v.optional(v.string()),
+		constraints: v.optional(v.string()),
+		budget: v.optional(v.string()),
+		dependencies: v.optional(v.string()),
+		priorities: v.optional(v.string()),
+		risks: v.optional(v.string()),
+		isArchived: v.optional(v.boolean()),
+		isPublished: v.optional(v.boolean()),
+
+	},
+	handler: async (ctx, args) => {
+		const { _id, ...updates } = args;
+
+		await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
 	},
 });

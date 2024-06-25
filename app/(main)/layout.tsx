@@ -6,7 +6,6 @@ import { useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import React from "react";
 import { Navigation } from "./_components/navigation";
-import ProjectNavbar from "./_components/ProjectNavbar";
 
 const MainLayout = ({
 	children,
@@ -29,7 +28,7 @@ const MainLayout = ({
 	}
 
 	return (
-		<div className="h-full flex">
+		<div className="flex" style={{height: "calc(100vh - 15px)"}}>
 			<Navigation />
 			{/* flex flex-1 overflow-y-auto */}
 			<main className="flex flex-1 ">

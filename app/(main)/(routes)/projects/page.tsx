@@ -9,12 +9,20 @@ import Empty from "@/public/empty.png";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const ProjectsPage = () => {
 	const { user, isSignedIn } = useUser();
+	const router = useRouter();
 
+	if (!isSignedIn) {
+		return <>Not signed in..</>
+	}
 	const projects = useQuery(api.projects.getProjects);
 
+	if (projects && projects?.length > 0) {
+		router.push(`/projects/${projects[0]._id}`);
+	}
 	const createProject = useMutation(
 		api.projects.createProject
 	);
@@ -22,8 +30,6 @@ const ProjectsPage = () => {
 	const onCreate = () => {
 		const promise = createProject({
 			title: "Untitled Project",
-			description: "dummey description",
-			objectives: "dummy Objective",
 		});
 
 		toast.promise(promise, {
@@ -39,7 +45,7 @@ const ProjectsPage = () => {
 				{projects?.length === 0 && (
 					<>
 						<h1 className="text-3xl font-semibold mb-8">
-							{user?.firstName}&apos;s space
+							{user?.firstName || user?.primaryEmailAddress?.emailAddress.split('@')[0]}&apos;s space
 						</h1>
 
 						<Image
