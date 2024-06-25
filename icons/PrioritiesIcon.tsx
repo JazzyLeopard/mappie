@@ -1,5 +1,5 @@
 
-const DefendenciesIcon = () => {
+const PrioritiesIcon = () => {
     return (
         <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -13,10 +13,10 @@ const DefendenciesIcon = () => {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="1.616"
-          d="M12.352 5.732h1.616a4.04 4.04 0 010 8.078h-1.616m-4.847 0H5.89a4.039 4.039 0 110-8.078h1.615"
+          d="M13.968 8.9l-4.04-4.04L5.89 8.9M13.968 14.554l-4.04-4.04-4.038 4.04"
         ></path>
       </svg>
     );
 };
 
-export default DefendenciesIcon;
+export default PrioritiesIcon;

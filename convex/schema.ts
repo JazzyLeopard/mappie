@@ -3,12 +3,10 @@ import { v } from "convex/values";
 
 export default defineSchema({
 	projects: defineTable({
-		title: v.string(),
+		userId: v.string(),
+		title: v.string(),	
 		description: v.string(),
 		objectives: v.string(),
-		userId: v.string(),
-		isArchived: v.boolean(),
-		content: v.optional(v.string()),
 		stakeholders: v.optional(v.string()),
 		scope: v.optional(v.string()),
 		targetAudience: v.optional(v.string()),
@@ -17,7 +15,7 @@ export default defineSchema({
 		dependencies: v.optional(v.string()),
 		priorities: v.optional(v.string()),
 		risks : v.optional(v.string()),
-		icon: v.optional(v.string()),
+		isArchived: v.boolean(),
 		isPublished: v.optional(v.boolean()),
 		createdAt: v.int64(), // Storing timestamp as bigint (milliseconds since Unix epoch)
 		updatedAt: v.int64(), // Storing timestamp as bigint

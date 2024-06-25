@@ -1,5 +1,5 @@
 
-const StackHoldersIcon = () => {
+const PeopleIcon = () => {
     return (
         <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -19,4 +19,4 @@ const StackHoldersIcon = () => {
     );
 };
 
-export default StackHoldersIcon;
+export default PeopleIcon;

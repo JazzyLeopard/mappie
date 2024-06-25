@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-import { cn } from "@/lib/utils";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,152 +11,137 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Textarea } from "@/components/ui/textarea";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import InlineEditor from "@ckeditor/ckeditor5-build-inline";
-import StackHoldersIcon from "@/icons/StackHoldersIcon";
+import PeopleIcon from "@/icons/PeopleIcon";
 import RoundCheckmark from "@/icons/RoundCheckmark";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
-import ScopsIcon from "@/icons/ScopsIcon";
 import AudienceIcon from "@/icons/AudienceIcon";
 import AlertIcon from "@/icons/AlertIcon";
-import DolarIcon from "@/icons/DolarIcon";
-import DefendenciesIcon from "@/icons/DefendenciesIcon";
-import PriritiesIcon from "@/icons/PriritiesIcon";
 import RisksIcon from "@/icons/RisksIcon";
+import { toTitleCase } from "@/utils/helper";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import ScopeIcon from "@/icons/ScopeIcon";
+import DollarIcon from "@/icons/DollarIcon";
+import PrioritiesIcon from "@/icons/PrioritiesIcon";
+import DependenciesIcon from "@/icons/DependenciesIcon";
 
-const WriteProjectInfo = () => {
-  const editorRef = useRef();
-  const [data, setData] = useState("");
-  const [text, setText] = useState("Project1");
+type MenuItemType = {
+  key: string;
+  icon: React.JSX.Element;
+  description: string
+  active: boolean
+  required?: boolean
+}
 
-  // const components: { title: string; icon: any; description: string, active: boolean }[] = [
-  //   {
-  //     title: " Project Stakeholders",
-  //     icon: <StackHoldersIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: true,
-  //   },
-  //   {
-  //     title: "Project Scope",
-  //     icon: <ScopsIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: true,
-  //   },
-  //   {
-  //     title: "Project Target Audience",
-  //     icon: <AudienceIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  //   {
-  //     title: "Project Constraints",
-  //     icon: <AlertIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  //   {
-  //     title: "Project Budget",
-  //     icon: <DolarIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  //   {
-  //     title: "Project Dependencies",
-  //     icon: <DefendenciesIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  //   {
-  //     title: "Project Priorities",
-  //     icon: <PriritiesIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  //   {
-  //     title: "Project Risks",
-  //     icon: <RisksIcon/>,
-  //     description: "Add regular paragraphs to convey your main content.",
-  //     active: false,
-  //   },
-  // ];
+const menuItems: MenuItemType[] = [
+  {
+    key: "description",
+    icon: <PeopleIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: true,
+    required: true
+  },
+  {
+    key: "objectives",
+    icon: <PeopleIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: true,
+    required: true
+  },
+  {
+    key: "stakeholders",
+    icon: <PeopleIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "scope",
+    icon: <ScopeIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "targetAudience",
+    icon: <AudienceIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "constraints",
+    icon: <AlertIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "budget",
+    icon: <DollarIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "dependencies",
+    icon: <DependenciesIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "priorities",
+    icon: <PrioritiesIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+  {
+    key: "risks",
+    icon: <RisksIcon />,
+    description: "Add regular paragraphs to convey your main content.",
+    active: false,
+  },
+]
 
-  const [components, setComponents] = useState([
-    {
-      title: " Project Description",
-      icon: <StackHoldersIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: true,
-    },
-    {
-      title: " Project Objectives",
-      icon: <StackHoldersIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: true,
-    },
-    {
-      title: " Project Requirements",
-      icon: <StackHoldersIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: " Project Stakeholders",
-      icon: <StackHoldersIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Scope",
-      icon: <ScopsIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Target Audience",
-      icon: <AudienceIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Constraints",
-      icon: <AlertIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Budget",
-      icon: <DolarIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Dependencies",
-      icon: <DefendenciesIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Priorities",
-      icon: <PriritiesIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-    {
-      title: "Project Risks",
-      icon: <RisksIcon />,
-      description: "Add regular paragraphs to convey your main content.",
-      active: false,
-    },
-  ]);
-  const divRef = useRef(null);
+const WriteProjectInfo = ({ project }: { project: any }) => {
+  const [projectDetails, setProjectDetails] = useState(project)
 
+  const [components, setComponents] = useState<MenuItemType[]>([]);
+  const divRef = useRef<HTMLDivElement | null>(null);
+
+  const updateProjectMutation = useMutation(api.projects.updateProject);
+
+  useEffect(() => {
+    if (project) {
+      const menu = menuItems;
+      Object.keys(project).forEach(ok => {
+        if (project[ok] && project[ok].length > 0) {
+          console.log(project[ok]);
+          menu.forEach(m => {
+            if (m.key == ok) {
+              m.active = true;
+              m.required = true;
+            }
+          })
+        }
+      })
+      setComponents(menu)
+    }
+  }, [project])
   // Use a timeout to debounce the input changes
   let typingTimeout: any = null;
 
-  const handleEditorChange = (event, editor: any) => {
+  const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
     const data = editor.getData();
-    setData(data);
+    setProjectDetails({ ...projectDetails, [attribute]: data });
+  };
+
+  const onEditorBlur = async (event: any, editor: InlineEditor, attribute: string) => {
+    try {
+      console.log('time for API call', projectDetails);
+      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
+      await updateProjectMutation(payload)
+    } catch (error) {
+      console.log('error updating project', error);
+    }
+    // setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 
   const handleItemClick = (index: any) => {
@@ -175,34 +159,37 @@ const WriteProjectInfo = () => {
 
     typingTimeout = setTimeout(() => {
       if (divRef.current) {
-        setText(divRef.current.innerText);
+        setProjectDetails({ ...projectDetails, title: divRef.current.innerText })
       }
     }, 300); // Adjust the debounce delay as needed
   };
 
-  useEffect(() => {
-    // Set the div content when the text state changes
-    if (divRef.current && divRef.current.innerText !== text) {
-      divRef.current.innerText = text;
-    }
-  }, [text]);
-
   return (
     <div>
       <div className="flex justify-between items-center">
-        {/* <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">
-          Project1
-        </h1> */}
 
-        <div
+        {/* <div
           ref={divRef}
           contentEditable
           className="text-3xl font-semibold"
           onInput={handleInputChange}
           suppressContentEditableWarning={true}
         >
-          {text}
-        </div>
+          {projectDetails.title}
+        </div> */}
+        <CKEditor
+          editor={InlineEditor}
+          data={projectDetails.title}
+          onBlur={(event, editor) => onEditorBlur(event, editor, 'title')}
+          onChange={(event, editor) => handleEditorChange(event, editor, 'title')}
+          onReady={(editor) => {
+            editor.ui.view.editable.element!.style.height = "100px";
+            editor.ui.view.editable.element!.style.fontWeight = "600";
+            editor.ui.view.editable.element!.style.fontSize = "1.875rem";
+            editor.ui.view.editable.element!.style.lineHeight = "2.25rem";
+          }}
+
+        />
 
         <NavigationMenu className="mt-10">
           <NavigationMenuList>
@@ -216,21 +203,14 @@ const WriteProjectInfo = () => {
                     Select Additional Project Elements
                   </p>
                   {components.map((component, index) => (
-                    // <ListItem
-                    //   key={component.title}
-                    //   title={component.title}
-                    //   href={component.href}
-                    // >
-                    //   {component.description}
-                    // </ListItem>
                     <div
-                      key={component.title}
+                      key={toTitleCase(component.key)}
                       className={`flex justify-center items-center gap-3 ${component.active === true ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
-                      onClick={() => handleItemClick(index)}
+                      onClick={() => !component.required && handleItemClick(index)}
                     >
                       <div>{component.icon}</div>
                       <div>
-                        <p className="text-sm font-bold">{component.title}</p>
+                        <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
                         <p className="text-sm">{component.description}</p>
                       </div>
                       <div>
@@ -256,163 +236,44 @@ const WriteProjectInfo = () => {
         </NavigationMenu>
       </div>
 
-      <div className="grid gap-3">
-        {components[0].active === true && (
-          <div className="border p-3 mt-10">
-            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Description
-            </h1>
-            {/* <Textarea placeholder="Enter a description..."  className="border-none outline-none focus:border-none"/> */}
+      <div className="grid grid-cols-6 gap-6 mt-10">
+        {components.map(c => {
+          if (c.active) {
+            return (
+              <div key={c.key} className="border p-3 col-span-6">
+                <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+                  {toTitleCase(c.key)}
+                </h1>
 
-            <div className="prose max-w-none">
-              <CKEditor
-                editor={InlineEditor}
-                data={data}
-                onChange={handleEditorChange}
-                config={{
-                  placeholder: "Enter a description...",
-                  toolbar: [
-                    "bold",
-                    "italic",
-                    "link",
-                    "bulletedList",
-                    "numberedList",
-                  ],
-                  removePlugins: [
-                    "BalloonToolbar",
-                    "BalloonToolbarUI",
-                    "EasyImage",
-                    "CKFinder",
-                  ],
-                }}
-                attributes={{
-                  "data-placeholder": "Enter a description...",
-                }}
-                className="ck-editor__editable_inline ck-focused"
-              />
-            </div>
-          </div>
-        )}
-        {components[1].active === true && (
-          <div className="border p-3">
-            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Objectives
-            </h1>
-            <Textarea
-              placeholder={`
-      • What is the main thing you want to achieve with this project?
-      • What is another objective?
-      • Any other objectives?
-      `}
-              className="border-none outline-none focus:border-none min-h-32"
-            />
-          </div>
-        )}
-        {components[2].active === true && (
-          <div className="border p-3">
-            <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-              Project Requirements
-            </h1>
-            <Textarea
-              placeholder={`
-      • What is the main requirements? 
-      • What is another requirement?
-      • Any other requirements? 
-      `}
-              className="border-none outline-none focus:border-none min-h-32"
-            />
-          </div>
-        )}
-        <div className="flex flex-wrap justify-between gap-3">
-          {components[3].active === true && (
-            <div className="border p-3 w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Stakeholders
-              </h1>
-              <Textarea
-                placeholder="Who are the stakeholders? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[4].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Scope
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[5].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Target Audience
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[6].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Constraints
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[7].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Budget
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[8].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Dependencies
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[9].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Priorities
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-          {components[10].active === true && (
-            <div className="border p-3  w-[49%]">
-              <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
-                Project Risks
-              </h1>
-              <Textarea
-                placeholder="What is in/out of scope? "
-                className="border-none outline-none focus:border-none"
-              />
-            </div>
-          )}
-        </div>
+                <div className="prose max-w-none">
+                  <CKEditor
+                    editor={InlineEditor}
+                    data={projectDetails[c.key]}
+                    onBlur={(event, editor) => onEditorBlur(event, editor, c.key)}
+                    onChange={(event, editor) => handleEditorChange(event, editor, c.key)}
+                    config={{
+                      placeholder: c.description,
+                      toolbar: [
+                        "bold",
+                        "italic",
+                        "link",
+                        "bulletedList",
+                        "numberedList",
+                      ],
+                      removePlugins: [
+                        "BalloonToolbar",
+                        "BalloonToolbarUI",
+                        "EasyImage",
+                        "CKFinder",
+                      ],
+                    }}
+                  // className="ck-editor__editable_inline ck-focused"
+                  />
+                </div>
+              </div>
+            )
+          }
+        })}
       </div>
     </div>
   );

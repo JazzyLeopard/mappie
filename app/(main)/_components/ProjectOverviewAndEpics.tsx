@@ -2,30 +2,27 @@
 import Link from "next/link";
 
 interface WriteProjectInfoProps {
-  setProjectOverViewStep: React.Dispatch<React.SetStateAction<number>>;
+  projectId: string
+  projectTitle: string
 }
 
-const ProjectOverviewAndEpics:React.FC<WriteProjectInfoProps>  = ({setProjectOverViewStep}) => {
+const ProjectOverviewAndEpics: React.FC<WriteProjectInfoProps> = ({ projectTitle, projectId }) => {
 
-  const handleStep = () => {
-    setProjectOverViewStep(2)
-  }
   return (
     <div className="grid gap-4">
       <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">
-        Project1
+        {projectTitle}
       </h1>
 
       <div className="grid">
-        <div
-          // href={"/oveview"}
-          onClick={handleStep}
-          className=" w-full text-slate-900 text-2xl font-semibold leading-loose py-3 rounded hover:bg-slate-400/10 px-3 cursor-pointer"
+        <Link
+          href={`/projects/${projectId}/overview`}
+          className=" w-full text-slate-900 text-2xl font-semibold leading-loose rounded py-3 px-3 hover:bg-slate-400/10"
         >
           Project Overview
-        </div>
+        </Link>
         <Link
-          href={"/oveview"}
+          href={`/projects/${projectId}/epics`}
           className=" w-full text-slate-900 text-2xl font-semibold leading-loose rounded py-3 px-3 hover:bg-slate-400/10"
         >
           Epics
