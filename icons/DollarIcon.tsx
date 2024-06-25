@@ -1,5 +1,5 @@
 
-const DolarIcon = () => {
+const DollarIcon = () => {
     return (
         <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -30,4 +30,4 @@ const DolarIcon = () => {
     );
 };
 
-export default DolarIcon;
+export default DollarIcon;

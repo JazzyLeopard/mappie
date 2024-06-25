@@ -1,5 +1,5 @@
 
-const ScopsIcon = () => {
+const ScopeIcon = () => {
     return (
         <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -33,4 +33,4 @@ const ScopsIcon = () => {
     );
 };
 
-export default ScopsIcon;
+export default ScopeIcon;
