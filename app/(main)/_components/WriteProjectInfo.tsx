@@ -26,6 +26,7 @@ import ScopeIcon from "@/icons/ScopeIcon";
 import DollarIcon from "@/icons/DollarIcon";
 import PrioritiesIcon from "@/icons/PrioritiesIcon";
 import DependenciesIcon from "@/icons/DependenciesIcon";
+import LabelToInput from "./LabelToInput";
 
 type MenuItemType = {
   key: string;
@@ -104,7 +105,6 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
   const [projectDetails, setProjectDetails] = useState(project)
 
   const [components, setComponents] = useState<MenuItemType[]>([]);
-  const divRef = useRef<HTMLDivElement | null>(null);
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
@@ -126,14 +126,13 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
     }
   }, [project])
   // Use a timeout to debounce the input changes
-  let typingTimeout: any = null;
 
   const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
     const data = editor.getData();
     setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 
-  const onEditorBlur = async (event: any, editor: InlineEditor, attribute: string) => {
+  const onEditorBlur = async () => {
     try {
       console.log('time for API call', projectDetails);
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
@@ -154,15 +153,6 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
     setComponents(newComponents);
   };
 
-  const handleInputChange = () => {
-    clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-      if (divRef.current) {
-        setProjectDetails({ ...projectDetails, title: divRef.current.innerText })
-      }
-    }, 300); // Adjust the debounce delay as needed
-  };
 
   return (
     <div>
@@ -177,7 +167,7 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
         >
           {projectDetails.title}
         </div> */}
-        <CKEditor
+        {/* <CKEditor
           editor={InlineEditor}
           data={projectDetails.title}
           onBlur={(event, editor) => onEditorBlur(event, editor, 'title')}
@@ -189,7 +179,10 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
             editor.ui.view.editable.element!.style.lineHeight = "2.25rem";
           }}
 
-        />
+        /> */}
+        <LabelToInput value={projectDetails.title}
+          setValue={(val) => setProjectDetails({ ...projectDetails, title: val })}
+          onBlur={onEditorBlur} />
 
         <NavigationMenu className="mt-10">
           <NavigationMenuList>
@@ -249,7 +242,7 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
                   <CKEditor
                     editor={InlineEditor}
                     data={projectDetails[c.key]}
-                    onBlur={(event, editor) => onEditorBlur(event, editor, c.key)}
+                    onBlur={() => onEditorBlur()}
                     onChange={(event, editor) => handleEditorChange(event, editor, c.key)}
                     config={{
                       placeholder: c.description,
