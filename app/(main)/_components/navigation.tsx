@@ -24,6 +24,9 @@ import DropdownIcon from "@/icons/DropdownIcon";
 import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Id } from "@/convex/_generated/dataModel";
 
 export const Navigation = () => {
 	const pathname = usePathname();
@@ -32,6 +35,8 @@ export const Navigation = () => {
 	const createProject = useMutation(
 		api.projects.createProject
 	);
+
+	const archiveProject = useMutation(api.projects.archiveProject)
 
 	const onCreate = () => {
 		const mypromise = createProject({
@@ -49,7 +54,7 @@ export const Navigation = () => {
 
 
 	const projects = useQuery(api.projects.getProjects);
-	
+
 
 	// true if the query matches, false otherwise
 	const isMobile = useMediaQuery("(max-width: 768px)");
@@ -148,11 +153,6 @@ export const Navigation = () => {
 			isMobile ? "0" : "calc(100%-240px)"
 		);
 
-		navbarRef.current!.style.setProperty(
-			"left",
-			isMobile ? "100%" : "240px"
-		);
-
 		setTimeout(() => setIsResetting(false), 300);
 	};
 
@@ -171,14 +171,18 @@ export const Navigation = () => {
 		setTimeout(() => setIsResetting(false), 300);
 	};
 
+	const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
+		await archiveProject({ _id: id, isArchived: !isArchived })
+	}
+
 	return (
 		<>
 			<div
 				ref={sidebarRef}
 				className={cn(
-					"group/sidebar h-full w-60 bg-secondary overflow-y-auto relative z-[100000] flex flex-col",
+					"group/sidebar h-full w-60 bg-secondary overflow-y-auto relative z-[50] flex flex-col",
 					isResetting &&
-						"transition-all ease-in-out duration-300",
+					"transition-all ease-in-out duration-300",
 					isMobile && "w-0"
 				)}>
 				<div
@@ -196,19 +200,25 @@ export const Navigation = () => {
 					<UserItems />
 				</div>
 
-				<div className="mt-4 h-[30rem] overflow-y-auto">
+				<ScrollArea className="mt-4 h-[50rem]">
 					{projects?.map((proj) => (
 						<Link href={`/projects/${proj._id}`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
 							<div className="flex">
-							<DropdownIcon/>
-							{proj.title}
+								<DropdownIcon />
+								{proj.title}
 							</div>
-							<div className="hidden group-hover:block px-2">
-								<ThreeDotMenuIcon/>
+							<div className="group-hover:block px-2">
+								<DropdownMenu>
+									<DropdownMenuTrigger><ThreeDotMenuIcon /></DropdownMenuTrigger>
+									<DropdownMenuContent>
+										<DropdownMenuItem onClick={() => onArchiveClick(proj._id, proj.isArchived)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+
 							</div>
-							</Link>
+						</Link>
 					))}
-				</div>
+				</ScrollArea>
 
 				<div>
 					<Item
@@ -229,9 +239,9 @@ export const Navigation = () => {
 			<div
 				ref={navbarRef}
 				className={cn(
-					"z-[100000] absolute top-0 left-60 w-[calc(100%-60px)]",
+					"z-[100000] absolute top-0 w-[calc(100%-60px)]",
 					isResetting &&
-						"transition-all ease-in-out duration-300",
+					"transition-all ease-in-out duration-300",
 					isMobile && "left-0 w-full"
 				)}>
 				<nav className="bg-transparent w-full px-3 py-2">

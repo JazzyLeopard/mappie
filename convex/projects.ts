@@ -27,67 +27,6 @@ export const getProjects = query({
 });
 
 
-// export const getProjectById = query({
-// 	handler: async (ctx) => {
-// 		const identity = await ctx.auth.getUserIdentity();
-
-// 		if (!identity) {
-// 			throw new Error("Not Authenticated");
-// 		}
-
-// 		const { projectId } = ctx.params;
-
-// 		const project = await ctx.db
-// 			.query("projects")
-// 			.filter((q) =>
-// 				q.and(
-// 					q.eq(q.field("userId"), identity?.subject),
-// 					q.eq(q.field("_id"), projectId)
-// 				)
-// 			)
-// 			?.first();
-
-// 		if (!project) {
-// 			throw new Error("Project not found");
-// 		}
-
-// 		return project;
-// 	},
-// });
-
-
-// export const getProjectById = query({
-// 	handler: async (ctx) => {
-// 	  const identity = await ctx.auth.getUserIdentity();
-
-// 	  if (!identity) {
-// 		throw new Error("Not Authenticated");
-// 	  }
-
-// 	  const { projectId } = ctx.params;
-
-// 	  if (!projectId) {
-// 		throw new Error("Project ID is required");
-// 	  }
-
-// 	  const project = await ctx.db
-// 		.query("projects")
-// 		.filter((q) =>
-// 		  q.and(
-// 			q.eq(q.field("userId"), identity?.subject),
-// 			q.eq(q.field("_id"), projectId)
-// 		  )
-// 		)
-// 		.first();
-
-// 	  if (!project) {
-// 		throw new Error("Project not found");
-// 	  }
-
-// 	  return project;
-// 	},
-//   });
-
 export const getProjectById = query({
 	args: { projectId: v.id("projects") },
 	handler: async (ctx, { projectId }) => {
@@ -130,11 +69,11 @@ export const getProjectNameById = query({
 		}
 
 		const project = await ctx.db.get(projectId)
-			// .query("projects")
-			// .filter((q) =>
-			// 	q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
-			// )
-			// .();
+		// .query("projects")
+		// .filter((q) =>
+		// 	q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
+		// )
+		// .();
 
 		if (!project) {
 			throw new Error("Project not found");
@@ -195,3 +134,15 @@ export const updateProject = mutation({
 		await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
 	},
 });
+
+export const archiveProject = mutation({
+	args: {
+		_id: v.id("projects"),
+		isArchived: v.boolean()
+	},
+	handler: async (ctx, args) => {
+		const { _id, isArchived } = args;
+
+		await ctx.db.patch(_id, { isArchived: isArchived, updatedAt: BigInt(Date.now()) });
+	},
+})
