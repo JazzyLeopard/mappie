@@ -20,9 +20,9 @@ const ProjectsPage = () => {
 	}
 	const projects = useQuery(api.projects.getProjects);
 
-	if (projects && projects?.length > 0) {
-		router.push(`/projects/${projects[0]._id}`);
-	}
+	// if (projects && projects?.length > 0) {
+	// 	router.push(`/projects/${projects[0]._id}`);
+	// }
 	const createProject = useMutation(
 		api.projects.createProject
 	);
