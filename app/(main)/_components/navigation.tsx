@@ -27,6 +27,8 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Id } from "@/convex/_generated/dataModel";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export const Navigation = () => {
 	const pathname = usePathname();
@@ -64,7 +66,7 @@ export const Navigation = () => {
 	const navbarRef = useRef<ElementRef<"div">>(null);
 
 	const [isResetting, setIsResetting] = useState(false);
-
+	const [openDialog, setOpenDialog] = useState(false)
 	// If mobile view it will auto matically collapse "true"
 	const [isCollapsed, setIsCollapsed] = useState(isMobile);
 
@@ -173,6 +175,8 @@ export const Navigation = () => {
 
 	const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
 		await archiveProject({ _id: id, isArchived: !isArchived })
+		setOpenDialog(false)
+		router.push(`/projects`);
 	}
 
 	return (
@@ -211,9 +215,25 @@ export const Navigation = () => {
 								<DropdownMenu>
 									<DropdownMenuTrigger><ThreeDotMenuIcon /></DropdownMenuTrigger>
 									<DropdownMenuContent>
-										<DropdownMenuItem onClick={() => onArchiveClick(proj._id, proj.isArchived)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem>
+										{/* <DropdownMenuItem>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
+										<DropdownMenuItem onClick={() => setOpenDialog(!openDialog)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem>
+										{/* <DropdownMenuItem onClick={() => onArchiveClick(proj._id, proj.isArchived)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
 									</DropdownMenuContent>
 								</DropdownMenu>
+								<Dialog open={openDialog} onOpenChange={() => setOpenDialog(!openDialog)}>
+									{/* <DialogTrigger>Open</DialogTrigger> */}
+									<DialogContent>
+										<DialogHeader>
+											<DialogTitle>Archive Project?</DialogTitle>
+											<DialogDescription>
+												Are you sure, you want to Archive this Project: <b>{proj.title}</b>
+											</DialogDescription>
+										</DialogHeader>
+										<DialogFooter>
+											<Button onClick={() => onArchiveClick(proj._id, proj.isArchived)}>Yes, Archive</Button>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
 
 							</div>
 						</Link>

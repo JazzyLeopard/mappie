@@ -3,9 +3,6 @@ import {
 	query,
 } from "@/convex/_generated/server";
 import { v } from "convex/values";
-import { Doc, Id } from "./_generated/dataModel";
-import projects from "@/pages/api/projects";
-import { describe } from "node:test";
 
 export const getProjects = query({
 	handler: async (ctx) => {
@@ -18,7 +15,8 @@ export const getProjects = query({
 		const projects = await ctx.db
 			.query("projects")
 			.filter((q) =>
-				q.eq(q.field("userId"), identity?.subject)
+				q.and(q.eq(q.field("userId"), identity?.subject),
+					q.eq(q.field("isArchived"), false))
 			)
 			?.collect();
 
