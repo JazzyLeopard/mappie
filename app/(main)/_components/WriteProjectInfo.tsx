@@ -113,7 +113,6 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
       const menu = menuItems;
       Object.keys(project).forEach(ok => {
         if (project[ok] && project[ok].length > 0) {
-          console.log(project[ok]);
           menu.forEach(m => {
             if (m.key == ok) {
               m.active = true;
@@ -140,7 +139,6 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
     } catch (error) {
       console.log('error updating project', error);
     }
-    // setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 
   const handleItemClick = (index: any) => {
@@ -157,29 +155,6 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
   return (
     <div>
       <div className="flex justify-between items-center">
-
-        {/* <div
-          ref={divRef}
-          contentEditable
-          className="text-3xl font-semibold"
-          onInput={handleInputChange}
-          suppressContentEditableWarning={true}
-        >
-          {projectDetails.title}
-        </div> */}
-        {/* <CKEditor
-          editor={InlineEditor}
-          data={projectDetails.title}
-          onBlur={(event, editor) => onEditorBlur(event, editor, 'title')}
-          onChange={(event, editor) => handleEditorChange(event, editor, 'title')}
-          onReady={(editor) => {
-            editor.ui.view.editable.element!.style.height = "100px";
-            editor.ui.view.editable.element!.style.fontWeight = "600";
-            editor.ui.view.editable.element!.style.fontSize = "1.875rem";
-            editor.ui.view.editable.element!.style.lineHeight = "2.25rem";
-          }}
-
-        /> */}
         <LabelToInput value={projectDetails.title}
           setValue={(val) => setProjectDetails({ ...projectDetails, title: val })}
           onBlur={onEditorBlur} />
