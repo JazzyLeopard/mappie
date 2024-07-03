@@ -100,6 +100,7 @@ export const createProject = mutation({
 			description: '',
 			objectives: '',
 			isArchived: false,
+			onboarding: 1,
 			createdAt: BigInt(Date.now()), // Use BigInt for timestamps
 			updatedAt: BigInt(Date.now()), // Use BigInt for timestamps
 		});
@@ -122,6 +123,7 @@ export const updateProject = mutation({
 		dependencies: v.optional(v.string()),
 		priorities: v.optional(v.string()),
 		risks: v.optional(v.string()),
+		onboarding: v.optional(v.number()),
 		isArchived: v.optional(v.boolean()),
 		isPublished: v.optional(v.boolean()),
 
