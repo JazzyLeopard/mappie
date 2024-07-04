@@ -9,7 +9,7 @@ const RisksIcon = () => {
       viewBox="0 0 20 21"
     >
       <path
-        stroke="#757575"
+        stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="1.616"
