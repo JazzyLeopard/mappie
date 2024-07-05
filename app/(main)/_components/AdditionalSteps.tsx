@@ -18,6 +18,7 @@ import SparklesLight from "@/icons/SparklesLight";
 import { toTitleCase } from "@/utils/helper";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
 import RoundCheckmark from "@/icons/RoundCheckmark";
+import {useRouter} from "next/navigation";
 
 type MenuItemType = {
   key: string;
@@ -66,13 +67,16 @@ const menuItems: MenuItemType[] = [
   },
 ]
 
-const AdditionalSteps = ({ project, onBackClick }: { project: any, onBackClick: () => void }) => {
+const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: ()=>void }) => {
+  
+
   const [projectDetails, setProjectDetails] = useState(project)
-
+  
   const [components, setComponents] = useState<MenuItemType[]>([]);
-
+  
   const updateProjectMutation = useMutation(api.projects.updateProject);
-
+  
+  const router = useRouter()
 
   useEffect(() => {
     if (project) {
@@ -102,25 +106,13 @@ const AdditionalSteps = ({ project, onBackClick }: { project: any, onBackClick: 
     setComponents(newComponents); 
   }
 
-  const onEditorBlur = async () => {
-    try {
-      console.log('time for API call', projectDetails);
-      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
-      payload.onboarding = await updateProjectMutation(payload)
-    } catch (error) {
-      console.log('error updating project', error);
-    }
-  };
-
   const handleOnBackClick = () => {
     console.log('clicked back in child');
     onBackClick()
   }
 
-  const handleOverviewApi = () =>{
-    return(
-      <Link href="/overview"></Link>
-    )
+  const handleOnContinue = () =>{
+    onContinueClick()
   }
 
   return (
@@ -161,7 +153,7 @@ const AdditionalSteps = ({ project, onBackClick }: { project: any, onBackClick: 
             <ChevronLeft className="h-4 w-4 ml-1" />
             Back
           </Button>
-          <Button variant="outline" onClick={handleOverviewApi}>
+          <Button variant="outline" onClick={handleOnContinue}>
             Continue without AI completion
             <ChevronRight className="h-4 w-4 ml-1"/>
           </Button>
