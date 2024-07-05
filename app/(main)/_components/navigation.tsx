@@ -30,6 +30,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+
 export const Navigation = () => {
 	const pathname = usePathname();
 	const router = useRouter();
@@ -204,12 +205,12 @@ export const Navigation = () => {
 					<UserItems />
 				</div>
 
-				<ScrollArea className="mt-4 h-[50rem]">
+				<ScrollArea className="mt-8">
 					{projects?.map((proj) => (
 						<Link href={`/projects/${proj._id}`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
 							<div className="flex">
 								<DropdownIcon />
-								{proj.title}
+								<span className="truncate max-w-[135px]">{proj.title}</span>
 							</div>
 							<div className="group-hover:block px-2">
 								<DropdownMenu>

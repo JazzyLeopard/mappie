@@ -196,7 +196,7 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
             <NavigationMenuItem>
               <Link href="/project" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Compare With AI
+                  Generate Epics
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
@@ -209,7 +209,7 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
           if (c.active) {
             return (
               <div key={c.key} className="border p-3 col-span-6">
-                <h1 className="text-slate-900 text-4xl font-semibold leading-[44.16px]">
+                <h1 className="text-slate-900 text-2xl font-semibold leading-[44.16px]">
                   {toTitleCase(c.key)}
                 </h1>
 

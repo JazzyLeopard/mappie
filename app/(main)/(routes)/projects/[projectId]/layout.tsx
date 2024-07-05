@@ -26,7 +26,7 @@ const ProjectLayout =  ({ params, children }: ProjectProps) => {
         <div className="pb-40">
             <div className="min-w-full md:max-w-3xl lg:max-w-4xl mx-auto">
                 <ProjectNavbar projectTitle={projectTitle} projectId={id} />
-                <div className="pl-[96px]">
+                <div className="">
                     {children}
                 </div>
             </div>
