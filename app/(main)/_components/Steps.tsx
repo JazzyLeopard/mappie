@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Card,
   CardHeader,
@@ -16,6 +15,7 @@ import InlineEditor from '@ckeditor/ckeditor5-build-inline';
 import AdditionalSteps from './AdditionalSteps';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useRouter } from 'next/navigation';
 
 
 const steps = [
@@ -50,16 +50,20 @@ const steps = [
     stepNumber: 5
   },
   {
-    key:'additional steps',
+    key: 'additional steps',
     stepNumber: 6
   }
 ];
 
-const Steps = ({ project }:{project:any}) => {
-  const router = useRouter();
+const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
   const [projectDetails, setProjectDetails] = useState(project);
   const [currentStep, setCurrentStep] = useState(steps[0]);
+  const router = useRouter()
+
+  if(project.onboarding === 0){
+    router.push(`/projects/${project._id}/overview`)
+  }
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
@@ -68,21 +72,52 @@ const Steps = ({ project }:{project:any}) => {
     if (foundStep) {
       setCurrentStep(foundStep);
     }
+    else if (step == 0) {
+      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
+      payload.onboarding = 0;
+      updateProjectMutation(payload);
+    }
   }, [step]);
 
-  const handleContinue = () => {
-    console.log("Additional button clicked")
-    if (step !== 6) {
-      setStep(step + 1);
-    } 
+  useEffect(() => {
+    console.log('set project is called');
+  }, [setProjectDetails])
+
+
+
+  const handleContinue = async () => {
+    try {
+      try {
+        const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
+        payload.onboarding = step;
+        await updateProjectMutation(payload);
+      } catch (error) {
+        console.log('error updating project', error);
+      }
+
+
+      if (step !== 6) {
+        setStep(step + 1);
+      }
+      else {
+        setStep(0)
+      }
+    } catch (error) {
+      console.log('error updating project', error);
+    }
   };
 
-  const handleBack = () => {
-    console.log('handleBack called');
-     if (step > 1) {
+  const handleBack = async () => {
+    try {
+      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
+      payload.onboarding = step - 1;
+      await updateProjectMutation(payload);
+    } catch (error) {
+      console.log('error updating project', error);
+    }
+
+    if (step > 1) {
       setStep(step - 1);
-    } else {
-      router.push(`/project/${project.id}/overview`);
     }
   };
 
@@ -109,7 +144,7 @@ const Steps = ({ project }:{project:any}) => {
 
   return (
     <>
-      {step !== 6 &&  (
+      {step !== 6 && (
         <Card className='mt-8 flex flex-col justify-items-start'>
           <CardHeader>
             <CardTitle>{currentStep?.title}</CardTitle>
@@ -120,7 +155,7 @@ const Steps = ({ project }:{project:any}) => {
                 value={projectDetails.title}
                 placeholder={currentStep?.placeholder}
                 onChange={handleInputChange}
-                onBlur={()=>{onEditorBlur()}}
+                onBlur={onEditorBlur}
               />
             )}
             {step >= 2 && step <= 5 && (
@@ -129,10 +164,10 @@ const Steps = ({ project }:{project:any}) => {
                   key={step} // Use step as key to force re-render
                   editor={InlineEditor}
                   data={projectDetails[currentStep.key] || ''}
-                  onBlur={() => onEditorBlur()}
+                  onBlur={onEditorBlur}
                   onChange={(event, editor) => handleEditorChange(event, editor, currentStep.key)}
                   config={{
-                    placeholder: steps[step-1].placeholder,
+                    placeholder: steps[step - 1].placeholder,
                     toolbar: [
                       'bold',
                       'italic',
@@ -158,14 +193,14 @@ const Steps = ({ project }:{project:any}) => {
                 Back
               </Button>
             )}
-            <Button onClick={handleContinue}> 
+            <Button onClick={handleContinue}>
               {step === 5 ? 'View Additional Steps' : 'Continue'}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </CardFooter>
         </Card>
       )}
-      {step >= 6 && <AdditionalSteps project={project} onBackClick={handleBack} />}
+      {step >= 6 && <AdditionalSteps project={project} onBackClick={handleBack} onContinueClick={handleContinue} />}
     </>
   );
 }
