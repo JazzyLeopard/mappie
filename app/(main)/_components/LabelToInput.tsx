@@ -24,18 +24,27 @@ export default function LabelToInput({ value, setValue, onBlur }: { value: strin
   };
 
   return (
-    <div className="flex items-center mt-10">
+    <div className="flex items-center w-full">
       {isEditing ? (
         <Input
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
-          className="border-gray-300 rounded-md px-3 py-2 text-3xl font-semibold"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent the default action to avoid form submission
+                setValue(value); // Directly update the state with the current value
+                setIsEditing(false); // Set editing to false to close the input field
+                onBlur(); // Call onBlur to handle any additional blur effects
+                console.log('Input updated:', value); // Log the updated value
+            }
+        }}
+          className="border-gray-300 rounded-md px-3 py-2 text-2xl font-semibold"
         />
       ) : (
         <Label
           onClick={handleClick}
-          className="cursor-pointer text-gray-700 hover:text-gray-900 text-3xl font-semibold"
+          className="cursor-pointer text-gray-700 hover:text-gray-900 text-2xl font-semibold"
         >
           {value || 'Click to edit'}
         </Label>

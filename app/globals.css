@@ -65,6 +65,7 @@
       --ring: 212.7 26.8% 83.9%;
     }
   }
+  
 
   @layer base {
     * {
@@ -78,8 +79,8 @@
 
   .ck-editor__editable_inline[contenteditable="true"]:focus {
     outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
+    box-shadow: none !important;
+    min-height: auto !important;
   }
 
   .ck-focused {
@@ -93,9 +94,21 @@
     color: #999;
     display: block;
     pointer-events: none;
-    height: 0; /* Important for the placeholder to be shown in the same line */
+    border-radius: 0.5rem !important;
+    height: 0px !important;
   }
   
+  .ck-editor__editable_inline > .ck-placeholder::before {
+    display:inline;
+    content: attr(data-placeholder);
+    color: #a0a0a0;
+    pointer-events: none;
+  }
+
   .ck-editor__editable_inline[contenteditable="true"]:focus::before {
     display: none;
+  }
+
+  .scroll-mt-header {
+    scroll-margin-top: 106px; /* Adjust this value to match your header height */
   }

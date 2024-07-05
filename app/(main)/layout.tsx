@@ -17,7 +17,7 @@ const MainLayout = ({
 
 	if (isLoading) {
 		return (
-			<div className="h-full flex items-center justify-center ">
+			<div className="h-full w-full flex items-center justify-center ">
 				<Spinner size={"lg"} />
 			</div>
 		);
@@ -28,14 +28,13 @@ const MainLayout = ({
 	}
 
 	return (
-		<div className="flex" style={{height: "calc(100vh - 15px)"}}>
-			<Navigation />
-			{/* flex flex-1 overflow-y-auto */}
-			<main className="flex flex-1 ">
-				{children}
-			</main>
-		</div>
-	);
+        <div className="flex h-[calc(100vh)] overflow-hidden">
+            <Navigation />
+            <main className="overflow-y-hidden w-full">
+                {children}
+            </main>
+        </div>
+    );
 };
 
 export default MainLayout;

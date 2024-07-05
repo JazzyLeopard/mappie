@@ -1,5 +1,6 @@
 'use client'
 import WriteProjectInfo from "@/app/(main)/_components/WriteProjectInfo";
+import ProjectLayout from "@/app/(main)/_components/projectLayout";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -23,7 +24,7 @@ const ProjectOverviewPage = ({ params }: ProjectOverviewPageProps) => {
     }
 
     if (project) {
-        return <WriteProjectInfo project={project} />
+        return <ProjectLayout project={project} />
     }
 }
 
