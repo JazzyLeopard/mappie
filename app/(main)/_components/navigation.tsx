@@ -207,7 +207,7 @@ export const Navigation = () => {
 
 				<ScrollArea className="mt-8">
 					{projects?.map((proj) => (
-						<Link href={`/projects/${proj._id}`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
+						<Link href={proj.onboarding === 0 ? `/projects/${proj._id}` : `/projects/${proj._id}/onboarding`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
 							<div className="flex">
 								<DropdownIcon />
 								<span className="truncate max-w-[135px]">{proj.title}</span>
