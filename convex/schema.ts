@@ -7,6 +7,7 @@ export default defineSchema({
 		title: v.string(),	
 		description: v.string(),
 		objectives: v.string(),
+		onboarding: v.number(),
 		stakeholders: v.optional(v.string()),
 		scope: v.optional(v.string()),
 		targetAudience: v.optional(v.string()),
