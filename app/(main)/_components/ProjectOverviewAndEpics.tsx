@@ -9,8 +9,8 @@ interface WriteProjectInfoProps {
 const ProjectOverviewAndEpics: React.FC<WriteProjectInfoProps> = ({ projectTitle, projectId }) => {
 
   return (
-    <div className="grid gap-4">
-      <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">
+    <div className="grid gap-4 mt-20 mx-24">
+      <h1 className="text-slate-900 text-5xl font-semibold leading-[48px]">
         {projectTitle}
       </h1>
 

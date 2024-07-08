@@ -68,15 +68,9 @@ const menuItems: MenuItemType[] = [
 ]
 
 const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: ()=>void }) => {
-  
 
-  const [projectDetails, setProjectDetails] = useState(project)
-  
   const [components, setComponents] = useState<MenuItemType[]>([]);
-  
-  const updateProjectMutation = useMutation(api.projects.updateProject);
-  
-  const router = useRouter()
+
 
   useEffect(() => {
     if (project) {
@@ -117,24 +111,24 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
 
   return (
     <>
-      <Card>
+      <Card className="mt-16 mx-24">
         <CardHeader>
           <CardTitle className="mb-4">Which other elements do you want to add to your project overview?</CardTitle>
-          <CardTitle className="w-full h-12 flex items-center rounded-xl p-4 text-sm font-medium bg-[#f1f5f9]"><Sparkles stroke="#FB8C00" />
-            &nbsp;&nbsp;Select elements and complete with AI</CardTitle>
+          <div className="h-12 flex items-center rounded-xl p-4 text-sm font-medium bg-[#f1f5f9]"><Sparkles stroke="#FB8C00" />
+            &nbsp;&nbsp;Select elements and complete with AI</div>
         </CardHeader>
-        <CardContent className="flex justify-center items-center flex-col m-6">
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent className="flex justify-center items-center flex-col p-0">
+          <div className="grid grid-cols-2 gap-6 w-[calc(100%-60px)]">
             {components.map((component, index) => (
               <div
                 key={toTitleCase(component.key)}
-                className={`flex justify-center items-center gap-3 ${component.active === true ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
+                className={`flex justify-center items-center gap-8 ${component.active === true ? "border border-black" : "border"} py-4 rounded cursor-pointer select-none`}
                 onClick={() => !component.required && handleItemClick(index)}
               >
                 <div>{component.icon}</div>
                 <div>
                   <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
-                  <p className="text-sm">{component.description}</p>
+                  <p className="text-sm mt-1">{component.description}</p>
                 </div>
                 <div>
                   {component.active === true ? (
@@ -146,7 +140,7 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
               </div>
             ))}
           </div>
-          <Button className="my-5"><SparklesLight />&nbsp;&nbsp;Complete selected elements with AI</Button>
+          <Button className="my-6"><SparklesLight />&nbsp;&nbsp;Complete selected elements with AI</Button>
         </CardContent>
         <CardFooter className="mt-5 flex justify-between">
           <Button variant="outline"onClick={handleOnBackClick}>
