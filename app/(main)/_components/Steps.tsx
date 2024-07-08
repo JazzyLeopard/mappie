@@ -58,49 +58,32 @@ const steps = [
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
   const [projectDetails, setProjectDetails] = useState(project);
-  const [currentStep, setCurrentStep] = useState(steps[0]);
+
   const router = useRouter()
 
-  if(project.onboarding === 0){
+  if (project.onboarding === 0) {
     router.push(`/projects/${project._id}/overview`)
   }
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
   useEffect(() => {
-    const foundStep = steps.find(s => s.stepNumber === step);
-    if (foundStep) {
-      setCurrentStep(foundStep);
-    }
-    else if (step == 0) {
+    if (step == 0) {
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
       payload.onboarding = 0;
       updateProjectMutation(payload);
     }
   }, [step]);
 
-  useEffect(() => {
-    console.log('set project is called');
-  }, [setProjectDetails])
-
-
-
   const handleContinue = async () => {
     try {
-      try {
-        const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
-        payload.onboarding = step;
-        await updateProjectMutation(payload);
-      } catch (error) {
-        console.log('error updating project', error);
-      }
-
-
+      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
+      payload.onboarding = step;
+      await updateProjectMutation(payload);
       if (step !== 6) {
         setStep(step + 1);
-      }
-      else {
-        setStep(0)
+      } else {
+        setStep(0);
       }
     } catch (error) {
       console.log('error updating project', error);
@@ -112,12 +95,11 @@ const Steps = ({ project }: { project: any }) => {
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
       payload.onboarding = step - 1;
       await updateProjectMutation(payload);
+      if (step > 1) {
+        setStep(step - 1);
+      }
     } catch (error) {
       console.log('error updating project', error);
-    }
-
-    if (step > 1) {
-      setStep(step - 1);
     }
   };
 
@@ -145,15 +127,15 @@ const Steps = ({ project }: { project: any }) => {
   return (
     <>
       {step !== 6 && (
-        <Card className='mt-8 flex flex-col justify-items-start'>
+        <Card className='mt-16 mx-24'>
           <CardHeader>
-            <CardTitle>{currentStep?.title}</CardTitle>
+            <CardTitle>{steps[step - 1].title}</CardTitle>
           </CardHeader>
-          <CardContent className='w-full'>
+          <CardContent className=''>
             {step === 1 && (
-              <Input className='w-full mt-2'
+              <Input className='mt-2'
                 value={projectDetails.title}
-                placeholder={currentStep?.placeholder}
+                placeholder={steps[step - 1].placeholder}
                 onChange={handleInputChange}
                 onBlur={onEditorBlur}
               />
@@ -163,9 +145,9 @@ const Steps = ({ project }: { project: any }) => {
                 <CKEditor
                   key={step} // Use step as key to force re-render
                   editor={InlineEditor}
-                  data={projectDetails[currentStep.key] || ''}
+                  data={projectDetails[steps[step - 1].key] || ''}
                   onBlur={onEditorBlur}
-                  onChange={(event, editor) => handleEditorChange(event, editor, currentStep.key)}
+                  onChange={(event, editor) => handleEditorChange(event, editor, steps[step - 1].key)}
                   config={{
                     placeholder: steps[step - 1].placeholder,
                     toolbar: [

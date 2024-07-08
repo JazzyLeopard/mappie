@@ -36,6 +36,7 @@ import {
     DialogTrigger,
     DialogFooter,
   } from "@/components/ui/dialog";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 type MenuItemType = {
     key: string;
@@ -78,18 +79,21 @@ type MenuItemType = {
       icon: <PeopleIcon />,
       description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
       active: false,
+      required: true
     },
     {
-        key: "stakeholders",
-        icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-      },
+      key: "stakeholders",
+      icon: <PeopleIcon />,
+      description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+      active: false,   
+      required: true
+    },
     {
       key: "scope",
       icon: <ScopeIcon />,
       description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
       active: false,
+      required: true
     },
     {
       key: "targetAudience",
@@ -136,7 +140,7 @@ const ProjectLayout = ({ project }: { project: any }) => {
     const [components, setComponents] = useState<MenuItemType[]>(() => {
         return menuItems.map(item => ({
             ...item,
-            active: ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase())
+            active: ['description', 'objectives', 'requirements', 'stakeholders','scope'].includes(item.key.toLowerCase())
         }));
     });
   
@@ -200,7 +204,7 @@ const ProjectLayout = ({ project }: { project: any }) => {
     };
 
     return (
-        <div className="flex h-screen w-full">
+        <div className="flex h-screen w-full px-0 mt-0">
             <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
                 <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
                     <LabelToInput value={projectDetails.title}
@@ -236,7 +240,9 @@ const ProjectLayout = ({ project }: { project: any }) => {
                                     ))}
                                 </ul>
                                 <DialogFooter>
-                                    <Button onClick={() => console.log('Close modal')}>Close</Button>
+                                    <DialogClose>
+                                        <Button>Close</Button>
+                                    </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
