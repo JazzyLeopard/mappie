@@ -34,8 +34,10 @@ const ProjectsPage = () => {
 
 		toast.promise(promise, {
 			loading: "Creating new project...",
-			success: "New project created",
-			error: "Failed to create project",
+			success: (data) => {
+				router.push(`/projects/${data}/onboarding`)
+				return "New project created"
+			}, error: "Failed to create project",
 		});
 	};
 
