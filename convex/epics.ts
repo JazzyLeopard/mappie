@@ -1,4 +1,4 @@
-import { mutation } from "@/convex/_generated/server";
+import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
 
 export const createUserStory = mutation({
@@ -32,11 +32,37 @@ export const createUserStory = mutation({
 	},
 });
 
+export const getEpics = query({
+	handler: async (ctx) => {
+	  const identity = await ctx.auth.getUserIdentity();
+  
+	  if (!identity) {
+		throw new Error("Not Authenticated");
+	  }
+  
+	  const epics = await ctx.db
+		.query("epics")
+		.filter((q) =>
+		  q.and(
+			// q.eq(q.field(""), identity?.subject),
+		  ),
+		)
+		?.collect();
+  
+	  return epics;
+	},
+});
+
 export const updateEpic = mutation({
 	args: {
 		id: v.id("epics"),
 		name: v.optional(v.string()),
 		description: v.optional(v.string()),
+		objectives: v.optional(v.string()),
+		requirements: v.optional(v.string()),
+		stakeholders: v.optional(v.string()),
+		timeline: v.optional(v.string()),
+		successMetrics: v.optional(v.string()),
 		status: v.optional(v.string()),
 		startDate: v.optional(v.string()),
 		endDate: v.optional(v.string()),
@@ -67,3 +93,37 @@ export const deleteEpic = mutation({
 		await ctx.db.delete(args.id);
 	},
 });
+
+export const createEpics = mutation({
+    args: {
+        projectId: v.id("projects"),
+        title: v.string(),
+        // description: v.string(),
+        // objectives: v.string(),
+        // requirements: v.optional(v.string()),
+        // stakeholders: v.optional(v.string()),
+        // timeline: v.optional(v.string()),
+        // successMetrics: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new Error("Not Authenticated");
+        }
+
+        const userId = identity.subject;
+
+        const epic = await ctx.db.insert("epics", {
+            title: args.title,
+            description: "",
+            objectives: "",
+            status: "",
+            projectId: args.projectId,
+            createdAt: BigInt(Date.now()), // Use BigInt for timestamps
+            updatedAt: BigInt(Date.now()),
+        });
+
+        return epic;
+    },
+})
