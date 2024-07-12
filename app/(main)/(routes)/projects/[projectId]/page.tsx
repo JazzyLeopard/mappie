@@ -1,11 +1,10 @@
 "use client";
-import ProjectNavbar from "@/app/(main)/_components/ProjectNavbar";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import Spinner from "@/components/ui/spinner";
-import { Link } from "lucide-react";
-import ProjectOverviewAndEpics from "@/app/(main)/_components/ProjectOverviewAndEpics";
+import ProjectLayout from "@/app/(main)/_components/projectLayout";
+import { useRouter } from "next/navigation";
 
 interface ProjectIdPageProps {
   params: {
@@ -15,15 +14,21 @@ interface ProjectIdPageProps {
 
 const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   const id = params.projectId;
-  const projectTitle = useQuery(api.projects.getProjectNameById, {
+  const router = useRouter();
+  const project = useQuery(api.projects.getProjectById, {
     projectId: id,
   });
 
-  if (projectTitle === undefined) {
+  if (project === undefined) {
     return <div className="flex justify-center items-center mx-auto"><Spinner /></div>;
   }
 
-  return <ProjectOverviewAndEpics projectTitle={projectTitle} projectId={id} />
+  if (project.onboarding != 0) {
+    router.push(`/projects/${id}/onboarding`);
+    return;
+  }
+
+  return <ProjectLayout project={project} />
 };
 
 export default ProjectIdPage;

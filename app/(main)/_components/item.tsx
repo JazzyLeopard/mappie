@@ -53,7 +53,7 @@ const Item = ({
 	const onCreate = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		event.stopPropagation();
 
-		const promise = create({ title: "Untitled", parentProject: id }).then(() => {
+		const promise = create({ title: "Untitled" }).then(() => {
 			if (!expanded) {
 				onExpand?.();
 			}
