@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Item from './item'
+import { useRouter } from "next/navigation";
 
 interface projectLitsProps {
     parenProjectId?: Id<"projects">;
@@ -20,7 +21,7 @@ export const ProjectList = ({
     data
 }: projectLitsProps) => {
     const params = useParams()
-    // const router = useRouter()
+    const router = useRouter()
     const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
     const onExpand = (projectId: string) => {
@@ -49,11 +50,20 @@ export const ProjectList = ({
     //     router.push(`/projects/${projectId}`)
     // }
 
+    const navigateToProject = (id: string, onboardingStatus: number) => {
+        if (onboardingStatus != 0) {
+            router.push(`/projects/${id}/onboarding`)
+            return
+        }
+        router.push(`/projects/${id}`)
+    }
+
     return (
         <>
             <p
                 style={{
-                    paddingLeft: level ? `${(level * 12) + 25}px` : undefined
+                    paddingLeft: level ? `${(level * 12) + 25}px` : undefined,
+                    textAlign: 'center'
                 }}
                 className={cn(
                     "hidden text-sm font-medium text-muted-foreground/80",
@@ -61,13 +71,13 @@ export const ProjectList = ({
                     level === 0 && "hidden"
                 )}
             >
-                No pages inside
+                No Projects Found
             </p>
             {data.map((project) => (
                 <div key={project._id}>
                     <Item
                         id={project._id}
-                        onClick={() => { }}
+                        onClick={() => navigateToProject(project._id, project.onboarding)}
                         // onClick={() => onRedirect(project._id)}
                         label={project.title}
                         icon={null}
