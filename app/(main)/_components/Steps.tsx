@@ -15,7 +15,6 @@ import InlineEditor from '@ckeditor/ckeditor5-build-inline';
 import AdditionalSteps from './AdditionalSteps';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useRouter } from 'next/navigation';
 
 
 const steps = [
@@ -58,12 +57,6 @@ const steps = [
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
   const [projectDetails, setProjectDetails] = useState(project);
-
-  const router = useRouter()
-
-  if (project.onboarding === 0) {
-    router.push(`/projects/${project._id}/overview`)
-  }
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
