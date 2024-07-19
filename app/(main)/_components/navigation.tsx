@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import {
-	ChevronRight,
 	ChevronsLeft,
 	MenuIcon,
 	PlusCircle,
@@ -21,15 +20,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Item from "./item";
 import { Toaster, toast } from "sonner";
-import DropdownIcon from "@/icons/DropdownIcon";
-import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Id } from "@/convex/_generated/dataModel";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { ProjectList } from "./project-list";
 
 
@@ -170,12 +161,6 @@ export const Navigation = () => {
 			error: "Failed to create project",
 		});
 	};
-
-	const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
-		await archiveProject({ _id: id, isArchived: !isArchived })
-		setOpenDialog(false)
-		router.push(`/projects`);
-	}
 
 	return (
 		<>

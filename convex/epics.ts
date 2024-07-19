@@ -32,6 +32,36 @@ export const createUserStory = mutation({
 	},
 });
 
+export const getEpicById = query({
+	args: { epicId: v.id("epics") },
+	handler: async (ctx, { epicId }) => {
+	  const identity = await ctx.auth.getUserIdentity();
+  
+	  if (!identity) {
+		throw new Error("Not Authenticated");
+	  }
+  
+	  if (!epicId) {
+		throw new Error("Project ID is required");
+	  }
+  
+	  const epic = await ctx.db
+		.query("epics")
+		.filter((q) =>
+		  q.and(
+			q.eq(q.field("_id"), epicId),
+		  ),
+		)
+		.first();
+  
+	  if (!epic) {
+		throw new Error("Epic not found");
+	  }
+  
+	  return epic;
+	},
+  });
+
 export const getEpics = query({
 	handler: async (ctx) => {
 	  const identity = await ctx.auth.getUserIdentity();
@@ -98,12 +128,6 @@ export const createEpics = mutation({
     args: {
         projectId: v.id("projects"),
         title: v.string(),
-        // description: v.string(),
-        // objectives: v.string(),
-        // requirements: v.optional(v.string()),
-        // stakeholders: v.optional(v.string()),
-        // timeline: v.optional(v.string()),
-        // successMetrics: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();

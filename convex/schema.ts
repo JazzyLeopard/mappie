@@ -7,7 +7,7 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     objectives: v.string(),
-    onboarding: v.number(),
+    requirements: v.optional(v.string()),
     stakeholders: v.optional(v.string()),
     scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
@@ -16,6 +16,7 @@ export default defineSchema({
     dependencies: v.optional(v.string()),
     priorities: v.optional(v.string()),
     risks: v.optional(v.string()),
+    onboarding: v.number(),
     isArchived: v.boolean(),
     isPublished: v.optional(v.boolean()),
     createdAt: v.int64(), // Storing timestamp as bigint (milliseconds since Unix epoch)

@@ -67,8 +67,6 @@ const Item = ({
 			error: "Failed to create project",
 		});
 	};
-
-
 	const ChevronIcon = expanded ? ChevronDown : ChevronRight;
 
 	return (
@@ -116,7 +114,7 @@ const Item = ({
 									<MoreHorizontal className="h-4 w-4 text-gray-500" />
 								</div>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end">
+							<DropdownMenuContent align="center">
 								<DropdownMenuItem onClick={() => setOpenDialog(!openDialog)}>Archive</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
