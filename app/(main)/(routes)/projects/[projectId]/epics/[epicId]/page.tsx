@@ -1,5 +1,5 @@
 'use client'
-import { menuItems } from "@/app/(main)/_components/constants";
+import { epicMenuItems, menuItems } from "@/app/(main)/_components/constants";
 import ProjectLayout from "@/app/(main)/_components/projectLayout";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -7,29 +7,28 @@ import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 
-type ProjectOverviewPageProps = {
+type EpicsPageProps = {
     params: {
-        projectId: Id<"projects">;
+        epicId: Id<"epics">;
     };
 }
 
-const ProjectOverviewPage = ({ params }: ProjectOverviewPageProps) => {
+const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
 
     const [projectDetails, setProjectDetails] = useState<any>()
 
-    const id = params.projectId;
+    const id = params.epicId;
 
-    const updateProjectMutation = useMutation(api.projects.updateProject)
+    const updateEpicMutation = useMutation(api.epics.updateEpic)
 
-    const project = useQuery(api.projects.getProjectById, {
-        projectId: id,
+    const epic = useQuery(api.epics.getEpicById, {
+        epicId: id,
     });
 
     useEffect(() => {
-        if (project)
-            setProjectDetails(project)
-    }, [project])
-
+        if (epic)
+            setProjectDetails(epic)
+    }, [epic])
 
     const updateLabel = (val: string) => {
         setProjectDetails({ ...projectDetails, title: val });
@@ -39,7 +38,7 @@ const ProjectOverviewPage = ({ params }: ProjectOverviewPageProps) => {
         try {
             console.log('time for API call', projectDetails);
             const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
-            await updateProjectMutation(payload)
+            await updateEpicMutation(payload)
         } catch (error) {
             console.log('error updating project', error);
         }
@@ -50,14 +49,15 @@ const ProjectOverviewPage = ({ params }: ProjectOverviewPageProps) => {
         setProjectDetails({ ...projectDetails, [attribute]: data });
     };
 
-    if (project instanceof Error) {
-        return <div>Error: {project.message}</div>;
+
+    if (epic instanceof Error) {
+        return <div>Error: {epic.message}</div>;
     }
 
     if (projectDetails) {
         return <ProjectLayout
             project={projectDetails}
-            menu={menuItems}
+            menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
             updateLabel={updateLabel}
             handleEditorChange={handleEditorChange} />

@@ -209,6 +209,7 @@ export const updateProject = mutation({
     description: v.optional(v.string()),
     objectives: v.optional(v.string()),
     stakeholders: v.optional(v.string()),
+    requirements: v.optional(v.string()),
     scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
     constraints: v.optional(v.string()),

@@ -3,11 +3,10 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
   CardContent
 } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Component } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
@@ -65,6 +64,7 @@ const Steps = ({ project }: { project: any }) => {
     router.push(`/projects/${project._id}/overview`)
   }
 
+
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
   useEffect(() => {
@@ -115,7 +115,6 @@ const Steps = ({ project }: { project: any }) => {
 
   const onEditorBlur = async () => {
     try {
-      console.log('time for API call', projectDetails);
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
       payload.onboarding = step
       await updateProjectMutation(payload)
@@ -129,7 +128,7 @@ const Steps = ({ project }: { project: any }) => {
       {step !== 6 && (
         <Card className='mt-16 mx-24'>
           <CardHeader>
-            <CardTitle>{steps[step - 1].title}</CardTitle>
+            <CardTitle>{steps[step - 1]?.title}</CardTitle>
           </CardHeader>
           <CardContent className=''>
             {step === 1 && (

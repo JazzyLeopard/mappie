@@ -13,12 +13,11 @@ interface EpicsPageProps {
 }
 
 const EpicsPage = ({ params }: EpicsPageProps) => {
-
     const id = params.projectId
-
     const createEpic = useMutation(api.epics.createEpics)
 
     const onCreateEpic = (projectId: Id<"projects">) => {
+        console.log("Create Epic called")
         const mypromise = createEpic({
             title: "Untitled Epic",
             projectId: projectId,
@@ -32,9 +31,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     }
 
     return (
-        <>
-            <Button className="mt-40" onClick={() => onCreateEpic(id)}>Create Epic</Button>
-        </>
+        <Button onClick={() => onCreateEpic(id)}>Create Epic</Button>
     )
 }
 
