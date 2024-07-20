@@ -18,11 +18,11 @@ const ProjectsPage = () => {
 	if (!isSignedIn) {
 		return <>Not signed in..</>
 	}
-	const projects = useQuery(api.projects.getProjects);
+	const projectId = useQuery(api.projects.getFirstProjectId);
 
-	// if (projects && projects?.length > 0) {
-	// 	router.push(`/projects/${projects[0]._id}`);
-	// }
+	if (projectId) {
+		router.push(`/projects/${projectId}`);
+	}
 	const createProject = useMutation(
 		api.projects.createProject
 	);
@@ -44,7 +44,7 @@ const ProjectsPage = () => {
 	return (
 		<>
 			<div className="h-full w-full flex flex-col items-center justify-center space-y-6">
-				{projects?.length === 0 && (
+				{!projectId || projectId.length <= 0 && (
 					<>
 						<h1 className="text-3xl font-semibold mb-8">
 							{user?.firstName || user?.primaryEmailAddress?.emailAddress.split('@')[0]}&apos;s space
@@ -58,7 +58,7 @@ const ProjectsPage = () => {
 						/>
 
 						<h2 className="text-xl font-semibold">
-							You haven’t created any projects...
+							You haven't created any projects...
 						</h2>
 
 						<Button variant="default" onClick={onCreate}>
