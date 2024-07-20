@@ -60,7 +60,7 @@ export const NavList = ({
                 router.push(`/projects/${data._id}/onboarding`)
                 return
             }
-            router.push(`/projects/${data._id}/overview`)
+            router.push(`/projects/${data._id}`)
         }
         // Epic navigation
         else if (level == 1) {
@@ -94,7 +94,7 @@ export const NavList = ({
                         // onClick={() => onRedirect(project._id)}
                         label={project.title}
                         icon={null}
-                        active={params?.documentId === project._id}
+                        active={params?.projectId === project._id}
                         level={level}
                         onExpand={() => onExpand(project._id)}
                         expanded={expanded[project._id]}
