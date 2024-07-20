@@ -21,7 +21,7 @@ const ProjectsPage = () => {
 	const projectId = useQuery(api.projects.getFirstProjectId);
 
 	if (projectId) {
-		router.push(`/projects/${projectId}/overview`);
+		router.push(`/projects/${projectId}`);
 	}
 	const createProject = useMutation(
 		api.projects.createProject
