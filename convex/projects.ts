@@ -2,64 +2,51 @@ import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
 import { Project } from "next/dist/build/swc";
 
-// export const getSidebar = query({
-//   args: {
-//     parentProject: v.optional(v.id("projects")),
-//   },
-//   handler: async (ctx, args) => {
-//     const identity = await ctx.auth.getUserIdentity();
 
-//     if (!identity) {
-//       throw new Error("Not authenticated");
-//     }
+export const getSidebar = query(async (ctx) => {
 
-//     const userId = identity.subject;
+  const identity = await ctx.auth.getUserIdentity();
 
-//     const projects = await ctx.db
-//       .query("projects")
-//       .withIndex("by_user_parent", (q) =>
-//         q.eq("userId", userId).eq("parentProject", args.parentProject),
-//       )
-//       .filter((q) => q.eq(q.field("isArchived"), false))
-//       .order("desc")
-//       .collect();
-
-//     return projects;
-//   },
-// });
-
-export const getProjectsWithEpicsAndUserStories = query(async (ctx) => {
   const projects = await ctx.db.query("projects")
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("userId"), identity?.subject),
+        q.eq(q.field("isArchived"), false),
+      ),
+    )
     .order("desc")
     .collect();
 
   const projectsWithEpicsAndUserStories = await Promise.all(
     projects.map(async (project) => {
       const epics = await ctx.db.query("epics")
-      .filter((q) => q.eq(q.field("projectId"), project._id))
-      
+        .filter((q) => q.eq(q.field("projectId"), project._id))
+
         .order("desc")
         .collect();
 
       const epicsWithUserStories = await Promise.all(
         epics.map(async (epic) => {
           const userStories = await ctx.db.query("userStories")
-          .filter((q) => q.eq(q.field("epicId"), epic._id))
-          
+            .filter((q) => q.eq(q.field("epicId"), epic._id))
+
             .order("desc")
             .collect();
 
+          userStories.map(us => { return { ...us, type: 'user-story' } })
           return {
-            id: epic._id,
+            _id: epic._id,
             title: epic.title,
+            type: 'epic',
             userStories,
           };
         })
       );
 
       return {
-        id: project._id,
+        _id: project._id,
         title: project.title,
+        type: 'project',
         epics: epicsWithUserStories,
       };
     })
@@ -68,7 +55,7 @@ export const getProjectsWithEpicsAndUserStories = query(async (ctx) => {
   return projectsWithEpicsAndUserStories;
 });
 
-export const getSidebar = query({
+export const getFirstProjectId = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
 
@@ -76,17 +63,16 @@ export const getSidebar = query({
       throw new Error("Not Authenticated");
     }
 
-    const projects = await ctx.db
+    const project = await ctx.db
       .query("projects")
       .filter((q) =>
         q.and(
           q.eq(q.field("userId"), identity?.subject),
           q.eq(q.field("isArchived"), false),
         ),
-      )
-      ?.collect();
+      ).first();
 
-    return projects;
+    return project?._id;
   },
 });
 

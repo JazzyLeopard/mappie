@@ -18,19 +18,15 @@ import { useMediaQuery } from "usehooks-ts";
 import UserItems from "./UserItems";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import Item from "./item";
 import { Toaster, toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { ProjectList } from "./project-list";
+import { NavList } from "./NavList";
+import NavItem from "./NavItem";
 
 
 export const Navigation = () => {
 	const pathname = usePathname();
-	const router = useRouter();
 
-	const archiveProject = useMutation(api.projects.archiveProject)
-
-	const projects = useQuery(api.projects.getProjects);
+	const sidebarData = useQuery(api.projects.getSidebar);
 
 	const createProject = useMutation(api.projects.createProject);
 
@@ -187,11 +183,11 @@ export const Navigation = () => {
 					<UserItems />
 				</div>
 				<div className="mt-4">
-					<ProjectList data={projects} />
+					<NavList data={sidebarData} />
 				</div>
 
 				<div>
-					<Item
+					<NavItem
 						label="New Project"
 						onClick={onCreate}
 						icon={PlusCircle}
