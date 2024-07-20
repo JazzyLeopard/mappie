@@ -2,12 +2,14 @@
 import Link from "next/link";
 
 interface WriteProjectInfoProps {
-  projectId: string
-  projectTitle: string
+  projectId: string;
+  projectTitle: string;
 }
 
-const ProjectOverviewAndEpics: React.FC<WriteProjectInfoProps> = ({ projectTitle, projectId }) => {
-
+const ProjectOverviewAndEpics: React.FC<WriteProjectInfoProps> = ({
+  projectTitle,
+  projectId,
+}) => {
   return (
     <div className="grid gap-4">
       <h1 className="text-slate-900 text-5xl font-semibold leading-[48px] mt-10">

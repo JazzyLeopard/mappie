@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
@@ -11,8 +11,6 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import PeopleIcon from "@/icons/PeopleIcon";
 import RoundCheckmark from "@/icons/RoundCheckmark";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
@@ -126,7 +124,7 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
   }, [project])
   // Use a timeout to debounce the input changes
 
-  const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
+  /*const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
     const data = editor.getData();
     setProjectDetails({ ...projectDetails, [attribute]: data });
   };
@@ -247,4 +245,4 @@ const WriteProjectInfo = ({ project }: { project: any }) => {
   );
 };
 
-export default WriteProjectInfo;
+export default WriteProjectInfo; */
