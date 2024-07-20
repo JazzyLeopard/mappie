@@ -12,7 +12,7 @@ import { DialogHeader, DialogFooter, Dialog, DialogContent, DialogDescription, D
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-interface ItemProps {
+interface NavItemProps {
 	id?: Id<"projects">;
 	active?: boolean;
 	expanded?: boolean;
@@ -23,7 +23,7 @@ interface ItemProps {
 	onClick?: () => void;
 }
 
-const Item = ({
+const NavItem = ({
 	id,
 	active,
 	expanded,
@@ -32,9 +32,10 @@ const Item = ({
 	label,
 	onClick,
 	icon: Icon,
-}: ItemProps) => {
+}: NavItemProps) => {
 	const router = useRouter()
-	const create = useMutation(api.projects.createProject);
+	const createProject = useMutation(api.projects.createProject);
+	const createEpic = useMutation(api.epics.createEpics);
 	const archiveProject = useMutation(api.projects.archiveProject)
 	const [openDialog, setOpenDialog] = useState(false)
 
@@ -53,19 +54,22 @@ const Item = ({
 	const onCreate = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		event.stopPropagation();
 
-		const promise = create({ title: "Untitled" }).then(() => {
-			if (!expanded) {
-				onExpand?.();
-			}
-		}).catch((error) => {
-			console.error("Error creating project:", error);
-		});
+		// create an EPIC if click + on Project Name
+		if (level == 0 && id) {
+			const promise = createEpic({ title: "Untitled Epic", projectId: id }).then(() => {
+				if (!expanded) {
+					onExpand?.();
+				}
+			}).catch((error) => {
+				console.error("Error creating epic:", error);
+			});
 
-		toast.promise(promise, {
-			loading: "Creating new project...",
-			success: "New project created",
-			error: "Failed to create project",
-		});
+			toast.promise(promise, {
+				loading: "Creating new epic...",
+				success: "New Epic created",
+				error: "Failed to create Epic",
+			});
+		}
 	};
 	const ChevronIcon = expanded ? ChevronDown : ChevronRight;
 
@@ -98,7 +102,7 @@ const Item = ({
 				<div className="ml-auto flex items-center gap-x-2">
 					<div
 						role="button"
-						onClick={() => { }} // pass onCreate function to enable creating nested childs
+						onClick={onCreate} // pass onCreate function to enable creating nested childs
 						className="opacity-0 group-hover:opacity-100 h-full ml-auto rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600"
 					>
 						<PlusIcon className="h-4 w-4 text-gray-500" />
@@ -139,4 +143,4 @@ const Item = ({
 	);
 };
 
-export default Item;
+export default NavItem;

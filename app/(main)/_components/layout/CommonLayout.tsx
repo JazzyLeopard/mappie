@@ -8,7 +8,7 @@
 import RoundCheckmark from "@/icons/RoundCheckmark";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
 import { toTitleCase } from "@/utils/helper";
-import LabelToInput from "./LabelToInput";
+import LabelToInput from "../LabelToInput";
 
 import '@/app/custom.css';
 
@@ -25,20 +25,20 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
-import SideList from "./sideList";
-import DisplayList from "./displayList";
+import FieldList from "./FieldList";
 import { MenuItemType } from "@/lib/types";
 import InlineEditor from "@ckeditor/ckeditor5-build-inline";
+import EditorList from "./EditorList";
 
-interface ProjectLayoutProps {
-    project: any;
+interface CommonLayoutProps {
+    data: any;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     updateLabel: (val: string) => void;
     handleEditorChange: (event: any, editor: InlineEditor, attribute: string) => void
 }
 
-const ProjectLayout = ({ project, menu, onEditorBlur, updateLabel, handleEditorChange }: ProjectLayoutProps) => {
+const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange }: CommonLayoutProps) => {
 
     const [components, setComponents] = useState<MenuItemType[]>(() => {
         return menu.map(item => ({
@@ -56,15 +56,15 @@ const ProjectLayout = ({ project, menu, onEditorBlur, updateLabel, handleEditorC
     };
 
     useEffect(() => {
-        if (project) {
+        if (data) {
             setComponents(prevComponents => prevComponents.map(component => {
-                if (project[component.key] && project[component.key].length > 0) {
+                if (data[component.key] && data[component.key].length > 0) {
                     return { ...component, active: true, required: true };
                 }
                 return component;
             }));
         }
-    }, [project]);
+    }, [data]);
 
     const handleItemClick = (index: number) => {
         const newComponents = components.map((component, i) => {
@@ -81,7 +81,7 @@ const ProjectLayout = ({ project, menu, onEditorBlur, updateLabel, handleEditorC
             <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
                 <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
                     <LabelToInput
-                        value={project.title}
+                        value={data.title}
                         setValue={updateLabel}
                         onBlur={onEditorBlur} />
                     <div className="flex gap-4">
@@ -128,12 +128,12 @@ const ProjectLayout = ({ project, menu, onEditorBlur, updateLabel, handleEditorC
                 </div>
 
                 <div className="flex items-start space-x-8">
-                    <SideList components={components} />
-                    <DisplayList components={components} data={project} onEditorBlur={onEditorBlur} handleEditorChange={handleEditorChange} />
+                    <FieldList components={components} />
+                    <EditorList components={components} data={data} onEditorBlur={onEditorBlur} handleEditorChange={handleEditorChange} />
                 </div>
             </main>
         </div>
     );
 };
 
-export default ProjectLayout;
+export default CommonLayout;

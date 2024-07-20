@@ -1,17 +1,17 @@
-// DisplayList.tsx
+// EditorList.tsx
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import { toTitleCase } from "@/utils/helper"
 import { MenuItemType } from "@/lib/types";
 
-interface DisplayListProps {
+interface EditorListProps {
     data: any
     components: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (event: any, editor: InlineEditor, attribute: string) => void
 }
 
-const DisplayList = ({ data, components, onEditorBlur, handleEditorChange }: DisplayListProps) => {
+const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: EditorListProps) => {
     return (
         <div className=" flex-row space-y-4 w-full justify-between pb-[420px]">
             {components.map(c => {
@@ -58,4 +58,4 @@ const DisplayList = ({ data, components, onEditorBlur, handleEditorChange }: Dis
     )
 }
 
-export default DisplayList
+export default EditorList
