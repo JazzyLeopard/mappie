@@ -1,6 +1,5 @@
-
 const EpicsPage = () => {
-    return (<h1>Epics Page</h1>)
-}
+  return <h1>Epics Page</h1>;
+};
 
-export default EpicsPage
+export default EpicsPage;

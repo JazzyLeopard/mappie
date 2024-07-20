@@ -2,280 +2,514 @@
 
 import { cn } from "@/lib/utils";
 import {
-	ChevronsLeft,
-	MenuIcon,
-	PlusCircle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  ChevronsLeft,
+  ChevronRight,
+  ChevronUp,
+  MenuIcon,
+  PlusCircle,
+  CreditCard,
+  Dot,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-
-import {
-	ElementRef,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { ElementRef, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import UserItems from "./UserItems";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Item from "./item";
 import { Toaster, toast } from "sonner";
-import DropdownIcon from "@/icons/DropdownIcon";
 import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Id } from "@/convex/_generated/dataModel";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 
 export const Navigation = () => {
-	const pathname = usePathname();
-	const router = useRouter();
+  const pathname = usePathname();
+  const router = useRouter();
 
-	const createProject = useMutation(
-		api.projects.createProject
-	);
+  const createProject = useMutation(api.projects.createProject);
 
-	const archiveProject = useMutation(api.projects.archiveProject)
+  const archiveProject = useMutation(api.projects.archiveProject);
 
-	const onCreate = () => {
-		const mypromise = createProject({
-			title: "Untitled Project",
-		});
+  const onCreate = () => {
+    const mypromise = createProject({
+      title: "Untitled Project",
+    });
 
-		toast.promise(mypromise, {
-			loading: "Creating new project...",
-			success: "New project created",
-			error: "Failed to create project",
-		});
+    toast.promise(mypromise, {
+      loading: "Creating new project...",
+      success: "New project created",
+      error: "Failed to create project",
+    });
+  };
 
+  const projects = useQuery(api.projects.getProjects);
 
-	};
+  // true if the query matches, false otherwise
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
+  const isResizingRef = useRef(false);
+  const sidebarRef = useRef<ElementRef<"div">>(null);
+  const navbarRef = useRef<ElementRef<"div">>(null);
 
-	const projects = useQuery(api.projects.getProjects);
+  const [isResetting, setIsResetting] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  // If mobile view it will auto matically collapse "true"
+  const [isCollapsed, setIsCollapsed] = useState(isMobile);
 
+  const [openPopover, setOpenPopover] = useState<Id<"projects"> | null>(null);
+  const [openEpicPopover, setOpenEpicPopover] = useState<number | null>(null);
+  const [openStoryPopover, setOpenStoryPopover] = useState<number | null>(null);
 
-	// true if the query matches, false otherwise
-	const isMobile = useMediaQuery("(max-width: 768px)");
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    } else {
+      resetWidth();
+    }
+  }, [isMobile]);
 
-	const isResizingRef = useRef(false);
-	const sidebarRef = useRef<ElementRef<"div">>(null);
-	const navbarRef = useRef<ElementRef<"div">>(null);
+  useEffect(() => {
+    if (isMobile) {
+      collapse();
+    } else {
+      resetWidth();
+    }
+  }, [pathname, isMobile]);
 
-	const [isResetting, setIsResetting] = useState(false);
-	const [openDialog, setOpenDialog] = useState(false)
-	// If mobile view it will auto matically collapse "true"
-	const [isCollapsed, setIsCollapsed] = useState(isMobile);
+  // WHEN NAVBAR IS MOVED
+  const handleMouseMove = (event: MouseEvent) => {
+    if (!isResizingRef.current) return;
 
-	useEffect(() => {
-		if (isMobile) {
-			collapse();
-		} else {
-			resetWidth();
-		}
-	}, [isMobile]);
+    let newWidth = event.clientX;
 
-	useEffect(() => {
-		if (isMobile) {
-			collapse();
-		} else {
-			resetWidth();
-		}
-	}, [pathname, isMobile]);
+    if (newWidth < 320) {
+      newWidth = 320;
+    }
 
-	// WHEN NAVBAR IS MOVED
-	const handleMouseMove = (event: MouseEvent) => {
-		if (!isResizingRef.current) return;
+    if (newWidth > 480) {
+      newWidth = 480;
+    }
 
-		let newWidth = event.clientX;
+    if (sidebarRef.current && navbarRef.current) {
+      sidebarRef.current.style.width = `${newWidth}px`;
+      navbarRef.current.style.setProperty("left", `${newWidth}`);
 
-		if (newWidth < 240) {
-			newWidth = 240;
-		}
+      navbarRef.current.style.setProperty(
+        "width",
+        `calc(100% - ${newWidth}px)`,
+      );
+    }
+  };
 
-		if (newWidth > 480) {
-			newWidth = 480;
-		}
+  // WHEN NAVBAR IS LEFT LOOSE
+  const handleMouseUp = () => {
+    isResizingRef.current = false;
 
-		if (sidebarRef.current && navbarRef.current) {
-			sidebarRef.current.style.width = `${newWidth}px`;
-			navbarRef.current.style.setProperty(
-				"left",
-				`${newWidth}`
-			);
+    document.removeEventListener("mousemove", handleMouseMove);
 
-			navbarRef.current.style.setProperty(
-				"width",
-				`calc(100% - ${newWidth}px)`
-			);
-		}
-	};
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
 
-	// WHEN NAVBAR IS LEFT LOOSE
-	const handleMouseUp = () => {
-		isResizingRef.current = false;
+  // WHEN NAVBAR IS SELECTED
+  const handleMouseDown = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-		document.removeEventListener(
-			"mousemove",
-			handleMouseMove
-		);
+    isResizingRef.current = true;
 
-		document.removeEventListener("mouseup", handleMouseUp);
-	};
+    document.addEventListener("mousemove", handleMouseMove);
 
-	// WHEN NAVBAR IS SELECTED
-	const handleMouseDown = (
-		event: React.MouseEvent<HTMLDivElement, MouseEvent>
-	) => {
-		event.preventDefault();
-		event.stopPropagation();
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
-		isResizingRef.current = true;
+  const resetWidth = () => {
+    if (sidebarRef.current && navbarRef.current) {
+      setIsCollapsed(false);
+      setIsResetting(true);
+    }
 
-		document.addEventListener("mousemove", handleMouseMove);
+    sidebarRef.current!.style.width = isMobile ? "100%" : "320px";
 
-		document.addEventListener("mouseup", handleMouseUp);
-	};
+    navbarRef.current!.style.setProperty(
+      "width",
+      isMobile ? "0" : "calc(100%-320px)",
+    );
 
-	const resetWidth = () => {
-		if (sidebarRef.current && navbarRef.current) {
-			setIsCollapsed(false);
-			setIsResetting(true);
-		}
+    setTimeout(() => setIsResetting(false), 300);
+  };
 
-		sidebarRef.current!.style.width = isMobile
-			? "100%"
-			: "240px";
+  const [expandedProject, setExpandedProject] = useState<Id<"projects"> | null>(
+    null,
+  );
 
-		navbarRef.current!.style.setProperty(
-			"width",
-			isMobile ? "0" : "calc(100%-240px)"
-		);
+  const toggleExpand = (projectId: Id<"projects">) => {
+    setExpandedProject(expandedProject === projectId ? null : projectId);
+  };
 
-		setTimeout(() => setIsResetting(false), 300);
-	};
+  const [expandedEpicIndex, setExpandedEpicIndex] = useState<number | null>(
+    null,
+  );
 
-	const collapse = () => {
-		if (sidebarRef.current && navbarRef.current) {
-			setIsCollapsed(true);
-			setIsResetting(true);
-		}
+  const toggleExpandEpic = (index: number) => {
+    setExpandedEpicIndex(expandedEpicIndex === index ? null : index);
+  };
 
-		sidebarRef.current!.style.width = "0";
+  const [expandedUserStoryIndex, setExpandedUserStoryIndex] = useState<
+    number | null
+  >(null);
 
-		navbarRef.current!.style.setProperty("width", "100%");
+  const toggleExpandUserStory = (index: number) => {
+    setExpandedUserStoryIndex(expandedUserStoryIndex === index ? null : index);
+  };
 
-		navbarRef.current!.style.setProperty("left", "0");
+  const collapse = () => {
+    if (sidebarRef.current && navbarRef.current) {
+      setIsCollapsed(true);
+      setIsResetting(true);
+    }
 
-		setTimeout(() => setIsResetting(false), 300);
-	};
+    sidebarRef.current!.style.width = "0";
 
-	const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
-		await archiveProject({ _id: id, isArchived: !isArchived })
-		setOpenDialog(false)
-		router.push(`/projects`);
-	}
+    navbarRef.current!.style.setProperty("width", "100%");
 
-	return (
-		<>
-			<div
-				ref={sidebarRef}
-				className={cn(
-					"group/sidebar h-full w-60 bg-secondary overflow-y-auto relative z-[50] flex flex-col",
-					isResetting &&
-					"transition-all ease-in-out duration-300",
-					isMobile && "w-0"
-				)}>
-				<div
-					title="Collapsible sidebar"
-					role="button"
-					onClick={collapse}
-					className={cn(
-						"h-6 w-6 text-muted-foreground hover:bg-neutral-300 rounded-sm absolute top-3 right-1 opacity-0 group-hover/sidebar:opacity-100",
-						isMobile && "opacity-100"
-					)}>
-					<ChevronsLeft className="h-6 w-6" />
-				</div>
+    navbarRef.current!.style.setProperty("left", "0");
 
-				<div>
-					<UserItems />
-				</div>
+    setTimeout(() => setIsResetting(false), 300);
+  };
 
-				<ScrollArea className="mt-8">
-					{projects?.map((proj) => (
-						<Link href={`/projects/${proj._id}`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
-							<div className="flex">
-								<DropdownIcon />
-								<span className="truncate max-w-[135px]">{proj.title}</span>
-							</div>
-							<div className="group-hover:block px-2">
-								<DropdownMenu>
-									<DropdownMenuTrigger><ThreeDotMenuIcon /></DropdownMenuTrigger>
-									<DropdownMenuContent>
-										{/* <DropdownMenuItem>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
-										<DropdownMenuItem onClick={() => setOpenDialog(!openDialog)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem>
-										{/* <DropdownMenuItem onClick={() => onArchiveClick(proj._id, proj.isArchived)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
-									</DropdownMenuContent>
-								</DropdownMenu>
-								<Dialog open={openDialog} onOpenChange={() => setOpenDialog(!openDialog)}>
-									{/* <DialogTrigger>Open</DialogTrigger> */}
-									<DialogContent>
-										<DialogHeader>
-											<DialogTitle>Archive Project?</DialogTitle>
-											<DialogDescription>
-												Are you sure, you want to Archive this Project: <b>{proj.title}</b>
-											</DialogDescription>
-										</DialogHeader>
-										<DialogFooter>
-											<Button onClick={() => onArchiveClick(proj._id, proj.isArchived)}>Yes, Archive</Button>
-										</DialogFooter>
-									</DialogContent>
-								</Dialog>
+  const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
+    await archiveProject({ _id: id, isArchived: !isArchived });
+    setOpenDialog(false);
+    router.push(`/projects`);
+  };
 
-							</div>
-						</Link>
-					))}
-				</ScrollArea>
+  return (
+    <>
+      <div
+        ref={sidebarRef}
+        className={cn(
+          "group/sidebar h-full w-80 bg-secondary overflow-y-auto relative z-[50] flex flex-col",
+          isResetting && "transition-all ease-in-out duration-300",
+          isMobile && "w-0",
+        )}
+      >
+        <div
+          title="Collapsible sidebar"
+          role="button"
+          onClick={collapse}
+          className={cn(
+            "h-6 w-6 text-muted-foreground hover:bg-neutral-300 rounded-sm absolute top-3 right-1 opacity-0 group-hover/sidebar:opacity-100",
+            isMobile && "opacity-100",
+          )}
+        >
+          <ChevronsLeft className="h-6 w-6" />
+        </div>
 
-				<div>
-					<Item
-						label="New Project"
-						onClick={onCreate}
-						icon={PlusCircle}
-					/>
-				</div>
+        <div>
+          <UserItems />
+        </div>
 
-				<div
-					onClick={resetWidth}
-					onMouseDown={handleMouseDown}
-					className="opacity-0 group-hover/sidebar:opacity-100 transition
+        <div className="pl-4 mt-8">
+          <span className="text-xs font-semibold text-muted-foreground">
+            Projects
+          </span>
+        </div>
+
+        <ScrollArea className="mt-2">
+          {projects?.map((proj) => (
+            <Collapsible key={proj._id}>
+              <div
+                className={cn(
+                  "flex items-center p-2 pl-3 transition-colors duration-300 ease-in-out w-full hover:bg-gray-200 group",
+                  expandedProject === proj._id ? "mb-0 bg-white-100" : "mb-0",
+                )}
+              >
+                <div className="flex items-center cursor-pointer w-full">
+                  <CollapsibleTrigger asChild>
+                    <div
+                      className="flex items-center"
+                      onClick={() => toggleExpand(proj._id)}
+                    >
+                      {expandedProject === proj._id ? (
+                        <ChevronUp className="hover:bg-gray-300 rounded-md w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="hover:bg-gray-300 rounded-md w-4 h-4" />
+                      )}
+                    </div>
+                  </CollapsibleTrigger>
+                  <Link
+                    href={`/projects/${proj._id}/overview`}
+                    key={proj._id}
+                    className="group flex items-center justify-between mx-2 py-1 select-none w-full rounded-md"
+                  >
+                    <div className="flex items-center">
+                      <div className="flex flex-col justify-start">
+                        <span className="truncate max-w-[150px] text-sm">
+                          {proj.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground text-left">
+                          Project
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+                <div
+                  className={cn(
+                    "hidden group-hover:flex px-4",
+                    openPopover === proj._id && "flex",
+                  )}
+                >
+                  <Popover
+                    open={openPopover === proj._id}
+                    onOpenChange={(open) =>
+                      setOpenPopover(open ? proj._id : null)
+                    }
+                  >
+                    <PopoverTrigger>
+                      <div
+                        onClick={() => setOpenPopover(proj._id)}
+                        className="hover:bg-gray-300 rounded-md cursor-pointer"
+                      >
+                        <ThreeDotMenuIcon />
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-1 w-[125px]">
+                      <div
+                        onClick={() => setOpenDialog(true)}
+                        className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full"
+                      >
+                        <span className="text-sm">Archive</span>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Dialog
+                    open={openDialog}
+                    onOpenChange={() => setOpenDialog(!openDialog)}
+                  >
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Archive Project?</DialogTitle>
+                        <DialogDescription>
+                          Are you sure, you want to Archive this Project:{" "}
+                          <b>{proj.title}</b>
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <Button
+                          onClick={() =>
+                            onArchiveClick(proj._id, proj.isArchived)
+                          }
+                        >
+                          Yes, Archive
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <CollapsibleContent>
+                <div>
+                  {[...Array(3)].map((_, index) => (
+                    <Collapsible key={index}>
+                      <div className="flex items-center p-2 transition-colors pl-8 duration-300 ease-in-out w-full hover:bg-gray-200 group">
+                        <div
+                          className="flex items-center cursor-pointer"
+                          onClick={() => toggleExpandEpic(index)}
+                        >
+                          <CollapsibleTrigger asChild>
+                            {expandedEpicIndex === index ? (
+                              <ChevronUp className="hover:bg-gray-300 rounded-md w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="hover:bg-gray-300 rounded-md w-4 h-4" />
+                            )}
+                          </CollapsibleTrigger>
+                        </div>
+                        <div className="group flex items-center justify-between mx-2 select-none w-full rounded-md">
+                          <div className="flex items-center">
+                            <div className="flex flex-col justify-start">
+                              <span className="text-sm truncate max-w-[150px]">
+                                Epic {index + 1}
+                              </span>
+                              <span className="text-xs text-muted-foreground text-left">
+                                Epic
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={cn(
+                            "hidden group-hover:flex px-4",
+                            openEpicPopover === index && "flex",
+                          )}
+                        >
+                          <Popover
+                            open={openEpicPopover === index}
+                            onOpenChange={(open) =>
+                              setOpenEpicPopover(open ? index : null)
+                            }
+                          >
+                            <PopoverTrigger>
+                              <div
+                                onClick={() => setOpenEpicPopover(index)}
+                                className="hover:bg-gray-300 rounded-md cursor-pointer"
+                              >
+                                <ThreeDotMenuIcon />
+                              </div>
+                            </PopoverTrigger>
+                            <PopoverContent className="p-1 w-[125px]">
+                              <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
+                                <span className="text-sm">Rename</span>
+                              </div>
+                              <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
+                                <span className="text-sm">Delete</span>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                      <CollapsibleContent>
+                        <div>
+                          {[...Array(3)].map((_, userStoryIndex) => (
+                            <Collapsible key={userStoryIndex}>
+                              <div className="flex items-center p-2 pl-14 transition-colors duration-300 ease-in-out w-full hover:bg-gray-200 group">
+                                <div className="flex items-center cursor-pointer">
+                                  <CollapsibleTrigger asChild>
+                                    <Dot className="text-gray-400 rounded-md w-6 h-6" />
+                                  </CollapsibleTrigger>
+                                </div>
+                                <div className="group flex items-center justify-between mx-2 select-none w-full rounded-md">
+                                  <div className="flex items-center">
+                                    <div className="flex flex-col justify-start">
+                                      <span className="text-sm truncate max-w-[150px]">
+                                        User Story {userStoryIndex + 1}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground text-left">
+                                        Story
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  className={cn(
+                                    "hidden group-hover:flex px-4",
+                                    openStoryPopover === userStoryIndex &&
+                                      "flex",
+                                  )}
+                                >
+                                  <Popover
+                                    open={openStoryPopover === userStoryIndex}
+                                    onOpenChange={(open) =>
+                                      setOpenStoryPopover(
+                                        open ? userStoryIndex : null,
+                                      )
+                                    }
+                                  >
+                                    <PopoverTrigger>
+                                      <div
+                                        onClick={() =>
+                                          setOpenStoryPopover(userStoryIndex)
+                                        }
+                                        className="hover:bg-gray-300 rounded-md cursor-pointer"
+                                      >
+                                        <ThreeDotMenuIcon />
+                                      </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="p-1 w-[125px]">
+                                      <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
+                                        <span className="text-sm">Rename</span>
+                                      </div>
+                                      <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
+                                        <span className="text-sm">Delete</span>
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
+                              </div>
+                            </Collapsible>
+                          ))}
+                          {/* Additional User Stories */}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+                  {/* Additional Epics */}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </ScrollArea>
+
+        <div className="mt-4">
+          <Item label="New Project" onClick={onCreate} icon={PlusCircle} />
+        </div>
+
+        <div className="pl-4 mt-10">
+          <span className="text-xs font-semibold text-muted-foreground">
+            Settings
+          </span>
+        </div>
+
+        <div className="mt-2">
+          <Item
+            label="Subscription"
+            onClick={() => router.push("/settings/subscription")}
+            icon={CreditCard}
+          />
+        </div>
+
+        <div
+          onClick={resetWidth}
+          onMouseDown={handleMouseDown}
+          className="opacity-0 group-hover/sidebar:opacity-100 transition
                                 cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
-				/>
-			</div>
+        />
+      </div>
 
-			<div
-				ref={navbarRef}
-				className={cn(
-					"z-[100000] absolute top-0 w-[calc(100%-60px)]",
-					isResetting &&
-					"transition-all ease-in-out duration-300",
-					isMobile && "left-0 w-full"
-				)}>
-				<nav className="bg-transparent w-full px-3 py-2">
-					{isCollapsed && (
-						<MenuIcon
-							onClick={resetWidth}
-							role="button"
-							className="h-6 w-6 text-muted-foreground"
-						/>
-					)}
-				</nav>
-			</div>
-			<Toaster />
-		</>
-	);
+      <div
+        ref={navbarRef}
+        className={cn(
+          "z-[100000] absolute top-0 w-[calc(100%-60px)]",
+          isResetting && "transition-all ease-in-out duration-300",
+          isMobile && "left-0 w-full",
+        )}
+      >
+        <nav className="bg-transparent w-full px-3 py-2">
+          {isCollapsed && (
+            <MenuIcon
+              onClick={resetWidth}
+              role="button"
+              className="h-6 w-6 text-muted-foreground"
+            />
+          )}
+        </nav>
+      </div>
+      <Toaster />
+    </>
+  );
 };

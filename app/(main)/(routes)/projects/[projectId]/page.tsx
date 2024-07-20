@@ -20,10 +20,14 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   });
 
   if (projectTitle === undefined) {
-    return <div className="flex justify-center items-center mx-auto"><Spinner /></div>;
+    return (
+      <div className="flex justify-center items-center mx-auto">
+        <Spinner />
+      </div>
+    );
   }
 
-  return <ProjectOverviewAndEpics projectTitle={projectTitle} projectId={id} />
+  return <ProjectOverviewAndEpics projectTitle={projectTitle} projectId={id} />;
 };
 
 export default ProjectIdPage;
