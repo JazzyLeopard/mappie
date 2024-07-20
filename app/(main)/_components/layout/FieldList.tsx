@@ -1,10 +1,10 @@
-// SideList.tsx
+// FieldList.tsx
 import { MenuItemType } from "@/lib/types";
 import { toTitleCase } from "@/utils/helper"
 import Link from "next/link"
 import { useState } from "react"
 
-interface SideListProps {
+interface FieldListProps {
     components: MenuItemType[];
 }
 
@@ -20,7 +20,7 @@ const NavLink = ({ section, activeSection, handleSectionClick }: { section: stri
     </Link>
 );
 
-const SideList = ({ components }: SideListProps) => {
+const FieldList = ({ components }: FieldListProps) => {
 
     const [activeSection, setActiveSection] = useState<string>("description");
 
@@ -53,4 +53,4 @@ const SideList = ({ components }: SideListProps) => {
     )
 }
 
-export default SideList
+export default FieldList

@@ -1,6 +1,6 @@
 'use client'
+import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import { epicMenuItems, menuItems } from "@/app/(main)/_components/constants";
-import ProjectLayout from "@/app/(main)/_components/projectLayout";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import InlineEditor from "@ckeditor/ckeditor5-build-inline";
@@ -15,7 +15,7 @@ type EpicsPageProps = {
 
 const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
 
-    const [projectDetails, setProjectDetails] = useState<any>()
+    const [epicDetails, setEpicDetails] = useState<any>()
 
     const id = params.epicId;
 
@@ -27,17 +27,17 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
 
     useEffect(() => {
         if (epic)
-            setProjectDetails(epic)
+            setEpicDetails(epic)
     }, [epic])
 
     const updateLabel = (val: string) => {
-        setProjectDetails({ ...projectDetails, title: val });
+        setEpicDetails({ ...epicDetails, title: val });
     };
 
     const handleEditorBlur = async () => {
         try {
-            console.log('time for API call', projectDetails);
-            const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
+            console.log('time for API call', epicDetails);
+            const { _creationTime, createdAt, updatedAt, userId, ...payload } = epicDetails
             await updateEpicMutation(payload)
         } catch (error) {
             console.log('error updating project', error);
@@ -46,7 +46,7 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
 
     const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
         const data = editor.getData();
-        setProjectDetails({ ...projectDetails, [attribute]: data });
+        setEpicDetails({ ...epicDetails, [attribute]: data });
     };
 
 
@@ -54,9 +54,9 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
         return <div>Error: {epic.message}</div>;
     }
 
-    if (projectDetails) {
-        return <ProjectLayout
-            project={projectDetails}
+    if (epicDetails) {
+        return <CommonLayout
+            data={epicDetails}
             menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
             updateLabel={updateLabel}

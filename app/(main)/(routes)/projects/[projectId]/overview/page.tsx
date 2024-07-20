@@ -1,6 +1,6 @@
 'use client'
+import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import { menuItems } from "@/app/(main)/_components/constants";
-import ProjectLayout from "@/app/(main)/_components/projectLayout";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import InlineEditor from "@ckeditor/ckeditor5-build-inline";
@@ -55,8 +55,8 @@ const ProjectOverviewPage = ({ params }: ProjectOverviewPageProps) => {
     }
 
     if (projectDetails) {
-        return <ProjectLayout
-            project={projectDetails}
+        return <CommonLayout
+            data={projectDetails}
             menu={menuItems}
             onEditorBlur={handleEditorBlur}
             updateLabel={updateLabel}

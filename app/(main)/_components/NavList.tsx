@@ -6,17 +6,17 @@ import { useQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import Item from './item'
 import { useRouter } from "next/navigation";
+import NavItem from "./NavItem";
 
 interface projectLitsProps {
-    parenProjectId?: Id<"projects">;
+    parentId?: Id<"projects"> | Id<"epics">;
     level?: number;
-    data?: Doc<"projects">[]
+    data?: any
 }
 
-export const ProjectList = ({
-    parenProjectId,
+export const NavList = ({
+    parentId,
     level = 0,
     data
 }: projectLitsProps) => {
@@ -34,11 +34,10 @@ export const ProjectList = ({
     if (data === undefined) {
         return (
             <>
-                <Item level={level} icon={null} />
+                <NavItem level={level} icon={null} />
                 {level === 0 && (
                     <>
-                        <Item level={level} icon={null} />
-                        <Item level={level} icon={null} />
+                        <NavItem level={level} icon={null} />
                     </>
                 )}
 
@@ -46,16 +45,27 @@ export const ProjectList = ({
         )
     }
 
-    // const onRedirect = (projectId: string) => {
-    //     router.push(`/projects/${projectId}`)
-    // }
-
     const navigateToProject = (id: string, onboardingStatus: number) => {
         if (onboardingStatus != 0) {
             router.push(`/projects/${id}/onboarding`)
             return
         }
         router.push(`/projects/${id}`)
+    }
+
+    const navigateToItem = (data: any) => {
+        // Project navigation
+        if (level == 0) {
+            if (data?.onboarding && data?.onboarding != 0) {
+                router.push(`/projects/${data._id}/onboarding`)
+                return
+            }
+            router.push(`/projects/${data._id}/overview`)
+        }
+        // Epic navigation
+        else if (level == 1) {
+            router.push(`/projects/${parentId}/epics/${data._id}`)
+        }1
     }
 
     return (
@@ -71,13 +81,16 @@ export const ProjectList = ({
                     level === 0 && "hidden"
                 )}
             >
-                No Projects Found
+                {level === 0 && 'No Projects Found'}
+                {level === 1 && 'No Epics Found'}
+                {level === 2 && 'No User Stories Found'}
             </p>
-            {data.map((project) => (
+            {data.map((project: any) => (
                 <div key={project._id}>
-                    <Item
+                    <NavItem
+                        key={project._id}
                         id={project._id}
-                        onClick={() => navigateToProject(project._id, project.onboarding)}
+                        onClick={() => navigateToItem(project)}
                         // onClick={() => onRedirect(project._id)}
                         label={project.title}
                         icon={null}
@@ -86,12 +99,13 @@ export const ProjectList = ({
                         onExpand={() => onExpand(project._id)}
                         expanded={expanded[project._id]}
                     />
-                    {/* {expanded[project._id] && (
-                        <ProjectList
-                            parenProjectId={project._id}
+                    {expanded[project._id] && (
+                        <NavList
+                            parentId={project._id}
                             level={level + 1}
+                            data={project.epics}
                         />
-                    )} */}
+                    )}
                 </div>
             ))}
         </>
