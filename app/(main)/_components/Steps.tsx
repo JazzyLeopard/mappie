@@ -3,11 +3,10 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
   CardContent
 } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Component } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
@@ -15,7 +14,6 @@ import InlineEditor from '@ckeditor/ckeditor5-build-inline';
 import AdditionalSteps from './AdditionalSteps';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useRouter } from 'next/navigation';
 
 
 const steps = [
@@ -58,12 +56,6 @@ const steps = [
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
   const [projectDetails, setProjectDetails] = useState(project);
-
-  const router = useRouter()
-
-  if (project.onboarding === 0) {
-    router.push(`/projects/${project._id}/overview`)
-  }
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
@@ -115,7 +107,6 @@ const Steps = ({ project }: { project: any }) => {
 
   const onEditorBlur = async () => {
     try {
-      console.log('time for API call', projectDetails);
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
       payload.onboarding = step
       await updateProjectMutation(payload)
@@ -129,7 +120,7 @@ const Steps = ({ project }: { project: any }) => {
       {step !== 6 && (
         <Card className='mt-16 mx-24'>
           <CardHeader>
-            <CardTitle>{steps[step - 1].title}</CardTitle>
+            <CardTitle>{steps[step - 1]?.title}</CardTitle>
           </CardHeader>
           <CardContent className=''>
             {step === 1 && (
