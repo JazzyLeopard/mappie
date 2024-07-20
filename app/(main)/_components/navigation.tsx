@@ -18,49 +18,17 @@ import { useMediaQuery } from "usehooks-ts";
 import UserItems from "./UserItems";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import Item from "./item";
 import { Toaster, toast } from "sonner";
-import DropdownIcon from "@/icons/DropdownIcon";
-import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Id } from "@/convex/_generated/dataModel";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { NavList } from "./NavList";
+import NavItem from "./NavItem";
 
 
 export const Navigation = () => {
 	const pathname = usePathname();
-	const router = useRouter();
 
-	const createProject = useMutation(
-		api.projects.createProject
-	);
+	const sidebarData = useQuery(api.projects.getSidebar);
 
-	const archiveProject = useMutation(api.projects.archiveProject)
-
-	const onCreate = () => {
-		const mypromise = createProject({
-			title: "Untitled Project",
-		});
-
-		toast.promise(mypromise, {
-			loading: "Creating new project...",
-			success: (data) => {
-				router.push(`/projects/${data}/onboarding`)
-				return "New project created"
-			},
-			error: "Failed to create project",
-		});
-
-
-	};
-
-
-	const projects = useQuery(api.projects.getProjects);
-
+	const createProject = useMutation(api.projects.createProject);
 
 	// true if the query matches, false otherwise
 	const isMobile = useMediaQuery("(max-width: 768px)");
@@ -89,6 +57,7 @@ export const Navigation = () => {
 			resetWidth();
 		}
 	}, [pathname, isMobile]);
+
 
 	// WHEN NAVBAR IS MOVED
 	const handleMouseMove = (event: MouseEvent) => {
@@ -177,11 +146,17 @@ export const Navigation = () => {
 		setTimeout(() => setIsResetting(false), 300);
 	};
 
-	const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
-		await archiveProject({ _id: id, isArchived: !isArchived })
-		setOpenDialog(false)
-		router.push(`/projects`);
-	}
+	const onCreate = () => {
+		const mypromise = createProject({
+			title: "Untitled Project",
+		});
+
+		toast.promise(mypromise, {
+			loading: "Creating new project...",
+			success: "New project created",
+			error: "Failed to create project",
+		});
+	};
 
 	return (
 		<>
@@ -207,45 +182,12 @@ export const Navigation = () => {
 				<div>
 					<UserItems />
 				</div>
-
-				<ScrollArea className="mt-8">
-					{projects?.map((proj) => (
-						<Link href={proj.onboarding === 0 ? `/projects/${proj._id}` : `/projects/${proj._id}/onboarding`} key={proj._id} className="group flex cursor-pointer justify-between mx-2 py-1 select-none rounded-md hover:bg-stone-400/10">
-							<div className="flex">
-								<DropdownIcon />
-								<span className="truncate max-w-[135px]">{proj.title}</span>
-							</div>
-							<div className="group-hover:block px-2">
-								<DropdownMenu>
-									<DropdownMenuTrigger><ThreeDotMenuIcon /></DropdownMenuTrigger>
-									<DropdownMenuContent>
-										{/* <DropdownMenuItem>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
-										<DropdownMenuItem onClick={() => setOpenDialog(!openDialog)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem>
-										{/* <DropdownMenuItem onClick={() => onArchiveClick(proj._id, proj.isArchived)}>{proj.isArchived ? 'UnArchive' : 'Archive'}</DropdownMenuItem> */}
-									</DropdownMenuContent>
-								</DropdownMenu>
-								<Dialog open={openDialog} onOpenChange={() => setOpenDialog(!openDialog)}>
-									{/* <DialogTrigger>Open</DialogTrigger> */}
-									<DialogContent>
-										<DialogHeader>
-											<DialogTitle>Archive Project?</DialogTitle>
-											<DialogDescription>
-												Are you sure, you want to Archive this Project: <b>{proj.title}</b>
-											</DialogDescription>
-										</DialogHeader>
-										<DialogFooter>
-											<Button onClick={() => onArchiveClick(proj._id, proj.isArchived)}>Yes, Archive</Button>
-										</DialogFooter>
-									</DialogContent>
-								</Dialog>
-
-							</div>
-						</Link>
-					))}
-				</ScrollArea>
+				<div className="mt-4">
+					<NavList data={sidebarData} />
+				</div>
 
 				<div>
-					<Item
+					<NavItem
 						label="New Project"
 						onClick={onCreate}
 						icon={PlusCircle}
