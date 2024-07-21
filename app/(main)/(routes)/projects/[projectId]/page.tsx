@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import { menuItems } from "@/app/(main)/_components/constants";
 import { useEffect, useState } from "react";
-import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 
 interface ProjectIdPageProps {
   params: {
@@ -54,8 +53,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     }
   };
 
-  const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
-    const data = editor.getData();
+  const handleEditorChange = (attribute: string, data: any) => {
     setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 

@@ -27,7 +27,6 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
 import { MenuItemType } from "@/lib/types";
-import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import EditorList from "./EditorList";
 
 interface CommonLayoutProps {
@@ -35,7 +34,7 @@ interface CommonLayoutProps {
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     updateLabel: (val: string) => void;
-    handleEditorChange: (event: any, editor: InlineEditor, attribute: string) => void
+    handleEditorChange: (attribute: string, value: any) => void
 }
 
 const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange }: CommonLayoutProps) => {

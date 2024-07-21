@@ -36,7 +36,7 @@ export const getSidebar = query(async (ctx) => {
           userStories.map(us => { return { ...us, type: 'user-story' } })
           return {
             _id: epic._id,
-            title: epic.title,
+            name: epic.name,
             type: 'epic',
             userStories,
           };
@@ -160,7 +160,6 @@ export const getProjectNameById = query({
 export const createProject = mutation({
   args: {
     title: v.string(),
-    parentProject: v.optional(v.id("projects")),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -173,7 +172,6 @@ export const createProject = mutation({
 
     const project = await ctx.db.insert("projects", {
       title: args.title,
-      parentProject: args.parentProject,
       userId: identity.subject,
       description: "",
       objectives: "",
@@ -195,7 +193,6 @@ export const updateProject = mutation({
     description: v.optional(v.string()),
     objectives: v.optional(v.string()),
     stakeholders: v.optional(v.string()),
-    requirements: v.optional(v.string()),
     scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
     constraints: v.optional(v.string()),
@@ -203,7 +200,6 @@ export const updateProject = mutation({
     dependencies: v.optional(v.string()),
     priorities: v.optional(v.string()),
     risks: v.optional(v.string()),
-    onboarding: v.optional(v.number()),
     isArchived: v.optional(v.boolean()),
     isPublished: v.optional(v.boolean()),
   },

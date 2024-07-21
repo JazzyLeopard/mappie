@@ -3,7 +3,6 @@ import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import { epicMenuItems, menuItems } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 
@@ -44,9 +43,8 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
         }
     };
 
-    const handleEditorChange = (event: any, editor: InlineEditor, attribute: string) => {
-        const data = editor.getData();
-        setEpicDetails({ ...epicDetails, [attribute]: data });
+    const handleEditorChange = (attribute: string, value: any) => {
+        setEpicDetails({ ...epicDetails, [attribute]: value });
     };
 
 
