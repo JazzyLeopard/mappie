@@ -7,7 +7,7 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     objectives: v.string(),
-    requirements: v.optional(v.string()),
+    onboarding: v.number(),
     stakeholders: v.optional(v.string()),
     scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
@@ -16,28 +16,18 @@ export default defineSchema({
     dependencies: v.optional(v.string()),
     priorities: v.optional(v.string()),
     risks: v.optional(v.string()),
-    onboarding: v.number(),
     isArchived: v.boolean(),
     isPublished: v.optional(v.boolean()),
     createdAt: v.int64(), // Storing timestamp as bigint (milliseconds since Unix epoch)
     updatedAt: v.int64(), // Storing timestamp as bigint
-    coverImage: v.optional(v.string()),
-    icon: v.optional(v.string()),
-	  parentProject: v.optional(v.id("projects")),
   })
     .index("by_userId", ["userId"]) // Index to query projects by userId
-    .index("by_createdAt", ["createdAt"]) // Index to query projects by creation time
-    .index("by_user_parent",["userId","parentProject"]),
+    .index("by_createdAt", ["createdAt"]), // Index to query projects by creation time
 
   epics: defineTable({
     projectId: v.id("projects"),
-    title: v.string(),
+    name: v.string(),
     description: v.string(),
-    objectives: v.string(),
-    requirements: v.optional(v.string()),
-    stakeholders: v.optional(v.string()),
-    timeline: v.optional(v.string()),
-    successMetrics: v.optional(v.string()),
     status: v.string(), // e.g., 'Not Started', 'In Progress', 'Completed'
     createdAt: v.int64(), // Storing timestamp as bigint
     updatedAt: v.int64(), // Storing timestamp as bigint

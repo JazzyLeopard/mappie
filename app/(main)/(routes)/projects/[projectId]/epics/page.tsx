@@ -19,7 +19,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     const onCreateEpic = (projectId: Id<"projects">) => {
         console.log("Create Epic called")
         const mypromise = createEpic({
-            title: "Untitled Epic",
+            name: "Untitled Epic",
             projectId: projectId,
         });
 
@@ -35,4 +35,4 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     )
 }
 
-export default EpicsPage
+export default EpicsPage;
