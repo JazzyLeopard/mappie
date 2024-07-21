@@ -1,14 +1,13 @@
 // EditorList.tsx
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import InlineEditor from "@ckeditor/ckeditor5-build-inline";
 import { toTitleCase } from "@/utils/helper"
 import { MenuItemType } from "@/lib/types";
+import BlockEditor from "../BlockEditor";
 
 interface EditorListProps {
     data: any
     components: MenuItemType[];
     onEditorBlur: () => Promise<void>;
-    handleEditorChange: (event: any, editor: InlineEditor, attribute: string) => void
+    handleEditorChange: (attribute: string, value: any) => void
 }
 
 const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: EditorListProps) => {
@@ -24,30 +23,11 @@ const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: Edit
                             </h1>
 
                             <div className="prose max-w-none">
-                                <CKEditor
-                                    editor={InlineEditor}
-                                    data={data[c.key]}
+                                <BlockEditor
                                     onBlur={onEditorBlur}
-                                    onChange={(event, editor) => handleEditorChange(event, editor, c.key)}
-                                    config={{
-                                        placeholder: c.description,
-                                        toolbar: [
-                                            "bold",
-                                            "italic",
-                                            "link",
-                                            "bulletedList",
-                                            "numberedList",
-                                        ],
-                                        removePlugins: [
-                                            "BalloonToolbar",
-                                            "BalloonToolbarUI",
-                                            "EasyImage",
-                                            "CKFinder",
-                                        ],
-                                        ui: {
-                                            viewportOffset: { top: 0, right: 0, bottom: 0, left: 0 }
-                                        }
-                                    }}
+                                    attribute={c.key}
+                                    projectDetails={data}
+                                    setProjectDetails={(value) => handleEditorChange(c.key, value)}
                                 />
                             </div>
                         </div>

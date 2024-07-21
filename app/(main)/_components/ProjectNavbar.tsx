@@ -1,7 +1,6 @@
 import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
-import { Slash } from "lucide-react"
-import React, { useState } from 'react';
-
+import { Slash } from "lucide-react";
+import React, { useState } from "react";
 
 import {
   Breadcrumb,
@@ -10,14 +9,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb";
 
-const ProjectNavbar = ({ projectId, projectTitle}: { projectId: string, projectTitle: string}) => {
+const ProjectNavbar = ({
+  projectId,
+  projectTitle,
+}: {
+  projectId: string;
+  projectTitle: string;
+}) => {
   return (
     <div
-      className={`fixed top-0 flex pt-4 justify-between px-4 z-50 bg-white transition-all duration-30 ${
-         'w-[calc(100vw-15rem)]'
-      }`}
+      className={`fixed top-0 flex pt-4 justify-between px-8 z-50 bg-white transition-all duration-30 ${"w-[calc(100vw-15rem)]"}`}
     >
       {/* <div className="flex flex-row w-full justify-between space-x-96">
             <h1>Project1 /  </h1>
@@ -30,17 +33,18 @@ const ProjectNavbar = ({ projectId, projectTitle}: { projectId: string, projectT
             
         </div> */}
 
-
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/projects/${projectId}`}>{projectTitle}</BreadcrumbLink>
+            <BreadcrumbLink href={`/projects/${projectId}`}>
+              {projectTitle}
+            </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            /
-          </BreadcrumbSeparator>
+          <BreadcrumbSeparator>/</BreadcrumbSeparator>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/components">Overview</BreadcrumbLink>
+            <BreadcrumbLink href={`/projects/${projectId}`}>
+              Overview
+            </BreadcrumbLink>
           </BreadcrumbItem>
           {/* <BreadcrumbSeparator>
           <Slash />
@@ -48,11 +52,6 @@ const ProjectNavbar = ({ projectId, projectTitle}: { projectId: string, projectT
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="flex justify-center items-center space-x-6">
-        <div>
-          <ThreeDotMenuIcon />
-        </div>
-      </div>
     </div>
   );
 };

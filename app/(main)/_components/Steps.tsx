@@ -9,11 +9,10 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import InlineEditor from '@ckeditor/ckeditor5-build-inline';
 import AdditionalSteps from './AdditionalSteps';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import BlockEditor from './BlockEditor';
 
 
 const steps = [
@@ -100,9 +99,10 @@ const Steps = ({ project }: { project: any }) => {
     setProjectDetails({ ...projectDetails, title: value });
   };
 
-  const handleEditorChange = (event: any, editor: { getData: () => any }, key: string) => {
-    const data = editor.getData();
-    setProjectDetails({ ...projectDetails, [key]: data });
+  const handleEditorChange = (attribute: string, value: any) => {
+    console.log(attribute, value);
+    
+    setProjectDetails({ ...projectDetails, [attribute]: value });
   };
 
   const onEditorBlur = async () => {
@@ -133,28 +133,11 @@ const Steps = ({ project }: { project: any }) => {
             )}
             {step >= 2 && step <= 5 && (
               <div className='prose max-w-none'>
-                <CKEditor
-                  key={step} // Use step as key to force re-render
-                  editor={InlineEditor}
-                  data={projectDetails[steps[step - 1].key] || ''}
+                <BlockEditor
                   onBlur={onEditorBlur}
-                  onChange={(event, editor) => handleEditorChange(event, editor, steps[step - 1].key)}
-                  config={{
-                    placeholder: steps[step - 1].placeholder,
-                    toolbar: [
-                      'bold',
-                      'italic',
-                      'link',
-                      'bulletedList',
-                      'numberedList',
-                    ],
-                    removePlugins: [
-                      'BalloonToolbar',
-                      'BalloonToolbarUI',
-                      'EasyImage',
-                      'CKFinder',
-                    ],
-                  }}
+                  attribute={steps[step - 1].key}
+                  projectDetails={projectDetails}
+                  setProjectDetails={(value) => handleEditorChange(steps[step - 1].key, value)}
                 />
               </div>
             )}
