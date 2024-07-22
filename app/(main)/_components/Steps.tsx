@@ -101,12 +101,13 @@ const Steps = ({ project }: { project: any }) => {
 
   const handleEditorChange = (attribute: string, value: any) => {
     console.log(attribute, value);
-    
+
     setProjectDetails({ ...projectDetails, [attribute]: value });
   };
 
   const onEditorBlur = async () => {
     try {
+      console.log("Time for API call", projectDetails);
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
       payload.onboarding = step
       await updateProjectMutation(payload)
@@ -137,6 +138,7 @@ const Steps = ({ project }: { project: any }) => {
                   onBlur={onEditorBlur}
                   attribute={steps[step - 1].key}
                   projectDetails={projectDetails}
+                  key={step}
                   setProjectDetails={(value) => handleEditorChange(steps[step - 1].key, value)}
                 />
               </div>

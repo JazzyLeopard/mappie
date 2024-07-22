@@ -1,24 +1,20 @@
 'use client';
 import React, { useEffect, useState } from "react";
 import RisksIcon from "@/icons/RisksIcon";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
   CardContent
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronsUp, DollarSign, Link, Sparkles, UserCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsUp, DollarSign, Sparkles, UserCheck } from "lucide-react";
 import UnLinkIcon from "@/icons/UnLinkIcon";
 import SparklesLight from "@/icons/SparklesLight";
 import { toTitleCase } from "@/utils/helper";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
 import RoundCheckmark from "@/icons/RoundCheckmark";
-import {useRouter} from "next/navigation";
 
 type MenuItemType = {
   key: string;
@@ -67,7 +63,7 @@ const menuItems: MenuItemType[] = [
   },
 ]
 
-const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: ()=>void }) => {
+const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: () => void }) => {
 
   const [components, setComponents] = useState<MenuItemType[]>([]);
 
@@ -97,7 +93,7 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
       }
       return component;
     });
-    setComponents(newComponents); 
+    setComponents(newComponents);
   }
 
   const handleOnBackClick = () => {
@@ -105,7 +101,7 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
     onBackClick()
   }
 
-  const handleOnContinue = () =>{
+  const handleOnContinue = () => {
     onContinueClick()
   }
 
@@ -122,7 +118,7 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
             {components.map((component, index) => (
               <div
                 key={toTitleCase(component.key)}
-                className={`flex justify-center items-center gap-8 ${component.active === true ? "border border-black" : "border"} py-4 rounded cursor-pointer select-none`}
+                className={`flex justify-center items-center gap-8 ${component.active === true ? "border border-black" : "border"} p-3 rounded cursor-pointer select-none`}
                 onClick={() => !component.required && handleItemClick(index)}
               >
                 <div>{component.icon}</div>
@@ -143,13 +139,13 @@ const AdditionalSteps = ({ project, onBackClick,onContinueClick }: { project: an
           <Button className="my-6"><SparklesLight />&nbsp;&nbsp;Complete selected elements with AI</Button>
         </CardContent>
         <CardFooter className="mt-5 flex justify-between">
-          <Button variant="outline"onClick={handleOnBackClick}>
+          <Button variant="outline" onClick={handleOnBackClick}>
             <ChevronLeft className="h-4 w-4 ml-1" />
             Back
           </Button>
           <Button variant="outline" onClick={handleOnContinue}>
             Continue without AI completion
-            <ChevronRight className="h-4 w-4 ml-1"/>
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </CardFooter>
       </Card>
