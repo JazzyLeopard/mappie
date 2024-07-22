@@ -22,9 +22,9 @@ import UserItems from "./UserItems";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Toaster, toast } from "sonner";
-import { NavList } from "./NavList";
 import NavItem from "./NavItem";
 import ThreeDotMenuIcon from "@/icons/ThreeDotMenuIcon";
+import PlusIcon from "@/icons/PlusIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -57,7 +57,7 @@ export const Navigation = () => {
   const router = useRouter();
 
   const createProject = useMutation(api.projects.createProject);
-	const sidebarData = useQuery(api.projects.getSidebar);
+  const sidebarData = useQuery(api.projects.getSidebar);
 
   const archiveProject = useMutation(api.projects.archiveProject);
 
@@ -202,17 +202,17 @@ export const Navigation = () => {
 
     sidebarRef.current!.style.width = "0";
 
-	const onCreate = () => {
-		const mypromise = createProject({
-			title: "Untitled Project",
-		});
+    const onCreate = () => {
+      const mypromise = createProject({
+        title: "Untitled Project",
+      });
 
-		toast.promise(mypromise, {
-			loading: "Creating new project...",
-			success: "New project created",
-			error: "Failed to create project",
-		});
-	};
+      toast.promise(mypromise, {
+        loading: "Creating new project...",
+        success: "New project created",
+        error: "Failed to create project",
+      });
+    };
     navbarRef.current!.style.setProperty("width", "100%");
 
     navbarRef.current!.style.setProperty("left", "0");
@@ -309,6 +309,14 @@ export const Navigation = () => {
                       setOpenPopover(open ? proj._id : null)
                     }
                   >
+                    <PopoverTrigger>
+                      <div
+                        onClick={() => setOpenPopover(proj._id)}
+                        className="hover:bg-gray-300 rounded-md cursor-pointer mr-1"
+                      >
+                        <PlusIcon />
+                      </div>
+                    </PopoverTrigger>
                     <PopoverTrigger>
                       <div
                         onClick={() => setOpenPopover(proj._id)}
@@ -439,7 +447,7 @@ export const Navigation = () => {
                                   className={cn(
                                     "hidden group-hover:flex px-4",
                                     openStoryPopover === userStoryIndex &&
-                                      "flex",
+                                    "flex",
                                   )}
                                 >
                                   <Popover
