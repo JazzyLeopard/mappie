@@ -202,6 +202,7 @@ export const updateProject = mutation({
     risks: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
     isPublished: v.optional(v.boolean()),
+    onboarding: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;

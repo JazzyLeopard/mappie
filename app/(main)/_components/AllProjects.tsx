@@ -20,79 +20,79 @@ import { Id } from "@/convex/_generated/dataModel";
 
 
 export default function Component() {
-  
-const projects = useQuery(api.projects.getProjects);
-const { user } = useUser();
-const router = useRouter();
-const [activeButton, setActiveButton] = useState("all");
-const [openPopover, setOpenPopover] = useState<string | null>(null);
-const [openDialog, setOpenDialog] = useState(false);
-const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
-const archiveProject = useMutation(api.projects.archiveProject);
-const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
+
+  const projects = useQuery(api.projects.getProjects);
+  const { user } = useUser();
+  const router = useRouter();
+  const [activeButton, setActiveButton] = useState("all");
+  const [openPopover, setOpenPopover] = useState<string | null>(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const archiveProject = useMutation(api.projects.archiveProject);
+  const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
     await archiveProject({ _id: id, isArchived: !isArchived });
     setOpenDialog(false);
     router.push(`/projects`);
   };
 
-
   return (
-    <div className="p-6 pt-16 min-w-100%">
+    <>
+      <div className="p-6 pt-16 min-w-100%">
         <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-bold">Projects</h1>
+          <h1 className="text-2xl font-bold">Projects</h1>
         </div>
         <div className="flex items-center space-x-2 mb-6">
           <Button className="bg-primary text-primary-foreground">
             <PlusIcon className="mr-2" />
             <p className="mr-4">Create new</p>
-            <AiGenerationIconWhite/>
+            <AiGenerationIconWhite />
           </Button>
           <Button variant="outline">
             <FileIcon className="mr-2" />
             New from blank
           </Button>
         </div>
-      <div className="flex items-center mb-6">
-            <Button
-                variant="ghost"
-                className={`mr-4 ${activeButton === "all" ? "bg-gray-200" : ""}`}
-                onClick={() => setActiveButton("all")}
-                >
-                <FolderIcon className="mr-2" />
-                All
-            </Button>
-            <Button
-                variant="ghost"
-                className={`${activeButton === "recent" ? "bg-gray-200" : ""}`}
-                onClick={() => setActiveButton("recent")}
-                >
-                <ClockIcon className="mr-2" />
-                Recently viewed
-            </Button>
-      </div>
-      <div className="flex gap-8 ">
-        {projects?.map((proj) => (
-          <Card 
-            key={proj._id} 
-            onClick={() => router.push(`/projects/${proj._id}`)}
-            className="cursor-pointer min-w-[20rem]"
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            className={`mr-4 ${activeButton === "all" ? "bg-gray-200" : ""}`}
+            onClick={() => setActiveButton("all")}
+          >
+            <FolderIcon className="mr-2" />
+            All
+          </Button>
+          <Button
+            variant="ghost"
+            className={`${activeButton === "recent" ? "bg-gray-200" : ""}`}
+            onClick={() => setActiveButton("recent")}
+          >
+            <ClockIcon className="mr-2" />
+            Recently viewed
+          </Button>
+        </div>
+        <div className="flex gap-8 ">
+          {projects?.map((proj) => (
+            <Card
+              key={proj._id}
+              onClick={() => router.push(`/projects/${proj._id}`)}
+              className="cursor-pointer min-w-[20rem]"
             >
-            <CardContent  className="flex items-center justify-start p-4 space-x-2 pr-16">
-              <FontAwesomeIcon icon={faDiagramProject} className="text-sm" />
-              <h2 className="text-m font-medium truncate max-w-[280px]">{proj.title}</h2>
-            </CardContent>
-            <CardFooter className="flex justify-between p-4">
+              <CardContent className="flex items-center justify-start p-4 space-x-2 pr-16">
+                <FontAwesomeIcon icon={faDiagramProject} className="text-sm" />
+                <h2 className="text-m font-medium truncate max-w-[280px]">{proj.title}</h2>
+              </CardContent>
+              <CardFooter className="flex justify-between p-4">
                 <div className="flex">
-                    <div className="flex items-center space-x-2">
-                        <Avatar className="w-8 h-8">
-                            <AvatarImage src={user?.imageUrl} />
-                            <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <div className="text-xs">
-                            <p>Created by {user?.firstName || "Unknown"}</p>
-                            <p className="text-muted-foreground">Created {new Date(proj._creationTime).toLocaleDateString()}</p>
-                        </div>
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user?.imageUrl} />
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                    <div className="text-xs">
+                      {<p>Created by {user?.emailAddresses[0].emailAddress.split("@")[0] || "Unknown"}</p>}
+                      <p className="text-muted-foreground">Created {new Date(proj._creationTime).toLocaleDateString()}</p>
                     </div>
+                  </div>
                 </div>
                 <div
                   className={cn(
@@ -113,7 +113,7 @@ const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
                         }}
                         className="hover:bg-gray-300 rounded-md w-6 h-6 flex items-center justify-center cursor-pointer"
                       >
-                        <FontAwesomeIcon icon={faEllipsisH} className="text-sm text-gray-500"/>
+                        <FontAwesomeIcon icon={faEllipsisH} className="text-sm text-gray-500" />
                       </div>
                     </PopoverTrigger>
                     <PopoverContent className="p-1 w-[125px]">
@@ -129,36 +129,37 @@ const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
                     </PopoverContent>
                   </Popover>
                 </div>
-                
-                  <Dialog
-                    open={openDialog}
-                    onOpenChange={() => setOpenDialog(!openDialog)}
-                  >
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Archive Project?</DialogTitle>
-                        <DialogDescription>
-                          Are you sure, you want to Archive this Project:{" "}
-                          <b>{proj.title}</b>
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button
-                          onClick={() =>
-                            onArchiveClick(proj._id, proj.isArchived)
-                          }
-                        >
-                          Yes, Archive
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                
-            </CardFooter>
-          </Card>
-        ))}
+
+                <Dialog
+                  open={openDialog}
+                  onOpenChange={() => setOpenDialog(!openDialog)}
+                >
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Archive Project?</DialogTitle>
+                      <DialogDescription>
+                        Are you sure, you want to Archive this Project:{" "}
+                        <b>{proj.title}</b>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        onClick={() =>
+                          onArchiveClick(proj._id, proj.isArchived)
+                        }
+                      >
+                        Yes, Archive
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

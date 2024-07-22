@@ -26,9 +26,8 @@ const UserItems = () => {
             <Avatar className="h-5 w-5">
               <AvatarImage src={user?.imageUrl} />
             </Avatar>
-
             <span className="text-start line-clamp-1 font-medium">
-              {user?.firstName}&apos; Listoriq
+              {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos; Listoriq
             </span>
             <ChevronsLeftRight className="rotate-90 h-4 w-4 ml-2 text-muted-foreground" />
           </div>
@@ -55,7 +54,7 @@ const UserItems = () => {
 
             <div className="space-y-1">
               <p className="text-sm line-clamp-1">
-                {user?.fullName}&apos; Lisoriq
+                {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos; Lisoriq
               </p>
             </div>
           </div>
