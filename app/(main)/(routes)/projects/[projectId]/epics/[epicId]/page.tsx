@@ -12,12 +12,11 @@ type EpicsPageProps = {
     };
 }
 
-const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
+const ProjectEpicPage = ({ params }: EpicsPageProps) => {
 
     const [epicDetails, setEpicDetails] = useState<any>()
 
-    const id = params.epicId;
-
+    const id = params.epicId
     const updateEpicMutation = useMutation(api.epics.updateEpic)
 
     const epic = useQuery(api.epics.getEpicById, {
@@ -30,13 +29,13 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
     }, [epic])
 
     const updateLabel = (val: string) => {
-        setEpicDetails({ ...epicDetails, title: val });
+        setEpicDetails({ ...epicDetails, name: val });
     };
 
     const handleEditorBlur = async () => {
         try {
-            console.log('time for API call', epicDetails);
-            const { _creationTime, createdAt, updatedAt, userId, ...payload } = epicDetails
+            const { _creationTime, createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
+            console.log('time for API call', payload);
             await updateEpicMutation(payload)
         } catch (error) {
             console.log('error updating project', error);
@@ -62,4 +61,4 @@ const ProjectOverviewPage = ({ params }: EpicsPageProps) => {
     }
 }
 
-export default ProjectOverviewPage;
+export default ProjectEpicPage;

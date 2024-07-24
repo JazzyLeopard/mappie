@@ -85,7 +85,7 @@ export const getEpics = query({
 
 export const updateEpic = mutation({
   args: {
-    id: v.id("epics"),
+    _id: v.id("epics"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     status: v.optional(v.string()),
@@ -97,7 +97,7 @@ export const updateEpic = mutation({
     dependencies: v.optional(v.array(v.id("epics"))),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    const { _id, ...updates } = args;
     const updatedFields = {
       ...updates,
       updatedAt: BigInt(Date.now()),
@@ -108,7 +108,7 @@ export const updateEpic = mutation({
         ? BigInt(new Date(updates.endDate).getTime())
         : undefined,
     };
-    await ctx.db.patch(id, updatedFields);
+    await ctx.db.patch(_id, updatedFields);
   },
 });
 
