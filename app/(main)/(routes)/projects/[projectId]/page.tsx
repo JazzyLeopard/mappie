@@ -59,7 +59,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
 
   if (projectDetails?.onboarding == 0) {
     return <CommonLayout
-      data={project}
+      data={projectDetails}
       menu={menuItems}
       onEditorBlur={handleEditorBlur}
       updateLabel={updateLabel}
