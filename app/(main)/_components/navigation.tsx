@@ -45,19 +45,16 @@ import {
 } from "@/components/ui/collapsible";
 
 
-// export const Navigation = () => {
-// 	const pathname = usePathname();
-
-// 	const sidebarData = useQuery(api.projects.getSidebar);
-
-// 	const createProject = useMutation(api.projects.createProject);
-
 export const Navigation = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const createProject = useMutation(api.projects.createProject);
   const sidebarData = useQuery(api.projects.getSidebar);
+  const createProject = useMutation(api.projects.createProject);
+
+  const createEpic = useMutation(api.epics.createEpics)
+
+  const createUserStory = useMutation(api.userstories.createUserStory)
 
   const archiveProject = useMutation(api.projects.archiveProject);
 
@@ -72,6 +69,35 @@ export const Navigation = () => {
       error: "Failed to create project",
     });
   };
+
+  const onCreateEpic = (projectId: Id<"projects">) => {
+    const mypromise = createEpic({
+      name: "Untitled Project",
+      projectId: projectId
+    })
+
+    toast.promise(mypromise, {
+      loading: "Creating new epic...",
+      success: "New epic created",
+      error: "Failed to create epic",
+    })
+  }
+
+  const onCreateUserStories = (epicId: Id<"epics">) => {
+    console.log(epicId);
+
+    const mypromise = createUserStory({
+      title: "Untitled Project",
+      description: "",
+      epicId: epicId
+    })
+
+    toast.promise(mypromise, {
+      loading: "Creating new userStory...",
+      success: "New userStory created",
+      error: "Failed to create userStory",
+    })
+  }
 
 
   // true if the query matches, false otherwise
@@ -175,6 +201,8 @@ export const Navigation = () => {
   );
 
   const toggleExpand = (projectId: Id<"projects">) => {
+    console.log("toggle expanded");
+
     setExpandedProject(expandedProject === projectId ? null : projectId);
   };
 
@@ -202,17 +230,6 @@ export const Navigation = () => {
 
     sidebarRef.current!.style.width = "0";
 
-    const onCreate = () => {
-      const mypromise = createProject({
-        title: "Untitled Project",
-      });
-
-      toast.promise(mypromise, {
-        loading: "Creating new project...",
-        success: "New project created",
-        error: "Failed to create project",
-      });
-    };
     navbarRef.current!.style.setProperty("width", "100%");
 
     navbarRef.current!.style.setProperty("left", "0");
@@ -303,20 +320,22 @@ export const Navigation = () => {
                     openPopover === proj._id && "flex",
                   )}
                 >
+                  <Popover>
+                    <PopoverTrigger>
+                      <div
+                        onClick={() => onCreateEpic(proj._id)}
+                        className="hover:bg-gray-300 rounded-md cursor-pointer"
+                      >
+                        <PlusIcon />
+                      </div>
+                    </PopoverTrigger>
+                  </Popover>
                   <Popover
                     open={openPopover === proj._id}
                     onOpenChange={(open) =>
                       setOpenPopover(open ? proj._id : null)
                     }
                   >
-                    <PopoverTrigger>
-                      <div
-                        onClick={() => setOpenPopover(proj._id)}
-                        className="hover:bg-gray-300 rounded-md cursor-pointer mr-1"
-                      >
-                        <PlusIcon />
-                      </div>
-                    </PopoverTrigger>
                     <PopoverTrigger>
                       <div
                         onClick={() => setOpenPopover(proj._id)}
@@ -382,7 +401,7 @@ export const Navigation = () => {
                           <div className="flex items-center">
                             <div className="flex flex-col justify-start">
                               <span className="text-sm truncate max-w-[150px]">
-                                {_.title} {index + 1}
+                                {index + 1} {_.name}
                               </span>
                               <span className="text-xs text-muted-foreground text-left">
                                 Epic
@@ -402,6 +421,16 @@ export const Navigation = () => {
                               setOpenEpicPopover(open ? index : null)
                             }
                           >
+                            <Popover>
+                              <PopoverTrigger>
+                                <div
+                                  onClick={() => { }}
+                                  className="hover:bg-gray-300 rounded-md cursor-pointer"
+                                >
+                                  <PlusIcon />
+                                </div>
+                              </PopoverTrigger>
+                            </Popover>
                             <PopoverTrigger>
                               <div
                                 onClick={() => setOpenEpicPopover(index)}
@@ -414,7 +443,10 @@ export const Navigation = () => {
                               <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
                                 <span className="text-sm">Rename</span>
                               </div>
-                              <div className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full">
+                              <div
+                                onClick={() => setOpenDialog(true)}
+                                className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full"
+                              >
                                 <span className="text-sm">Delete</span>
                               </div>
                             </PopoverContent>

@@ -26,11 +26,11 @@ import {
 } from "@/components/ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
-import { MenuItemType } from "@/lib/types";
+import type { Epic, MenuItemType, Project } from "@/lib/types";
 import EditorList from "./EditorList";
 
 interface CommonLayoutProps {
-    data: any;
+    data: Project | Epic;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     updateLabel: (val: string) => void;
@@ -80,7 +80,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
             <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
                 <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
                     <LabelToInput
-                        value={data.title}
+                        value={'title' in data ? data.title : data.name}
+
                         setValue={updateLabel}
                         onBlur={onEditorBlur} />
                     <div className="flex gap-4">
