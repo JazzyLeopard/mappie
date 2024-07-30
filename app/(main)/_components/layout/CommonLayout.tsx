@@ -43,7 +43,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         return menu.map(item => ({
             ...item,
             active: ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase()),
-            data: ''
+            data: data[item.key]
         }));
     });
 
@@ -81,7 +81,6 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                 <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
                     <LabelToInput
                         value={'title' in data ? data.title : data.name}
-
                         setValue={updateLabel}
                         onBlur={onEditorBlur} />
                     <div className="flex gap-4">

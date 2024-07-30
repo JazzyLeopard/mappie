@@ -11,6 +11,7 @@ interface EditorListProps {
 }
 
 const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: EditorListProps) => {
+
     return (
         <div className=" flex-row space-y-4 w-full justify-between pb-[420px]">
             {components.map(c => {
@@ -39,3 +40,4 @@ const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: Edit
 }
 
 export default EditorList
+
