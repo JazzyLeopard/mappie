@@ -55,6 +55,20 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     };
 
     useEffect(() => {
+        // Retrieve active components from sessionStorage
+        const storedActiveComponents = sessionStorage.getItem("activeComponents");
+        if (storedActiveComponents) {
+            const activeComponents = JSON.parse(storedActiveComponents);
+            setComponents(prevComponents =>
+                prevComponents.map(component => ({
+                    ...component,
+                    active: activeComponents.some((active: { key: string; }) => active.key === component.key) // Set active based on stored data
+                }))
+            );
+        }
+    }, []); // Run once on mount
+
+    useEffect(() => {
         if (data) {
             setComponents(prevComponents => prevComponents.map(component => {
                 if (data[component.key] && data[component.key].length > 0) {

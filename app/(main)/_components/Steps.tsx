@@ -13,44 +13,7 @@ import AdditionalSteps from './AdditionalSteps';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import BlockEditor from './BlockEditor';
-
-
-const steps = [
-  {
-    title: 'What is the name of your project?',
-    key: 'title',
-    placeholder: 'Project Name',
-    stepNumber: 1
-  },
-  {
-    title: 'Can you describe your project in a few sentences?',
-    key: 'description',
-    placeholder: 'Write a description',
-    stepNumber: 2
-  },
-  {
-    title: 'What are the main objectives of this project?',
-    key: "objectives",
-    placeholder: 'Specify Objectives',
-    stepNumber: 3
-  },
-  {
-    title: 'What is in scope? What is out of scope?',
-    key: "scope",
-    placeholder: 'Specify Scope',
-    stepNumber: 4
-  },
-  {
-    title: 'Who are the main stakeholders? Who is involved in this project?',
-    key: "stakeholders",
-    placeholder: 'Specify Stakeholders',
-    stepNumber: 5
-  },
-  {
-    key: 'additional steps',
-    stepNumber: 6
-  }
-];
+import { steps } from "./constants"
 
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
@@ -75,6 +38,7 @@ const Steps = ({ project }: { project: any }) => {
         setStep(step + 1);
       } else {
         setStep(0);
+
       }
     } catch (error) {
       console.log('error updating project', error);
@@ -100,7 +64,6 @@ const Steps = ({ project }: { project: any }) => {
   };
 
   const handleEditorChange = (attribute: string, value: any) => {
-    console.log(attribute, value);
 
     setProjectDetails({ ...projectDetails, [attribute]: value });
   };

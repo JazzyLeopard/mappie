@@ -43,6 +43,7 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
 
 
 export const Navigation = () => {
@@ -50,6 +51,7 @@ export const Navigation = () => {
   const router = useRouter();
 
   const sidebarData = useQuery(api.projects.getSidebar);
+
   const createProject = useMutation(api.projects.createProject);
 
   const createEpic = useMutation(api.epics.createEpics)
@@ -98,7 +100,6 @@ export const Navigation = () => {
       error: "Failed to create userStory",
     })
   }
-
 
   // true if the query matches, false otherwise
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -308,7 +309,7 @@ export const Navigation = () => {
                           {proj.title}
                         </span>
                         <span className="text-xs text-muted-foreground text-left">
-                          Project
+                          {proj && proj?.onboarding != 0 ? (<Badge>Not Onboarded</Badge>) : (<Badge> Onboarded</Badge>)}
                         </span>
                       </div>
                     </div>

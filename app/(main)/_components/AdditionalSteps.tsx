@@ -1,6 +1,5 @@
 'use client';
 import React, { useEffect, useState } from "react";
-import RisksIcon from "@/icons/RisksIcon";
 import {
   Card,
   CardHeader,
@@ -9,68 +8,22 @@ import {
   CardContent
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ChevronsUp, DollarSign, Sparkles, UserCheck } from "lucide-react";
-import UnLinkIcon from "@/icons/UnLinkIcon";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import SparklesLight from "@/icons/SparklesLight";
 import { toTitleCase } from "@/utils/helper";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
 import RoundCheckmark from "@/icons/RoundCheckmark";
+import { MenuItemType } from "@/lib/types";
+import { menuItems } from "./constants";
+import { Underdog } from "next/font/google";
 
-type MenuItemType = {
-  key: string;
-  icon: React.JSX.Element;
-  description: string
-  active: boolean
-  required?: boolean
-}
-
-const menuItems: MenuItemType[] = [
-  {
-    key: "Project Target Audience",
-    icon: <UserCheck />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-  {
-    key: "Project Budget",
-    icon: <DollarSign />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-  {
-    key: "Project Constraints",
-    icon: <UnLinkIcon />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-  {
-    key: "Project Risks",
-    icon: <RisksIcon />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-  {
-    key: "Project Dependencies",
-    icon: <ChevronsUp />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-  {
-    key: "Project Priorites",
-    icon: <ChevronsUp />,
-    description: "Add regular paragraphs to convey your main content.",
-    active: false,
-  },
-]
-
-const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: () => void }) => {
+const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: (activeComponents: MenuItemType[]) => void }) => {
 
   const [components, setComponents] = useState<MenuItemType[]>([]);
 
-
   useEffect(() => {
     if (project) {
-      const menu = menuItems;
+      const menu = menuItems.filter(item => ['targetAudience', 'constraints', 'budget', 'dependencies', 'priorities', 'risks'].includes(item.key));
       Object.keys(project).forEach(ok => {
         if (project[ok] && project[ok].length > 0) {
           menu.forEach(m => {
@@ -97,13 +50,63 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
   }
 
   const handleOnBackClick = () => {
-    console.log('clicked back in child');
     onBackClick()
   }
 
   const handleOnContinue = () => {
-    onContinueClick()
+    const activeComponents = components.filter(component => component.active)
+    console.log("active:", activeComponents);
+    sessionStorage.setItem("activeComponents", JSON.stringify(activeComponents));
+    onContinueClick(activeComponents)
   }
+
+  const handleAICompletion = async () => {
+    // Collect pre-filled fields
+
+    const preFilled = [
+      { key: "description", value: project.description || "" },
+      { key: "objectives", value: project.objectives || "" },
+      { key: "scope", value: project.scope || "" },
+      { key: "stakeholders", value: project.stakeholders || "" },
+    ];
+
+    // Define required fields
+    const required = components
+      .filter(component => component.active)
+      .map(component => ({
+        key: component.key,
+        value: project[component.key] // Assuming project contains the necessary fields
+      }));
+
+    // Prepare payload
+    const payload = {
+      preFilled,
+      required
+    };
+
+    console.log("Payload", payload)
+
+    try {
+      const response = await fetch('/api/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('AI Response:', result.response);
+        // Handle the AI response as needed
+      } else {
+        console.error('Error from AI:', result.error);
+      }
+    } catch (error) {
+      console.error('Error calling AI API:', error);
+    }
+  };
 
   return (
     <>
@@ -136,7 +139,9 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
               </div>
             ))}
           </div>
-          <Button className="my-6"><SparklesLight />&nbsp;&nbsp;Complete selected elements with AI</Button>
+          <Button className="my-6" onClick={handleAICompletion}>
+            <SparklesLight />&nbsp;&nbsp;Complete selected elements with AI
+          </Button>
         </CardContent>
         <CardFooter className="mt-5 flex justify-between">
           <Button variant="outline" onClick={handleOnBackClick}>

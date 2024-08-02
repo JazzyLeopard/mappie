@@ -47,6 +47,7 @@ export const getSidebar = query(async (ctx) => {
         _id: project._id,
         title: project.title,
         type: 'project',
+        onboarding: project.onboarding,
         epics: epicsWithUserStories,
       };
     })

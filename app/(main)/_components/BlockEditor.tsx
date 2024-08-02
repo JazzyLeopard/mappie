@@ -12,6 +12,8 @@ import { useState, useEffect } from "react";
 import { Bold, Italic, Underline, Strikethrough, Code } from "lucide-react"
 import { debounce } from "lodash";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
@@ -29,15 +31,26 @@ export default function BlockEditor({
 
   const [isAiPromptOpen, setIsAiPromptOpen] = useState(false);
 
-  const editor = useCreateBlockNote({
-    initialContent: projectDetails[attribute] ? JSON.parse(projectDetails[attribute]) : undefined,
-  });
-
   const [formattedData, setFormattedData] = useState<string>()
+
+  const updateProjectMutation = useMutation(api.projects.updateProject)
+
+  const editor = useCreateBlockNote({
+    initialContent: undefined
+  })
+
+  useEffect(() => {
+    const initializeEditor = async () => {
+      if (projectDetails[attribute]) {
+        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
+        editor.replaceBlocks(editor.document, newBlock)
+      }
+    }
+    initializeEditor()
+  }, [])
 
   const handleOnBlur = async () => {
     onBlur();
-
     const formatted = await editor.blocksToMarkdownLossy(editor.document);
     setFormattedData(formatted)
   }
@@ -50,6 +63,7 @@ export default function BlockEditor({
 
   const toggleStyle = (style: StyleKeys) => {
     editor.focus();
+    console.log("Current active styles:", editor.getActiveStyles());
 
     if (editor.schema.styleSchema[style].propSchema !== "boolean") {
       throw new Error("can only toggle boolean styles");
@@ -57,10 +71,13 @@ export default function BlockEditor({
 
     const isActive = style in editor.getActiveStyles();
     editor.toggleStyles({ [style]: !isActive } as any);
+    console.log("updated active styles:", editor.getActiveStyles());
   };
 
-  const saveContent = debounce(() => {
-    const content = JSON.stringify(editor.document); // Retrieve the document content
+
+  const saveContent = debounce(async () => {
+    const content = await editor.blocksToMarkdownLossy(editor.document)
+    //const content = JSON.stringify(editor.document); // Retrieve the document content
     setProjectDetails((prevDetails: any) => ({
       ...prevDetails,
       [attribute]: content,
@@ -77,7 +94,6 @@ export default function BlockEditor({
     }
   }, [editor, attribute, setProjectDetails]);
 
-
   // Custom function to get filtered Slash Menu items
   const getCustomSlashMenuItems = (
     editor: BlockNoteEditor
@@ -89,7 +105,6 @@ export default function BlockEditor({
     );
   };
 
-
   // Function to handle AI responses
   const handleAIResponse = async (aiResponse: string) => {
     // Focus the editor before making changes
@@ -98,6 +113,19 @@ export default function BlockEditor({
     // Retrieve the block using getBlock
     const block = await editor.tryParseMarkdownToBlocks(aiResponse)
 
+    //Function to save the Markdown content to db
+    const markDownContent = await editor.blocksToMarkdownLossy(block)
+
+    try {
+      await updateProjectMutation({
+        [attribute]: markDownContent, _id: projectDetails._id,
+      })
+
+      console.log("Content saved to convex Db", markDownContent);
+    } catch (error) {
+      console.log("Error saving content to db", error);
+      return
+    }
 
     editor.replaceBlocks(editor.document, block);
 
