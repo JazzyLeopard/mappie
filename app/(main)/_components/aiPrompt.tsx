@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import Draggable from "react-draggable";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,8 @@ interface AiPromptbarProps {
 export default function AiPromptBar({ onClose, attribute, data, onAIResponse }: AiPromptbarProps) {
 
   const [inputValue, setInputValue] = useState("");
+
+  const draggableRef = useRef<HTMLDivElement>(null)
 
   const [showHistory, setShowHistory] = useState(false);
   const previousPrompts = ["Prompt 1", "Prompt 2", "Prompt 3"]; // Example previous prompts
@@ -54,8 +56,8 @@ export default function AiPromptBar({ onClose, attribute, data, onAIResponse }: 
 
 
   return (
-    <Draggable cancel=".no-drag">
-      <div className="flex flex-col items-center min-h-[3rem] max-w-lg p-2 bg-gray-900 text-white rounded-lg">
+    <Draggable cancel=".no-drag" nodeRef={draggableRef}>
+      <div ref={draggableRef} className="flex flex-col items-center min-h-[3rem] max-w-lg p-2 bg-gray-900 text-white rounded-lg">
         <div className="flex items-center w-full">
           <div className="flex items-center justify-center p-2">
             <AiGenerationIconWhite />

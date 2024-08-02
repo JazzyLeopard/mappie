@@ -8,6 +8,42 @@ import RisksIcon from "@/icons/RisksIcon";
 import ScopeIcon from "@/icons/ScopeIcon";
 import { MenuItemType } from "@/lib/types";
 
+export const steps = [
+    {
+        title: 'What is the name of your project?',
+        key: 'title',
+        placeholder: 'Project Name',
+        stepNumber: 1
+    },
+    {
+        title: 'Can you describe your project in a few sentences?',
+        key: 'description',
+        placeholder: 'Write a description',
+        stepNumber: 2
+    },
+    {
+        title: 'What are the main objectives of this project?',
+        key: "objectives",
+        placeholder: 'Specify Objectives',
+        stepNumber: 3
+    },
+    {
+        title: 'What is in scope? What is out of scope?',
+        key: "scope",
+        placeholder: 'Specify Scope',
+        stepNumber: 4
+    },
+    {
+        title: 'Who are the main stakeholders? Who is involved in this project?',
+        key: "stakeholders",
+        placeholder: 'Specify Stakeholders',
+        stepNumber: 5
+    },
+    {
+        key: 'additional steps',
+        stepNumber: 6
+    }
+];
 
 export const menuItems: MenuItemType[] = [
     {
@@ -28,14 +64,12 @@ export const menuItems: MenuItemType[] = [
         key: "requirements",
         icon: <PeopleIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
         required: true
     },
     {
         key: "stakeholders",
         icon: <PeopleIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
         required: true
     },
     {
