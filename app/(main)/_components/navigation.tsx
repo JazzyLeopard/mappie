@@ -309,7 +309,7 @@ export const Navigation = () => {
                           {proj.title}
                         </span>
                         <span className="text-xs text-muted-foreground text-left">
-                          {proj && proj?.onboarding != 0 ? (<Badge>Not Onboarded</Badge>) : (<Badge> Onboarded</Badge>)}
+                          {proj && proj?.onboarding != 0 ? (<p>Onboarding</p>) : (<p> Active</p>)}
                         </span>
                       </div>
                     </div>
