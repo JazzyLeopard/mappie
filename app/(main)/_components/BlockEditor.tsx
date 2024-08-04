@@ -7,19 +7,20 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import "@/app/custom.css";
 import { AiPromptButton } from "@/components/ui/AiPromptButton";
-import AiPromptBar from "./aiPrompt";
-import { useState, useEffect } from "react";
+import { propertyPrompts } from "./constants";
+import { useState, useEffect, useCallback } from "react";
 import { Bold, Italic, Underline, Strikethrough, Code } from "lucide-react"
 import { debounce } from "lodash";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem, ToggleGroupItemNoHover } from "@/components/ui/toggle-group";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
   attribute: string;
   projectDetails: any;
-  setProjectDetails: (value: any) => void
+  setProjectDetails: (value: any) => void;
 };
 
 export default function BlockEditor({
@@ -28,8 +29,6 @@ export default function BlockEditor({
   projectDetails,
   setProjectDetails,
 }: BlockEditorProps) {
-
-  const [isAiPromptOpen, setIsAiPromptOpen] = useState(false);
 
   const [formattedData, setFormattedData] = useState<string>()
 
@@ -55,8 +54,47 @@ export default function BlockEditor({
     setFormattedData(formatted)
   }
 
-  const toggleAiPrompt = () => {
-    setIsAiPromptOpen((prev) => !prev);
+  const jsonReplacer = (key: string, value: any) => {
+    if (typeof value === 'bigint') {
+      return value.toString();
+    }
+    return value;
+  };
+
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAIEnhancement = async () => {
+    setIsLoading(true);
+    const currentContent = await editor.blocksToMarkdownLossy(editor.document);
+    const prompt = propertyPrompts[attribute] || "Enhance the following content:";
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: attribute,
+          data: currentContent,
+          instructions: prompt,
+          projectDetails: projectDetails,
+        }, jsonReplacer),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        handleAIResponse(result.response);
+      } else {
+        console.error('Error:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching AI response:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   type StyleKeys = keyof typeof editor.schema.styleSchema;
@@ -136,6 +174,21 @@ export default function BlockEditor({
     console.log("Current Block:", block);
   };
 
+  const checkEditorContent = useCallback(async () => {
+    const content = await editor.blocksToMarkdownLossy(editor.document);
+    setIsEditorEmpty(content.trim() === '');
+  }, [editor]);
+
+  useEffect(() => {
+    checkEditorContent(); // Check initial content
+    editor.onChange(checkEditorContent);
+
+    return () => {
+      // No need to explicitly remove the listener
+      // The editor instance will be destroyed when the component unmounts
+    };
+  }, [editor, checkEditorContent]);
+
   // Renders the editor instance using a React component.
   return (
     <>
@@ -159,35 +212,37 @@ export default function BlockEditor({
               <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="ai" onClick={() => toggleAiPrompt()}>
-                <AiPromptButton />
-              </ToggleGroupItem>
+              <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
+                <AiPromptButton onClick={handleAIEnhancement} disabled={isEditorEmpty || isLoading} loading={isLoading} />
+              </ToggleGroupItemNoHover>
             </ToggleGroup>
           </div>
-          <BlockNoteView
-            editor={editor}
-            formattingToolbar={false}
-            data-theming-css
-            sideMenu={false}
-            slashMenu={false} // Disable default Slash Menu
-            onBlur={handleOnBlur}
-            style={{ paddingTop: "16px" }}
-          >
-            <SuggestionMenuController
-              triggerCharacter={"/"}
-              // Replaces the default Slash Menu items with our custom ones.
-              getItems={async (query) =>
-                filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-              }
-            />
-          </BlockNoteView>
+          {isLoading ? (
+            <div className="mt-4">
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ) : (
+            <BlockNoteView
+              editor={editor}
+              formattingToolbar={false}
+              data-theming-css
+              sideMenu={false}
+              slashMenu={false} // Disable default Slash Menu
+              onBlur={handleOnBlur}
+              style={{ paddingTop: "16px" }}
+            >
+              <SuggestionMenuController
+                triggerCharacter={"/"}
+                // Replaces the default Slash Menu items with our custom ones.
+                getItems={async (query) =>
+                  filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                }
+              />
+            </BlockNoteView>
+          )}
           {/* <h1>Formatted Data: {formattedData}</h1> */}
-          {isAiPromptOpen &&
-            <AiPromptBar
-              onClose={() => setIsAiPromptOpen(false)}
-              attribute={attribute}
-              data={formattedData}
-              onAIResponse={handleAIResponse} />}
         </BlockNoteContext.Provider>
       </div>
 
