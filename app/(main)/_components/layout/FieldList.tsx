@@ -2,16 +2,14 @@
 import { MenuItemType } from "@/lib/types";
 import { toTitleCase } from "@/utils/helper"
 import Link from "next/link"
-import { useState } from "react"
 
 interface FieldListProps {
     components: MenuItemType[];
+    activeSection: string;
+    setActiveSection: (section: string) => void;
 }
 
-const FieldList = ({ components }: FieldListProps) => {
-
-    const [activeSection, setActiveSection] = useState<string>("description");
-
+const FieldList = ({ components, activeSection, setActiveSection }: FieldListProps) => {
     const handleSectionClick = (sectionId: string) => {
         setActiveSection(sectionId);
         const element = document.getElementById(sectionId);
@@ -23,29 +21,20 @@ const FieldList = ({ components }: FieldListProps) => {
         }
     };
 
-    const NavLink = ({ section, activeSection, handleSectionClick }: { section: string, activeSection: string, handleSectionClick: (sectionId: string) => void }) => (
-        <Link
-            href="#"
-            className={`block p-2 rounded-md ${activeSection === section ? "font-semibold bg-white text-black-500" : "hover:bg-gray-200"
-                }`}
-            onClick={() => handleSectionClick(section)}
-            prefetch={false}
-        >
-            {toTitleCase(section)}
-        </Link>
-    );
-
     return (
         <div className="w-60 bg-secondary p-4 rounded-md sticky top-[106px] self-start h-auto overflow-y-auto">
             <nav className="space-y-2">
                 {components.map(component => (
                     component.active && (
-                        <NavLink
+                        <Link
                             key={component.key}
-                            section={component.key}
-                            activeSection={activeSection}
-                            handleSectionClick={handleSectionClick}
-                        />
+                            href="#"
+                            className={`block p-2 rounded-md ${activeSection === component.key ? "font-semibold bg-white text-black-500" : "hover:bg-gray-200"}`}
+                            onClick={() => handleSectionClick(component.key)}
+                            prefetch={false}
+                        >
+                            {toTitleCase(component.key)}
+                        </Link>
                     )
                 ))}
             </nav>

@@ -19,6 +19,7 @@ import listIcon from "@iconify/icons-ic/outline-list";
 import "@/app/custom.css";
 import AiGenerationIcon from "@/icons/AI-Generation";
 import BlockEditor from "./BlockEditor";
+import { Presentation } from "lucide-react";
 
 
 import React, { useEffect, useState } from "react";
@@ -285,6 +286,10 @@ const ProjectLayout = ({ project }: { project: any }) => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            <Button variant="outline">
+                  <Presentation />
+                  Presentation Mode
+                </Button>
             <Button className="flex items-center gap-2">
               <AiGenerationIconWhite />
               Generate Epics
