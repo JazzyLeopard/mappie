@@ -14,6 +14,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import BlockEditor from './BlockEditor';
 import { steps } from "./constants"
+import { propertyPrompts } from "./constants";
 
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
