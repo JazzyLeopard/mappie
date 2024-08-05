@@ -28,6 +28,8 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
 import EditorList from "./EditorList";
+import { Presentation } from "lucide-react";
+import PresentationMode from '../PresentationMode';
 
 interface CommonLayoutProps {
     data: Project | Epic;
@@ -72,11 +74,17 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 
 
 
+    const [activeSection, setActiveSection] = useState<string>("description");
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+    const [isPresentationMode, setIsPresentationMode] = useState(false);
 
     // Toggle modal visibility
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
+    };
+
+    const togglePresentationMode = () => {
+        setIsPresentationMode(!isPresentationMode);
     };
 
     useEffect(() => {
@@ -90,40 +98,42 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         }
     }, [data]);
 
-    const handleItemClick = (index: number) => {
-        const newComponents = components.map((component, i) => {
-            if (i === index) {
-                return { ...component, active: !component.active };
-            }
-            return component;
-        });
-        setComponents(newComponents);
-    };
+    if (isPresentationMode) {
+        return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
+    }
 
     return (
-        <div className="flex h-screen w-full px-0 mt-0">
-            <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
-                <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
-                    <LabelToInput
-                        value={'title' in data ? data.title : data.name}
-                        setValue={updateLabel}
-                        onBlur={onEditorBlur} />
-                    <div className="flex gap-4">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline">Project Elements</Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-[800px] max-h-[85vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle>Select Additional Project Elements</DialogTitle>
-                                </DialogHeader>
-                                <DialogDescription></DialogDescription>
-                                <ul className="grid gap-3 p-4">
-                                    {components.map((component, index) => {
-                                        return (
+        <>
+            <div className="flex h-screen w-full px-0 mt-0">
+                <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
+                    <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
+                        <LabelToInput
+                            value={'title' in data ? data.title : data.name}
+                            setValue={updateLabel}
+                            onBlur={onEditorBlur} />
+                        <div className="flex gap-4">
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">Project Elements</Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[800px] max-h-[85vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle>Select Additional Project Elements</DialogTitle>
+                                    </DialogHeader>
+                                    <DialogDescription></DialogDescription>
+                                    <ul className="grid gap-3 p-4">
+                                        {components.map((component) => (
                                             <li key={toTitleCase(component.key)}
                                                 className={`flex justify-center items-center p-4 gap-4 ${component.active ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
-                                                onClick={() => !component.required && handleItemClick(index)}>
+                                                onClick={() => {
+                                                    if (!component.required) {
+                                                        setComponents(prevComponents => 
+                                                            prevComponents.map(c => 
+                                                                c.key === component.key ? {...c, active: !c.active} : c
+                                                            )
+                                                        );
+                                                    }
+                                                }}>
                                                 <div>{component.icon}</div>
                                                 <div>
                                                     <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
@@ -137,26 +147,47 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                                                     )}
                                                 </div>
                                             </li>
-                                        )
-                                    })}
-                                </ul>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button>Close</Button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                        <Button>Generate Epics</Button>
+                                        ))}
+                                    </ul>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button>Close</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                            <Button 
+                                className="bg-gradient-to-r from-blue-400 to-pink-400 text-white"
+                                onClick={togglePresentationMode}
+                            >
+                                <Presentation className="pr-2" />
+                                Presentation Mode
+                            </Button>
+                            <Button>Generate Epics</Button>
+                        </div>
                     </div>
-                </div>
 
-                <div className="flex items-start space-x-8">
-                    <FieldList components={components} />
-                    <EditorList components={components} data={data} onEditorBlur={onEditorBlur} handleEditorChange={handleEditorChange} />
-                </div>
-            </main>
-        </div>
+                    <div className="flex items-start space-x-8">
+                        <FieldList 
+                            components={components} 
+                            activeSection={activeSection}
+                            setActiveSection={setActiveSection}
+                        />
+                        <div className="flex-1">
+                            <EditorList 
+                                components={components.filter(c => c.key === activeSection)} 
+                                data={data} 
+                                onEditorBlur={onEditorBlur} 
+                                handleEditorChange={handleEditorChange} 
+                            />
+                        </div>
+                    </div>
+                </main>
+            </div>
+            {isPresentationMode && (
+                <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />
+            )}
+        </>
     );
 };
 
