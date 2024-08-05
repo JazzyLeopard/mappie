@@ -66,7 +66,7 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
     const preFilled = [
       { key: "description", value: project.description || "" },
       { key: "objectives", value: project.objectives || "" },
-      { key: "scope", value: project.scope || "" },
+      { key: "requirements", value: project.requirements || "" },
       { key: "stakeholders", value: project.stakeholders || "" },
     ];
 
