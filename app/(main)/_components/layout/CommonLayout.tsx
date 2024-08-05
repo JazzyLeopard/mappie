@@ -39,13 +39,38 @@ interface CommonLayoutProps {
 
 const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange }: CommonLayoutProps) => {
 
-    const [components, setComponents] = useState<MenuItemType[]>(() => {
-        return menu.map(item => ({
+    const [components, setComponents] = useState<MenuItemType[]>(new Array(0))
+
+    useEffect(() => {
+        const toBeAdded: MenuItemType[] = menu.map(item => ({
             ...item,
             active: ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase()),
             data: data[item.key]
         }));
-    });
+
+        const activeComponents = JSON.parse(sessionStorage.getItem("activeComponents") as string) as MenuItemType[];
+
+        activeComponents.forEach((ac) => {
+            const index = toBeAdded.findIndex(tba => tba.key === ac.key);
+            if (index != -1) {
+                toBeAdded[index] = ac
+            }
+            else {
+                toBeAdded.push(ac)
+            }
+        });
+
+        setComponents(toBeAdded);
+
+        activeComponents.forEach((ac) => {
+            if (ac.data?.length > 0) {
+                handleEditorChange(ac.key, ac.data)
+            }
+        })
+
+    }, [])
+
+
 
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
@@ -53,20 +78,6 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
     };
-
-    useEffect(() => {
-        // Retrieve active components from sessionStorage
-        const storedActiveComponents = sessionStorage.getItem("activeComponents");
-        if (storedActiveComponents) {
-            const activeComponents = JSON.parse(storedActiveComponents);
-            setComponents(prevComponents =>
-                prevComponents.map(component => ({
-                    ...component,
-                    active: activeComponents.some((active: { key: string; }) => active.key === component.key) // Set active based on stored data
-                }))
-            );
-        }
-    }, []); // Run once on mount
 
     useEffect(() => {
         if (data) {

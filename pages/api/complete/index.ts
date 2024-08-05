@@ -28,17 +28,14 @@ export default async function handler(
   const prompt = `
     You're an experienced project manager and scrum master with over 10 years of hands-on experience in managing diverse teams and delivering successful projects using Agile methodologies.
    
-    I am providing you with the following pre-filled fields:
-    ${preFilled}
-    
-    Based on the fields I have shared:
+    You're provided with the below details / fields of Project filled by the user:
     ${preFilled.map((field: { key: any; value: any; }) => `${field.key}: ${field.value}`).join('\n')}
     
-    Help me generate the following items for the ${required} field:
+    Based on the fields I have shared, Help me generate the below fields / details:
 
-    ${required.map((field: { key: any; }) => field.key).join(', ')}
+    ${required.join(', ')}
 
-    Return me response in JSON format like this:
+    Return ONLY the json response as below without any explanations or other details:
     [{"key": "value"}]
 
     The keys in the JSON response should match the keys provided in the required fields, and the value should be the generated content for each field.
