@@ -73,10 +73,7 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
     // Define required fields
     const required = components
       .filter(component => component.active)
-      .map(component => ({
-        key: component.key,
-        value: project[component.key] // Assuming project contains the necessary fields
-      }));
+      .map(component => component.key);
 
     // Prepare payload
     const payload = {
@@ -96,9 +93,32 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
       });
 
       const result = await response.json();
-
+      
+      // const result = {
+      //   "response": "{\"constraints\": \"Detail constraints here\", \"budget\": \"Specify budget details here\"}",
+      //   error: null
+      // }
+      // const response ={
+      //   ok: true
+      // }
       if (response.ok) {
         console.log('AI Response:', result.response);
+        const resp = JSON.parse(result.response);
+
+        // Create data to store in sessionStorage
+        const autoFilledData = new Array<MenuItemType>();
+
+        Object.keys(resp).forEach(ok=>{
+          const selected = menuItems.find(c=> c.key == ok);
+          if (selected) {
+            selected.active = true;
+            selected.data = resp[ok];
+            autoFilledData.push(selected)
+          }
+        })
+
+        sessionStorage.setItem("activeComponents", JSON.stringify(autoFilledData));
+        onContinueClick(autoFilledData)
         // Handle the AI response as needed
       } else {
         console.error('Error from AI:', result.error);
