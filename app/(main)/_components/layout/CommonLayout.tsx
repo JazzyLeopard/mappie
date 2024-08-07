@@ -163,7 +163,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                                 <Presentation className="pr-2" />
                                 Presentation Mode
                             </Button>
-                            <Button>Generate Epics</Button>
+                            <Button>Start Analysis</Button>
                         </div>
                     </div>
 

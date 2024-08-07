@@ -1,10 +1,15 @@
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AlertTriangleIcon, BarChartIcon, CalendarIcon, ListIcon, XIcon } from 'lucide-react' // Import an X icon for closing
+import { AlertTriangleIcon, BarChartIcon, CalendarIcon, ListIcon, XIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import { serialize } from 'next-mdx-remote/serialize'
+import { MDXRemote } from 'next-mdx-remote'
 import remarkGfm from 'remark-gfm'
+import Spinner from "@/components/ui/spinner"
 import "./markdown-styles.css";
+import {ChakraProvider} from "@chakra-ui/react"
+import { UnorderedList, OrderedList, ListItem } from "@chakra-ui/react";
 import {
   Table,
   TableBody,
@@ -15,14 +20,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import React, { useState, useEffect, useCallback } from "react"
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import { MDXRemoteSerializeResult } from 'next-mdx-remote'
+import { Listbox, ListboxItem } from "@nextui-org/react";
 
 interface PresentationModeProps {
-  data: any; // Replace 'any' with your actual data type
+  data: any;
   onClose: () => void;
 }
 
 export default function PresentationMode({ data, onClose }: PresentationModeProps) {
   const [activeSection, setActiveSection] = useState<string>("description");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [serializedContent, setSerializedContent] = useState<Record<string, MDXRemoteSerializeResult>>({});
 
   const sections = [
     { id: "description", icon: FileTextIcon },
@@ -65,6 +76,62 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    const serializeContent = async () => {
+      const serialized: Record<string, MDXRemoteSerializeResult> = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          serialized[key] = await serialize(value, {
+            mdxOptions: {
+              remarkPlugins: [remarkGfm],
+            },
+            parseFrontmatter: false
+          });
+        }
+      }
+      setSerializedContent(serialized);
+    };
+    serializeContent();
+  }, [data]);
+
+  const generatePDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const elements = document.querySelectorAll('section');
+      
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i] as HTMLElement;
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+          foreignObjectRendering: true
+        });
+        const imgData = canvas.toDataURL('image/png');
+        
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const imgX = (pdfWidth - imgWidth * ratio);
+        const imgY = 30;
+
+        pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      }
+      
+      pdf.save('presentation.pdf');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-auto">
@@ -112,12 +179,16 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <DownloadIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
-                  <span className="sr-only">Download</span>
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={generatePDF} disabled={isGeneratingPDF}>
+                  {isGeneratingPDF ? (
+                    <Spinner />
+                  ) : (
+                    <DownloadIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+                  )}
+                  <span className="sr-only">Download PDF</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Download</TooltipContent>
+              <TooltipContent side="right">Download PDF</TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <TooltipProvider>
@@ -135,48 +206,46 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
       </aside>
       <div className="ml-14 sm:ml-16 md:ml-20 lg:ml-24">
         {sections.map(({ id }) => (
-          <section key={id} id={id} className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 sm:px-6 md:px-10">
-            <div className="bg-slate-100 w-fit max-w-4xl mx-auto my-4 rounded-3xl shadow-md flex py-10 flex-col items-center justify-center gap-4 px-8 sm:px-10 md:px-12">            
+          <section key={id} id={id} className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 sm:px-6 md:px-10 bg-slate-100">
+            <div className="w-fit max-w-4xl mx-auto my-4 rounded-3xl flex py-10 flex-col items-center justify-center gap-4 px-8 sm:px-10 md:px-12">            
               <h1 className="text-3xl mb-12 font-bold tracking-tighter text-center sm:text-4xl md:text-5xl lg:text-6xl">{id.charAt(0).toUpperCase() + id.slice(1)}</h1>
               <div className="prose dark:prose-invert max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    table: ({ node, ...props }) => (
-                      <Table {...props} />
-                    ),
-                    thead: ({ node, ...props }) => (
-                      <TableHeader {...props} />
-                    ),
-                    th: ({ node, ...props }) => (
-                      <TableHead {...props} />
-                    ),
-                    tr: ({ node, ...props }) => (
-                      <TableRow {...props} />
-                    ),
-                    td: ({ node, ...props }) => (
-                      <TableCell {...props} />
-                    ),
-                    ul: ({ node, ...props }) => (
-                      <ul className="list-disc pl-8 space-y-2" {...props} />
-                    ),
-                    ol: ({ node, ...props }) => (
-                      <ol className="list-decimal pl-6" {...props} />
-                    ),
-                    li: ({ node, ...props }) => (
-                      <li className="mb-2" {...props} />
-                    ),
-                  }}
-                  className="text-left"
-                >
-                  {data[id]}
-                </ReactMarkdown>
+                {serializedContent[id] && (
+                  <MDXRemote
+                    {...serializedContent[id]}
+                    components={{
+                      ul: (props: React.HTMLAttributes<HTMLUListElement>) => <UnorderedList {...props} />,
+                      ol: (props: React.HTMLAttributes<HTMLOListElement>) => <OrderedList {...props} />,
+                      li: (props: React.HTMLAttributes<HTMLLIElement>) => <ListItem {...props} />,
+                      strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                      table: (props) => (
+                        <Table {...props} className="border-2 border-border rounded-lg">
+                          <TableBody className="rounded-lg">
+                            {props.children}
+                          </TableBody>
+                        </Table>
+                      ),
+                      thead: TableHeader,
+                      tbody: TableBody,
+                      tr: TableRow,
+                      th: TableHead,
+                      td: TableCell,
+                    }}
+                  />
+                )}
               </div>
             </div>
           </section>
         ))}
       </div>
-    </div>
+      <div className="fixed bottom-0 ml-14 sm:ml-16 md:ml-20 lg:ml-24 left-0 right-0 flex justify-center p-4 bg-background/60 backdrop-blur-md">
+        <div className="flex flex-row items-center gap-4">
+          <p className="text-sm text-muted-foreground">Use arrow keys to navigate</p>
+          <ChevronUpIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
+          <ChevronDownIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />  
+          </div>
+        </div>
+      </div>
   )
 }
 
