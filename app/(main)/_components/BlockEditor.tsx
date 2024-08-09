@@ -33,6 +33,8 @@ export default function BlockEditor({
   const [formattedData, setFormattedData] = useState<string>()
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
+  const updateAnalysisMutation = useMutation(api.analysis.updateAnalysis)
+  const updateEpicMutation = useMutation(api.epics.updateEpic)
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -86,6 +88,7 @@ export default function BlockEditor({
       const result = await response.json();
 
       if (response.ok) {
+
         handleAIResponse(result.response);
       } else {
         console.error('Error:', result.error);
@@ -101,7 +104,6 @@ export default function BlockEditor({
 
   const toggleStyle = (style: StyleKeys) => {
     editor.focus();
-    console.log("Current active styles:", editor.getActiveStyles());
 
     if (editor.schema.styleSchema[style].propSchema !== "boolean") {
       throw new Error("can only toggle boolean styles");
@@ -109,7 +111,6 @@ export default function BlockEditor({
 
     const isActive = style in editor.getActiveStyles();
     editor.toggleStyles({ [style]: !isActive } as any);
-    console.log("updated active styles:", editor.getActiveStyles());
   };
 
 
@@ -155,9 +156,25 @@ export default function BlockEditor({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      await updateProjectMutation({
-        [attribute]: markDownContent, _id: projectDetails._id,
-      })
+      if ("useCase" in projectDetails) {
+        // If it's an Analysis object
+        await updateAnalysisMutation({
+          _id: projectDetails._id,
+          [attribute]: markDownContent,
+        });
+      } else if ("name" in projectDetails) {
+        // If it's an Epic object
+        await updateEpicMutation({
+          _id: projectDetails._id,
+          [attribute]: markDownContent,
+        });
+      } else {
+        // If it's a Project object
+        await updateProjectMutation({
+          _id: projectDetails._id,
+          [attribute]: markDownContent,
+        });
+      }
 
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
