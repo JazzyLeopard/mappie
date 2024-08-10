@@ -8,9 +8,10 @@ interface EditorListProps {
     components: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void
+    onOpenBrainstormChat: () => void; // Added this prop
 }
 
-const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: EditorListProps) => {
+const EditorList = ({ data, components, onEditorBlur, handleEditorChange, onOpenBrainstormChat }: EditorListProps) => {
 
     return (
         <div className=" flex-row space-y-4 w-full justify-between pb-[420px]">
@@ -29,6 +30,7 @@ const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: Edit
                                     attribute={c.key}
                                     projectDetails={data}
                                     setProjectDetails={(value) => handleEditorChange(c.key, value)}
+                                    onOpenBrainstormChat={onOpenBrainstormChat} // Pass the prop
                                 />
                             </div>
                         </div>
@@ -40,4 +42,3 @@ const EditorList = ({ data, components, onEditorBlur, handleEditorChange }: Edit
 }
 
 export default EditorList
-

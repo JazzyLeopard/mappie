@@ -29,4 +29,36 @@
       margin-left: 0.5rem;
     }
 
+    .prose {
+      @apply text-sm;
+    }
+    
+    .prose p {
+      @apply mb-2;
+    }
+    
+    .prose ul, .prose ol {
+      @apply pl-4 mb-2;
+    }
+    
+    .prose li {
+      @apply mb-1;
+    }
+    
+    .prose code {
+      @apply px-1 py-0.5 bg-gray-100 rounded text-sm;
+    }
+    
+    .prose pre {
+      @apply p-2 bg-gray-100 rounded overflow-x-auto;
+    }
+    
+    .prose a {
+      @apply text-blue-500 underline;
+    }
+    
+    .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+      @apply font-bold mb-2;
+    }
+
 
