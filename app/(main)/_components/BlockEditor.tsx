@@ -9,18 +9,21 @@ import "@/app/custom.css";
 import { AiPromptButton } from "@/components/ui/AiPromptButton";
 import { propertyPrompts } from "./constants";
 import { useState, useEffect, useCallback } from "react";
-import { Bold, Italic, Underline, Strikethrough, Code } from "lucide-react"
+import { Bold, Italic, Underline, Strikethrough, Code, MessageSquare } from "lucide-react"
 import { debounce } from "lodash";
 import { ToggleGroup, ToggleGroupItem, ToggleGroupItemNoHover } from "@/components/ui/toggle-group";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import BrainstormChatButton from "./ChatButton";
 
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
   attribute: string;
   projectDetails: any;
   setProjectDetails: (value: any) => void;
+  onOpenBrainstormChat: () => void; // Add this new prop
 };
 
 export default function BlockEditor({
@@ -28,6 +31,7 @@ export default function BlockEditor({
   attribute,
   projectDetails,
   setProjectDetails,
+  onOpenBrainstormChat, // Add this new prop
 }: BlockEditorProps) {
 
   const [formattedData, setFormattedData] = useState<string>()
@@ -214,6 +218,9 @@ export default function BlockEditor({
               </ToggleGroupItem>
               <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
                 <AiPromptButton onClick={handleAIEnhancement} disabled={isEditorEmpty || isLoading} loading={isLoading} />
+              </ToggleGroupItemNoHover>
+              <ToggleGroupItemNoHover value="brainstorm" onClick={onOpenBrainstormChat}>
+                <BrainstormChatButton />
               </ToggleGroupItemNoHover>
             </ToggleGroup>
           </div>
