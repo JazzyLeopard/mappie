@@ -28,7 +28,7 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
 import EditorList from "./EditorList";
-import { Presentation } from "lucide-react";
+import { MessageSquare, Presentation } from "lucide-react";
 import PresentationMode from '../PresentationMode';
 
 interface CommonLayoutProps {
@@ -50,25 +50,28 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
             data: data[item.key]
         }));
 
-        const activeComponents = JSON.parse(sessionStorage.getItem("activeComponents") as string) as MenuItemType[];
+        const activeComponents = JSON.parse(sessionStorage.getItem("activeComponents") as string) as MenuItemType[] | null;
 
-        activeComponents.forEach((ac) => {
-            const index = toBeAdded.findIndex(tba => tba.key === ac.key);
-            if (index != -1) {
-                toBeAdded[index] = ac
-            }
-            else {
-                toBeAdded.push(ac)
-            }
-        });
+        if (activeComponents) {
+            activeComponents.forEach((ac) => {
+                const index = toBeAdded.findIndex(tba => tba.key === ac.key);
+                if (index != -1) {
+                    toBeAdded[index] = ac;
+                }
+            });
+        } else {
+            console.log("No active components found in session storage");
+        }
 
         setComponents(toBeAdded);
 
-        activeComponents.forEach((ac) => {
-            if (ac.data?.length > 0) {
-                handleEditorChange(ac.key, ac.data)
-            }
-        })
+        if (activeComponents) {
+            activeComponents.forEach((ac) => {
+                if (ac.data?.length > 0) {
+                    handleEditorChange(ac.key, ac.data)
+                }
+            })
+        }
 
     }, [])
 
@@ -77,6 +80,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     const [activeSection, setActiveSection] = useState<string>("description");
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
     const [isPresentationMode, setIsPresentationMode] = useState(false);
+    const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
 
     // Toggle modal visibility
     const toggleModal = () => {
@@ -85,6 +89,10 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 
     const togglePresentationMode = () => {
         setIsPresentationMode(!isPresentationMode);
+    };
+
+    const handleOpenBrainstormChat = () => {
+        setIsBrainstormChatOpen(true);
     };
 
     useEffect(() => {
@@ -178,7 +186,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                                 components={components.filter(c => c.key === activeSection)} 
                                 data={data} 
                                 onEditorBlur={onEditorBlur} 
-                                handleEditorChange={handleEditorChange} 
+                                handleEditorChange={handleEditorChange}
+                                onOpenBrainstormChat={handleOpenBrainstormChat}
                             />
                         </div>
                     </div>
@@ -192,3 +201,4 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 };
 
 export default CommonLayout;
+
