@@ -1,6 +1,7 @@
 "use client"
 import { analysisItems } from "@/app/(main)/_components/constants"
 import CommonLayout from "@/app/(main)/_components/layout/CommonLayout"
+import Spinner from "@/components/ui/spinner"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
@@ -13,31 +14,30 @@ interface AnalysisProps {
 }
 
 const Analysis = ({ params }: AnalysisProps) => {
-    const [analysisDetails, setanalysisDetails] = useState<any>();
-
     const id = params.projectId
 
+
+    const [analysisDetails, setanalysisDetails] = useState<any>();
     const updateAnalysis = useMutation(api.analysis.updateAnalysis)
     const createAnalysis = useMutation(api.analysis.createAnalysis)
 
     let analysis = useQuery(api.analysis.getAnalysisByProjectId, {
-        projectId: id
-    })
-
-    if (!analysis) {
-        createAnalysis({ projectId: id, functionalRequirements: '', useCase: '' }).then((val) => {
-            analysis = val
-        })
-    }
+        projectId: id,
+    });
 
     useEffect(() => {
         if (analysis) {
-            setanalysisDetails(analysis)
+            setanalysisDetails(analysis);
+        } else if (analysis === null) {
+            createAnalysis({ projectId: id, useCase: '', functionalRequirements: '' })
+                .then((newAnalysis) => {
+                    setanalysisDetails(newAnalysis);
+                })
+                .catch((error) => {
+                    console.error("Error creating analysis", error);
+                });
         }
-        else {
-
-        }
-    }, [analysis])
+    }, [analysis, createAnalysis, id]);
 
 
     const updateLabel = (val: string) => {
@@ -67,6 +67,9 @@ const Analysis = ({ params }: AnalysisProps) => {
             updateLabel={updateLabel}
             handleEditorChange={handleEditorChange} />
     }
+    return (<div className="flex justify-center items-center mx-auto">
+        <Spinner />
+    </div>)
 }
 
 export default Analysis
