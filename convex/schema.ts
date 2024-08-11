@@ -25,6 +25,16 @@ export default defineSchema({
     .index("by_userId", ["userId"]) // Index to query projects by userId
     .index("by_createdAt", ["createdAt"]), // Index to query projects by creation time
 
+  analysis: defineTable({
+    projectId: v.id("projects"),
+    functionalRequirements: v.string(),
+    useCase: v.string(),
+    createdAt: v.int64(), // Storing timestamp as bigint
+    updatedAt: v.int64(), // Storing timestamp as bigint
+  })
+    .index("by_projectId", ["projectId"]) // Index to query analysis by projectId
+    .index("by_createdAt", ["createdAt"]), // Index to query analysis by creation time
+
   epics: defineTable({
     projectId: v.id("projects"),
     name: v.string(),

@@ -1,6 +1,5 @@
 import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
-import { Project } from "next/dist/build/swc";
 
 
 export const getSidebar = query(async (ctx) => {
@@ -229,3 +228,5 @@ export const archiveProject = mutation({
     });
   },
 });
+
+
