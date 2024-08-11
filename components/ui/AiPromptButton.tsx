@@ -22,9 +22,9 @@ export function AiPromptButton({ onClick, disabled, loading }: AiPromptButtonPro
             <div className={`max-w-md rounded-xl p-px ${
               disabled || loading ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gradient-to-b from-blue-300 to-pink-300 dark:from-blue-800 dark:to-purple-800'
             }`}>
-              <div className="rounded-xl items-center flex py-2 px-3 bg-white dark:bg-gray-900">
+              <div className="rounded-xl items-center flex py-1 px-3 bg-white dark:bg-gray-900">
                 {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIcon />}
-                <p className="text-gray-700 dark:text-gray-300 flex flex-col pl-2 items-center justify-center">
+                <p className="text-gray-700 dark:text-gray-300 pt-2 pl-2">
                   {loading ? "Generating..." : "Enhance with AI"}
                 </p>
               </div>
