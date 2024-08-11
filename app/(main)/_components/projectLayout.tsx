@@ -230,6 +230,11 @@ const ProjectLayout = ({ project }: { project: any }) => {
     return () => clearInterval(interval);
   }, [projectDetails]);
 
+  const handleOpenBrainstormChat = () => {
+    // Implement the logic for opening brainstorm chat
+    console.log("Opening brainstorm chat");
+  };
+
   return (
     <div className="flex h-screen w-full">
       <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-hidden">
@@ -333,6 +338,7 @@ const ProjectLayout = ({ project }: { project: any }) => {
                         attribute={c.key}
                         projectDetails={projectDetails}
                         setProjectDetails={setProjectDetails}
+                        onOpenBrainstormChat={handleOpenBrainstormChat}
                       />
                     </div>
                   </div>

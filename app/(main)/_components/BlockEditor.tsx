@@ -1,7 +1,7 @@
 "use client";
 
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote, getDefaultReactSlashMenuItems, DefaultReactSuggestionItem, SuggestionMenuController, BlockNoteContext } from "@blocknote/react";
+import { useCreateBlockNote, getDefaultReactSlashMenuItems, DefaultReactSuggestionItem, SuggestionMenuController, BlockNoteContext, CreateLinkButton, NestBlockButton, UnnestBlockButton } from "@blocknote/react";
 import { BlockNoteEditor, filterSuggestionItems } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
@@ -213,6 +213,15 @@ export default function BlockEditor({
               <ToggleGroupItem value="strike" onClick={() => toggleStyle("strike")}>
                 <Strikethrough className="h-4 w-4" />
               </ToggleGroupItem>
+              <ToggleGroupItem value="nest-block">
+                <NestBlockButton/>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="unnest-block">
+                <UnnestBlockButton/>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="create-link">
+                <CreateLinkButton/>
+              </ToggleGroupItem>
               <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
@@ -235,7 +244,7 @@ export default function BlockEditor({
               editor={editor}
               formattingToolbar={false}
               data-theming-css
-              sideMenu={false}
+              sideMenu={true}
               slashMenu={false} // Disable default Slash Menu
               onBlur={handleOnBlur}
               style={{ paddingTop: "16px" }}
