@@ -159,6 +159,23 @@ export const epicMenuItems: MenuItemType[] = [
     },
 ]
 
+export const analysisItems: MenuItemType[] = [
+    {
+        key: "functionalRequirements",
+        icon: <PeopleIcon />,
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        active: true,
+        required: true
+    },
+    {
+        key: "useCases",
+        icon: <PeopleIcon />,
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        active: true,
+        required: true
+    },
+]
+
 export const propertyPrompts: { [key: string]: string } = {
     title: "Generate a concise and catchy title for the project based on the given information.",
     description: "Take the provided summary of the project and make it clear and easy to understand. Include the project's name, main goal, and the problem it aims to solve. If it's part of a larger project, explain how it fits in. Use simple language that anyone can understand. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
@@ -174,6 +191,8 @@ export const propertyPrompts: { [key: string]: string } = {
     targetAudience: "Improve the provided information on target audience. Clearly define each target audience item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     timeline: "Improve the provided information on timeline. Clearly define each timeline item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     successMetrics: "Improve the provided information on success metrics. Clearly define each success metric. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
+    functionalRequirements: "Clearly define the functional requirements for the project. Each requirement should describe a specific feature or functionality that the system must provide. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
+    useCases: "Clearly define the use cases for the project. Each use case should describe a specific scenario in which the system will be used. Explain the steps involved and the expected outcome. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data."
     // Add more prompts for other properties as needed
-  };
+};
 
