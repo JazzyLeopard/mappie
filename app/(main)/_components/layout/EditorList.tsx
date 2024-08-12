@@ -8,29 +8,27 @@ interface EditorListProps {
     components: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void
-    onOpenBrainstormChat: () => void; // Added this prop
+    onOpenBrainstormChat: () => void;
 }
 
 const EditorList = ({ data, components, onEditorBlur, handleEditorChange, onOpenBrainstormChat }: EditorListProps) => {
 
     return (
-        <div className=" flex-row space-y-4 w-full justify-between pb-[420px]">
+        <div className="h-full flex flex-col overflow-hidden">
             {components.map(c => {
                 if (c.active) {
-
                     return (
-                        <div key={c.key} id={c.key} className="border rounded-lg scroll-mt-[140px] p-3 min-h-[600px]">
-                            <h1 className="text-slate-900 pl-2 text-2xl font-semibold leading-[44.16px]">
+                        <div key={c.key} id={c.key} className="h-full flex flex-col overflow-hidden">
+                            <h1 className="text-slate-900 pl-2 text-2xl font-semibold sticky top-0 bg-white z-10">
                                 {toTitleCase(c.key)}
                             </h1>
-
-                            <div className="prose max-w-none">
+                            <div className="flex-1 overflow-hidden">
                                 <BlockEditor
                                     onBlur={onEditorBlur}
                                     attribute={c.key}
                                     projectDetails={data}
                                     setProjectDetails={(value) => handleEditorChange(c.key, value)}
-                                    onOpenBrainstormChat={onOpenBrainstormChat} // Pass the prop
+                                    onOpenBrainstormChat={onOpenBrainstormChat}
                                 />
                             </div>
                         </div>
