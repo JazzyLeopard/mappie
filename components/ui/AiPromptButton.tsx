@@ -1,38 +1,38 @@
 import AiGenerationIcon from "@/icons/AI-Generation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"; // Import a loading icon
+import { Button } from "./button";
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 
 interface AiPromptButtonProps {
   onClick: () => void;
   disabled: boolean;
   loading: boolean;
+  showingComparison: boolean;
 }
 
-export function AiPromptButton({ onClick, disabled, loading }: AiPromptButtonProps) {
+export function AiPromptButton({ onClick, disabled, loading, showingComparison }: AiPromptButtonProps) {
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div 
-            className={`flex flex-col items-center rounded-xl justify-center bg-white dark:bg-gray-950 ${
+          <Button 
+            className={`bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl ${
               disabled || loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             }`}
             onClick={disabled || loading ? undefined : onClick}
+            disabled={disabled || loading}
           >
-            <div className={`max-w-md rounded-xl p-px ${
-              disabled || loading ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gradient-to-b from-blue-300 to-pink-300 dark:from-blue-800 dark:to-purple-800'
-            }`}>
-              <div className="rounded-xl items-center flex py-1 px-3 bg-white dark:bg-gray-900">
-                {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIcon />}
-                <p className="text-gray-700 dark:text-gray-300 pt-2 pl-2">
-                  {loading ? "Generating..." : "Enhance with AI"}
-                </p>
-              </div>
+            <div className="rounded-xl items-center flex py-1 px-1">
+              {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIconWhite />}
+              <p className="pl-2">
+                {loading ? "Generating..." : showingComparison ? "New content below" : "Enhance with AI"}
+              </p>
             </div>
-          </div>
+          </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {disabled ? "Provide input first" : loading ? "Generating content..." : "Enhance with AI"}
+          {disabled ? "Provide input first" : loading ? "Generating content..." : showingComparison ? "New content generated" : "Enhance with AI"}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

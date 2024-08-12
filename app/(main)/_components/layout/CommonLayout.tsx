@@ -124,116 +124,108 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     }
 
     return (
-        <>
-            <div className="flex h-screen w-full px-0 mt-0">
-                <main className="flex-1 w-full pr-8 pl-8 pt-8 overflow-auto">
-                    <div className="bg-white sticky top-0 z-10 flex items-center justify-between pt-8 pb-8 justify-items-center gap-4">
-
-                        {showTitle &&
-                            (
-                                <div className="flex-1">
-                                    <LabelToInput
-                                        value={'title' in data ? data.title : data.name}
-                                        setValue={updateLabel}
-                                        onBlur={onEditorBlur} />
-                                </div>
-                            )
-                        }
-
-                        <div className="flex items-center gap-4 ml-auto">
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline">
-                                        {'title' in data && "Project Elements"}
-                                        {'useCase' in data && "Analysis Elements"}
-                                        {'name' in data && "Epics Elements"}
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-[800px] max-h-[85vh] overflow-y-auto">
-                                    <DialogHeader>
-                                        <DialogTitle>Select Additional Project Elements</DialogTitle>
-                                    </DialogHeader>
-                                    <DialogDescription></DialogDescription>
-                                    <ul className="grid gap-3 p-4">
-                                        {components.map((component) => (
-                                            <li key={toTitleCase(component.key)}
-                                                className={`flex justify-center items-center p-4 gap-4 ${component.active ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
-                                                onClick={() => {
-                                                    if (!component.required) {
-                                                        setComponents(prevComponents =>
-                                                            prevComponents.map(c =>
-                                                                c.key === component.key ? { ...c, active: !c.active } : c
-                                                            )
-                                                        );
-                                                    }
-                                                }}>
-                                                {/* Causing error when clicking on projectElements beacuse of icons */}
-                                                {/* <div>{component?.icon}</div> */}
-                                                <div>
-                                                    <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
-                                                    <p className="text-sm">{component.description}</p>
-                                                </div>
-                                                <div>
-                                                    {component.active ? (
-                                                        <BoldRoundCheckmark />
-                                                    ) : (
-                                                        <RoundCheckmark />
-                                                    )}
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button>Close</Button>
-                                        </DialogClose>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                            <Button
-                                className="bg-gradient-to-r from-blue-400 to-pink-400 text-white"
-                                onClick={togglePresentationMode}
-                            >
-                                <Presentation className="pr-2" />
-                                Presentation Mode
-                            </Button>
-                            {pathname === `/projects/${data._id}` &&
-                                <Button onClick={handleRouteAnalysis}>
-                                    Start Analysis
-                                </Button>
-                            }
-                            {pathname !== `/projects/${data._id}` && (
-                                <Button>
-                                    Generate Epics
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex items-start space-x-8">
-                        <FieldList
-                            components={components}
-                            activeSection={activeSection}
-                            setActiveSection={setActiveSection}
-                        />
+        <div className="h-screen flex flex-col z-top">
+            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8">
+                {showTitle &&
+                    (
                         <div className="flex-1">
-                            <EditorList 
-                                components={components.filter(c => c.key === activeSection)} 
-                                data={data} 
-                                onEditorBlur={onEditorBlur} 
-                                handleEditorChange={handleEditorChange}
-                                onOpenBrainstormChat={handleOpenBrainstormChat}
+                            <LabelToInput
+                                value={'title' in data ? data.title : data.name}
+                                setValue={updateLabel}
+                                onBlur={onEditorBlur}
                             />
                         </div>
-                    </div>
-                </main>
+                    )
+                }
+
+                <div className="flex items-center gap-4 ml-auto">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline">
+                                {'title' in data && "Project Elements"}
+                                {'useCase' in data && "Analysis Elements"}
+                                {'name' in data && "Epics Elements"}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-[800px] max-h-[85vh] overflow-y-auto">
+                            <DialogHeader>
+                                <DialogTitle>Select Additional Project Elements</DialogTitle>
+                            </DialogHeader>
+                            <DialogDescription></DialogDescription>
+                            <ul className="grid gap-3 p-4">
+                                {components.map((component) => (
+                                    <li key={toTitleCase(component.key)}
+                                        className={`flex justify-center items-center p-4 gap-4 ${component.active ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
+                                        onClick={() => {
+                                            if (!component.required) {
+                                                setComponents(prevComponents =>
+                                                    prevComponents.map(c =>
+                                                        c.key === component.key ? { ...c, active: !c.active } : c
+                                                    )
+                                                );
+                                            }
+                                        }}>
+                                        <div>
+                                            <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
+                                            <p className="text-sm">{component.description}</p>
+                                        </div>
+                                        <div>
+                                            {component.active ? (
+                                                <BoldRoundCheckmark />
+                                            ) : (
+                                                <RoundCheckmark />
+                                            )}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button>Close</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                    <Button
+                        className="bg-gradient-to-r from-gray-400 to-gray-60 text-white"
+                        onClick={togglePresentationMode}
+                    >
+                        <Presentation className="pr-2" />
+                        Presentation Mode
+                    </Button>
+                    {pathname === `/projects/${data._id}` &&
+                        <Button onClick={handleRouteAnalysis}>
+                            Start Analysis
+                        </Button>
+                    }
+                    {pathname !== `/projects/${data._id}` && (
+                        <Button>
+                            Generate Epics
+                        </Button>
+                    )}
+                </div>
             </div>
-            {isPresentationMode && (
-                <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />
-            )}
-        </>
+
+            <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10">
+                <div className="align-top">
+                    <FieldList
+                        components={components}
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
+                    />
+                </div>
+                <div className="overflow-hidden">
+                    <EditorList 
+                        components={components.filter(c => c.key === activeSection)} 
+                        data={data} 
+                        onEditorBlur={onEditorBlur} 
+                        handleEditorChange={handleEditorChange}
+                        onOpenBrainstormChat={handleOpenBrainstormChat}
+                    />
+                </div>
+            </div>
+        </div>
     );
 };
 
 export default CommonLayout;
-

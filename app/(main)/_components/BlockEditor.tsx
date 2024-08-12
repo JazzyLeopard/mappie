@@ -9,7 +9,7 @@ import "@/app/custom.css";
 import { AiPromptButton } from "@/components/ui/AiPromptButton";
 import { propertyPrompts } from "./constants";
 import { useState, useEffect, useCallback } from "react";
-import { Bold, Italic, Underline, Strikethrough, Code, MessageSquare } from "lucide-react"
+import { Bold, Italic, Underline, Strikethrough, Code, MessageSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 import { debounce } from "lodash";
 import { ToggleGroup, ToggleGroupItem, ToggleGroupItemNoHover } from "@/components/ui/toggle-group";
 import { useMutation } from "convex/react";
@@ -17,28 +17,59 @@ import { api } from "@/convex/_generated/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import BrainstormChatButton from "./ChatButton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+// Add this utility function at the top of your file
+function toTitleCase(str: string): string {
+  return str.replace(
+    /\w\S*/g,
+    function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    }
+  );
+}
 
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
   attribute: string;
   projectDetails: any;
   setProjectDetails: (value: any) => void;
-  onOpenBrainstormChat: () => void; // Add this new prop
+  onOpenBrainstormChat: () => void;
 };
+
+const MarkdownContent = ({ children }: { children: string }) => (
+  <ReactMarkdown 
+    remarkPlugins={[remarkGfm]}
+    components={{
+      ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-2" {...props} />,
+      ol: ({node, ...props}) => <ol className="list-decimal pl-5 space-y-2" {...props} />,
+      li: ({node, ...props}) => <li className="ml-2" {...props} />
+    }}
+    className="prose prose-sm max-w-none"
+  >
+    {children}
+  </ReactMarkdown>
+);
 
 export default function BlockEditor({
   onBlur,
   attribute,
   projectDetails,
   setProjectDetails,
-  onOpenBrainstormChat, // Add this new prop
+  onOpenBrainstormChat,
 }: BlockEditorProps) {
 
+  const [previousContent, setPreviousContent] = useState<string>('');
+  const [newAIContent, setNewAIContent] = useState<string>('');
+  const [showComparison, setShowComparison] = useState(false);
   const [formattedData, setFormattedData] = useState<string>()
+  const [showSummary, setShowSummary] = useState(false);
+  const [changeSummary, setChangeSummary] = useState("");
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
-  const updateAnalysisMutation = useMutation(api.analysis.updateAnalysis)
-  const updateEpicMutation = useMutation(api.epics.updateEpic)
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -73,6 +104,7 @@ export default function BlockEditor({
   const handleAIEnhancement = async () => {
     setIsLoading(true);
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
+    setPreviousContent(currentContent);
     const prompt = propertyPrompts[attribute] || "Enhance the following content:";
 
     try {
@@ -92,8 +124,24 @@ export default function BlockEditor({
       const result = await response.json();
 
       if (response.ok) {
-
-        handleAIResponse(result.response);
+        setNewAIContent(result.response);
+        setShowComparison(true);
+        
+        // Request a summary of changes
+        setIsSummaryLoading(true);
+        const summaryResponse = await fetch('/api/summary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            oldContent: currentContent,
+            newContent: result.response,
+          }),
+        });
+        const summaryResult = await summaryResponse.json();
+        setChangeSummary(summaryResult.summary);
+        setIsSummaryLoading(false);
       } else {
         console.error('Error:', result.error);
       }
@@ -104,10 +152,16 @@ export default function BlockEditor({
     }
   };
 
+  const handleConfirmAIContent = async () => {
+    await handleAIResponse(newAIContent);
+    setShowComparison(false);
+  };
+
   type StyleKeys = keyof typeof editor.schema.styleSchema;
 
   const toggleStyle = (style: StyleKeys) => {
     editor.focus();
+    console.log("Current active styles:", editor.getActiveStyles());
 
     if (editor.schema.styleSchema[style].propSchema !== "boolean") {
       throw new Error("can only toggle boolean styles");
@@ -115,6 +169,7 @@ export default function BlockEditor({
 
     const isActive = style in editor.getActiveStyles();
     editor.toggleStyles({ [style]: !isActive } as any);
+    console.log("updated active styles:", editor.getActiveStyles());
   };
 
 
@@ -160,25 +215,9 @@ export default function BlockEditor({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      if ("useCase" in projectDetails) {
-        // If it's an Analysis object
-        await updateAnalysisMutation({
-          _id: projectDetails._id,
-          [attribute]: markDownContent,
-        });
-      } else if ("name" in projectDetails) {
-        // If it's an Epic object
-        await updateEpicMutation({
-          _id: projectDetails._id,
-          [attribute]: markDownContent,
-        });
-      } else {
-        // If it's a Project object
-        await updateProjectMutation({
-          _id: projectDetails._id,
-          [attribute]: markDownContent,
-        });
-      }
+      await updateProjectMutation({
+        [attribute]: markDownContent, _id: projectDetails._id,
+      })
 
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
@@ -212,12 +251,12 @@ export default function BlockEditor({
 
   // Renders the editor instance using a React component.
   return (
-    <>
-      <div>
-        {/* @ts-ignore */}
-        <BlockNoteContext.Provider value={editor}>
+    <div className="h-full flex flex-col overflow-hidden">
+      {/* @ts-ignore */}
+      <BlockNoteContext.Provider value={editor}>
+        <div className="sticky top-0 z-20 bg-white">
           <div className="flex justify-between py-3 border-b border-gray-200">
-            <ToggleGroup type="single" defaultValue="none">
+            <ToggleGroup className="py-2" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
@@ -230,26 +269,24 @@ export default function BlockEditor({
               <ToggleGroupItem value="strike" onClick={() => toggleStyle("strike")}>
                 <Strikethrough className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="nest-block">
-                <NestBlockButton/>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="unnest-block">
-                <UnnestBlockButton/>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="create-link">
-                <CreateLinkButton/>
-              </ToggleGroupItem>
               <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
               <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
-                <AiPromptButton onClick={handleAIEnhancement} disabled={isEditorEmpty || isLoading} loading={isLoading} />
+                <AiPromptButton 
+                  onClick={handleAIEnhancement} 
+                  disabled={isEditorEmpty || isLoading} 
+                  loading={isLoading} 
+                  showingComparison={showComparison}
+                />
               </ToggleGroupItemNoHover>
               <ToggleGroupItemNoHover value="brainstorm" onClick={onOpenBrainstormChat}>
                 <BrainstormChatButton />
               </ToggleGroupItemNoHover>
             </ToggleGroup>
           </div>
+        </div>
+        <div className="flex-1 overflow-auto pt-4">
           {isLoading ? (
             <div className="mt-4">
               <Skeleton className="h-4 w-full mb-2" />
@@ -262,24 +299,73 @@ export default function BlockEditor({
               formattingToolbar={false}
               data-theming-css
               sideMenu={true}
-              slashMenu={false} // Disable default Slash Menu
+              slashMenu={false}
               onBlur={handleOnBlur}
-              style={{ paddingTop: "16px" }}
             >
               <SuggestionMenuController
                 triggerCharacter={"/"}
-                // Replaces the default Slash Menu items with our custom ones.
                 getItems={async (query) =>
                   filterSuggestionItems(getCustomSlashMenuItems(editor), query)
                 }
               />
             </BlockNoteView>
           )}
-          {/* <h1>Formatted Data: {formattedData}</h1> */}
-        </BlockNoteContext.Provider>
-      </div>
-
-    </>
+        </div>
+      </BlockNoteContext.Provider>
+      {showComparison && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Compare and Confirm - {toTitleCase(attribute)}</h2>
+              <Button
+                variant="outline"
+                onClick={() => setShowSummary(!showSummary)}
+                className="mb-4 flex items-center hover:text-blue-800"
+              >
+                {showSummary ? <ChevronUp className="mr-2" /> : <ChevronDown className="mr-2" />}
+                {showSummary ? "Hide Summary" : "Show Summary of Changes"}
+              </Button>
+              {showSummary && (
+                <div className="mb-4 p-4 bg-yellow-50 rounded-lg">
+                  <h3 className="font-semibold mb-2">Summary of Changes:</h3>
+                  {isSummaryLoading ? (
+                    <div className="flex items-center text-gray-500">
+                      <Loader2 className="animate-spin mr-2" />
+                      Generating summary...
+                    </div>
+                  ) : (
+                    <MarkdownContent>{changeSummary}</MarkdownContent>
+                  )}
+                </div>
+              )}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Previous Content</h3>
+                  <div className="border p-4 rounded bg-gray-50 max-h-[30vh] overflow-y-auto">
+                    <MarkdownContent>{previousContent}</MarkdownContent>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">New AI-Generated Content</h3>
+                  <div className="border p-4 rounded bg-blue-50 max-h-[30vh] overflow-y-auto">
+                    <MarkdownContent>{newAIContent}</MarkdownContent>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-4">
+                <Button variant="outline" onClick={() => setShowComparison(false)}>Cancel</Button>
+                <Button onClick={handleConfirmAIContent}>Confirm and Apply</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <style jsx global>{`
+        .bn-side-menu {
+          z-index: -10;
+        }
+      `}</style>
+    </div>
   );
 }
 
