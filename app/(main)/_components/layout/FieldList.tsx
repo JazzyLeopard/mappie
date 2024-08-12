@@ -22,7 +22,7 @@ const FieldList = ({ components, activeSection, setActiveSection }: FieldListPro
     };
 
     return (
-        <div className="w-60 bg-secondary p-4 rounded-md sticky top-[106px] self-start h-auto overflow-y-auto">
+        <div className="w-60 bg-secondary p-4 rounded-md self-start h-auto overflow-y-auto">
             <nav className="space-y-2">
                 {components?.length > 0 && components?.map(component => (
                     component.active && (
