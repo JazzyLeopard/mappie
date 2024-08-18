@@ -23,14 +23,15 @@ import {
 } from "@/components/ui/dialog";
 import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
-import type { Epic, MenuItemType, Project, Analysis } from "@/lib/types";
+import type { Epic, MenuItemType, Project } from "@/lib/types";
 import EditorList from "./EditorList";
 import { MessageSquare, Presentation } from "lucide-react";
 import PresentationMode from '../PresentationMode';
 import { useRouter, usePathname } from "next/navigation"
+import { debounce } from "lodash";
 
 interface CommonLayoutProps {
-    data: Project | Epic | Analysis;
+    data: Project | Epic ;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     updateLabel: (val: string) => void;
@@ -116,7 +117,11 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     }, [data]);
 
     const handleRouteAnalysis = () => {
-        router.push(`/projects/${data._id}/analysis`)
+        router.push(`/projects/${data._id}/functional-requirements`)
+    }
+
+    const handleRouteUseCase = () => {
+        router.push(`/projects/${data._id}/use-cases`)
     }
 
     if (isPresentationMode) {
@@ -195,7 +200,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     </Button>
                     {pathname === `/projects/${data._id}` &&
                         <Button onClick={handleRouteAnalysis}>
-                            Start Analysis
+                            Generate Functional Requirements
                         </Button>
                     }
                     {pathname !== `/projects/${data._id}` && (
@@ -203,6 +208,9 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                             Generate Epics
                         </Button>
                     )}
+                    <Button onClick={handleRouteUseCase}>
+                        Generate Use Cases
+                    </Button>
                 </div>
             </div>
 
@@ -217,8 +225,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                 <div className="overflow-hidden">
                     <EditorList 
                         components={components.filter(c => c.key === activeSection)} 
-                        data={data} 
-                        onEditorBlur={onEditorBlur} 
+                        data={data}  
                         handleEditorChange={handleEditorChange}
                         onOpenBrainstormChat={handleOpenBrainstormChat}
                     />

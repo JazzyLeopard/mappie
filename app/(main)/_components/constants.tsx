@@ -159,28 +159,87 @@ export const epicMenuItems: MenuItemType[] = [
     },
 ]
 
-export const analysisItems: MenuItemType[] = [
+export const functionalRequirementsItems: MenuItemType[] = [
     {
-        key: "functionalRequirements",
+        key: "title",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "The title of the functional requirement",
         active: true,
         required: true
     },
     {
-        key: "useCases",
+        key: "description",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "The description including all sub-requirements",
         active: true,
         required: true
     },
-]
+];
+
+export const useCasesItems: MenuItemType[] = [
+    {
+        key: "title",
+        icon: <PeopleIcon />,
+        description: "The title of the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "summary",
+        icon: <PeopleIcon />,
+        description: "A brief summary of the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "actors",
+        icon: <PeopleIcon />,
+        description: "The actors involved in the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "preconditions",
+        icon: <PeopleIcon />,
+        description: "The preconditions for the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "mainSuccessScenario",
+        icon: <PeopleIcon />,
+        description: "The main success scenario for the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "alternativeSequences",
+        icon: <PeopleIcon />,
+        description: "The alternative sequences for the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "errorSequences",
+        icon: <PeopleIcon />,
+        description: "The error sequences for the use case",
+        active: true,
+        required: true
+    },
+    {
+        key: "uiRequirements",
+        icon: <PeopleIcon />,
+        description: "The UI requirements for the use case",
+        active: true,
+        required: true
+    },
+];
 
 export const propertyPrompts: { [key: string]: string } = {
     title: "Generate a concise and catchy title for the project based on the given information.",
     description: "Take the provided summary of the project and make it clear and easy to understand. Include the project's name, main goal, and the problem it aims to solve. If it's part of a larger project, explain how it fits in. Use simple language that anyone can understand. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     objectives: "Refine the provided objectives to make sure they are clear and easy to track. Each objective should be specific and show how it helps reach the project's main goal. Use simple and straightforward language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
-    requirements: "Enhance the list of business requirements by organizing them with an ID (use id as column title), a short title description, a detailed description, the rationale behind it and the MoSCoW prioritization and use them as the column names. Provide the response in a markdown table. Make the top row bold. Order them from most important to least important. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete list. If the business requirements can be made more granular by splitting them  up, please do so. Use plain language that anyone can understand. Do not provide any explanation and also remove the headings. Don't add extra information or fields. Use the language of the inputted data. ", //You always write business requirements from the client’s point of view. They are broad, high-level system requirements yet detail-oriented. They are not organizational objectives but aid an organization in achieving its goals. By fulfilling these business requirements, the organization attains its broad objectives.
+    requirements: "Enhance the list of business requirements by organizing them with an ID, a short title description, a detailed description, the rationale behind it and the MoSCoW prioritization. Order them from most important to least important. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete list. If the business requirements can be made more granular by splitting them  up, please do so. Use plain language that anyone can understand. Do not provide any explanation and also remove the headings. Don't add extra information or fields. Use the language of the inputted data. ", //You always write business requirements from the client's point of view. They are broad, high-level system requirements yet detail-oriented. They are not organizational objectives but aid an organization in achieving its goals. By fulfilling these business requirements, the organization attains its broad objectives.
     stakeholders: "Improve the provided information on stakeholders and the target audience. Clearly define each stakeholder's role and concerns. Describe the target audience with details about their needs and challenges. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     constraints: "Improve the provided information on constraints. Clearly define each constraint. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     budget: "Improve the provided information on budget. Clearly define each budget item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
@@ -191,8 +250,8 @@ export const propertyPrompts: { [key: string]: string } = {
     targetAudience: "Improve the provided information on target audience. Clearly define each target audience item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     timeline: "Improve the provided information on timeline. Clearly define each timeline item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     successMetrics: "Improve the provided information on success metrics. Clearly define each success metric. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
-    functionalRequirements: "Clearly define the functional requirements for the project. Each requirement should describe a specific feature or functionality that the system must provide. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
-    useCases: "Clearly define the use cases for the project. Each use case should describe a specific scenario in which the system will be used. Explain the steps involved and the expected outcome. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data."
-    // Add more prompts for other properties as needed
+    useCases: "Clearly define the use cases for the project. Each use case should describe a specific scenario in which the system will be used. Explain the steps involved and the expected outcome. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
+    functionalRequirements: "Enhance the following functional requirements. Ensure they are clear, specific, and actionable. Keep the same structure and format as the inputted data. Use the language of the inputted data.",
 };
+
 

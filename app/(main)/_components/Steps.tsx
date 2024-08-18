@@ -99,12 +99,12 @@ const Steps = ({ project }: { project: any }) => {
             {step >= 2 && step <= 5 && (
               <div className='prose max-w-none'>
                 <BlockEditor
-                  onBlur={onEditorBlur}
                   attribute={steps[step - 1].key}
                   projectDetails={projectDetails}
-                  key={step}
                   setProjectDetails={(value) => handleEditorChange(steps[step - 1].key, value)}
-                />
+                  onBlur={onEditorBlur}
+                  onOpenBrainstormChat={() => {}} // Added this line
+/>
               </div>
             )}
           </CardContent>

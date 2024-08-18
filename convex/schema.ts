@@ -25,15 +25,22 @@ export default defineSchema({
     .index("by_userId", ["userId"]) // Index to query projects by userId
     .index("by_createdAt", ["createdAt"]), // Index to query projects by creation time
 
-  analysis: defineTable({
+  useCases: defineTable({
     projectId: v.id("projects"),
-    functionalRequirements: v.string(),
-    useCase: v.string(),
-    createdAt: v.int64(), // Storing timestamp as bigint
-    updatedAt: v.int64(), // Storing timestamp as bigint
-  })
-    .index("by_projectId", ["projectId"]) // Index to query analysis by projectId
-    .index("by_createdAt", ["createdAt"]), // Index to query analysis by creation time
+    title: v.string(),
+    description: v.string(), // This will contain all sub-requirements
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  }).index("by_projectId", ["projectId"]),
+// Index to query projects by creation time,
+
+  functionalRequirements: defineTable({
+    projectId: v.id("projects"),
+    content: v.string(),
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  }).index("by_projectId", ["projectId"])
+    .index("by_createdAt", ["createdAt"]), // Index to query functional requirements by creation time
 
   epics: defineTable({
     projectId: v.id("projects"),
@@ -68,3 +75,4 @@ export default defineSchema({
     .index("by_epicId", ["epicId"]) // Index to query user stories by epicId
     .index("by_createdAt", ["createdAt"]), // Index to query user stories by creation time
 });
+
