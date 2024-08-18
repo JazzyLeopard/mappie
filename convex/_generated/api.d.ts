@@ -14,9 +14,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as analysis from "../analysis.js";
 import type * as epics from "../epics.js";
+import type * as functionalRequirements from "../functionalRequirements.js";
 import type * as projects from "../projects.js";
+import type * as useCases from "../useCases.js";
 import type * as userstories from "../userstories.js";
 
 /**
@@ -28,9 +29,10 @@ import type * as userstories from "../userstories.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  analysis: typeof analysis;
   epics: typeof epics;
+  functionalRequirements: typeof functionalRequirements;
   projects: typeof projects;
+  useCases: typeof useCases;
   userstories: typeof userstories;
 }>;
 export declare const api: FilterApi<

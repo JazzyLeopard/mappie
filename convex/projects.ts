@@ -209,7 +209,6 @@ export const updateProject = mutation({
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
-
     await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
   },
 });
@@ -228,5 +227,3 @@ export const archiveProject = mutation({
     });
   },
 });
-
-
