@@ -46,9 +46,22 @@ export type Epic = {
   [key: string]: any;
 };
 
-export type Analysis = {
-  _id: string;
-  useCase: string;
-  functionalRequirements: string;
+export type UseCase = {
+  _id: string; // Unique identifier for the use case
+  projectId: string; // ID of the project the use case belongs to
+  title: string; // Title of the use case
+  description: string; // Description of the use case
+  createdAt: bigint; // Timestamp for when the use case was created
+  updatedAt: bigint; // Timestamp for when the use case was last updated
   [key: string]: any;
-}
+};
+
+export type FunctionalRequirement = {
+  _id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  createdAt: bigint;
+  updatedAt: bigint;
+  [key: string]: any;
+};
