@@ -56,7 +56,7 @@ const NavItem = ({
 
 		// create an EPIC if click + on Project Name
 		if (level == 0 && id) {
-			const promise = createEpic({ title: "Untitled Epic", projectId: id }).then(() => {
+			const promise = createEpic({ name: "Untitled Epic", projectId: id }).then(() => {
 				if (!expanded) {
 					onExpand?.();
 				}

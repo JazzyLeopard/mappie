@@ -200,16 +200,16 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     </Button>
                     {pathname === `/projects/${data._id}` &&
                         <Button onClick={handleRouteAnalysis}>
-                            Generate Functional Requirements
+                            Functional Requirements
                         </Button>
                     }
                     {pathname !== `/projects/${data._id}` && (
                         <Button>
-                            Generate Epics
+                            Epics
                         </Button>
                     )}
                     <Button onClick={handleRouteUseCase}>
-                        Generate Use Cases
+                        Use Cases
                     </Button>
                 </div>
             </div>
