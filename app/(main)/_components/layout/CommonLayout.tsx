@@ -25,9 +25,10 @@ import { DialogClose } from "@radix-ui/react-dialog";
 import FieldList from "./FieldList";
 import type { Epic, MenuItemType, Project, Analysis } from "@/lib/types";
 import EditorList from "./EditorList";
-import { MessageSquare, Presentation } from "lucide-react";
+import { Presentation } from "lucide-react";
 import PresentationMode from '../PresentationMode';
 import { useRouter, usePathname } from "next/navigation"
+
 
 interface CommonLayoutProps {
     data: Project | Epic | Analysis;
@@ -46,49 +47,43 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     const pathname = usePathname()
 
     const [activeSection, setActiveSection] = useState<string>('');
+
+
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
 
     useEffect(() => {
         if ('useCase' in data) {
-            setComponents(menu)
+            // When 'useCase' exists in the data, use the menu directly
+            setComponents(menu);
             if (!activeSection) {
-                setActiveSection(menu[0].key)
+                setActiveSection(menu[0].key);
             }
-        }
-        else {
-            const toBeAdded: MenuItemType[] = menu.map(item =>
-            ({
-                ...item,
-                active: ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase()),
-                data: data[item.key]
-            }));
+        } else {
+            const activeComponents = JSON.parse(sessionStorage.getItem('activeComponents') as string) as MenuItemType[] || [];
 
-            const activeComponents = JSON.parse(sessionStorage.getItem("activeComponents") as string) as MenuItemType[] || [];
+            const toBeAdded: MenuItemType[] = menu.map(item => {
 
-            activeComponents.forEach((ac) => {
-                const index = toBeAdded.findIndex(tba => tba.key === ac.key);
-                if (index != -1) {
-                    toBeAdded[index] = ac
-                }
-                else {
-                    toBeAdded.push(ac)
-                }
+                const aiComponent = activeComponents.find(ac => ac.key === item.key);
+
+                return {
+                    ...item,
+                    active: aiComponent ? true : ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase()),
+                    data: aiComponent ? aiComponent?.data : data[item.key],
+                    key: item.key
+                };
             });
 
-            setComponents(toBeAdded);
-            if (!activeSection) {
-                setActiveSection(toBeAdded[0].key)
-            }
-            activeComponents.forEach((ac) => {
-                if (ac.data?.length > 0) {
-                    handleEditorChange(ac.key, ac.data)
+            // Update components only if they have changed
+            if (JSON.stringify(toBeAdded) !== JSON.stringify(components)) {
+                setComponents(toBeAdded);
+                if (!activeSection && toBeAdded.length > 0) {
+                    setActiveSection(toBeAdded[0].key);
                 }
-            })
+            }
         }
-
-    }, [data, menu])
+    }, [data, menu, activeSection]);
 
 
     // Toggle modal visibility
@@ -106,17 +101,56 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 
     useEffect(() => {
         if (data) {
-            setComponents(prevComponents => prevComponents.map(component => {
-                if (data[component.key] && data[component.key].length > 0) {
-                    return { ...component, active: true, required: true };
+            setComponents(prevComponents => {
+                const newComponents = prevComponents.map(component => {
+                    if (data[component.key] && data[component.key].length > 0) {
+                        return { ...component, active: true, required: true };
+                    }
+                    return component;
+                });
+
+                // Only update state if components have changed
+                if (JSON.stringify(newComponents) !== JSON.stringify(prevComponents)) {
+                    return newComponents;
                 }
-                return component;
-            }));
+                return prevComponents;
+            });
         }
     }, [data]);
 
-    const handleRouteAnalysis = () => {
-        router.push(`/projects/${data._id}/analysis`)
+
+    const handleAnalysis = async () => {
+
+        // fetch analysis, check if 2 fields are empty OR analysis doesn't exist
+        try {
+            const response = await fetch('/api/analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    description: data.description,
+                    objectives: data.objectives,
+                    requirements: data.requirements,
+                    scope: data.scope,
+                    targetAudience: data.targetAudience,
+                    priorities: data.priorities,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log("reponse: ", result.response);
+
+                router.push(`/projects/${data._id}/analysis`)
+
+            } else {
+                console.error('Error:', result.error);
+            }
+        } catch (error) {
+            console.error('Error fetching AI response:', error);
+        }
     }
 
     if (isPresentationMode) {
@@ -194,7 +228,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                         Presentation Mode
                     </Button>
                     {pathname === `/projects/${data._id}` &&
-                        <Button onClick={handleRouteAnalysis}>
+                        <Button onClick={handleAnalysis}>
                             Start Analysis
                         </Button>
                     }
@@ -215,10 +249,10 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     />
                 </div>
                 <div className="overflow-hidden">
-                    <EditorList 
-                        components={components.filter(c => c.key === activeSection)} 
-                        data={data} 
-                        onEditorBlur={onEditorBlur} 
+                    <EditorList
+                        components={components.filter(c => c.key === activeSection)}
+                        data={data}
+                        onEditorBlur={onEditorBlur}
                         handleEditorChange={handleEditorChange}
                         onOpenBrainstormChat={handleOpenBrainstormChat}
                     />

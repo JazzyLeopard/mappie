@@ -13,31 +13,38 @@ import SparklesLight from "@/icons/SparklesLight";
 import { toTitleCase } from "@/utils/helper";
 import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
 import RoundCheckmark from "@/icons/RoundCheckmark";
-import { MenuItemType } from "@/lib/types";
+import { MenuItemType, Project } from "@/lib/types";
 import { menuItems } from "./constants";
-import { Underdog } from "next/font/google";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: any, onBackClick: () => void, onContinueClick: (activeComponents: MenuItemType[]) => void }) => {
 
   const [components, setComponents] = useState<MenuItemType[]>([]);
+  const updateProjectMutation = useMutation(api.projects.updateProject)
+
 
   useEffect(() => {
-    if (project) {
-      const menu = menuItems.filter(item => ['targetAudience', 'constraints', 'budget', 'dependencies', 'priorities', 'risks'].includes(item.key));
-      Object.keys(project).forEach(ok => {
-        if (project[ok] && project[ok].length > 0) {
-          menu.forEach(m => {
-            if (m.key == ok) {
-              m.active = true;
-              m.required = true;
-            }
-          })
-        }
-      })
-      setComponents(menu)
-    }
-  }, [project])
-  // Use a timeout to debounce the input changes
+    const timer = setTimeout(() => {
+      if (project) {
+        const menu = menuItems.filter(item => ['scope', 'constraints', 'budget', 'dependencies', 'priorities', 'risks'].includes(item.key));
+        Object.keys(project).forEach(ok => {
+          if (project[ok] && project[ok].length > 0) {
+            menu.forEach(m => {
+              if (m.key == ok) {
+                m.active = true;
+                m.required = true;
+              }
+            })
+          }
+        })
+        setComponents(menu)
+      }
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timer);
+  }, [project]);
+
 
   function handleItemClick(index: number): void {
     const newComponents = components.map((component, i) => {
@@ -93,33 +100,43 @@ const AdditionalSteps = ({ project, onBackClick, onContinueClick }: { project: a
       });
 
       const result = await response.json();
-      
-      // const result = {
-      //   "response": "{\"constraints\": \"Detail constraints here\", \"budget\": \"Specify budget details here\"}",
-      //   error: null
-      // }
-      // const response ={
-      //   ok: true
-      // }
+
       if (response.ok) {
+        let resp;
+        try {
+          resp = JSON.parse(result.response.replace(/```json|```/g, '').trim());
+        } catch (error) {
+          console.error('Error parsing AI response:', error);
+          return;
+        }
         console.log('AI Response:', result.response);
-        const resp = JSON.parse(result.response);
 
         // Create data to store in sessionStorage
-        const autoFilledData = new Array<MenuItemType>();
+        const autoFilledData: MenuItemType[] = [];
 
-        Object.keys(resp).forEach(ok=>{
-          const selected = menuItems.find(c=> c.key == ok);
-          if (selected) {
-            selected.active = true;
-            selected.data = resp[ok];
-            autoFilledData.push(selected)
-          }
-        })
+        resp.forEach((item: any) => {
+          Object.keys(item).forEach(key => {
+            const selected = menuItems.find(c => c.key === key);
+            if (selected) {
+              selected.active = true;
+              selected.data = item[key]; // Set the data from the AI response
+              autoFilledData.push(selected);
+            }
+          });
+        });
+
+        console.log("Auto filled Data:", autoFilledData);
+
+        await updateProjectMutation({
+          _id: project._id,
+          ...autoFilledData.reduce((acc, curr) => {
+            (acc as Project)[curr.key] = curr.data; // Map AI data to project fields
+            return acc;
+          }, {})
+        });
 
         sessionStorage.setItem("activeComponents", JSON.stringify(autoFilledData));
         onContinueClick(autoFilledData)
-        // Handle the AI response as needed
       } else {
         console.error('Error from AI:', result.error);
       }
