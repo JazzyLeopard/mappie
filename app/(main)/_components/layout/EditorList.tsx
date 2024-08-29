@@ -8,13 +8,14 @@ interface EditorListProps {
     data: any
     components: MenuItemType[];
     handleEditorChange: (attribute: string, value: any) => void
+    onEditorBlur: () => Promise<void>;
     onOpenBrainstormChat: () => void;
 }
 
-const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat }: EditorListProps) => {
+const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat, onEditorBlur }: EditorListProps) => {
 
     return (
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className="h-full flex flex-col overflow-hidden laptop-1024:-z-10">
             {components.map(c => {
                 if (c.active) {
                     return (
@@ -28,7 +29,7 @@ const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat
                                     projectDetails={data}
                                     setProjectDetails={(value) => handleEditorChange(c.key, value)}
                                     onOpenBrainstormChat={onOpenBrainstormChat}
-                                    onBlur={async () => {}} // Changed to async function
+                                    onBlur={onEditorBlur}
                                 />
                             </div>
                         </div>

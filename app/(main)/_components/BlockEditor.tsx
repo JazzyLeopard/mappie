@@ -1,31 +1,30 @@
 "use client";
 
-import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote, getDefaultReactSlashMenuItems, DefaultReactSuggestionItem, SuggestionMenuController, BlockNoteContext, CreateLinkButton, NestBlockButton, UnnestBlockButton } from "@blocknote/react";
-import { BlockNoteEditor, filterSuggestionItems } from "@blocknote/core";
-import { BlockNoteView } from "@blocknote/mantine";
-import "@blocknote/mantine/style.css";
 import "@/app/custom.css";
 import { AiPromptButton } from "@/components/ui/AiPromptButton";
-import { propertyPrompts } from "./constants";
-import { useState, useEffect, useCallback } from "react";
-import { Bold, Italic, Underline, Strikethrough, Code, MessageSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
-import { debounce } from "lodash";
-import { ToggleGroup, ToggleGroupItem, ToggleGroupItemNoHover } from "@/components/ui/toggle-group";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import BrainstormChatButton from "./ChatButton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem, ToggleGroupItemNoHover } from "@/components/ui/toggle-group";
+import { api } from "@/convex/_generated/api";
+import { BlockNoteEditor, filterSuggestionItems } from "@blocknote/core";
+import "@blocknote/core/fonts/inter.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/mantine/style.css";
+import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
+import { useMutation } from "convex/react";
+import { debounce } from "lodash";
+import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import BrainstormChatButton from "./ChatButton";
+import { propertyPrompts } from "./constants";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
   return str.replace(
     /\w\S*/g,
-    function(txt) {
+    function (txt) {
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     }
   );
@@ -40,12 +39,12 @@ type BlockEditorProps = {
 };
 
 const MarkdownContent = ({ children }: { children: string }) => (
-  <ReactMarkdown 
+  <ReactMarkdown
     remarkPlugins={[remarkGfm]}
     components={{
-      ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-2" {...props} />,
-      ol: ({node, ...props}) => <ol className="list-decimal pl-5 space-y-2" {...props} />,
-      li: ({node, ...props}) => <li className="ml-2" {...props} />
+      ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-2" {...props} />,
+      ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-2" {...props} />,
+      li: ({ node, ...props }) => <li className="ml-2" {...props} />
     }}
     className="prose prose-sm max-w-none"
   >
@@ -70,6 +69,7 @@ export default function BlockEditor({
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
+  const updateEpicMutation = useMutation(api.epics.updateEpic)
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -126,7 +126,7 @@ export default function BlockEditor({
       if (response.ok) {
         setNewAIContent(result.response);
         setShowComparison(true);
-        
+
         // Request a summary of changes
         setIsSummaryLoading(true);
         const summaryResponse = await fetch('/api/summary', {
@@ -215,9 +215,16 @@ export default function BlockEditor({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      await updateProjectMutation({
-        [attribute]: markDownContent, _id: projectDetails._id,
-      })
+      if ('name' in projectDetails) {
+        await updateEpicMutation({
+          [attribute]: markDownContent, _id: projectDetails._id
+        })
+      }
+      else {
+        await updateProjectMutation({
+          [attribute]: markDownContent, _id: projectDetails._id,
+        })
+      }
 
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
@@ -255,8 +262,8 @@ export default function BlockEditor({
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white">
-          <div className="flex justify-between py-3 border-b border-gray-200">
-            <ToggleGroup className="py-2" type="single" defaultValue="none">
+          <div className="flex justify-between py-3 border-b border-gray-200 ">
+            <ToggleGroup className="py-2 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
@@ -273,10 +280,10 @@ export default function BlockEditor({
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
               <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
-                <AiPromptButton 
-                  onClick={handleAIEnhancement} 
-                  disabled={isEditorEmpty || isLoading} 
-                  loading={isLoading} 
+                <AiPromptButton
+                  onClick={handleAIEnhancement}
+                  disabled={isEditorEmpty || isLoading}
+                  loading={isLoading}
                   showingComparison={showComparison}
                 />
               </ToggleGroupItemNoHover>

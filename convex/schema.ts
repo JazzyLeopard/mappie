@@ -32,7 +32,7 @@ export default defineSchema({
     createdAt: v.int64(),
     updatedAt: v.int64(),
   }).index("by_projectId", ["projectId"]),
-// Index to query projects by creation time,
+  // Index to query projects by creation time,
 
   functionalRequirements: defineTable({
     projectId: v.id("projects"),
@@ -46,15 +46,12 @@ export default defineSchema({
     projectId: v.id("projects"),
     name: v.string(),
     description: v.string(),
-    status: v.string(), // e.g., 'Not Started', 'In Progress', 'Completed'
+    acceptanceCriteria: v.string(),
+    businessValue: v.string(),
+    dependencies: v.optional(v.string()), // Array of epic or user story IDs
+    risks: v.optional(v.string()),
     createdAt: v.int64(), // Storing timestamp as bigint
     updatedAt: v.int64(), // Storing timestamp as bigint
-    startDate: v.optional(v.int64()), // Storing timestamp as bigint
-    endDate: v.optional(v.int64()), // Storing timestamp as bigint
-    owner: v.optional(v.string()),
-    priority: v.optional(v.string()), // e.g., 'Low', 'Medium', 'High'
-    labels: v.optional(v.array(v.string())),
-    dependencies: v.optional(v.array(v.id("epics"))), // Array of epic or user story IDs
   })
     .index("by_projectId", ["projectId"]) // Index to query epics by projectId
     .index("by_createdAt", ["createdAt"]), // Index to query epics by creation time

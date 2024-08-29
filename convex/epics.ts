@@ -88,13 +88,12 @@ export const updateEpic = mutation({
     _id: v.id("epics"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
-    status: v.optional(v.string()),
-    startDate: v.optional(v.string()),
+    acceptanceCriteria: v.optional(v.string()),
+    businessValue: v.optional(v.string()),
+    dependencies: v.optional(v.string()),
+    risks: v.optional(v.string()),
     endDate: v.optional(v.string()),
-    owner: v.optional(v.string()),
-    priority: v.optional(v.string()),
-    labels: v.optional(v.array(v.string())),
-    dependencies: v.optional(v.array(v.id("epics"))),
+    startDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
@@ -136,7 +135,8 @@ export const createEpics = mutation({
     const epic = await ctx.db.insert("epics", {
       name: args.name,
       description: "",
-      status: "",
+      acceptanceCriteria: "",
+      businessValue: "",
       projectId: args.projectId,
       createdAt: BigInt(Date.now()), // Use BigInt for timestamps
       updatedAt: BigInt(Date.now()),

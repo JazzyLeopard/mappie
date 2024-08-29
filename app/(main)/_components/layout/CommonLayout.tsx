@@ -5,30 +5,29 @@
  */
 "use client"
 
-import RoundCheckmark from "@/icons/RoundCheckmark";
-import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
-import { toTitleCase } from "@/utils/helper";
-import LabelToInput from "../LabelToInput";
 import '@/app/custom.css';
-import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogDescription,
+    DialogFooter,
+    DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogFooter,
 } from "@/components/ui/dialog";
-import { DialogClose } from "@radix-ui/react-dialog";
-import FieldList from "./FieldList";
+import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
+import RoundCheckmark from "@/icons/RoundCheckmark";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
-import EditorList from "./EditorList";
+import { toTitleCase } from "@/utils/helper";
+import { DialogClose } from "@radix-ui/react-dialog";
 import { Presentation } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
-import { useRouter, usePathname } from "next/navigation"
-import { debounce } from "lodash";
+import EditorList from "./EditorList";
+import FieldList from "./FieldList";
 
 
 interface CommonLayoutProps {
@@ -49,15 +48,14 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 
     const [activeSection, setActiveSection] = useState<string>('');
 
-
     const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
 
     useEffect(() => {
-        if ('useCase' in data) {
-            // When 'useCase' exists in the data, use the menu directly
+        if ('name' in data) {
             setComponents(menu);
+
             if (!activeSection) {
                 setActiveSection(menu[0].key);
             }
@@ -84,7 +82,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                 }
             }
         }
-    }, [data, menu, activeSection]);
+    }, [data, menu]);
 
 
     // Toggle modal visibility
@@ -132,8 +130,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     }
 
     return (
-        <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8">
+        <div className="h-screen flex flex-col z-top ">
+            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8 lg:w-full laptop-1024:flex-wrap laptop-1024:gap-4">
                 {showTitle &&
                     (
                         <div className="flex-1">
@@ -146,7 +144,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     )
                 }
 
-                <div className="flex items-center gap-4 ml-auto">
+                <div className="flex items-center gap-4 ml-auto laptop-1024:flex-wrap">
                     <Dialog>
                         <DialogTrigger asChild>
                             <Button variant="outline">
@@ -173,6 +171,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                                                 );
                                             }
                                         }}>
+                                        <div>{component.icon}</div>
                                         <div>
                                             <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
                                             <p className="text-sm">{component.description}</p>
@@ -217,7 +216,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                 </div>
             </div>
 
-            <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10">
+            <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10 laptop-1024:overflow-auto">
                 <div className="align-top">
                     <FieldList
                         components={components}
@@ -229,6 +228,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     <EditorList
                         components={components.filter(c => c.key === activeSection)}
                         data={data}
+                        onEditorBlur={onEditorBlur}
                         handleEditorChange={handleEditorChange}
                         onOpenBrainstormChat={handleOpenBrainstormChat}
                     />
