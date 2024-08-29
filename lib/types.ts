@@ -1,3 +1,5 @@
+import { Id } from "@/convex/_generated/dataModel";
+
 export type MenuItemType = {
   key: string;
   icon?: React.JSX.Element;
@@ -8,7 +10,7 @@ export type MenuItemType = {
 }
 
 export type Project = {
-  _id: string; // Unique identifier for the project
+  _id: Id<"projects">; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
   'title': string; // Title of the project
   description: string; // Description of the project
