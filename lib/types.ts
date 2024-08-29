@@ -34,15 +34,14 @@ export type Epic = {
   projectId: string; // ID of the project the epic belongs to
   'name': string; //Title of the project
   description: string; // Description of the epic
-  status: string; // Status of the epic (e.g., 'Not Started', 'In Progress', 'Completed')
+  acceptanceCriteria: string;
+  businessValue: string;
+  dependencies?: string;
+  risks?: string;
   createdAt: bigint; // Timestamp for when the epic was created
   updatedAt: bigint; // Timestamp for when the epic was last updated
   startDate?: bigint; // Optional start date of the epic
   endDate?: bigint; // Optional end date of the epic
-  owner?: string; // Optional owner of the epic
-  priority?: string; // Optional priority of the epic (e.g., 'Low', 'Medium', 'High')
-  labels?: string[]; // Optional array of labels for the epic
-  dependencies?: string[]; // Optional array of IDs of dependent epics
   [key: string]: any;
 };
 

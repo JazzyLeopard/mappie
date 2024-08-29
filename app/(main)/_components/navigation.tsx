@@ -321,7 +321,7 @@ export const Navigation = () => {
                     openPopover === proj._id && "flex",
                   )}
                 >
-                  <Popover>
+                  {/* <Popover>
                     <PopoverTrigger>
                       <div
                         onClick={() => onCreateEpic(proj._id)}
@@ -330,7 +330,7 @@ export const Navigation = () => {
                         <PlusIcon />
                       </div>
                     </PopoverTrigger>
-                  </Popover>
+                  </Popover> */}
                   <Popover
                     open={openPopover === proj._id}
                     onOpenChange={(open) =>
@@ -422,7 +422,7 @@ export const Navigation = () => {
                               setOpenEpicPopover(open ? index : null)
                             }
                           >
-                            <Popover>
+                            {/* <Popover>
                               <PopoverTrigger>
                                 <div
                                   onClick={() => { }}
@@ -431,7 +431,7 @@ export const Navigation = () => {
                                   <PlusIcon />
                                 </div>
                               </PopoverTrigger>
-                            </Popover>
+                            </Popover> */}
                             <PopoverTrigger>
                               <div
                                 onClick={() => setOpenEpicPopover(index)}

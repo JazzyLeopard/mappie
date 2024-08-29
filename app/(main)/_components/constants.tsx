@@ -125,35 +125,28 @@ export const epicMenuItems: MenuItemType[] = [
         required: true
     },
     {
-        key: "objectives",
+        key: "acceptanceCriteria",
         icon: <PeopleIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
         active: true,
         required: true
     },
     {
-        key: "requirements",
+        key: "businessValue",
         icon: <PeopleIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
+        active: true,
         required: true
     },
     {
-        key: "stakeholders",
-        icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-        required: true
-    },
-    {
-        key: "timeline",
-        icon: <PeopleIcon />,
+        key: "dependencies",
+        icon: <DependenciesIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
         active: false,
     },
     {
-        key: "successMetrics",
-        icon: <AudienceIcon />,
+        key: "risks",
+        icon: <RisksIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
         active: false,
     },

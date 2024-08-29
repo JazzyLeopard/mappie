@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        'laptop-1024': { max: '1024px' }
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
