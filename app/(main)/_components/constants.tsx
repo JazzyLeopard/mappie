@@ -254,4 +254,58 @@ export const propertyPrompts: { [key: string]: string } = {
     functionalRequirements: "Enhance the following functional requirements. Ensure they are clear, specific, and actionable. Keep the same structure and format as the inputted data. Use the language of the inputted data.",
 };
 
+export const placeholders = {
+    description: `- **What to write**:
+      - Imagine you're pitching your project to a friend at a coffee shop ☕. Give a brief summary of your project or product, focusing on the main purpose, the problem you're solving, and the overall goal. Think of it as your project's elevator pitch 🚀.
+  - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+  - **Example**:
+      - **For** busy professionals and families 
+      **Who** want convenient access to restaurant-quality meals without the hassle of cooking or dining out, 
+      **The** "QuickEats" **Is** a mobile food delivery app 
+      **That** allows users to browse menus, place orders, and track deliveries from their favorite local restaurants in real-time. 
+      **Unlike** traditional takeout or competing apps, 
+      **Our product** offers personalized meal recommendations, faster delivery times, and a rewards program that enhances user loyalty and satisfaction.`,
+    objectives: `- **What to write**:
+      - Clearly define the objectives of the project. Each objective should be specific, measurable, achievable, relevant, and time-bound (SMART).
+      - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+      - **Example**:
+      - **Objective**: Increase customer satisfaction by 20%
+      - **How**: By implementing a new customer feedback system and improving the delivery process.
+      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
+    requirements: `- **What to write**:
+      - Clearly define the requirements of the project. Each requirement should be specific, measurable, achievable, relevant, and time-bound (SMART).
+      - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+      - **Example**:
+      - **Requirement**: The system should be able to handle 1000 concurrent users.
+      - **How**: By implementing a new customer feedback system and improving the delivery process.
+      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,    
+    stakeholders: `- **What to write**:
+      - Clearly define the stakeholders of the project. Each stakeholder should be specific, measurable, achievable, relevant, and time-bound (SMART).
+      - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+      - **Example**:
+      - **Stakeholder**: The CEO of the company.
+      - **How**: By implementing a new customer feedback system and improving the delivery process.
+      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
+    timeline: `- **What to write**:
+      - Clearly define the timeline of the project. Each timeline should be specific, measurable, achievable, relevant, and time-bound (SMART).
+      - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+      - **Example**:
+      - **Timeline**: The project should be completed in 3 months.
+      - **How**: By implementing a new customer feedback system and improving the delivery process.
+      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
+    successMetrics: `- **What to write**:
+      - Clearly define the success metrics of the project. Each success metric should be specific, measurable, achievable, relevant, and time-bound (SMART).
+      - **How the tool helps**:
+      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
+      - **Example**:
+      - **Success Metric**: The project should be completed in 3 months.
+      - **How**: By implementing a new customer feedback system and improving the delivery process.
+      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
+};
+
 
