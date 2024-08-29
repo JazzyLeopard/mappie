@@ -24,18 +24,16 @@ const FieldList = ({ components, activeSection, setActiveSection }: FieldListPro
     return (
         <div className="w-60 bg-secondary p-4 rounded-md self-start h-auto overflow-y-auto">
             <nav className="space-y-2">
-                {components?.length > 0 && components?.map(component => (
-                    component.active && (
-                        <Link
-                            key={component.key}
-                            href="#"
-                            className={`block p-2 rounded-md ${activeSection === component.key ? "font-semibold bg-white text-black-500" : "hover:bg-gray-200"}`}
-                            onClick={() => handleSectionClick(component.key)}
-                            prefetch={false}
-                        >
-                            {toTitleCase(component.key)}
-                        </Link>
-                    )
+                {components.map(component => (
+                    <Link
+                        key={component.key}
+                        href="#"
+                        className={`block p-2 rounded-md ${activeSection === component.key ? "font-semibold bg-white text-black-500" : "hover:bg-gray-200"}`}
+                        onClick={() => handleSectionClick(component.key)}
+                        prefetch={false}
+                    >
+                        {toTitleCase(component.key)}
+                    </Link>
                 ))}
             </nav>
         </div>

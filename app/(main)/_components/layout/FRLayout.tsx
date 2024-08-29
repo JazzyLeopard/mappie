@@ -82,28 +82,25 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     return (
         <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8">
+            <div className="bg-white sticky z-999 flex items-center justify-between px-12 pt-8 pb-2">
                 <div className="flex-1">
-                    <h1 className="text-3xl font-bold">Functional Requirements</h1>
+                    <h1 className="text-2xl font-bold">Functional Requirements</h1>
                 </div>
                 <div className="flex items-center gap-4 ml-auto">
                     <Button onClick={handleGenerateFR} disabled={isGenerating}>
                         {isGenerating ? "Generating..." : "Generate Functional Requirements"}
                     </Button>
                     <Button
-                        className="bg-gradient-to-r from-gray-400 to-gray-60 text-white"
+                        className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                         onClick={() => {/* Implement presentation mode */}}
                     >
                         <Presentation className="pr-2" />
                         Presentation Mode
                     </Button>
-                    <Button onClick={handleRouteBack}>
-                        Back to Project
-                    </Button>
                 </div>
             </div>
 
-            <div className="overflow-hidden px-8 pt-10">
+            <div className="overflow-hidden px-12 pt-0">
                 <FREditorList
                     projectId={projectId}
                     frId={frId}

@@ -37,7 +37,7 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="sticky top-0 bg-white z-10 pb-4">
+            <div className="sticky top-0 bg-white z-10 pb-2">
                 <LabelToInput
                     value={activeUC.title}
                     setValue={handleTitleChange}
