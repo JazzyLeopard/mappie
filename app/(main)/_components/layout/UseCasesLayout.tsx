@@ -83,7 +83,7 @@ const UseCasesLayout = ({
     const handleAIEnhance = async (content: string, promptType: string) => {
         try {
             const token = await getToken({ template: "convex" });
-            const response = await axios.post('/api/enhance-content', 
+            const response = await axios.post('/api/enhance-content',
                 { content, promptType, projectId },
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
@@ -96,7 +96,7 @@ const UseCasesLayout = ({
 
     return (
         <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8">
+            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8 laptop-1024:flex-wrap laptop-1024:gap-4">
                 <div className="flex-1">
                     <LabelToInput
                         value={title}
@@ -104,7 +104,7 @@ const UseCasesLayout = ({
                         onBlur={onEditorBlur}
                     />
                 </div>
-                <div className="flex items-center gap-4 ml-auto">
+                <div className="flex items-center gap-4 ml-auto laptop-1024:ml-0">
                     <Button onClick={onAddUseCase}>
                         Add Use Case
                     </Button>
@@ -113,7 +113,7 @@ const UseCasesLayout = ({
                     </Button>
                     <Button
                         className="bg-gradient-to-r from-gray-400 to-gray-60 text-white"
-                        onClick={() => {/* Implement presentation mode */}}
+                        onClick={() => {/* Implement presentation mode */ }}
                     >
                         <Presentation className="pr-2" />
                         Presentation Mode

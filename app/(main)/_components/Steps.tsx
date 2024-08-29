@@ -103,8 +103,9 @@ const Steps = ({ project }: { project: any }) => {
                   projectDetails={projectDetails}
                   setProjectDetails={(value) => handleEditorChange(steps[step - 1].key, value)}
                   onBlur={onEditorBlur}
-                  onOpenBrainstormChat={() => {}} // Added this line
-/>
+                  key={step}
+                  onOpenBrainstormChat={() => { }} // Added this line
+                />
               </div>
             )}
           </CardContent>

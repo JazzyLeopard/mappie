@@ -28,15 +28,17 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             setEpicDetails(epic)
     }, [epic])
 
+
     const updateLabel = (val: string) => {
         setEpicDetails({ ...epicDetails, name: val });
     };
 
     const handleEditorBlur = async () => {
         try {
+            console.log('time for API call', epicDetails);
             const { _creationTime, createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
-            console.log('time for API call', payload);
             await updateEpicMutation(payload)
+            console.log("epic", epicDetails);
         } catch (error) {
             console.log('error updating project', error);
         }
