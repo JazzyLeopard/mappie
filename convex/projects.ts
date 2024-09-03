@@ -173,10 +173,10 @@ export const createProject = mutation({
     const project = await ctx.db.insert("projects", {
       title: args.title,
       userId: identity.subject,
-      description: placeholders.description,
-      objectives: placeholders.objectives || "",
-      requirements: placeholders.requirements || "",
-      stakeholders: placeholders.stakeholders || "",
+      description: "",
+      objectives: "",
+      requirements: "",
+      stakeholders: "",
       isArchived: false,
       isPublished: false,
       onboarding: 1,
@@ -210,7 +210,7 @@ export const updateProject = mutation({
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
     await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
-    
+
     // Return the updated project
     return await ctx.db.get(_id);
   },

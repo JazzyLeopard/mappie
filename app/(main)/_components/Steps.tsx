@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardHeader,
-  CardTitle,
+  CardContent,
   CardFooter,
-  CardContent
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import AdditionalSteps from './AdditionalSteps';
-import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useMutation } from 'convex/react';
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from 'react';
+import AdditionalSteps from './AdditionalSteps';
 import BlockEditor from './BlockEditor';
-import { steps } from "./constants"
-import { propertyPrompts } from "./constants";
+import { steps } from "./constants";
 
 const Steps = ({ project }: { project: any }) => {
   const [step, setStep] = useState(project.onboarding);
@@ -71,10 +70,11 @@ const Steps = ({ project }: { project: any }) => {
 
   const onEditorBlur = async () => {
     try {
-      console.log("Time for API call", projectDetails);
+      // console.log("Time for API call", projectDetails);
       const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
       payload.onboarding = step
       await updateProjectMutation(payload)
+      console.log("Updataed Details:", payload)
     } catch (error) {
       console.log('error updating project', error);
     }
@@ -104,7 +104,7 @@ const Steps = ({ project }: { project: any }) => {
                   setProjectDetails={(value) => handleEditorChange(steps[step - 1].key, value)}
                   onBlur={onEditorBlur}
                   key={step}
-                  onOpenBrainstormChat={() => { }} // Added this line
+                  onOpenBrainstormChat={() => { }}
                 />
               </div>
             )}
