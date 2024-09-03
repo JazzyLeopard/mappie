@@ -12,12 +12,10 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
-import { debounce } from "lodash";
 import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import BrainstormChatButton from "./ChatButton";
 import { propertyPrompts } from "./constants";
 
 // Add this utility function at the top of your file
@@ -52,14 +50,20 @@ const MarkdownContent = ({ children }: { children: string }) => (
   </ReactMarkdown>
 );
 
-export default function BlockEditor({
+const BlockEditor: React.FC<BlockEditorProps> = ({
   onBlur,
   attribute,
   projectDetails,
   setProjectDetails,
   onOpenBrainstormChat,
-}: BlockEditorProps) {
+}) => {
+  if (!projectDetails || !attribute || typeof setProjectDetails !== 'function') {
+    console.error('BlockEditor: Missing required props', { projectDetails, attribute, setProjectDetails });
+    return null; // or some fallback UI
+  }
 
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
@@ -70,20 +74,41 @@ export default function BlockEditor({
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
   const updateEpicMutation = useMutation(api.epics.updateEpic)
+  const editor = useCreateBlockNote({ initialContent: undefined });
 
-  const editor = useCreateBlockNote({
-    initialContent: undefined
-  })
+  const handleEditorChange = useCallback(() => {
+    if (!editor || !editor.document) return;
+
+    const saveContent = async () => {
+      const content = await editor.blocksToMarkdownLossy(editor.document);
+      console.log('BlockEditor: Saving content', { attribute, content });
+      setProjectDetails((prevDetails: any) => {
+        console.log('BlockEditor: Previous details', prevDetails);
+        const newDetails = { ...prevDetails, [attribute]: content };
+        console.log('BlockEditor: New details', newDetails);
+        return newDetails;
+      });
+    };
+    saveContent();
+  }, [editor, attribute, setProjectDetails]);
+
+  const checkEditorContent = useCallback(() => {
+    if (!editor || !editor.document) return;
+
+    editor.blocksToMarkdownLossy(editor.document).then(content => {
+      setIsEditorEmpty(content.trim() === '');
+    });
+  }, [editor]);
 
   useEffect(() => {
+    if (!editor || !projectDetails || !projectDetails[attribute]) return;
+
     const initializeEditor = async () => {
-      if (projectDetails[attribute]) {
-        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
-        editor.replaceBlocks(editor.document, newBlock)
-      }
-    }
-    initializeEditor()
-  }, [])
+      const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute]);
+      editor.replaceBlocks(editor.document, newBlock);
+    };
+    initializeEditor();
+  }, [editor, projectDetails, attribute]);
 
   const handleOnBlur = async () => {
     onBlur();
@@ -97,9 +122,6 @@ export default function BlockEditor({
     }
     return value;
   };
-
-  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleAIEnhancement = async () => {
     setIsLoading(true);
@@ -172,26 +194,6 @@ export default function BlockEditor({
     console.log("updated active styles:", editor.getActiveStyles());
   };
 
-
-  const saveContent = debounce(async () => {
-    const content = await editor.blocksToMarkdownLossy(editor.document)
-    //const content = JSON.stringify(editor.document); // Retrieve the document content
-    setProjectDetails((prevDetails: any) => ({
-      ...prevDetails,
-      [attribute]: content,
-    }));
-    setProjectDetails(content)
-
-  }, 2000);
-
-  useEffect(() => {
-    if (editor) {
-      editor.onChange(() => {
-        saveContent();
-      });
-    }
-  }, [editor, attribute, setProjectDetails]);
-
   // Custom function to get filtered Slash Menu items
   const getCustomSlashMenuItems = (
     editor: BlockNoteEditor
@@ -241,29 +243,17 @@ export default function BlockEditor({
     console.log("Current Block:", block);
   };
 
-  const checkEditorContent = useCallback(async () => {
-    const content = await editor.blocksToMarkdownLossy(editor.document);
-    setIsEditorEmpty(content.trim() === '');
-  }, [editor]);
+  if (!editor) {
+    return <div>Loading editor...</div>;
+  }
 
-  useEffect(() => {
-    checkEditorContent(); // Check initial content
-    editor.onChange(checkEditorContent);
-
-    return () => {
-      // No need to explicitly remove the listener
-      // The editor instance will be destroyed when the component unmounts
-    };
-  }, [editor, checkEditorContent]);
-
-  // Renders the editor instance using a React component.
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white">
-          <div className="flex justify-between py-3 border-b border-gray-200 ">
-            <ToggleGroup className="py-2 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
+          <div className="flex justify-between py-2 border-b border-gray-200">
+            <ToggleGroup className="py-2" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
@@ -285,11 +275,13 @@ export default function BlockEditor({
                   disabled={isEditorEmpty || isLoading}
                   loading={isLoading}
                   showingComparison={showComparison}
+                  asChild={true}
+                  className="w-full p-1 px-2"
                 />
               </ToggleGroupItemNoHover>
-              <ToggleGroupItemNoHover value="brainstorm" onClick={onOpenBrainstormChat}>
+              {/* <ToggleGroupItemNoHover value="brainstorm" onClick={onOpenBrainstormChat}>
                 <BrainstormChatButton />
-              </ToggleGroupItemNoHover>
+              </ToggleGroupItemNoHover> */}
             </ToggleGroup>
           </div>
         </div>
@@ -374,6 +366,6 @@ export default function BlockEditor({
       `}</style>
     </div>
   );
-}
+};
 
-{/* <AiPromptButton onToggle={toggleAiPrompt} {...{isAiPromptOpen}}/> */ }
+export default BlockEditor;

@@ -22,12 +22,12 @@ const UserItems = () => {
           className="flex items-centertext-sm p-3 w-full hover:bg-primary/5"
           role="button"
         >
-          <div className="gap-x-2 flex items-center max-w-[150px]">
+          <div className="gap-x-2 flex items-center max-w-[200px]">
             <Avatar className="h-5 w-5">
               <AvatarImage src={user?.imageUrl} />
             </Avatar>
             <span className="text-start line-clamp-1 font-medium">
-              {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos; Listoriq
+              {user?.firstName && user?.lastName ? `${user?.firstName} ${user?.lastName}` : user?.emailAddresses[0].emailAddress.split("@")[0]}
             </span>
             <ChevronsLeftRight className="rotate-90 h-4 w-4 ml-2 text-muted-foreground" />
           </div>
@@ -54,7 +54,7 @@ const UserItems = () => {
 
             <div className="space-y-1">
               <p className="text-sm line-clamp-1">
-                {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos; Lisoriq
+                {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos;s Listoriq
               </p>
             </div>
           </div>
