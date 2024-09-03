@@ -1,18 +1,17 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import LabelToInput from "../LabelToInput";
-import UCFieldList from "./UCFieldList";
-import UCEditorList from "./UCEditorList";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { useAuth } from "@clerk/nextjs";
+import axios from 'axios';
+import { useQuery } from "convex/react";
 import { Presentation } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Id } from "@/convex/_generated/dataModel";
-import axios from 'axios';
-import { useAuth } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useEffect, useState } from 'react';
 import { propertyPrompts } from '../constants';
+import UCEditorList from "./UCEditorList";
+import UCFieldList from "./UCFieldList";
 
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
@@ -96,41 +95,32 @@ const UseCasesLayout = ({
 
     return (
         <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8 laptop-1024:flex-wrap laptop-1024:gap-4">
+            <div className="bg-white sticky z-999 flex items-center justify-between p-8">
                 <div className="flex-1">
-                    <LabelToInput
-                        value={title}
-                        setValue={updateLabel}
-                        onBlur={onEditorBlur}
-                    />
+                    <h1 className="text-2xl font-semibold">{title}</h1>
                 </div>
-                <div className="flex items-center gap-4 ml-auto laptop-1024:ml-0">
-                    <Button onClick={onAddUseCase}>
-                        Add Use Case
-                    </Button>
+                <div className="flex items-center gap-4 ml-auto">
                     <Button onClick={handleGenerateUseCases} disabled={isGenerating}>
                         {isGenerating ? "Generating..." : "Generate Use Cases"}
                     </Button>
                     <Button
-                        className="bg-gradient-to-r from-gray-400 to-gray-60 text-white"
-                        onClick={() => {/* Implement presentation mode */ }}
+                        className="bg-white text-black border border-gray-300 hover:bg-gray-200"
+                        onClick={handlePresentationMode}
                     >
                         <Presentation className="pr-2" />
                         Presentation Mode
                     </Button>
-                    <Button onClick={handleRouteBack}>
-                        Back to Project
-                    </Button>
                 </div>
             </div>
 
-            <div className="overflow-hidden grid grid-cols-[0.5fr,1fr] gap-8 px-8 pt-10">
+            <div className="overflow-hidden grid grid-cols-[0.3fr,1fr] gap-12 px-8">
                 <div className="align-top">
                     <UCFieldList
                         useCases={useCases}
                         activeUseCase={activeUseCase}
                         setActiveUseCase={setActiveUseCase}
                         onDelete={handleDelete}
+                        onAddUseCase={onAddUseCase}
                     />
                 </div>
                 <div className="overflow-hidden">
@@ -140,7 +130,7 @@ const UseCasesLayout = ({
                         onEditorBlur={onEditorBlur}
                         handleEditorChange={handleEditorChange}
                         propertyPrompts={propertyPrompts}
-                        onOpenBrainstormChat={onOpenBrainstormChat} // Added this line
+                        onOpenBrainstormChat={onOpenBrainstormChat}
                     />
                 </div>
             </div>

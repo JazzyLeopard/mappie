@@ -6,29 +6,15 @@
 "use client"
 
 import '@/app/custom.css';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import BoldRoundCheckmark from "@/icons/BoldRoundCheckmark";
-import RoundCheckmark from "@/icons/RoundCheckmark";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
-import { toTitleCase } from "@/utils/helper";
-import { DialogClose } from "@radix-ui/react-dialog";
-import { Presentation } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from 'react';
+import { Presentation, Rocket, X } from "lucide-react";
+import { useCallback, useEffect, useState } from 'react';
 import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
 import EditorList from "./EditorList";
 import FieldList from "./FieldList";
-
 
 interface CommonLayoutProps {
     data: Project | Epic;
@@ -40,55 +26,16 @@ interface CommonLayoutProps {
 }
 
 const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange, showTitle = true }: CommonLayoutProps) => {
-
-    const [components, setComponents] = useState<MenuItemType[]>(new Array(0))
-
-    const router = useRouter()
-    const pathname = usePathname()
-
     const [activeSection, setActiveSection] = useState<string>('');
-
-    const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
 
     useEffect(() => {
-        if ('name' in data) {
-            setComponents(menu);
-
-            if (!activeSection) {
-                setActiveSection(menu[0].key);
-            }
-        } else {
-            const activeComponents = JSON.parse(sessionStorage.getItem('activeComponents') as string) as MenuItemType[] || [];
-
-            const toBeAdded: MenuItemType[] = menu.map(item => {
-
-                const aiComponent = activeComponents.find(ac => ac.key === item.key);
-
-                return {
-                    ...item,
-                    active: aiComponent ? true : ['description', 'objectives', 'requirements', 'stakeholders'].includes(item.key.toLowerCase()),
-                    data: aiComponent ? aiComponent?.data : data[item.key],
-                    key: item.key
-                };
-            });
-
-            // Update components only if they have changed
-            if (JSON.stringify(toBeAdded) !== JSON.stringify(components)) {
-                setComponents(toBeAdded);
-                if (!activeSection && toBeAdded.length > 0) {
-                    setActiveSection(toBeAdded[0].key);
-                }
-            }
+        if (!activeSection && menu.length > 0) {
+            setActiveSection(menu[0].key);
         }
-    }, [data, menu]);
-
-
-    // Toggle modal visibility
-    const toggleModal = () => {
-        setIsModalOpen(!isModalOpen);
-    };
+    }, [menu, activeSection]);
 
     const togglePresentationMode = () => {
         setIsPresentationMode(!isPresentationMode);
@@ -98,120 +45,65 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         setIsBrainstormChatOpen(true);
     };
 
-    useEffect(() => {
-        if (data) {
-            setComponents(prevComponents => {
-                const newComponents = prevComponents.map(component => {
-                    if (data[component.key] && data[component.key].length > 0) {
-                        return { ...component, active: true, required: true };
-                    }
-                    return component;
-                });
-
-                // Only update state if components have changed
-                if (JSON.stringify(newComponents) !== JSON.stringify(prevComponents)) {
-                    return newComponents;
-                }
-                return prevComponents;
-            });
-        }
-    }, [data]);
-
-    const handleRouteAnalysis = () => {
-        router.push(`/projects/${data._id}/functional-requirements`)
-    }
-
-    const handleRouteUseCase = () => {
-        router.push(`/projects/${data._id}/use-cases`)
-    }
+    const memoizedHandleEditorChange = useCallback((attribute: string, value: any) => {
+        handleEditorChange(attribute, value);
+    }, [handleEditorChange]);
 
     if (isPresentationMode) {
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
     }
 
-    return (
-        <div className="h-screen flex flex-col z-top ">
-            <div className="bg-white sticky top-10 z-999 flex items-center justify-between p-8 lg:w-full laptop-1024:flex-wrap laptop-1024:gap-4">
-                {showTitle &&
-                    (
-                        <div className="flex-1">
-                            <LabelToInput
-                                value={'title' in data ? data.title : data.name}
-                                setValue={updateLabel}
-                                onBlur={onEditorBlur}
-                            />
-                        </div>
-                    )
-                }
+    const handleUpdateLabel = (newValue: string) => {
+        console.log("Updating label in CommonLayout:", newValue);
+        updateLabel(newValue);
+    };
 
-                <div className="flex items-center gap-4 ml-auto laptop-1024:flex-wrap">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="outline">
-                                {'title' in data && "Project Elements"}
-                                {'useCase' in data && "Analysis Elements"}
-                                {'name' in data && "Epics Elements"}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-[800px] max-h-[85vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>Select Additional Project Elements</DialogTitle>
-                            </DialogHeader>
-                            <DialogDescription></DialogDescription>
-                            <ul className="grid gap-3 p-4">
-                                {components.map((component) => (
-                                    <li key={toTitleCase(component.key)}
-                                        className={`flex justify-center items-center p-4 gap-4 ${component.active ? "border border-black" : "border"} p-2 rounded cursor-pointer select-none`}
-                                        onClick={() => {
-                                            if (!component.required) {
-                                                setComponents(prevComponents =>
-                                                    prevComponents.map(c =>
-                                                        c.key === component.key ? { ...c, active: !c.active } : c
-                                                    )
-                                                );
-                                            }
-                                        }}>
-                                        <div>{component.icon}</div>
-                                        <div>
-                                            <p className="text-sm font-bold">{toTitleCase(component.key)}</p>
-                                            <p className="text-sm">{component.description}</p>
-                                        </div>
-                                        <div>
-                                            {component.active ? (
-                                                <BoldRoundCheckmark />
-                                            ) : (
-                                                <RoundCheckmark />
-                                            )}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button>Close</Button>
-                                </DialogClose>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+    const handleLabelBlur = () => {
+        console.log("Label blur in CommonLayout");
+        onEditorBlur();
+    };
+
+    console.log("Current data in CommonLayout:", data);
+
+    return (
+        <div className="h-screen flex flex-col z-top">
+            {showAlert && (
+                <Alert className="mt-16 ml-8 mr-8 bg-primary/5 w-4/4 text-primary relative">
+                    <Rocket className="h-5 w-5" />
+                    <AlertTitle className="text-md">Welcome!</AlertTitle>
+                    <AlertDescription>
+                        This is your PRD, your product/project requirements document. This is where all of the business information related to your product or project lives.<br />
+                        This tool uses the information you specify here to help you create all the necessary parts of your analysis to have development-ready user stories.
+                    </AlertDescription>
                     <Button
-                        className="bg-gradient-to-r from-gray-400 to-gray-60 text-white"
+                        className="absolute top-2 right-2 p-1"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowAlert(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </Alert>
+            )}
+
+            <div className="bg-white sticky z-999 flex items-center justify-between px-8 pt-8 pb-2">
+                {showTitle && (
+                    <div className="flex-1 mr-4">
+                        <LabelToInput
+                            value={'title' in data ? data.title : data.name}
+                            setValue={handleUpdateLabel}
+                            onBlur={handleLabelBlur}
+                        />
+                    </div>
+                )}
+
+                <div className="flex items-center gap-4 ml-auto">
+                    <Button
+                        className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                         onClick={togglePresentationMode}
                     >
                         <Presentation className="pr-2" />
                         Presentation Mode
-                    </Button>
-                    {pathname === `/projects/${data._id}` &&
-                        <Button onClick={handleRouteAnalysis}>
-                            Functional Requirements
-                        </Button>
-                    }
-                    {pathname !== `/projects/${data._id}` && (
-                        <Button>
-                            Epics
-                        </Button>
-                    )}
-                    <Button onClick={handleRouteUseCase}>
-                        Use Cases
                     </Button>
                 </div>
             </div>
@@ -219,19 +111,18 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
             <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10 laptop-1024:overflow-auto">
                 <div className="align-top">
                     <FieldList
-                        components={components}
+                        components={menu}
                         activeSection={activeSection}
                         setActiveSection={setActiveSection}
                     />
                 </div>
                 <div className="overflow-hidden">
                     <EditorList
-                        components={components.filter(c => c.key === activeSection)}
+                        components={menu.filter(c => c.key === activeSection)}
                         data={data}
-                        onEditorBlur={onEditorBlur}
                         handleEditorChange={handleEditorChange}
-                        onOpenBrainstormChat={handleOpenBrainstormChat}
-                    />
+                        onEditorBlur={onEditorBlur}
+                        onOpenBrainstormChat={() => { }} />
                 </div>
             </div>
         </div>
