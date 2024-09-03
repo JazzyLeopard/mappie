@@ -1,6 +1,6 @@
 import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
-
+import { placeholders } from "../app/(main)/_components/constants";
 
 export const getSidebar = query(async (ctx) => {
 
@@ -173,10 +173,10 @@ export const createProject = mutation({
     const project = await ctx.db.insert("projects", {
       title: args.title,
       userId: identity.subject,
-      description: "",
-      objectives: "",
-      requirements: "",
-      stakeholders: "",
+      description: placeholders.description,
+      objectives: placeholders.objectives || "",
+      requirements: placeholders.requirements || "",
+      stakeholders: placeholders.stakeholders || "",
       isArchived: false,
       isPublished: false,
       onboarding: 1,
@@ -210,6 +210,9 @@ export const updateProject = mutation({
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
     await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
+    
+    // Return the updated project
+    return await ctx.db.get(_id);
   },
 });
 
