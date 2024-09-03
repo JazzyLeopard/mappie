@@ -12,8 +12,9 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
+import { debounce } from "lodash";
 import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
@@ -50,20 +51,14 @@ const MarkdownContent = ({ children }: { children: string }) => (
   </ReactMarkdown>
 );
 
-const BlockEditor: React.FC<BlockEditorProps> = ({
+export default function BlockEditor({
   onBlur,
   attribute,
   projectDetails,
   setProjectDetails,
   onOpenBrainstormChat,
-}) => {
-  if (!projectDetails || !attribute || typeof setProjectDetails !== 'function') {
-    console.error('BlockEditor: Missing required props', { projectDetails, attribute, setProjectDetails });
-    return null; // or some fallback UI
-  }
+}: BlockEditorProps) {
 
-  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
@@ -73,42 +68,20 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
-  const updateEpicMutation = useMutation(api.epics.updateEpic)
-  const editor = useCreateBlockNote({ initialContent: undefined });
 
-  const handleEditorChange = useCallback(() => {
-    if (!editor || !editor.document) return;
-
-    const saveContent = async () => {
-      const content = await editor.blocksToMarkdownLossy(editor.document);
-      console.log('BlockEditor: Saving content', { attribute, content });
-      setProjectDetails((prevDetails: any) => {
-        console.log('BlockEditor: Previous details', prevDetails);
-        const newDetails = { ...prevDetails, [attribute]: content };
-        console.log('BlockEditor: New details', newDetails);
-        return newDetails;
-      });
-    };
-    saveContent();
-  }, [editor, attribute, setProjectDetails]);
-
-  const checkEditorContent = useCallback(() => {
-    if (!editor || !editor.document) return;
-
-    editor.blocksToMarkdownLossy(editor.document).then(content => {
-      setIsEditorEmpty(content.trim() === '');
-    });
-  }, [editor]);
+  const editor = useCreateBlockNote({
+    initialContent: undefined
+  })
 
   useEffect(() => {
-    if (!editor || !projectDetails || !projectDetails[attribute]) return;
-
     const initializeEditor = async () => {
-      const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute]);
-      editor.replaceBlocks(editor.document, newBlock);
-    };
-    initializeEditor();
-  }, [editor, projectDetails, attribute]);
+      if (projectDetails[attribute]) {
+        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
+        editor.replaceBlocks(editor.document, newBlock)
+      }
+    }
+    initializeEditor()
+  }, [])
 
   const handleOnBlur = async () => {
     onBlur();
@@ -122,6 +95,9 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
     }
     return value;
   };
+
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAIEnhancement = async () => {
     setIsLoading(true);
@@ -176,6 +152,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
+    await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
     setShowComparison(false);
   };
 
@@ -193,6 +170,26 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
     editor.toggleStyles({ [style]: !isActive } as any);
     console.log("updated active styles:", editor.getActiveStyles());
   };
+
+
+  const saveContent = debounce(async () => {
+    const content = await editor.blocksToMarkdownLossy(editor.document)
+    //const content = JSON.stringify(editor.document); // Retrieve the document content
+    setProjectDetails((prevDetails: any) => ({
+      ...prevDetails,
+      [attribute]: content,
+    }));
+    setProjectDetails(content)
+
+  }, 2000);
+
+  useEffect(() => {
+    if (editor) {
+      editor.onChange(() => {
+        saveContent();
+      });
+    }
+  }, [editor, attribute, setProjectDetails]);
 
   // Custom function to get filtered Slash Menu items
   const getCustomSlashMenuItems = (
@@ -217,17 +214,9 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      if ('name' in projectDetails) {
-        await updateEpicMutation({
-          [attribute]: markDownContent, _id: projectDetails._id
-        })
-      }
-      else {
-        await updateProjectMutation({
-          [attribute]: markDownContent, _id: projectDetails._id,
-        })
-      }
-
+      await updateProjectMutation({
+        [attribute]: markDownContent, _id: projectDetails._id,
+      })
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
       console.log("Error saving content to db", error);
@@ -243,17 +232,29 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
     console.log("Current Block:", block);
   };
 
-  if (!editor) {
-    return <div>Loading editor...</div>;
-  }
+  const checkEditorContent = useCallback(async () => {
+    const content = await editor.blocksToMarkdownLossy(editor.document);
+    setIsEditorEmpty(content.trim() === '');
+  }, [editor]);
 
+  useEffect(() => {
+    checkEditorContent(); // Check initial content
+    editor.onChange(checkEditorContent);
+
+    return () => {
+      // No need to explicitly remove the listener
+      // The editor instance will be destroyed when the component unmounts
+    };
+  }, [editor, checkEditorContent]);
+
+  // Renders the editor instance using a React component.
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white">
-          <div className="flex justify-between py-2 border-b border-gray-200">
-            <ToggleGroup className="py-2" type="single" defaultValue="none">
+          <div className="flex justify-between py-3 border-b border-gray-200 ">
+            <ToggleGroup className="py-2 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
@@ -275,8 +276,6 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
                   disabled={isEditorEmpty || isLoading}
                   loading={isLoading}
                   showingComparison={showComparison}
-                  asChild={true}
-                  className="w-full p-1 px-2"
                 />
               </ToggleGroupItemNoHover>
               {/* <ToggleGroupItemNoHover value="brainstorm" onClick={onOpenBrainstormChat}>
@@ -366,6 +365,6 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
       `}</style>
     </div>
   );
-};
+}
 
-export default BlockEditor;
+{/* <AiPromptButton onToggle={toggleAiPrompt} {...{isAiPromptOpen}}/> */ }
