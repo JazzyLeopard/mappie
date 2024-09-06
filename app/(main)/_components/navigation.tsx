@@ -11,12 +11,14 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { CreditCard, FileText, GitPullRequest, Home, Layers, List, PlusCircle } from "lucide-react";
+import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, List, PlusCircle } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
+import { faRoad } from "@fortawesome/free-solid-svg-icons";
+import { Badge } from "@/components/ui/badge";
 
 export const Navigation = () => {
   const router = useRouter();
@@ -92,6 +94,12 @@ export const Navigation = () => {
       path: ""
     },
     {
+      label: "User Journeys",
+      icon: Car,
+      path: "user-journeys",
+      badge: "Coming soon"
+    },
+    {
       label: "Functional Requirements",
       icon: FileText,
       path: "functional-requirements"
@@ -102,14 +110,9 @@ export const Navigation = () => {
       path: "use-cases"
     },
     {
-      label: "Epics",
+      label: "Epics & User Stories",
       icon: Layers,
       path: "epics"
-    },
-    {
-      label: "Stories",
-      icon: List,
-      path: "stories"
     }
   ];
 
@@ -126,7 +129,7 @@ export const Navigation = () => {
 
   return (
     <div className="group/sidebar h-full w-80 bg-secondary overflow-y-auto relative z-[50] flex flex-col">
-      <div className="p-3">
+      <div className="p-2 rounded-md">
         <UserItems />
       </div>
 
@@ -165,6 +168,7 @@ export const Navigation = () => {
                 icon={item.icon}
                 onClick={() => router.push(`/projects/${selectedProject}/${item.path}`)}
                 active={isActive(item.path)}
+                badge={item.badge}
               />
             ))}
           </>

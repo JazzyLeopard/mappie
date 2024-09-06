@@ -23,8 +23,8 @@ export function AiPromptButton({
   asChild = false
 }: AiPromptButtonProps) {
   const buttonContent = (
-    <div className="rounded-xl items-center flex py-1 px-1">
-      {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIconWhite />}
+    <div className="rounded-xl items-center flex">
+      {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIcon />}
       <p className="pl-2">
         {loading ? "Generating..." : showingComparison ? "New content below" : "Enhance with AI"}
       </p>
@@ -32,7 +32,7 @@ export function AiPromptButton({
   );
 
   const buttonProps = {
-    className: `bg-gradient-to-r from-blue-400 to-pink-400 text-white text-xs rounded-xl ${
+    className: `bg-transparent text-gray-700 text-sm rounded-xl hover:bg-slate-200 ${
       disabled || loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
     } ${className}`,
     onClick: disabled || loading ? undefined : onClick,

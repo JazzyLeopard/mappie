@@ -45,11 +45,6 @@ export default function Component() {
           <Button className="bg-primary text-primary-foreground">
             <PlusIcon className="mr-2" />
             <p className="mr-4">Create new</p>
-            <AiGenerationIconWhite />
-          </Button>
-          <Button variant="outline">
-            <FileIcon className="mr-2" />
-            New from blank
           </Button>
         </div>
         <div className="flex items-center mb-6">
@@ -70,7 +65,7 @@ export default function Component() {
             Recently viewed
           </Button>
         </div>
-        <div className="flex gap-8 ">
+        <div className="pt-2 grid grid-cols-3 gap-8 ">
           {projects?.map((proj) => (
             <Card
               key={proj._id}
