@@ -13,11 +13,13 @@ import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
 import { debounce } from "lodash";
-import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
+import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, LucideSeparatorVertical, Strikethrough, Underline } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
+import { BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Separator } from "@radix-ui/react-separator";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -249,12 +251,12 @@ export default function BlockEditor({
 
   // Renders the editor instance using a React component.
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="min-h-full flex flex-col overflow-hidden">
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
-        <div className="sticky top-0 z-20 bg-white">
-          <div className="flex justify-between py-3 border-b border-gray-200 ">
-            <ToggleGroup className="py-2 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
+        <div className="sticky top-0 z-20 bg-white w-full">
+          <div className="flex justify-between border rounded-lg pl-2 mt-2">
+            <ToggleGroup className="py-1 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
@@ -270,6 +272,7 @@ export default function BlockEditor({
               <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
+              <p className="mx-1 text-gray-200">|</p>
               <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
                 <AiPromptButton
                   onClick={handleAIEnhancement}
@@ -292,7 +295,7 @@ export default function BlockEditor({
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
-            <BlockNoteView
+            <BlockNoteView className=""
               editor={editor}
               formattingToolbar={false}
               data-theming-css

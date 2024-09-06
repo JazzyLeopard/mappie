@@ -5,14 +5,20 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import axios from 'axios';
-import { useQuery } from "convex/react";
-import { Presentation } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { Presentation, MoreHorizontal, Trash, Plus, FileIcon, MoreVertical, PresentationIcon, GitPullRequest, SeparatorHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { propertyPrompts } from '../constants';
 import UCEditorList from "./UCEditorList";
-import UCFieldList from "./UCFieldList";
-
+import Link from "next/link";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import Image from "next/image";
+import Empty from "@/public/empty.png"; // Make sure this path is correct
+import AiGenerationIcon from "@/icons/AI-Generation";
+import { Separator } from "@/components/ui/separator";
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
     title: string;
@@ -21,7 +27,8 @@ interface UseCasesLayoutProps {
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
     onAddUseCase: () => Promise<void>;
     propertyPrompts: typeof propertyPrompts;
-    onOpenBrainstormChat: () => void; // Added this line
+    onOpenBrainstormChat: () => void;
+    useCases: any[]; // Add this line
 }
 
 const UseCasesLayout = ({
@@ -32,15 +39,16 @@ const UseCasesLayout = ({
     handleEditorChange,
     onAddUseCase,
     propertyPrompts,
-    onOpenBrainstormChat // Added this line
+    onOpenBrainstormChat,
+    
 }: UseCasesLayoutProps) => {
     const [activeUseCase, setActiveUseCase] = useState<string | null>(null);
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
     const { getToken } = useAuth();
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    // Use Convex's live query to fetch use cases
     const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId }) || [];
+    const deleteUseCase = useMutation(api.useCases.deleteUseCase);
 
     useEffect(() => {
         if (useCases.length > 0 && !activeUseCase) {
@@ -48,9 +56,16 @@ const UseCasesLayout = ({
         }
     }, [useCases, activeUseCase]);
 
-    const handleDelete = (deletedId: Id<"useCases">) => {
-        if (activeUseCase === deletedId) {
-            setActiveUseCase(null);
+    const handleDelete = async (id: Id<"useCases">) => {
+        try {
+            await deleteUseCase({ id });
+            if (activeUseCase === id) {
+                setActiveUseCase(null);
+            }
+            toast.success("Use case deleted successfully");
+        } catch (error) {
+            console.error("Error deleting use case:", error);
+            toast.error("Failed to delete use case");
         }
     };
 
@@ -94,36 +109,98 @@ const UseCasesLayout = ({
     };
 
     return (
-        <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky z-999 flex items-center justify-between p-8">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">{title}</h1>
-                </div>
-                <div className="flex items-center gap-4 ml-auto">
-                    <Button onClick={handleGenerateUseCases} disabled={isGenerating}>
-                        {isGenerating ? "Generating..." : "Generate Use Cases"}
-                    </Button>
-                    <Button
-                        className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-                        onClick={handlePresentationMode}
-                    >
-                        <Presentation className="pr-2" />
-                        Presentation Mode
-                    </Button>
-                </div>
-            </div>
-
-            <div className="overflow-hidden grid grid-cols-[0.3fr,1fr] gap-12 px-8">
-                <div className="align-top">
-                    <UCFieldList
-                        useCases={useCases}
-                        activeUseCase={activeUseCase}
-                        setActiveUseCase={setActiveUseCase}
-                        onDelete={handleDelete}
-                        onAddUseCase={onAddUseCase}
-                    />
-                </div>
-                <div className="overflow-hidden">
+        <div className="h-screen flex overflow-hidden">
+            {useCases.length > 0 && (
+                <aside className="w-96 flex flex-col">
+                    <div className="flex-grow overflow-y-auto px-4 pt-8">
+                        <div className="pl-4 text-lg font-semibold">
+                            Use Cases
+                        </div>
+                        <div className="p-4 bg-white">
+                            <div className="space-y-2 flex flex-col gap-4 items-center p-4 pt-8 bg-slate-100 rounded-md">
+                                <div className="flex flex-col gap-2">
+                                    <Button 
+                                        className="w-full rounded-xl gap-2 h-10 bg-gradient-to-r from-blue-400 to-pink-400" 
+                                        variant="default" 
+                                        size="sm"
+                                        onClick={handleGenerateUseCases}
+                                        disabled={isGenerating}
+                                    >
+                                        <AiGenerationIconWhite />
+                                        {isGenerating ? "Generating..." : "Generate use case"}
+                                    </Button>
+                                    <Button className="w-full h-10 hover:bg-slate-200 bg-transparent text-gray-500" size="sm" onClick={onAddUseCase}>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add a use case
+                                    </Button>
+                                </div>
+                                <Separator className="w-full bg-gray-200" />
+                                <ul className="space-y-2 rounded-md w-full">
+                                    {useCases.map((useCase) => (
+                                        <li
+                                            key={useCase._id}
+                                            className={`flex items-center justify-between p-4 rounded-md cursor-pointer group ${
+                                                activeUseCase === useCase._id ? "bg-white" : ""
+                                            }`}
+                                            onClick={() => setActiveUseCase(useCase._id)}
+                                        >
+                                            <div className="flex items-center min-w-0 flex-grow">
+                                                <GitPullRequest className={`flex-shrink-0 mr-2 ${useCase.title.length > 0 ? 'w-4 h-4' : 'w-4 h-4'}`} />
+                                                <span className="truncate text-sm">
+                                                    {useCase.title}
+                                                </span>
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreVertical className="h-4 w-4 text-gray-500" />
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(useCase._id);
+                                                    }}>
+                                                        <Trash className="h-4 w-4 mr-2" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            )}
+            <div className={`flex-1 overflow-hidden ${useCases.length === 0 ? 'w-full' : ''}`}>
+                {useCases.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center gap-6">
+                        <Image src={Empty} alt="No use cases" width={100} height={100} />
+                        <h2 className="text-xl font-semibold text-center">
+                            You haven't created any use cases<br />for this project yet.
+                        </h2>
+                        <p className="text-center text-gray-600 max-w-md">
+                            Based on the project details, the AI can generate
+                            streamlined use cases that detail the actions of
+                            the user and the system. Try it!
+                        </p>
+                        <Button 
+                            className="gap-2 h-10" 
+                            variant="default" 
+                            onClick={handleGenerateUseCases}
+                            disabled={isGenerating}
+                        >
+                            <AiGenerationIconWhite />
+                            {isGenerating ? "Generating..." : "Generate Use Cases"}
+                        </Button>
+                        <div className="text-center">
+                            <span className="text-gray-500">or</span>
+                        </div>
+                        <Button variant="outline" onClick={onAddUseCase}>
+                            Add Use Case manually
+                        </Button>
+                    </div>
+                ) : (
                     <UCEditorList
                         useCases={useCases}
                         activeUseCase={activeUseCase}
@@ -132,7 +209,7 @@ const UseCasesLayout = ({
                         propertyPrompts={propertyPrompts}
                         onOpenBrainstormChat={onOpenBrainstormChat}
                     />
-                </div>
+                )}
             </div>
         </div>
     );

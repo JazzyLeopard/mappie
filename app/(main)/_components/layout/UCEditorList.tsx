@@ -4,6 +4,8 @@ import LabelToInput from "../LabelToInput";
 import { Id } from "@/convex/_generated/dataModel";
 import { debounce } from "lodash";
 import { propertyPrompts } from "../constants";
+import { Button } from '@/components/ui/button';
+import { PresentationIcon } from 'lucide-react';
 
 interface UCEditorListProps {
     useCases: any[];
@@ -29,6 +31,8 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
         [handleEditorChange]
     );
 
+    if (useCases.length === 0) return null; // Add this line to handle empty use cases
+
     if (!activeUC) return null;
 
     const handleTitleChange = (newTitle: string) => {
@@ -37,14 +41,20 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="sticky top-0 bg-white z-10 pb-2">
+            <div className="px-4 pb-2 pt-6 bg-white z-10 flex flex-row items-end">
                 <LabelToInput
                     value={activeUC.title}
                     setValue={handleTitleChange}
                     onBlur={onEditorBlur}
                 />
+                <div className="">
+                    <Button className="w-full gap-2 h-10" variant="ghost" onClick={() => {}}>
+                        <PresentationIcon className="w-4 h-4" />
+                        Presentation Mode
+                    </Button>
+                </div>
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden px-4">
                 <BlockEditor
                     key={activeUC._id}
                     attribute="description"

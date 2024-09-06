@@ -78,6 +78,7 @@ const UseCases = ({ params }: UseCasesProps) => {
             onAddUseCase={handleCreateUseCase}
             propertyPrompts={propertyPrompts}
             onOpenBrainstormChat={handleOpenBrainstormChat}
+            useCases={useCases || []}
         />
     );
 };

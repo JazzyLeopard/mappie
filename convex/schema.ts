@@ -46,10 +46,6 @@ export default defineSchema({
     projectId: v.id("projects"),
     name: v.string(),
     description: v.string(),
-    acceptanceCriteria: v.string(),
-    businessValue: v.string(),
-    dependencies: v.optional(v.string()), // Array of epic or user story IDs
-    risks: v.optional(v.string()),
     createdAt: v.int64(), // Storing timestamp as bigint
     updatedAt: v.int64(), // Storing timestamp as bigint
   })
@@ -60,12 +56,6 @@ export default defineSchema({
     epicId: v.id("epics"),
     title: v.string(),
     description: v.string(),
-    acceptanceCriteria: v.optional(v.string()), // Optional field
-    interfaceElements: v.optional(v.string()), // Optional field
-    inScope: v.optional(v.string()), // Optional field
-    outOfScope: v.optional(v.string()), // Optional field
-    accessibilityInfo: v.optional(v.string()), // Optional field
-    functionalFlow: v.optional(v.string()), // Optional field
     createdAt: v.int64(), // Storing timestamp as bigint
     updatedAt: v.int64(), // Storing timestamp as bigint
   })
