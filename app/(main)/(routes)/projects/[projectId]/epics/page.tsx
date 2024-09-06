@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation } from "convex/react"
 import { toast } from "sonner"
+import EpicLayout from "@/app/(main)/_components/layout/EpicLayout"
 
 interface EpicsPageProps {
     params: {
@@ -15,6 +16,7 @@ interface EpicsPageProps {
 const EpicsPage = ({ params }: EpicsPageProps) => {
     const id = params.projectId
     const createEpic = useMutation(api.epics.createEpics)
+
 
     const onCreateEpic = (projectId: Id<"projects">) => {
         console.log("Create Epic called")
@@ -31,7 +33,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     }
 
     return (
-        <Button onClick={() => onCreateEpic(id)}>Create Epic</Button>
+        <EpicLayout projectId={id} />
     )
 }
 

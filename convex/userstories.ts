@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const createUserStory = mutation({
@@ -49,5 +49,22 @@ export const deleteUserStory = mutation({
   args: { id: v.id("userStories") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
+  },
+});
+
+export const getUserStories = query({
+  args: { epicId: v.id("epics") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("userStories")
+      .filter((q) => q.eq(q.field("epicId"), args.epicId))
+      .collect();
+  },
+});
+
+export const getUserStoryById = query({
+  args: { userStoryId: v.id("userStories") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userStoryId);
   },
 });

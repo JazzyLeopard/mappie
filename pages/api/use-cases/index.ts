@@ -125,7 +125,7 @@ export default async function handler(
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const prompt = `As an expert systems analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail:
+    const prompt = `As an expert systems analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
 
 {
   "title": "Withdraw Cash from ATM",
@@ -244,7 +244,8 @@ export default async function handler(
   }
 }
 
-Generate enough use cases to cover all the requirements of the project, following this exact structure and level of detail. Be creative and consider edge cases that might not be immediately obvious. Format the output as a JSON array of objects, each containing 'title' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block.
+Generate enough use cases to cover all the functional requirements of the project, following this exact structure and level of detail. Be creative and consider edge cases that might not be immediately obvious. Format the output as a JSON array of objects, each containing 'title' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block.
+Use the language of the project, don't use Heading 1 and Heading 2 in Markdown.
 
 Project Details:
 ${projectDetails}`;
