@@ -12,11 +12,12 @@ export type MenuItemType = {
 export type Project = {
   _id: Id<"projects">; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
-  'title': string; // Title of the project
+  title: string; // Title of the project
   description: string; // Description of the project
   objectives: string; // Objectives of the project
   onboarding: number; // Onboarding step number
   stakeholders?: string; // Optional stakeholders
+  requirements?: string; // Optional requirements
   scope?: string; // Optional scope
   targetAudience?: string; // Optional target audience
   constraints?: string; // Optional constraints
@@ -26,8 +27,8 @@ export type Project = {
   risks?: string; // Optional risks
   isArchived: boolean; // Indicates if the project is archived
   isPublished?: boolean; // Indicates if the project is published
-  createdAt: bigint; // Timestamp for when the project was created
-  updatedAt: bigint; // Timestamp for when the project was last updated
+  createdAt: bigint; // Timestamp for when the project was created (as number)
+  updatedAt: bigint; // Timestamp for when the project was last updated (as number)
   [key: string]: any;
 };
 
