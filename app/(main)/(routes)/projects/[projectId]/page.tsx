@@ -27,10 +27,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   });
 
   useEffect(() => {
-    if (project && project?.onboarding != 0) {
-      router.push(`/projects/${project?._id}/onboarding`)
-    }
-    else {
+    if (project && project?._id) {
       setProjectDetails(project)
     }
   }, [project])
@@ -57,16 +54,12 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 
-  if (projectDetails?.onboarding == 0) {
-    return <CommonLayout
-      data={projectDetails}
-      menu={menuItems}
-      onEditorBlur={handleEditorBlur}
-      updateLabel={updateLabel}
-      handleEditorChange={handleEditorChange} />
-  }
-
-  return <>Redirecting...</>
+  return <CommonLayout
+    data={projectDetails}
+    menu={menuItems}
+    onEditorBlur={handleEditorBlur}
+    updateLabel={updateLabel}
+    handleEditorChange={handleEditorChange} />
 };
 
 export default ProjectIdPage;
