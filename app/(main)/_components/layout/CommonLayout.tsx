@@ -5,12 +5,15 @@
  */
 "use client"
 
+import React, { useState, useEffect, useCallback } from 'react';
 import '@/app/custom.css';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
 import { Presentation, Rocket, X } from "lucide-react";
-import { useCallback, useEffect, useState } from 'react';
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation';
 import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
 import EditorList from "./EditorList";
@@ -30,12 +33,22 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
+    const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         if (!activeSection && menu.length > 0) {
             setActiveSection(menu[0].key);
         }
     }, [menu, activeSection]);
+
+    useEffect(() => {
+        // Check if all required fields have content
+        const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders'];
+        const allFieldsHaveContent = requiredFields.every(field => data[field] && data[field].trim() !== '');
+        setIsGenerateButtonActive(allFieldsHaveContent);
+    }, [data]);
 
     const togglePresentationMode = () => {
         setIsPresentationMode(!isPresentationMode);
@@ -64,6 +77,16 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     };
 
     console.log("Current data in CommonLayout:", data);
+
+    const handleGenerateFR = () => {
+        setIsConfirmModalOpen(true);
+    };
+
+    const confirmGenerateFR = () => {
+        setIsConfirmModalOpen(false);
+        // Navigate to the Functional Requirements page and trigger generation
+        router.push(`/projects/${data._id}/functional-requirements?generate=true`);
+    };
 
     return (
         <div className="h-screen flex flex-col z-top">
@@ -99,6 +122,14 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
 
                 <div className="flex items-center gap-4 ml-auto">
                     <Button
+                        className="gap-2"
+                        onClick={handleGenerateFR}
+                        disabled={!isGenerateButtonActive}
+                    >
+                        <AiGenerationIconWhite />
+                        Generate Functional Requirements
+                    </Button>
+                    <Button
                         className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                         onClick={togglePresentationMode}
                     >
@@ -107,6 +138,21 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     </Button>
                 </div>
             </div>
+
+            <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="pb-2">Generate Functional Requirements</DialogTitle>
+                        <DialogDescription className="pb-2">
+                            Are you confident that you've provided enough information about the project to generate comprehensive Functional Requirements?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+                        <Button onClick={confirmGenerateFR}>Confirm</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10 laptop-1024:overflow-auto">
                 <div className="align-top">
