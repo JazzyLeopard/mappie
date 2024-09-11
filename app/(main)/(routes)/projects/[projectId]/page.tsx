@@ -1,11 +1,10 @@
 "use client";
-import { useMutation, useQuery } from "convex/react";
+import { menuItems } from "@/app/(main)/_components/constants";
+import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
+import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import Spinner from "@/components/ui/spinner";
-import { useRouter } from "next/navigation";
-import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
-import { menuItems } from "@/app/(main)/_components/constants";
+import { useMutation, useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 
 interface ProjectIdPageProps {
@@ -17,7 +16,6 @@ interface ProjectIdPageProps {
 const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   const id = params.projectId;
 
-  const router = useRouter();
   const [projectDetails, setProjectDetails] = useState<any>()
 
   const updateProjectMutation = useMutation(api.projects.updateProject)
@@ -36,15 +34,17 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     return <div className="flex justify-center items-center mx-auto"><Spinner /></div>;
   }
 
-  const updateLabel = (val: string) => {
-    setProjectDetails({ ...projectDetails, title: val });
-  };
 
   const handleEditorBlur = async () => {
     try {
-      console.log('time for API call', projectDetails);
-      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails
-      await updateProjectMutation(payload)
+      setProjectDetails((prevDetails: any) => {
+        console.log('time for API call', prevDetails);
+        const { _creationTime, createdAt, updatedAt, userId, ...payload } = prevDetails;
+        updateProjectMutation(payload).catch(error => {
+          console.log('error updating project', error);
+        });
+        return prevDetails;  // Return the same state to avoid unnecessary re-renders
+      });
     } catch (error) {
       console.log('error updating project', error);
     }
@@ -54,11 +54,11 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     setProjectDetails({ ...projectDetails, [attribute]: data });
   };
 
+
   return <CommonLayout
     data={projectDetails}
     menu={menuItems}
     onEditorBlur={handleEditorBlur}
-    updateLabel={updateLabel}
     handleEditorChange={handleEditorChange} />
 };
 

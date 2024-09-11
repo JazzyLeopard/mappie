@@ -12,7 +12,7 @@ export type MenuItemType = {
 export type Project = {
   _id: Id<"projects">; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
-  title: string; // Title of the project
+  'title': string; // Title of the project
   description: string; // Description of the project
   objectives: string; // Objectives of the project
   onboarding: number; // Onboarding step number

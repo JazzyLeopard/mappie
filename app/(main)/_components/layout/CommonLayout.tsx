@@ -14,6 +14,7 @@ import { Presentation, Rocket, X } from "lucide-react";
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
 import EditorList from "./EditorList";
@@ -23,12 +24,13 @@ interface CommonLayoutProps {
     data: Project | Epic;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
-    updateLabel: (val: string) => void;
     handleEditorChange: (attribute: string, value: any) => void,
     showTitle?: boolean;
+    mandatoryFields?: string[];
 }
 
-const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange, showTitle = true }: CommonLayoutProps) => {
+const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] }: CommonLayoutProps) => {
+
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
@@ -36,6 +38,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
     const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const router = useRouter();
+
 
     useEffect(() => {
         if (!activeSection && menu.length > 0) {
@@ -54,27 +57,13 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         setIsPresentationMode(!isPresentationMode);
     };
 
-    const handleOpenBrainstormChat = () => {
-        setIsBrainstormChatOpen(true);
-    };
 
-    const memoizedHandleEditorChange = useCallback((attribute: string, value: any) => {
-        handleEditorChange(attribute, value);
-    }, [handleEditorChange]);
 
     if (isPresentationMode) {
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
     }
 
-    const handleUpdateLabel = (newValue: string) => {
-        console.log("Updating label in CommonLayout:", newValue);
-        updateLabel(newValue);
-    };
 
-    const handleLabelBlur = () => {
-        console.log("Label blur in CommonLayout");
-        onEditorBlur();
-    };
 
     console.log("Current data in CommonLayout:", data);
 
@@ -87,6 +76,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         // Navigate to the Functional Requirements page and trigger generation
         router.push(`/projects/${data._id}/functional-requirements?generate=true`);
     };
+    // console.log("Current data in CommonLayout:", data);
 
     return (
         <div className="h-screen flex flex-col z-top">
@@ -114,8 +104,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     <div className="flex-1 mr-4">
                         <LabelToInput
                             value={'title' in data ? data.title : data.name}
-                            setValue={handleUpdateLabel}
-                            onBlur={handleLabelBlur}
+                            setValue={(val) => handleEditorChange('title', val)}
+                            onBlur={onEditorBlur}
                         />
                     </div>
                 )}
@@ -160,6 +150,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                         components={menu}
                         activeSection={activeSection}
                         setActiveSection={setActiveSection}
+                        mandatoryFields={mandatoryFields}
                     />
                 </div>
                 <div className="overflow-hidden">
@@ -168,7 +159,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                         data={data}
                         handleEditorChange={handleEditorChange}
                         onEditorBlur={onEditorBlur}
-                        onOpenBrainstormChat={() => { }} />
+                        onOpenBrainstormChat={async () => { }} />
                 </div>
             </div>
         </div>
