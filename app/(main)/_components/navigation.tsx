@@ -101,7 +101,6 @@ export const Navigation = () => {
       label: "Project Overview",
       icon: Home,
       path: "",
-      isDisabled: false,
       isHidden: false
     },
     {
@@ -109,28 +108,24 @@ export const Navigation = () => {
       icon: Car,
       path: "user-journeys",
       badge: "Coming soon",
-      isDisabled: currentProject?.onboarding !== 0,
       isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Functional Requirements",
       icon: FileText,
       path: "functional-requirements",
-      isDisabled: currentProject?.onboarding !== 0,
       isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Use Cases",
       icon: GitPullRequest,
       path: "use-cases",
-      isDisabled: currentProject?.onboarding !== 0,
       isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Epics & User Stories",
       icon: Layers,
       path: "epics",
-      isDisabled: currentProject?.onboarding !== 0,
       isHidden: currentProject?.onboarding !== 0
     }
   ];
@@ -185,18 +180,20 @@ export const Navigation = () => {
       <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
         {selectedProject && projects && (
           <>
-            {navItems.map((item) => (
-              <NavItem
-                key={item.label}
-                label={item.label}
-                icon={item.icon}
-                onClick={() => handleNavItemClick(item.path)}
-                active={isActive(item.path)}
-                badge={item.badge}
-                isDisabled={item.isDisabled}
-                isHidden={item.isHidden}
-              />
-            ))}
+            {navItems.map((item) => {
+              
+              if (!item.isHidden) 
+                return (<NavItem
+                  key={item.label}
+                  label={item.label}
+                  icon={item.icon}
+                  onClick={() => handleNavItemClick(item.path)}
+                  active={isActive(item.path)}
+                  badge={item.badge}
+                />
+              )
+            }
+            )}
           </>
         )}
       </ScrollArea>

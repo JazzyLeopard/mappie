@@ -34,12 +34,6 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     return <div className="flex justify-center items-center mx-auto"><Spinner /></div>;
   }
 
-  const updateLabel = (val: string) => {
-    setProjectDetails({ ...projectDetails, title: val });
-    updateProjectMutation({ _id: id, title: val }).catch(error => {
-      console.log('error updating project title', error);
-    });
-  };
 
   const handleEditorBlur = async () => {
     try {
@@ -65,7 +59,6 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     data={projectDetails}
     menu={menuItems}
     onEditorBlur={handleEditorBlur}
-    updateLabel={updateLabel}
     handleEditorChange={handleEditorChange} />
 };
 
