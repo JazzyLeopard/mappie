@@ -10,15 +10,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, List, PlusCircle } from "lucide-react";
+import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, PlusCircle } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
-import { faRoad } from "@fortawesome/free-solid-svg-icons";
-import { Badge } from "@/components/ui/badge";
 
 export const Navigation = () => {
   const router = useRouter();
@@ -27,26 +26,37 @@ export const Navigation = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const createProject = useMutation(api.projects.createProject);
 
+  const currentProject = useQuery(api.projects.getProjectById,
+    selectedProject ? { projectId: selectedProject as Id<"projects"> } : "skip"
+  );
+
+  const [mandatoryFieldsFilled, setMandatoryFieldsFilled] = useState(false);
+
+  useEffect(() => {
+    if (currentProject) {
+      const mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] as const;
+      const allFieldsFilled = mandatoryFields.every(field =>
+        currentProject[field] && typeof currentProject[field] === 'string' && currentProject[field].trim() !== ''
+      );
+      setMandatoryFieldsFilled(allFieldsFilled);
+    }
+  }, [currentProject]);
+
   useEffect(() => {
     const updateSelectedProject = () => {
-      console.log("Pathname:", pathname);
-      console.log("Projects:", projects);
 
       const pathParts = pathname?.split('/') || [];
       const projectIdFromUrl = pathParts[pathParts.indexOf('projects') + 1];
 
-      console.log("Project ID from URL:", projectIdFromUrl);
 
       if (projectIdFromUrl && projects) {
         const matchingProject = projects.find(project => project._id === projectIdFromUrl);
         console.log("Matching project:", matchingProject);
         if (matchingProject) {
           setSelectedProject(matchingProject._id);
-          console.log("Selected project set to:", matchingProject._id);
         }
       } else if (projects && projects.length > 0 && !selectedProject) {
         setSelectedProject(projects[0]._id);
-        console.log("Selected project set to first project:", projects[0]._id);
       }
     };
 
@@ -82,7 +92,6 @@ export const Navigation = () => {
         router.push(`/projects/${newProject}`);
       }
     } catch (error) {
-      console.error("Failed to create project", error);
       toast.error("Failed to create project");
     }
   };
@@ -91,30 +100,41 @@ export const Navigation = () => {
     {
       label: "Project Overview",
       icon: Home,
-      path: ""
+      path: "",
+      isHidden: false
     },
     {
       label: "User Journeys",
       icon: Car,
       path: "user-journeys",
-      badge: "Coming soon"
+      badge: "Coming soon",
+      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Functional Requirements",
       icon: FileText,
-      path: "functional-requirements"
+      path: "functional-requirements",
+      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Use Cases",
       icon: GitPullRequest,
-      path: "use-cases"
+      path: "use-cases",
+      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Epics & User Stories",
       icon: Layers,
-      path: "epics"
+      path: "epics",
+      isHidden: currentProject?.onboarding !== 0
     }
   ];
+
+  const handleNavItemClick = (path: string) => {
+    if (currentProject?.onboarding === 0 || path === "") {
+      router.push(`/projects/${selectedProject}/${path}`);
+    }
+  };
 
   const isActive = (itemPath: string) => {
     const projectPath = `/projects/${selectedProject}`;
@@ -125,7 +145,6 @@ export const Navigation = () => {
   const selectedProjectTitle = selectedProject && projects
     ? projects.find(project => project._id === selectedProject)?.title
     : "Select a project";
-  console.log("Selected project title:", selectedProjectTitle);
 
   return (
     <div className="group/sidebar h-full w-80 bg-secondary overflow-y-auto relative z-[50] flex flex-col">
@@ -161,16 +180,20 @@ export const Navigation = () => {
       <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
         {selectedProject && projects && (
           <>
-            {navItems.map((item) => (
-              <NavItem
-                key={item.label}
-                label={item.label}
-                icon={item.icon}
-                onClick={() => router.push(`/projects/${selectedProject}/${item.path}`)}
-                active={isActive(item.path)}
-                badge={item.badge}
-              />
-            ))}
+            {navItems.map((item) => {
+              
+              if (!item.isHidden) 
+                return (<NavItem
+                  key={item.label}
+                  label={item.label}
+                  icon={item.icon}
+                  onClick={() => handleNavItemClick(item.path)}
+                  active={isActive(item.path)}
+                  badge={item.badge}
+                />
+              )
+            }
+            )}
           </>
         )}
       </ScrollArea>
