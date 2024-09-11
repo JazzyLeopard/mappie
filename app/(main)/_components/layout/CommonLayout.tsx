@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { Epic, MenuItemType, Project } from "@/lib/types";
 import { Presentation, Rocket, X } from "lucide-react";
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
 import EditorList from "./EditorList";
@@ -23,13 +23,16 @@ interface CommonLayoutProps {
     updateLabel: (val: string) => void;
     handleEditorChange: (attribute: string, value: any) => void,
     showTitle?: boolean;
+    mandatoryFields?: string[];
 }
 
-const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange, showTitle = true }: CommonLayoutProps) => {
+const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] }: CommonLayoutProps) => {
+
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
+
 
     useEffect(() => {
         if (!activeSection && menu.length > 0) {
@@ -45,9 +48,9 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         setIsBrainstormChatOpen(true);
     };
 
-    const memoizedHandleEditorChange = useCallback((attribute: string, value: any) => {
+    const memoizedHandleEditorChange = (attribute: string, value: any) => {
         handleEditorChange(attribute, value);
-    }, [handleEditorChange]);
+    };
 
     if (isPresentationMode) {
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
@@ -63,7 +66,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         onEditorBlur();
     };
 
-    console.log("Current data in CommonLayout:", data);
+    // console.log("Current data in CommonLayout:", data);
 
     return (
         <div className="h-screen flex flex-col z-top">
@@ -91,8 +94,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     <div className="flex-1 mr-4">
                         <LabelToInput
                             value={'title' in data ? data.title : data.name}
-                            setValue={handleUpdateLabel}
-                            onBlur={handleLabelBlur}
+                            setValue={updateLabel}
+                            onBlur={onEditorBlur}
                         />
                     </div>
                 )}
@@ -114,6 +117,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                         components={menu}
                         activeSection={activeSection}
                         setActiveSection={setActiveSection}
+                        mandatoryFields={mandatoryFields}
                     />
                 </div>
                 <div className="overflow-hidden">
@@ -122,7 +126,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                         data={data}
                         handleEditorChange={handleEditorChange}
                         onEditorBlur={onEditorBlur}
-                        onOpenBrainstormChat={() => { }} />
+                        onOpenBrainstormChat={async () => { }} />
                 </div>
             </div>
         </div>
