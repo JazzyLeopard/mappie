@@ -209,10 +209,32 @@ export const updateProject = mutation({
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
-    await ctx.db.patch(_id, { ...updates, updatedAt: BigInt(Date.now()) });
 
-    // Return the updated project
-    return await ctx.db.get(_id);
+    const currentProject = await ctx.db.get(_id);
+    if (!currentProject) throw new Error("Project not found");
+
+    const updatedProject = { ...currentProject, ...updates };
+
+    const mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] as const;
+    let filledFields = mandatoryFields.filter(field =>
+      updatedProject[field] && typeof updatedProject[field] === 'string' && updatedProject[field].trim() !== ''
+    );
+
+    let onboarding = filledFields.length;
+
+    // If all mandatory fields are filled, set onboarding to 0
+    if (onboarding === mandatoryFields.length) {
+      onboarding = 0;
+    }
+
+    const finalUpdates = { ...updates, onboarding };
+
+    await ctx.db.patch(_id, { ...finalUpdates, updatedAt: BigInt(Date.now()) });
+
+    const finalProject = await ctx.db.get(_id);
+    console.log("Updated project:", finalProject); // Add this line for debugging
+
+    return finalProject;
   },
 });
 

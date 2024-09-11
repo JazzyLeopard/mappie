@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { input } from "@nextui-org/react";
 import { Edit } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LabelToInput({
   value,
@@ -20,23 +21,18 @@ export default function LabelToInput({
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(event.target.value);
+    setInputValue(event.target.value)
   };
 
   const handleBlur = () => {
     setIsEditing(false);
-    if (inputValue !== value) {
-      setValue(inputValue);
-      onBlur();
-    }
+    setValue(inputValue)
+    onBlur();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (inputValue !== value) {
-        setValue(inputValue);
-      }
       setIsEditing(false);
       onBlur();
     }
@@ -54,7 +50,7 @@ export default function LabelToInput({
           autoFocus
         />
       ) : (
-        <div 
+        <div
           onClick={handleClick}
           className="flex items-center cursor-pointer group"
         >
@@ -63,8 +59,8 @@ export default function LabelToInput({
           >
             {value || "Click to edit"}
           </Label>
-          <Edit 
-            className="h-5 w-5 text-gray-300 group-hover:text-gray-600 transition-colors duration-200" 
+          <Edit
+            className="h-5 w-5 text-gray-300 group-hover:text-gray-600 transition-colors duration-200"
           />
         </div>
       )}
