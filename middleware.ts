@@ -10,8 +10,16 @@ const isProtectedRoute = createRouteMatcher(["/projects(.*)"]);
 const restrictedRoutes = ['functional-requirements', 'user-journeys', 'use-cases', 'epics'];
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
+
   if (isProtectedRoute(req)) {
-    await auth().protect();
+    const { userId, getToken } = auth()
+    const token = await getToken({ template: 'convex' })
+    if (!userId || !token) {
+      // User is not authenticated, redirect to login
+      return NextResponse.redirect(new URL('/sign-in', req.url));
+    }
+
+    convex.setAuth(token)
 
     const pathname = req.nextUrl.pathname;
 
@@ -28,10 +36,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         if (project && project.onboarding !== 0) {
           return NextResponse.redirect(new URL(`/projects/${projectId}`, req.url));
         }
+        return NextResponse.next();
+
       } catch (error) {
         console.error('Error fetching project details:', error);
         // In case of error, redirect to a safe page
-        return NextResponse.redirect(new URL(`/projects/${projectId}`, req.url));
+        return NextResponse.redirect(new URL(`/projects`, req.url));
       }
     }
   }
