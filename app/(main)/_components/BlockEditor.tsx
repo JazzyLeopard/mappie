@@ -64,7 +64,6 @@ export default function BlockEditor({
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
-  const [formattedData, setFormattedData] = useState<string>()
   const [showSummary, setShowSummary] = useState(false);
   const [changeSummary, setChangeSummary] = useState("");
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
@@ -85,10 +84,8 @@ export default function BlockEditor({
     initializeEditor()
   }, [])
 
-  const handleOnBlur = async () => {
+  const handleOnBlur = async () => { 
     onBlur();
-    const formatted = await editor.blocksToMarkdownLossy(editor.document);
-    setFormattedData(formatted)
   }
 
   const jsonReplacer = (key: string, value: any) => {
@@ -174,16 +171,11 @@ export default function BlockEditor({
   };
 
 
-  const saveContent = debounce(async () => {
+  const saveContent = async () => {
     const content = await editor.blocksToMarkdownLossy(editor.document)
     //const content = JSON.stringify(editor.document); // Retrieve the document content
-    setProjectDetails((prevDetails: any) => ({
-      ...prevDetails,
-      [attribute]: content,
-    }));
-    setProjectDetails(content)
-
-  }, 2000);
+    setProjectDetails(content);
+  };
 
   useEffect(() => {
     if (editor) {

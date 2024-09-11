@@ -28,11 +28,6 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             setEpicDetails(epic)
     }, [epic])
 
-
-    const updateLabel = (val: string) => {
-        setEpicDetails({ ...epicDetails, name: val });
-    };
-
     const handleEditorBlur = async () => {
         try {
             console.log('time for API call', epicDetails);
@@ -58,7 +53,6 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             data={epicDetails}
             menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
-            updateLabel={updateLabel}
             handleEditorChange={handleEditorChange} />
     }
 }
