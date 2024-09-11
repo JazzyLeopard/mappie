@@ -1,3 +1,3 @@
-# listoriq
+# Projeqtly
 
 Epic and story generator

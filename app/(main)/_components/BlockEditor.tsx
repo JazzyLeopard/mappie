@@ -255,7 +255,7 @@ export default function BlockEditor({
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white w-full">
-          <div className="flex justify-between border rounded-lg pl-2 mt-2">
+          <div className="flex justify-between border rounded-lg pl-1 mt-2">
             <ToggleGroup className="py-1 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />

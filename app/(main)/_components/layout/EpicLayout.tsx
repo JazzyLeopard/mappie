@@ -267,7 +267,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
             <div className="flex-1 ml-1 p-4 pt-6 overflow-y-auto">
               {selectedUserStoryId && selectedUserStory ? (
                 <>
-                  <header className="flex items-center justify-between pb-4 w-full">
+                  <header className="flex items-center justify-between pb-3 w-full">
                     <LabelToInput
                       value={selectedUserStory.title}
                       setValue={(newTitle) => handleUserStoryTitleChange(selectedUserStoryId, newTitle)}
