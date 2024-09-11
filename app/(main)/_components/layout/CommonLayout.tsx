@@ -20,13 +20,12 @@ interface CommonLayoutProps {
     data: Project | Epic;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
-    updateLabel: (val: string) => void;
     handleEditorChange: (attribute: string, value: any) => void,
     showTitle?: boolean;
     mandatoryFields?: string[];
 }
 
-const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] }: CommonLayoutProps) => {
+const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] }: CommonLayoutProps) => {
 
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -44,27 +43,13 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
         setIsPresentationMode(!isPresentationMode);
     };
 
-    const handleOpenBrainstormChat = () => {
-        setIsBrainstormChatOpen(true);
-    };
 
-    const memoizedHandleEditorChange = (attribute: string, value: any) => {
-        handleEditorChange(attribute, value);
-    };
 
     if (isPresentationMode) {
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
     }
 
-    const handleUpdateLabel = (newValue: string) => {
-        console.log("Updating label in CommonLayout:", newValue);
-        updateLabel(newValue);
-    };
 
-    const handleLabelBlur = () => {
-        console.log("Label blur in CommonLayout");
-        onEditorBlur();
-    };
 
     // console.log("Current data in CommonLayout:", data);
 
@@ -94,7 +79,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, updateLabel, handleEditorChang
                     <div className="flex-1 mr-4">
                         <LabelToInput
                             value={'title' in data ? data.title : data.name}
-                            setValue={updateLabel}
+                            setValue={(val) => handleEditorChange('title', val)}
                             onBlur={onEditorBlur}
                         />
                     </div>
