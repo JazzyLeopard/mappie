@@ -45,10 +45,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log('Generated functional requirements:', response.data.content);
+            console.log('Generated content:', response.data.content);
             setLocalContent(response.data.content);
             onEditorChange(response.data.content);
-
             // Save the generated content to the functional requirements table
             if (frId) {
                 await updateFunctionalRequirements({ id: frId, content: response.data.content });
@@ -56,6 +55,12 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 const newFrId = await createFunctionalRequirements({ projectId, content: response.data.content });
                 console.log("New FR created with ID:", newFrId);
             }
+            setLocalContent(prevContent => {
+                if (prevContent === response.data.content) {
+                    return prevContent + ' '; // Add a space to force re-render
+                }
+                return response.data.content;
+            });
         } catch (error) {
             console.error("Failed to generate functional requirements:", error);
             if (axios.isAxiosError(error)) {
