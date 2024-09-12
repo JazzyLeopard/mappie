@@ -9,7 +9,6 @@ interface NavItemProps {
 	onClick: () => void;
 	active?: boolean;
 	badge?: string;
-	isHidden?: boolean;
 }
 
 const NavItem: React.FC<NavItemProps> = ({
