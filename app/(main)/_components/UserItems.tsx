@@ -54,7 +54,7 @@ const UserItems = () => {
 
             <div className="space-y-1">
               <p className="text-sm line-clamp-1">
-                {user?.emailAddresses[0].emailAddress.split("@")[0]}&apos;s Listoriq
+                {user?.emailAddresses[0].emailAddress.split("@")[0]}
               </p>
             </div>
           </div>
