@@ -34,6 +34,7 @@ export default function LabelToInput({
     if (e.key === "Enter") {
       e.preventDefault();
       setIsEditing(false);
+      setValue(inputValue)
       onBlur();
     }
   };
