@@ -51,7 +51,6 @@ export const Navigation = () => {
 
       if (projectIdFromUrl && projects) {
         const matchingProject = projects.find(project => project._id === projectIdFromUrl);
-        console.log("Matching project:", matchingProject);
         if (matchingProject) {
           setSelectedProject(matchingProject._id);
         }
@@ -101,37 +100,32 @@ export const Navigation = () => {
       label: "Project Overview",
       icon: Home,
       path: "",
-      isHidden: false
     },
     {
       label: "User Journeys",
       icon: Car,
       path: "user-journeys",
       badge: "Coming soon",
-      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Functional Requirements",
       icon: FileText,
       path: "functional-requirements",
-      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Use Cases",
       icon: GitPullRequest,
       path: "use-cases",
-      isHidden: currentProject?.onboarding !== 0
     },
     {
       label: "Epics & User Stories",
       icon: Layers,
       path: "epics",
-      isHidden: currentProject?.onboarding !== 0
     }
   ];
 
   const handleNavItemClick = (path: string) => {
-    if (currentProject?.onboarding === 0 || path === "") {
+    if (currentProject || path === "") {
       router.push(`/projects/${selectedProject}/${path}`);
     }
   };
@@ -181,16 +175,14 @@ export const Navigation = () => {
         {selectedProject && projects && (
           <>
             {navItems.map((item) => {
-              
-              if (!item.isHidden) 
-                return (<NavItem
-                  key={item.label}
-                  label={item.label}
-                  icon={item.icon}
-                  onClick={() => handleNavItemClick(item.path)}
-                  active={isActive(item.path)}
-                  badge={item.badge}
-                />
+              return (<NavItem
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                onClick={() => handleNavItemClick(item.path)}
+                active={isActive(item.path)}
+                badge={item.badge}
+              />
               )
             }
             )}

@@ -25,6 +25,10 @@ const UseCases = ({ params }: UseCasesProps) => {
     const updateUseCase = useMutation(api.useCases.updateUseCase);
     const deleteUseCase = useMutation(api.useCases.deleteUseCase);
 
+    const project = useQuery(api.projects.getProjectById, {
+        projectId: projectId
+    })
+
     const handleCreateUseCase = useCallback(async () => {
         await createUseCase({
             projectId,
@@ -79,6 +83,7 @@ const UseCases = ({ params }: UseCasesProps) => {
             propertyPrompts={propertyPrompts}
             onOpenBrainstormChat={handleOpenBrainstormChat}
             useCases={useCases || []}
+            isOnboardingComplete={project?.onboarding == 0}
         />
     );
 };
