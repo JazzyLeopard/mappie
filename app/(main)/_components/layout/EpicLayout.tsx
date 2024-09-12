@@ -19,22 +19,23 @@ import { useRouter } from "next/navigation"
 
 interface EpicLayoutProps {
   projectId: Id<"projects">
+  isOnboardingComplete: boolean
 }
 
-export default function EpicLayout({ projectId }: EpicLayoutProps) {
+export default function EpicLayout({ projectId, isOnboardingComplete }: EpicLayoutProps) {
   const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null)
   const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
 
   const epics = useQuery(api.epics.getEpics, { projectId }) || []
-  const userStories = useQuery(api.userstories.getUserStories, 
+  const userStories = useQuery(api.userstories.getUserStories,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
-  const selectedEpic = useQuery(api.epics.getEpicById, 
+  const selectedEpic = useQuery(api.epics.getEpicById,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
-  const selectedUserStory = useQuery(api.userstories.getUserStoryById, 
+  const selectedUserStory = useQuery(api.userstories.getUserStoryById,
     selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
   )
 
@@ -136,7 +137,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden justify-center items-center w-full">
       {epics.length > 0 && (
         <header className="flex items-center justify-between pl-6 pr-6 pt-6 pb-2">
           <div className="flex items-center">
@@ -167,7 +168,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                   >
                     <div className={`rounded-md overflow-hidden ${activeEpicId === epic._id ? 'bg-slate-100 p-4' : ''}`}>
                       <CollapsibleTrigger className="w-full rounded-md hover:bg-slate-200">
-                        <div 
+                        <div
                           className={`flex items-center p-4 group ${activeEpicId === epic._id && !selectedUserStoryId ? 'bg-white rounded-md' : 'border border-slate-100 bg-transparent rounded-md'}`}
                         >
                           <div className="flex-grow flex items-center space-x-4" onClick={(e) => handleEpicTitleClick(epic._id, e)}>
@@ -206,7 +207,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                       <CollapsibleContent>
                         <div className="space-y-2 p-2 w-full">
                           {userStories?.filter(story => story.epicId === epic._id).map((story) => (
-                            <div 
+                            <div
                               key={story._id}
                               className={`flex items-center space-x-2 p-2 text-sm font-light rounded cursor-pointer group ${selectedUserStoryId === story._id ? 'bg-white font-bold' : 'hover:bg-slate-200'}`}
                             >
@@ -231,26 +232,26 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                             </div>
                           ))}
                           {userStories?.filter(story => story.epicId === epic._id).length === 0 ? (
-                            <Button 
-                              variant="ghost" 
-                              className="w-full bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl text-xs mt-2" 
+                            <Button
+                              variant="ghost"
+                              className="w-full bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl text-xs mt-2"
                               onClick={() => handleGenerateUserStories(epic._id)}
                             >
                               <p className="">Generate User Stories with AI</p>
                             </Button>
                           ) : (
                             <div className="flex flex-col items-center space-y-1">
-                              <Button 
-                                variant="default" 
-                                className="w-full text-xs bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl space-x-2 mt-2 px-2" 
+                              <Button
+                                variant="default"
+                                className="w-full text-xs bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl space-x-2 mt-2 px-2"
                                 onClick={handleCreateUserStory}
                               >
-                                <AiGenerationIconWhite/>
+                                <AiGenerationIconWhite />
                                 <p className="ml-2">Generate a User Story</p>
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                className="w-full text-xs mt-2" 
+                              <Button
+                                variant="ghost"
+                                className="w-full text-xs mt-2"
                                 onClick={handleCreateUserStory}
                               >
                                 Add user story
@@ -271,15 +272,15 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                     <LabelToInput
                       value={selectedUserStory.title}
                       setValue={(newTitle) => handleUserStoryTitleChange(selectedUserStoryId, newTitle)}
-                      onBlur={async () => {/* You can add any additional logic here */}}
+                      onBlur={async () => {/* You can add any additional logic here */ }}
                     />
                   </header>
                   <BlockEditor
-                    onBlur={async () => {/* Save changes */}}
+                    onBlur={async () => {/* Save changes */ }}
                     attribute="description"
                     projectDetails={selectedUserStory}
-                    setProjectDetails={() => {/* Update user story */}}
-                    onOpenBrainstormChat={() => {/* Open brainstorm chat */}}
+                    setProjectDetails={() => {/* Update user story */ }}
+                    onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
                   />
                 </>
               ) : activeEpicId && selectedEpic ? (
@@ -288,15 +289,15 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                     <LabelToInput
                       value={selectedEpic.name}
                       setValue={(newName) => handleEpicNameChange(activeEpicId, newName)}
-                      onBlur={async () => {/* You can add any additional logic here */}}
+                      onBlur={async () => {/* You can add any additional logic here */ }}
                     />
                   </header>
                   <BlockEditor
-                    onBlur={async () => {/* Save changes */}}
+                    onBlur={async () => {/* Save changes */ }}
                     attribute="description"
                     projectDetails={selectedEpic}
-                    setProjectDetails={() => {/* Update epic */}}
-                    onOpenBrainstormChat={() => {/* Open brainstorm chat */}}
+                    setProjectDetails={() => {/* Update epic */ }}
+                    onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
                   />
                 </>
               ) : (
@@ -306,7 +307,12 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
               )}
             </div>
           </>
-        ) : (
+        ) : !isOnboardingComplete ? (<div className=" h-full flex flex-col items-center justify-center gap-6">
+          <Image src={Empty} alt="No functional requirements" width={100} height={100} />
+          <h2 className="text-xl font-semibold text-center">
+            Please complete all mandatory fields in the Project Overview <br /> before proceeding to Epics..
+          </h2>
+        </div>) : (
           <div className="flex-1 overflow-hidden w-full">
             <div className="h-full flex flex-col items-center justify-center gap-6">
               <Image src={Empty} alt="No epics" width={100} height={100} />
@@ -318,9 +324,9 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                 streamlined epics that outline the main features
                 and functionalities of your project. Try it!
               </p>
-              <Button 
-                className="gap-2 h-10" 
-                variant="default" 
+              <Button
+                className="gap-2 h-10"
+                variant="default"
                 onClick={handleGenerateEpics}
                 disabled={isGenerating}
               >
