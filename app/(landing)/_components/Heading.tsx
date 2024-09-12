@@ -16,17 +16,17 @@ export const Heading = () => {
       </h1>
 
       <h1 className="pt-2 text-2xl font-semi-bold">
-        Welcome to <span className=" font-[800]">Listoriq</span>.
+        Welcome to <span className=" font-[800]">Projeqtly</span>.
       </h1>
 
       <h3 className="pt-10 text-base sm:text-xl md:text-2xl font-medium">
-        Listoriq is the go-to tool for analysing Epics & Stories, with AI.
+        Projeqtly is the go-to tool for analysing Epics & Stories, with AI.
       </h3>
 
       {isSignedIn ? (
         <Button asChild>
           <Link href="/projects">
-            Enter Listoriq
+            Enter Projeqtly
             <ArrowRight className="h-4 w-4 ml-2" />
           </Link>
         </Button>
