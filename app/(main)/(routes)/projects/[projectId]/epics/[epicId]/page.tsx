@@ -17,6 +17,7 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
     const [epicDetails, setEpicDetails] = useState<any>()
 
     const id = params.epicId
+
     const updateEpicMutation = useMutation(api.epics.updateEpic)
 
     const epic = useQuery(api.epics.getEpicById, {
@@ -53,7 +54,8 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             data={epicDetails}
             menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
-            handleEditorChange={handleEditorChange} />
+            handleEditorChange={handleEditorChange}
+        />
     }
 }
 

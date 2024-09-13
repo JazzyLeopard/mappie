@@ -265,7 +265,7 @@ export default function BlockEditor({
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
               <p className="mx-1 text-gray-200">|</p>
-              <ToggleGroupItemNoHover value="ai" onClick={handleAIEnhancement}>
+              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={handleAIEnhancement}>
                 <AiPromptButton
                   onClick={handleAIEnhancement}
                   disabled={isEditorEmpty || isLoading}
