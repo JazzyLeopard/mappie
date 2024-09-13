@@ -1,29 +1,26 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import Empty from "@/public/empty.png"; // Make sure this path is correct
 import { useAuth } from "@clerk/nextjs";
 import axios from 'axios';
-import { useQuery, useMutation } from "convex/react";
-import { Presentation, MoreHorizontal, Trash, Plus, FileIcon, MoreVertical, PresentationIcon, GitPullRequest, SeparatorHorizontal } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { GitPullRequest, MoreVertical, Plus, Trash } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { propertyPrompts } from '../constants';
 import UCEditorList from "./UCEditorList";
-import Link from "next/link";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import AiGenerationIconWhite from "@/icons/AI-Generation-White";
-import Image from "next/image";
-import Empty from "@/public/empty.png"; // Make sure this path is correct
-import AiGenerationIcon from "@/icons/AI-Generation";
-import { Separator } from "@/components/ui/separator";
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
     title: string;
     onEditorBlur: () => Promise<void>;
-    updateLabel: (val: string) => void;
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
     onAddUseCase: () => Promise<void>;
     propertyPrompts: typeof propertyPrompts;
@@ -36,7 +33,6 @@ const UseCasesLayout = ({
     projectId,
     title,
     onEditorBlur,
-    updateLabel,
     handleEditorChange,
     onAddUseCase,
     propertyPrompts,
@@ -111,15 +107,9 @@ const UseCasesLayout = ({
     };
 
     return (
-        <div className="h-screen flex overflow-hidden justify-center items-center w-full">
-            {!isOnboardingComplete ? (
-                <div className="h-full flex flex-col items-center justify-center gap-6">
-                    <Image src={Empty} alt="No functional requirements" width={100} height={100} />
-                    <h2 className="text-xl font-semibold text-center">
-                        Please complete all mandatory fields in the Project Overview <br /> before proceeding to Use Cases.
-                    </h2>
-                </div>) :
-                useCases.length > 0 && (
+        <div className="h-screen flex overflow-auto">
+            {useCases.length > 0 && (
+                <aside className="w-96 flex flex-col">
                     <div className="flex-grow overflow-y-auto px-4 pt-8">
                         <div className="pl-4 text-lg font-semibold">
                             Use Cases
@@ -177,9 +167,16 @@ const UseCasesLayout = ({
                             </div>
                         </div>
                     </div>
-                )}
-            {isOnboardingComplete &&
-                <div className={`flex-1 overflow-hidden ${useCases.length === 0 ? 'w-full' : ''}`}>
+                </aside>
+            )}
+            {!isOnboardingComplete ? (
+                <div className="h-full flex flex-col items-center justify-center gap-6">
+                    <Image src={Empty} alt="No functional requirements" width={100} height={100} />
+                    <h2 className="text-xl font-semibold text-center">
+                        Please complete all mandatory fields in the Project Overview <br /> before proceeding to Use Cases.
+                    </h2>
+                </div>) :
+                (<div className={`flex-1 overflow-hidden ${useCases.length === 0 ? 'w-full' : ''}`}>
                     {useCases.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center gap-6">
                             <Image src={Empty} alt="No use cases" width={100} height={100} />
@@ -218,6 +215,7 @@ const UseCasesLayout = ({
                         />
                     )}
                 </div>
+                )
             }
         </div>
     );

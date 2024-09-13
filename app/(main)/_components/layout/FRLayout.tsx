@@ -8,10 +8,15 @@ import axios from 'axios';
 import { useMutation } from 'convex/react';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import FREditorList from './FREditorList';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from 'lucide-react';
 
 interface FRLayoutProps {
     projectId: Id<"projects">;
@@ -38,15 +43,26 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const createFunctionalRequirements = useMutation(api.functionalRequirements.createFunctionalRequirement);
     const searchParams = useSearchParams();
 
+    const hasGenerateRef = useRef(false)
+
     useEffect(() => {
-        setLocalContent(content);
+        setLocalContent(content)
+    }, [content])
+
+
+    useEffect(() => {
         const shouldGenerate = searchParams?.get('generate') === 'true';
-        if (shouldGenerate) {
+        if (shouldGenerate && !hasGenerateRef.current) {
             handleGenerateFR();
+            hasGenerateRef.current = true
         }
-    }, [content, searchParams]);
+    }, [searchParams]);
 
     const handleGenerateFR = async () => {
+        if (localContent.trim() !== '') {
+            console.log('Content already exists, skipping generation');
+            return;
+        }
         setIsGenerating(true);
         try {
             const token = await getToken({ template: "convex" });
@@ -112,6 +128,22 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="flex-1">
                     <h1 className="text-2xl font-bold">Functional Requirements</h1>
                 </div>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button className="w-36">
+                            <div className='flex items-center ml-auto'>
+                                <AiGenerationIconWhite />
+                                &nbsp;Generate
+                                <ChevronDown className="h-4 w-4 ml-4" />
+                            </div>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-36">
+                        <DropdownMenuItem>Use case</DropdownMenuItem>
+                        <DropdownMenuItem>Epics</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">
@@ -122,7 +154,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             Please complete all mandatory fields in the Project Overview <br /> before proceeding to Functional Requirements..
                         </h2>
                     </div>)
-                    : isOnboardingComplete ? (
+                    : isOnboardingComplete && !content ? (
                         <div className="h-full flex flex-col items-center justify-center gap-6">
                             <Image src={Empty} alt="No functional requirements" width={100} height={100} />
                             <h2 className="text-xl font-semibold text-center">

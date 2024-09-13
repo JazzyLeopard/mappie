@@ -65,7 +65,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
     }, [debouncedUpdate]);
 
     if (functionalRequirements === undefined) {
-        return <Spinner />;
+        return <Spinner size={"lg"} />;
     }
 
     return (
