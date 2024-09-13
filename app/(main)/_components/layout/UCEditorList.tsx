@@ -48,13 +48,13 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     onBlur={onEditorBlur}
                 />
                 <div className="">
-                    <Button className="w-full gap-2 h-10" variant="ghost" onClick={() => {}}>
+                    <Button className="w-full gap-2 h-10" variant="ghost" onClick={() => { }}>
                         <PresentationIcon className="w-4 h-4" />
                         Presentation Mode
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 overflow-hidden px-4">
+            <div className="flex-1 overflow-auto px-4">
                 <BlockEditor
                     key={activeUC._id}
                     attribute="description"

@@ -31,7 +31,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   }, [project])
 
   if (projectDetails === undefined) {
-    return <div className="flex justify-center items-center mx-auto"><Spinner /></div>;
+    return <div className="flex justify-center items-center mx-auto"><Spinner size={"lg"} /></div>;
   }
 
 

@@ -31,11 +31,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       try {
         // Fetch project details
         const project = await convex.query(api.projects.getProjectById, { projectId: projectId as any });
-
-        // If onboarding is not complete, redirect to project overview
-        if (project && project.onboarding !== 0) {
-          return NextResponse.redirect(new URL(`/projects/${projectId}`, req.url));
-        }
         return NextResponse.next();
 
       } catch (error) {

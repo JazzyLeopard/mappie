@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
@@ -23,6 +23,10 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
     const [content, setContent] = useState('');
     const [frId, setFrId] = useState<Id<"functionalRequirements"> | null>(null);
 
+    const project = useQuery(api.projects.getProjectById, {
+        projectId: projectId,
+    });
+
     useEffect(() => {
         if (functionalRequirements) {
             setContent(functionalRequirements.content || '');
@@ -34,9 +38,9 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
         debounce(async (value: string) => {
             if (frId) {
                 try {
-                    const result = await updateFunctionalRequirement({ 
-                        id: frId, 
-                        content: value 
+                    const result = await updateFunctionalRequirement({
+                        id: frId,
+                        content: value
                     });
                     console.log("Update result:", result);
                     if (result === null) {
@@ -61,7 +65,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
     }, [debouncedUpdate]);
 
     if (functionalRequirements === undefined) {
-        return <Spinner />;
+        return <Spinner size={"lg"} />;
     }
 
     return (
@@ -71,6 +75,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
             content={content}
             onEditorChange={handleEditorChange}
             propertyPrompts={propertyPrompts}
+            isOnboardingComplete={project?.onboarding == 0}
         />
     );
 };

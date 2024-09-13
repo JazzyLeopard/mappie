@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Id } from '@/convex/_generated/dataModel';
-import FREditorList from './FREditorList';
 import { Button } from '@/components/ui/button';
-import { Presentation } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import Empty from "@/public/empty.png";
 import { useAuth } from "@clerk/clerk-react";
 import axios from 'axios';
 import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
 import Image from "next/image";
-import Empty from "@/public/empty.png";
-import AiGenerationIconWhite from "@/icons/AI-Generation-White";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
+import FREditorList from './FREditorList';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ChevronDown } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
 
 interface FRLayoutProps {
     projectId: Id<"projects">;
@@ -21,6 +24,7 @@ interface FRLayoutProps {
     content: string;
     onEditorChange: (value: string) => void;
     propertyPrompts: any;
+    isOnboardingComplete: boolean;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
@@ -28,7 +32,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     frId,
     content,
     onEditorChange,
-    propertyPrompts
+    propertyPrompts,
+    isOnboardingComplete
 }) => {
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
@@ -38,15 +43,26 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const createFunctionalRequirements = useMutation(api.functionalRequirements.createFunctionalRequirement);
     const searchParams = useSearchParams();
 
+    const hasGenerateRef = useRef(false)
+
     useEffect(() => {
-        setLocalContent(content);
+        setLocalContent(content)
+    }, [content])
+
+
+    useEffect(() => {
         const shouldGenerate = searchParams?.get('generate') === 'true';
-        if (shouldGenerate) {
+        if (shouldGenerate && !hasGenerateRef.current) {
             handleGenerateFR();
+            hasGenerateRef.current = true
         }
-    }, [content, searchParams]);
+    }, [searchParams]);
 
     const handleGenerateFR = async () => {
+        if (localContent.trim() !== '') {
+            console.log('Content already exists, skipping generation');
+            return;
+        }
         setIsGenerating(true);
         try {
             const token = await getToken({ template: "convex" });
@@ -103,7 +119,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     const handleGenerateEpics = async () => {
         // Implement the logic for generating epics
-        console.log("Generating Epics...");
+        console.log("Gene̥rating Epics...");
     };
 
     return (
@@ -112,77 +128,69 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="flex-1">
                     <h1 className="text-2xl font-bold">Functional Requirements</h1>
                 </div>
-                {content && (
-                    <div className="flex items-center gap-4 ml-auto laptop-1024:ml-0">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button 
-                                    className="gap-2" 
-                                    disabled={isGenerating}
-                                >
-                                    <AiGenerationIconWhite />
-                                    {isGenerating ? "Generating..." : "Generate"}
-                                    <ChevronDown className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="dropdown-content p-2">
-                                <DropdownMenuItem onClick={handleGenerateUseCases} className="p-2">
-                                    Generate Use Cases
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleGenerateEpics} className="p-2">
-                                    Generate Epics
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button
-                            className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-                            onClick={() => {/* Implement presentation mode */ }}
-                        >
-                            <Presentation className="pr-2" />
-                            Presentation Mode
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button className="w-36">
+                            <div className='flex items-center ml-auto'>
+                                <AiGenerationIconWhite />
+                                &nbsp;Generate
+                                <ChevronDown className="h-4 w-4 ml-4" />
+                            </div>
                         </Button>
-                    </div>
-                )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-36">
+                        <DropdownMenuItem>Use case</DropdownMenuItem>
+                        <DropdownMenuItem>Epics</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
-            <div className="flex-1 overflow-hidden px-12 pt-0">
-                {!content ? (
-                    <div className="h-full flex flex-col items-center justify-center gap-6">
+            <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">
+                {!isOnboardingComplete ? (
+                    <div className=" h-full flex flex-col items-center justify-center gap-6">
                         <Image src={Empty} alt="No functional requirements" width={100} height={100} />
                         <h2 className="text-xl font-semibold text-center">
-                            You haven't created any functional requirements<br />for this project yet.
+                            Please complete all mandatory fields in the Project Overview <br /> before proceeding to Functional Requirements..
                         </h2>
-                        <p className="text-center text-gray-600 max-w-md">
-                            Based on the project details, the AI can generate
-                            comprehensive functional requirements that outline
-                            the system's behavior and capabilities. Give it a try!
-                        </p>
-                        <Button 
-                            className="gap-2 h-10" 
-                            variant="default" 
-                            onClick={handleGenerateFR}
-                            disabled={isGenerating}
-                        >
-                            <AiGenerationIconWhite />
-                            {isGenerating ? "Generating..." : "Generate Functional Requirements"}
-                        </Button>
-                        <div className="text-center">
-                            <span className="text-gray-500">or</span>
+                    </div>)
+                    : isOnboardingComplete && !content ? (
+                        <div className="h-full flex flex-col items-center justify-center gap-6">
+                            <Image src={Empty} alt="No functional requirements" width={100} height={100} />
+                            <h2 className="text-xl font-semibold text-center">
+                                You haven't created any functional requirements<br />for this project yet.
+                            </h2>
+                            <p className="text-center text-gray-600 max-w-md">
+                                Based on the project details, the AI can generate
+                                comprehensive functional requirements that outline
+                                the system's behavior and capabilities. Give it a try!
+                            </p>
+                            <Button
+                                className="gap-2 h-10"
+                                variant="default"
+                                onClick={handleGenerateFR}
+                                disabled={isGenerating}
+                            >
+                                <AiGenerationIconWhite />
+                                {isGenerating ? "Generating..." : "Generate Functional Requirements"}
+                            </Button>
+                            <div className="text-center">
+                                <span className="text-gray-500">or</span>
+                            </div>
+                            <Button variant="outline" onClick={() => onEditorChange("")}>
+                                Add Functional Requirements manually
+                            </Button>
                         </div>
-                        <Button variant="outline" onClick={() => onEditorChange("")}>
-                            Add Functional Requirements manually
-                        </Button>
-                    </div>
-                ) : (
-                    <FREditorList
-                        projectId={projectId}
-                        frId={frId}
-                        content={localContent}
-                        onEditorChange={handleLocalEditorChange}
-                        onOpenBrainstormChat={handleOpenBrainstormChat}
-                        propertyPrompts={propertyPrompts}
-                    />
-                )}
+                    ) : (
+                        <FREditorList
+                            projectId={projectId}
+                            frId={frId}
+                            content={localContent}
+                            onEditorChange={handleLocalEditorChange}
+                            onOpenBrainstormChat={handleOpenBrainstormChat}
+                            propertyPrompts={propertyPrompts}
+                        />
+                    )}
             </div>
         </div>
     );
