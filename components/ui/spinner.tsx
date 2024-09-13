@@ -17,13 +17,13 @@ const spinnerVariants = cva("text-muted-foreground animate-spin", {
   },
 });
 
-interface SpinnerProps extends VariantProps<typeof spinnerVariants> {}
+interface SpinnerProps extends VariantProps<typeof spinnerVariants> { }
 
 const Spinner = ({ size }: SpinnerProps) => {
   return (
-    <>
+    <div className="flex items-center justify-center h-screen">
       <Loader className={cn(spinnerVariants({ size }))} />
-    </>
+    </div>
   );
 };
 

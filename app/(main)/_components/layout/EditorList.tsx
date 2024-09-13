@@ -12,7 +12,7 @@ interface EditorListProps {
 }
 
 const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat, onEditorBlur }: EditorListProps) => {
-            
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             {components.map(c => (
@@ -20,7 +20,7 @@ const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat
                     <h1 className="text-slate-900 pl-0 text-2xl font-semibold sticky top-0 bg-white z-10">
                         {toTitleCase(c.key)}
                     </h1>
-                    <div className="flex-1 overflow-hidden mt-2">
+                    <div className="flex-1 overflow-auto mt-2">
                         <BlockEditor
                             attribute={c.key}
                             projectDetails={data}

@@ -8,7 +8,7 @@ import { MDXRemote } from 'next-mdx-remote'
 import remarkGfm from 'remark-gfm'
 import Spinner from "@/components/ui/spinner"
 import "./markdown-styles.css";
-import {ChakraProvider} from "@chakra-ui/react"
+import { ChakraProvider } from "@chakra-ui/react"
 import { UnorderedList, OrderedList, ListItem } from "@chakra-ui/react";
 import {
   Table,
@@ -100,7 +100,7 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const elements = document.querySelectorAll('section');
-      
+
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i] as HTMLElement;
         const canvas = await html2canvas(element, {
@@ -111,11 +111,11 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
           foreignObjectRendering: true
         });
         const imgData = canvas.toDataURL('image/png');
-        
+
         if (i > 0) {
           pdf.addPage();
         }
-        
+
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
@@ -126,7 +126,7 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
 
         pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       }
-      
+
       pdf.save('presentation.pdf');
     } finally {
       setIsGeneratingPDF(false);
@@ -143,9 +143,8 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
                 <TooltipTrigger asChild>
                   <Link
                     href={`#${id}`}
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:h-10 md:w-10 lg:h-11 lg:w-11 ${
-                      activeSection === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                    }`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:h-10 md:w-10 lg:h-11 lg:w-11 ${activeSection === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      }`}
                     prefetch={false}
                     onClick={(e) => {
                       e.preventDefault();
@@ -181,7 +180,7 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full" onClick={generatePDF} disabled={isGeneratingPDF}>
                   {isGeneratingPDF ? (
-                    <Spinner />
+                    <Spinner size={"lg"} />
                   ) : (
                     <DownloadIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
                   )}
@@ -207,7 +206,7 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
       <div className="ml-14 sm:ml-16 md:ml-20 lg:ml-24">
         {sections.map(({ id }) => (
           <section key={id} id={id} className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 sm:px-6 md:px-10 bg-slate-100">
-            <div className="w-fit max-w-4xl mx-auto my-4 rounded-3xl flex py-10 flex-col items-center justify-center gap-4 px-8 sm:px-10 md:px-12">            
+            <div className="w-fit max-w-4xl mx-auto my-4 rounded-3xl flex py-10 flex-col items-center justify-center gap-4 px-8 sm:px-10 md:px-12">
               <h1 className="text-3xl mb-12 font-bold tracking-tighter text-center sm:text-4xl md:text-5xl lg:text-6xl">{id.charAt(0).toUpperCase() + id.slice(1)}</h1>
               <div className="prose dark:prose-invert max-w-none">
                 {serializedContent[id] && (
@@ -242,10 +241,10 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
         <div className="flex flex-row items-center gap-4">
           <p className="text-sm text-muted-foreground">Use arrow keys to navigate</p>
           <ChevronUpIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
-          <ChevronDownIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />  
-          </div>
+          <ChevronDownIcon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7" />
         </div>
       </div>
+    </div>
   )
 }
 

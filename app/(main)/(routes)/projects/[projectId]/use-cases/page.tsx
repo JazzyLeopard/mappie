@@ -1,13 +1,12 @@
 "use client"
-import { useCasesItems } from "@/app/(main)/_components/constants"
+import { propertyPrompts } from "@/app/(main)/_components/constants"
 import UseCasesLayout from "@/app/(main)/_components/layout/UseCasesLayout"
 import Spinner from "@/components/ui/spinner"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
-import { useEffect, useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { toast } from "sonner"
-import { propertyPrompts } from "@/app/(main)/_components/constants"
 
 interface UseCasesProps {
     params: {
@@ -24,6 +23,10 @@ const UseCases = ({ params }: UseCasesProps) => {
     const createUseCase = useMutation(api.useCases.createUseCase);
     const updateUseCase = useMutation(api.useCases.updateUseCase);
     const deleteUseCase = useMutation(api.useCases.deleteUseCase);
+
+    const project = useQuery(api.projects.getProjectById, {
+        projectId: projectId
+    })
 
     const handleCreateUseCase = useCallback(async () => {
         await createUseCase({
@@ -65,7 +68,7 @@ const UseCases = ({ params }: UseCasesProps) => {
     }, []);
 
     if (useCases === undefined) {
-        return <Spinner />;
+        return <Spinner size={"lg"} />;
     }
 
     return (
@@ -73,12 +76,12 @@ const UseCases = ({ params }: UseCasesProps) => {
             projectId={projectId}
             title={title}
             onEditorBlur={handleEditorBlur}
-            updateLabel={updateLabel}
             handleEditorChange={handleEditorChange}
             onAddUseCase={handleCreateUseCase}
             propertyPrompts={propertyPrompts}
             onOpenBrainstormChat={handleOpenBrainstormChat}
             useCases={useCases || []}
+            isOnboardingComplete={project?.onboarding == 0}
         />
     );
 };
