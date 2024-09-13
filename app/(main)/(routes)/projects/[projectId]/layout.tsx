@@ -23,7 +23,7 @@ const ProjectLayout = ({ params, children }: ProjectProps) => {
   if (projectTitle === undefined) {
     return (
       <div className="flex justify-center items-center mx-auto">
-        <Spinner />
+        <Spinner size={"lg"} />
       </div>
     );
   }
