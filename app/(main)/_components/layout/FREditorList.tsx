@@ -76,7 +76,7 @@ const FREditorList: React.FC<FREditorListProps> = ({
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-auto">
                 <BlockEditor
                     key={`${frId || 'new'}-${localContent.length}`}
                     projectDetails={{ _id: frId || 'new', description: localContent }}
