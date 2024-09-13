@@ -43,7 +43,7 @@ export default async function handler(
 
   try {
     const completions = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
     });
 

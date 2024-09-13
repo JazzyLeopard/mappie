@@ -52,7 +52,7 @@ Current content for ${type}: ${data}
   Please provide your response in complete MARKDOWN format, without headings or extra explanations. Only include information directly related to the instructions.`;
 
     const completions = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: "You're an experienced product manager and business analyst." },
         { role: "user", content: prompt }
