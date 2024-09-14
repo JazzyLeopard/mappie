@@ -61,7 +61,8 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     projectDetails={activeUC}
                     setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
                     onBlur={onEditorBlur}
-                    onOpenBrainstormChat={onOpenBrainstormChat} // Added this line
+                    onOpenBrainstormChat={onOpenBrainstormChat}
+                    context="useCase" // Add this line
                 />
             </div>
         </div>
