@@ -54,16 +54,14 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 overflow-auto px-4">
-                <BlockEditor
-                    key={activeUC._id}
-                    attribute="description"
-                    projectDetails={activeUC}
-                    setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
-                    onBlur={onEditorBlur}
-                    onOpenBrainstormChat={onOpenBrainstormChat} // Added this line
-                />
-            </div>
+            <BlockEditor
+                key={activeUC._id}
+                attribute="description"
+                projectDetails={activeUC}
+                setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
+                onBlur={onEditorBlur}
+                onOpenBrainstormChat={onOpenBrainstormChat} // Added this line
+            />
         </div>
     );
 };
