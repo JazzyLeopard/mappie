@@ -30,6 +30,7 @@ const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat
                             }}
                             onOpenBrainstormChat={onOpenBrainstormChat}
                             onBlur={onEditorBlur}
+                            context="project"
                         />
                     </div>
                 </div>

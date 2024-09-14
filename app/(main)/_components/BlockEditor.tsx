@@ -37,6 +37,7 @@ type BlockEditorProps = {
   projectDetails: any;
   setProjectDetails: (value: any) => void;
   onOpenBrainstormChat: () => void;
+  context: 'project' | 'useCase' | 'functionalRequirement'; // Add this line
 };
 
 const MarkdownContent = ({ children }: { children: string }) => (
@@ -59,6 +60,7 @@ export default function BlockEditor({
   projectDetails,
   setProjectDetails,
   onOpenBrainstormChat,
+  context,
 }: BlockEditorProps) {
 
   const [previousContent, setPreviousContent] = useState<string>('');
@@ -68,7 +70,9 @@ export default function BlockEditor({
   const [changeSummary, setChangeSummary] = useState("");
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
-  const updateProjectMutation = useMutation(api.projects.updateProject)
+  const updateProjectMutation = useMutation(api.projects.updateProject);
+  const updateUseCaseMutation = useMutation(api.useCases.updateUseCase);
+  const updateFunctionalRequirementMutation = useMutation(api.functionalRequirements.updateFunctionalRequirement);
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -102,7 +106,16 @@ export default function BlockEditor({
     setIsLoading(true);
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
     setPreviousContent(currentContent);
-    const prompt = propertyPrompts[attribute] || "Enhance the following content:";
+    
+    // Determine the correct prompt based on context and attribute
+    let prompt;
+    if (context === 'useCase' && attribute === 'description') {
+      prompt = propertyPrompts['useCases'];
+    } else if (context === 'functionalRequirement' && attribute === 'description') {
+      prompt = propertyPrompts['functionalRequirements'];
+    } else {
+      prompt = propertyPrompts[attribute] || "Enhance the following content:";
+    }
 
     try {
       const response = await fetch('/api/projects', {
@@ -115,6 +128,7 @@ export default function BlockEditor({
           data: currentContent,
           instructions: prompt,
           projectDetails: projectDetails,
+          context: context, // Add this line
         }, jsonReplacer),
       });
 
@@ -151,7 +165,26 @@ export default function BlockEditor({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
-    await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
+    try {
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent });
+          break;
+        default:
+          console.error('Unknown context:', context);
+          return;
+      }
+      console.log("Content saved to convex Db", newAIContent);
+    } catch (error) {
+      console.log("Error saving content to db", error);
+      return;
+    }
     setShowComparison(false);
   };
 
@@ -208,9 +241,20 @@ export default function BlockEditor({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      await updateProjectMutation({
-        [attribute]: markDownContent, _id: projectDetails._id,
-      })
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({ [attribute]: markDownContent, _id: projectDetails._id });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({ id: projectDetails._id, description: markDownContent });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: markDownContent });
+          break;
+        default:
+          console.error('Unknown context:', context);
+          return;
+      }
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
       console.log("Error saving content to db", error);
