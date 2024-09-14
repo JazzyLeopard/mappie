@@ -76,20 +76,18 @@ const FREditorList: React.FC<FREditorListProps> = ({
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-auto">
-                <BlockEditor
-                    key={`${frId || 'new'}-${localContent.length}`}
-                    projectDetails={{ _id: frId || 'new', description: localContent }}
-                    setProjectDetails={(value) => {
-                        console.log("setProjectDetails called in FREditorList:", value);
-                        setLocalContent(value);
-                        debouncedHandleEditorChange(value);
-                    }}
-                    onOpenBrainstormChat={onOpenBrainstormChat}
-                    attribute="description"
-                    onBlur={async () => { }} // Changed to async function
-                />
-            </div>
+            <BlockEditor
+                key={`${frId || 'new'}-${localContent.length}`}
+                projectDetails={{ _id: frId || 'new', description: localContent }}
+                setProjectDetails={(value) => {
+                    console.log("setProjectDetails called in FREditorList:", value);
+                    setLocalContent(value);
+                    debouncedHandleEditorChange(value);
+                }}
+                onOpenBrainstormChat={onOpenBrainstormChat}
+                attribute="description"
+                onBlur={async () => { }} // Changed to async function
+            />
         </div>
     );
 };
