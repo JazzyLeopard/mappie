@@ -110,7 +110,7 @@ const UseCasesLayout = ({
         <div className="h-screen flex overflow-auto">
             {useCases.length > 0 && (
                 <aside className="w-96 flex flex-col">
-                    <div className="flex-grow overflow-y-auto px-4 pt-8">
+                    <div className="flex-grow px-4 pt-8">
                         <div className="pl-4 text-lg font-semibold">
                             Use Cases
                         </div>
@@ -176,7 +176,7 @@ const UseCasesLayout = ({
                         Please complete all mandatory fields in the Project Overview <br /> before proceeding to Use Cases.
                     </h2>
                 </div>) :
-                (<div className={`flex-1 overflow-hidden ${useCases.length === 0 ? 'w-full' : ''}`}>
+                (<div className={`flex-1 overflow-hidden px-4 ${useCases.length === 0 ? 'w-full' : ''}`}>
                     {useCases.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center gap-6">
                             <Image src={Empty} alt="No use cases" width={100} height={100} />
