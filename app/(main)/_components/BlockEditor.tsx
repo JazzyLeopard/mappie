@@ -102,7 +102,7 @@ export default function BlockEditor({
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAIEnhancement = async () => {
+  const handleAIEnhancement = async (customPrompt?: string) => {
     setIsLoading(true);
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
     setPreviousContent(currentContent);
@@ -126,9 +126,9 @@ export default function BlockEditor({
         body: JSON.stringify({
           type: attribute,
           data: currentContent,
-          instructions: prompt,
+          instructions: customPrompt || prompt,
           projectDetails: projectDetails,
-          context: context, // Add this line
+          context: context,
         }, jsonReplacer),
       });
 
@@ -291,27 +291,26 @@ export default function BlockEditor({
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white w-full">
-          <div className="flex justify-between border rounded-lg pl-1 mt-2">
+          <div className="flex justify-between rounded-lg pl-1 mt-2">
             <ToggleGroup className="py-1 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
-              <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
+              <ToggleGroupItem value="bold" className="border mr-3" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="italic" onClick={() => toggleStyle("italic")}>
+              <ToggleGroupItem value="italic" className="border mr-3" onClick={() => toggleStyle("italic")}>
                 <Italic className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="underline" onClick={() => toggleStyle("underline")}>
+              <ToggleGroupItem value="underline" className="border mr-3" onClick={() => toggleStyle("underline")}>
                 <Underline className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="strike" onClick={() => toggleStyle("strike")}>
+              <ToggleGroupItem value="strike" className="border mr-3" onClick={() => toggleStyle("strike")}>
                 <Strikethrough className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
+              <ToggleGroupItem value="code" className="border mr-3" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
-              <p className="mx-1 text-gray-200">|</p>
-              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={handleAIEnhancement}>
+              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={() => handleAIEnhancement()}>
                 <AiPromptButton
-                  onClick={handleAIEnhancement}
+                  onClick={(customPrompt) => handleAIEnhancement(customPrompt)}
                   disabled={isEditorEmpty || isLoading}
                   loading={isLoading}
                   showingComparison={showComparison}
