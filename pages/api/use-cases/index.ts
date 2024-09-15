@@ -125,7 +125,7 @@ export default async function handler(
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const prompt = `As an expert systems analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
+    const prompt = `As an expert use case analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
 
 {
   "title": "Withdraw Cash from ATM",
@@ -252,7 +252,7 @@ ${projectDetails}`;
 
     console.log('Calling OpenAI API...');
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
     });
