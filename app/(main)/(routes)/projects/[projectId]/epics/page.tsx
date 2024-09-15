@@ -21,8 +21,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     })
 
     return (
-        <EpicLayout projectId={id}
-            isOnboardingComplete={project?.onboarding == 0} />
+        <EpicLayout projectId={id} />
     )
 }
 

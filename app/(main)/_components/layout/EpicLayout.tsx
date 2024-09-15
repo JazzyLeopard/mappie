@@ -298,6 +298,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                         projectDetails={selectedUserStory}
                         setProjectDetails={() => {/* Update user story */ }}
                         onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
+                        context='project'
                       />
                     </>
                   ) : activeEpicId && selectedEpic ? (
@@ -315,6 +316,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                         projectDetails={selectedEpic}
                         setProjectDetails={() => {/* Update epic */ }}
                         onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
+                        context='project'
                       />
                     </>
                   ) : (

@@ -109,7 +109,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     <h1 className="text-2xl font-bold">Functional Requirements</h1>
                 </div>
 
-                <DropdownMenu>
+                {isOnboardingComplete && !content ?(<DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button className="w-36">
                             <div className='flex items-center ml-auto'>
@@ -123,7 +123,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         <DropdownMenuItem>Use case</DropdownMenuItem>
                         <DropdownMenuItem>Epics</DropdownMenuItem>
                     </DropdownMenuContent>
-                </DropdownMenu>
+                 </DropdownMenu>) : '' }
             </div>
 
             <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">

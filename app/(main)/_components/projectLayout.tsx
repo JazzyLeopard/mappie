@@ -339,6 +339,7 @@ const ProjectLayout = ({ project }: { project: any }) => {
                         projectDetails={projectDetails}
                         setProjectDetails={setProjectDetails}
                         onOpenBrainstormChat={handleOpenBrainstormChat}
+                        context="project"
                       />
                     </div>
                   </div>
