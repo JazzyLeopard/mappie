@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AiGenerationIcon from "@/icons/AI-Generation";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Loader2 } from "lucide-react"; // Import a loading icon
+import { Loader2, ChevronDown, Icon, Wand, Wand2 } from "lucide-react";
 import { Button } from "./button";
-import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "./input";
 
 interface AiPromptButtonProps {
-  onClick: () => void;
+  onClick: (customPrompt?: string) => void;
   disabled: boolean;
   loading: boolean;
   showingComparison: boolean;
@@ -14,28 +15,35 @@ interface AiPromptButtonProps {
   asChild?: boolean;
 }
 
-export function AiPromptButton({ 
-  onClick, 
-  disabled, 
-  loading, 
-  showingComparison, 
+export function AiPromptButton({
+  onClick,
+  disabled,
+  loading,
+  showingComparison,
   className = '',
   asChild = false
 }: AiPromptButtonProps) {
+  const [customPrompt, setCustomPrompt] = useState('');
+
+  const handleEnhance = () => {
+    onClick(customPrompt.trim() || undefined);
+    setCustomPrompt('');
+  };
+
   const buttonContent = (
     <div className="rounded-xl items-center flex">
       {loading ? <Loader2 className="animate-spin" /> : <AiGenerationIcon />}
       <p className="pl-2">
         {loading ? "Generating..." : showingComparison ? "New content below" : "Enhance with AI"}
       </p>
+      <ChevronDown className="h-4 w-4 ml-2" />
     </div>
   );
 
   const buttonProps = {
-    className: `bg-transparent text-gray-700 text-sm rounded-xl hover:bg-slate-200 ${
+    className: `bg-transparent border text-gray-700 text-sm rounded-xl hover:bg-slate-200 ${
       disabled || loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
     } ${className}`,
-    onClick: disabled || loading ? undefined : onClick,
     disabled: disabled || loading,
   };
 
@@ -43,11 +51,32 @@ export function AiPromptButton({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          {asChild ? (
-            <div {...buttonProps}>{buttonContent}</div>
-          ) : (
-            <Button {...buttonProps}>{buttonContent}</Button>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {asChild ? (
+                <div {...buttonProps}>{buttonContent}</div>
+              ) : (
+                <Button {...buttonProps}>{buttonContent}</Button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-96 p-2">
+              <div className="w-full p-2 border rounded-md">
+                <p className="mb-2 text-sm font-medium">Enhance with AI</p>
+                <div className="flex flex-col">
+                  <Input
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    placeholder="Enter additional context (optional)"
+                    className="mb-2"
+                  />
+                  <Button onClick={handleEnhance} className="w-full bg-gradient-to-r from-pink-400 to-blue-400 text-white">
+                    <Wand2 className="mr-2 w-4 h-4" />
+                    Enhance
+                  </Button>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </TooltipTrigger>
         <TooltipContent>
           {disabled ? "Provide input first" : loading ? "Generating content..." : showingComparison ? "New content generated" : "Enhance with AI"}

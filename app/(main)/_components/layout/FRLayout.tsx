@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useMutation } from 'convex/react';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import FREditorList from './FREditorList';
 import {
     DropdownMenu,
@@ -25,6 +25,7 @@ interface FRLayoutProps {
     onEditorChange: (value: string) => void;
     propertyPrompts: any;
     isOnboardingComplete: boolean;
+    handleLocalEditorChange: (value: string) => void;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
@@ -37,57 +38,42 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 }) => {
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
-    const [localContent, setLocalContent] = useState(content);
     const { getToken } = useAuth();
     const updateFunctionalRequirements = useMutation(api.functionalRequirements.updateFunctionalRequirement);
     const createFunctionalRequirements = useMutation(api.functionalRequirements.createFunctionalRequirement);
     const searchParams = useSearchParams();
 
-    const hasGenerateRef = useRef(false)
-
-    useEffect(() => {
-        setLocalContent(content)
-    }, [content])
-
+    const hasGenerateRef = useRef(false);
 
     useEffect(() => {
         const shouldGenerate = searchParams?.get('generate') === 'true';
         if (shouldGenerate && !hasGenerateRef.current) {
             handleGenerateFR();
-            hasGenerateRef.current = true
+            hasGenerateRef.current = true;
         }
     }, [searchParams]);
 
-    const handleGenerateFR = async () => {
-        if (localContent.trim() !== '') {
+    const handleGenerateFR = useCallback(async () => {
+        if (content.trim() !== '') {
             console.log('Content already exists, skipping generation');
             return;
         }
         setIsGenerating(true);
         try {
             const token = await getToken({ template: "convex" });
-            console.log('Token received:', token); // Log the token (be careful with this in production)
             const response = await axios.post('/api/functional-requirements', { projectId }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log('Generated content:', response.data.content);
-            setLocalContent(response.data.content);
-            onEditorChange(response.data.content);
-            // Save the generated content to the functional requirements table
+            const newContent = response.data.content;
+            onEditorChange(newContent);
             if (frId) {
-                await updateFunctionalRequirements({ id: frId, content: response.data.content });
+                await updateFunctionalRequirements({ id: frId, content: newContent });
             } else {
-                const newFrId = await createFunctionalRequirements({ projectId, content: response.data.content });
+                const newFrId = await createFunctionalRequirements({ projectId, content: newContent });
                 console.log("New FR created with ID:", newFrId);
             }
-            setLocalContent(prevContent => {
-                if (prevContent === response.data.content) {
-                    return prevContent + ' '; // Add a space to force re-render
-                }
-                return response.data.content;
-            });
         } catch (error) {
             console.error("Failed to generate functional requirements:", error);
             if (axios.isAxiosError(error)) {
@@ -97,30 +83,25 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         } finally {
             setIsGenerating(false);
         }
-    };
+    }, [projectId, frId, content, getToken, onEditorChange, updateFunctionalRequirements, createFunctionalRequirements]);
 
-    const handleRouteBack = () => {
+    const handleRouteBack = useCallback(() => {
         router.push(`/projects/${projectId}`);
-    };
+    }, [router, projectId]);
 
-    const handleOpenBrainstormChat = () => {
+    const handleOpenBrainstormChat = useCallback(() => {
         // Implement if needed
-    };
+    }, []);
 
-    const handleLocalEditorChange = (value: string) => {
-        setLocalContent(value);
-        onEditorChange(value);
-    };
-
-    const handleGenerateUseCases = async () => {
+    const handleGenerateUseCases = useCallback(async () => {
         // Implement the logic for generating use cases
         console.log("Generating Use Cases...");
-    };
+    }, []);
 
-    const handleGenerateEpics = async () => {
+    const handleGenerateEpics = useCallback(async () => {
         // Implement the logic for generating epics
-        console.log("Gene̥rating Epics...");
-    };
+        console.log("Generating Epics...");
+    }, []);
 
     return (
         <div className="h-screen flex flex-col z-top">
@@ -181,16 +162,21 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 Add Functional Requirements manually
                             </Button>
                         </div>
-                    ) : (
+                    ) :
+                    (
                         <FREditorList
-                            projectId={projectId}
-                            frId={frId}
-                            content={localContent}
-                            onEditorChange={handleLocalEditorChange}
-                            onOpenBrainstormChat={handleOpenBrainstormChat}
-                            propertyPrompts={propertyPrompts}
-                        />
-                    )}
+                        projectId={projectId}
+                        frId={frId}
+                        content={content}
+                        onEditorChange={onEditorChange}
+                        onOpenBrainstormChat={handleOpenBrainstormChat}
+                        propertyPrompts={propertyPrompts}
+                        onEditorBlur={async () => {
+                            // Implement if needed
+                        }}
+                    />
+                    )
+                }
             </div>
         </div>
     );
