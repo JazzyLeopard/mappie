@@ -25,7 +25,6 @@ interface FRLayoutProps {
     onEditorChange: (value: string) => void;
     propertyPrompts: any;
     isOnboardingComplete: boolean;
-    handleLocalEditorChange: (value: string) => void;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
