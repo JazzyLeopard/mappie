@@ -54,14 +54,15 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     </Button>
                 </div>
             </div>
-            <BlockEditor
-                key={activeUC._id}
-                attribute="description"
-                projectDetails={activeUC}
-                setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
-                onBlur={onEditorBlur}
-                onOpenBrainstormChat={onOpenBrainstormChat} // Added this line
-            />
+                <BlockEditor
+                    key={activeUC._id}
+                    attribute="description"
+                    projectDetails={activeUC}
+                    setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
+                    onBlur={onEditorBlur}
+                    onOpenBrainstormChat={onOpenBrainstormChat}
+                    context="useCase" // Add this line
+                />
         </div>
     );
 };

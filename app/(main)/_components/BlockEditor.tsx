@@ -34,6 +34,7 @@ type BlockEditorProps = {
   projectDetails: any;
   setProjectDetails: (value: any) => void;
   onOpenBrainstormChat: () => void;
+  context: 'project' | 'useCase' | 'functionalRequirement'; // Add this line
 };
 
 const MarkdownContent = ({ children }: { children: string }) => (
@@ -56,6 +57,7 @@ export default function BlockEditor({
   projectDetails,
   setProjectDetails,
   onOpenBrainstormChat,
+  context,
 }: BlockEditorProps) {
 
   const [previousContent, setPreviousContent] = useState<string>('');
@@ -65,7 +67,9 @@ export default function BlockEditor({
   const [changeSummary, setChangeSummary] = useState("");
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
-  const updateProjectMutation = useMutation(api.projects.updateProject)
+  const updateProjectMutation = useMutation(api.projects.updateProject);
+  const updateUseCaseMutation = useMutation(api.useCases.updateUseCase);
+  const updateFunctionalRequirementMutation = useMutation(api.functionalRequirements.updateFunctionalRequirement);
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -95,11 +99,20 @@ export default function BlockEditor({
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAIEnhancement = async () => {
+  const handleAIEnhancement = async (customPrompt?: string) => {
     setIsLoading(true);
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
     setPreviousContent(currentContent);
-    const prompt = propertyPrompts[attribute] || "Enhance the following content:";
+    
+    // Determine the correct prompt based on context and attribute
+    let prompt;
+    if (context === 'useCase' && attribute === 'description') {
+      prompt = propertyPrompts['useCases'];
+    } else if (context === 'functionalRequirement' && attribute === 'description') {
+      prompt = propertyPrompts['functionalRequirements'];
+    } else {
+      prompt = propertyPrompts[attribute] || "Enhance the following content:";
+    }
 
     try {
       const response = await fetch('/api/projects', {
@@ -110,8 +123,9 @@ export default function BlockEditor({
         body: JSON.stringify({
           type: attribute,
           data: currentContent,
-          instructions: prompt,
+          instructions: customPrompt || prompt,
           projectDetails: projectDetails,
+          context: context,
         }, jsonReplacer),
       });
 
@@ -148,7 +162,26 @@ export default function BlockEditor({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
-    await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
+    try {
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent });
+          break;
+        default:
+          console.error('Unknown context:', context);
+          return;
+      }
+      console.log("Content saved to convex Db", newAIContent);
+    } catch (error) {
+      console.log("Error saving content to db", error);
+      return;
+    }
     setShowComparison(false);
   };
 
@@ -205,9 +238,20 @@ export default function BlockEditor({
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
     try {
-      await updateProjectMutation({
-        [attribute]: markDownContent, _id: projectDetails._id,
-      })
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({ [attribute]: markDownContent, _id: projectDetails._id });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({ id: projectDetails._id, description: markDownContent });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: markDownContent });
+          break;
+        default:
+          console.error('Unknown context:', context);
+          return;
+      }
       console.log("Content saved to convex Db", markDownContent);
     } catch (error) {
       console.log("Error saving content to db", error);
@@ -244,27 +288,26 @@ export default function BlockEditor({
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
         <div className="sticky top-0 z-20 bg-white w-full mb-2">
-          <div className="flex justify-between border rounded-lg pl-1 mt-2">
+          <div className="flex justify-between rounded-lg pl-1 mt-2">
             <ToggleGroup className="py-1 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
-              <ToggleGroupItem value="bold" onClick={() => toggleStyle("bold")}>
+              <ToggleGroupItem value="bold" className="border mr-3" onClick={() => toggleStyle("bold")}>
                 <Bold className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="italic" onClick={() => toggleStyle("italic")}>
+              <ToggleGroupItem value="italic" className="border mr-3" onClick={() => toggleStyle("italic")}>
                 <Italic className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="underline" onClick={() => toggleStyle("underline")}>
+              <ToggleGroupItem value="underline" className="border mr-3" onClick={() => toggleStyle("underline")}>
                 <Underline className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="strike" onClick={() => toggleStyle("strike")}>
+              <ToggleGroupItem value="strike" className="border mr-3" onClick={() => toggleStyle("strike")}>
                 <Strikethrough className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="code" onClick={() => toggleStyle("code")}>
+              <ToggleGroupItem value="code" className="border mr-3" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
-              <p className="mx-1 text-gray-200">|</p>
-              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={handleAIEnhancement}>
+              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={() => handleAIEnhancement()}>
                 <AiPromptButton
-                  onClick={handleAIEnhancement}
+                  onClick={(customPrompt) => handleAIEnhancement(customPrompt)}
                   disabled={isEditorEmpty || isLoading}
                   loading={isLoading}
                   showingComparison={showComparison}
