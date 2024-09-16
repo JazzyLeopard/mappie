@@ -48,7 +48,10 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
     useEffect(() => {
         // Check if all required fields have content
         const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders'];
-        const allFieldsHaveContent = requiredFields.every(field => data[field] && data[field].trim() !== '');
+        const allFieldsHaveContent = requiredFields.every(field => {
+            const value = data[field];
+            return value && typeof value === 'string' && value.trim() !== '';
+        });
         setIsGenerateButtonActive(allFieldsHaveContent);
     }, [data]);
 

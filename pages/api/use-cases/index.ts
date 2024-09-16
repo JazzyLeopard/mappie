@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
+import { getAuth } from "@clerk/nextjs/server"; // Import getAuth
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
@@ -100,7 +101,8 @@ export default async function handler(
   }
 
   const { projectId } = req.body;
-  const authToken = req.headers.authorization?.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader && authHeader.split(' ')[1];
 
   if (!authToken) {
     return res.status(401).json({ message: 'No authentication token provided' });
