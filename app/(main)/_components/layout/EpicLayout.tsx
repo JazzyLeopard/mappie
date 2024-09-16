@@ -145,7 +145,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-auto">
       {(!areFunctionalRequirementsComplete && !areUseCasesComplete) ? (
         <div className="h-full flex flex-col items-center justify-center gap-6">
           <Image src={Empty} alt="Incomplete requirements" width={100} height={100} />
@@ -172,10 +172,10 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
               </div>
             </header>
           )}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="h-screen flex">
             {epics.length > 0 ? (
               <>
-                <aside className="w-72 bg-white h-full p-4 overflow-y-auto">
+                <aside className="w-72 bg-white h-full p-4">
                   <div className="p-1 space-y-2">
                     {epics?.map((epic) => (
                       <Collapsible
@@ -284,7 +284,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                 </aside>
                 <div className="flex-1 ml-1 p-4 pt-6 overflow-y-auto">
                   {selectedUserStoryId && selectedUserStory ? (
-                    <>
+                    <div className="flex flex-col h-full">
                       <header className="flex items-center justify-between pb-3 w-full">
                         <LabelToInput
                           value={selectedUserStory.title}
@@ -292,17 +292,19 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                           onBlur={async () => {/* You can add any additional logic here */ }}
                         />
                       </header>
-                      <BlockEditor
-                        onBlur={async () => {/* Save changes */ }}
-                        attribute="description"
-                        projectDetails={selectedUserStory}
-                        setProjectDetails={() => {/* Update user story */ }}
-                        onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
-                        context='project'
-                      />
-                    </>
+                      <div className='flex-1 overflow-y-auto'>
+                        <BlockEditor
+                          onBlur={async () => {/* Save changes */ }}
+                          attribute="description"
+                          projectDetails={selectedUserStory}
+                          setProjectDetails={() => {/* Update user story */ }}
+                          onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
+                          context='project'
+                        />
+                      </div>
+                    </div>
                   ) : activeEpicId && selectedEpic ? (
-                    <>
+                    <div className='flex flex-col h-full'>
                       <header className="flex items-center justify-between pb-4 w-full">
                         <LabelToInput
                           value={selectedEpic.name}
@@ -310,15 +312,17 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                           onBlur={async () => {/* You can add any additional logic here */ }}
                         />
                       </header>
-                      <BlockEditor
-                        onBlur={async () => {/* Save changes */ }}
-                        attribute="description"
-                        projectDetails={selectedEpic}
-                        setProjectDetails={() => {/* Update epic */ }}
-                        onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
-                        context='project'
-                      />
-                    </>
+                      <div className='flex-1 overflow-y-auto'>
+                        <BlockEditor
+                          onBlur={async () => {/* Save changes */ }}
+                          attribute="description"
+                          projectDetails={selectedEpic}
+                          setProjectDetails={() => {/* Update epic */ }}
+                          onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
+                          context='project'
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <p className="text-gray-500">Select an epic or user story to edit</p>
