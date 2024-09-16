@@ -20,6 +20,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
     const projectId = params.projectId;
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
     const updateFunctionalRequirement = useMutation(api.functionalRequirements.updateFunctionalRequirement);
+    const createFunctionalRequirement = useMutation(api.functionalRequirements.createFunctionalRequirement);
     const [content, setContent] = useState('');
     const [frId, setFrId] = useState<Id<"functionalRequirements"> | null>(null);
 
@@ -52,6 +53,8 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
                     console.error("Error updating functional requirement:", error);
                 }
             } else {
+                const result = await createFunctionalRequirement({projectId, content: value})
+                console.log("FR Created:", result);
                 console.warn("Cannot update: frId is null");
             }
         }, 1000),
