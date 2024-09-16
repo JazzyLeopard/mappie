@@ -17,7 +17,9 @@ import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Id } from "@/convex/_generated/dataModel";
-
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from 'sonner';
+import { Wand2 } from "lucide-react";
 
 export default function Component() {
 
@@ -35,6 +37,50 @@ export default function Component() {
     router.push(`/projects`);
   };
 
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const createProject = useMutation(api.projects.createProject);
+
+  const handleGenerateProject = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error("Please enter a project description.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      // Phase 1: Create the project with only a title
+      const projectId = await createProject({
+        title: "New AI Generated Project",
+      });
+
+      toast.success("Project created. Generating details...");
+
+      // Navigate to the new project
+      router.push(`/projects/${projectId}`);
+
+      // Phase 2: Generate and populate project details
+      const response = await fetch('/api/ideate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: aiPrompt, projectId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate project details');
+      }
+
+      toast.success("Project details generated successfully!");
+    } catch (error) {
+      console.error('Error generating project:', error);
+      toast.error("Failed to generate project. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <>
       <div className="p-6 pt-16 min-w-100%">
@@ -42,10 +88,31 @@ export default function Component() {
           <h1 className="text-2xl font-bold">Projects</h1>
         </div>
         <div className="flex items-center space-x-2 mb-6">
-          <Button className="bg-primary text-primary-foreground">
-            <PlusIcon className="mr-2" />
+          <Button variant="outline"  className="">
+            <PlusIcon className="mr-2 w-4 h-4" />
             <p className="mr-4">Create new</p>
           </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-primary-foreground">
+                <Wand2 className="mr-2 w-4 h-4" />
+                Ideate with AI
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="min-w-96">
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Describe the type of project/product/app/feature you want to create. Projeqtly will generate a project with populated fields as a starting point for you to build upon."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  rows={4}
+                />
+                <Button onClick={handleGenerateProject} className="w-full" disabled={isGenerating}>
+                  {isGenerating ? "Generating..." : "Generate"}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="flex items-center mb-6">
           <Button
