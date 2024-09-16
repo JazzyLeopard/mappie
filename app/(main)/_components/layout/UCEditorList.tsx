@@ -54,7 +54,6 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 overflow-auto px-4">
                 <BlockEditor
                     key={activeUC._id}
                     attribute="description"
@@ -64,7 +63,6 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     onOpenBrainstormChat={onOpenBrainstormChat}
                     context="useCase" // Add this line
                 />
-            </div>
         </div>
     );
 };

@@ -221,10 +221,15 @@ export const updateProject = mutation({
       updatedProject[field] && typeof updatedProject[field] === 'string' && updatedProject[field].trim() !== ''
     );
 
-    let onboarding = filledFields.length;
+    let onboarding = 1; // Start onboarding at 1
+
+    // Set onboarding based on the number of filled mandatory fields
+    if (filledFields.length > 0) {
+      onboarding = filledFields.length; // Set onboarding to the number of filled fields
+    }
 
     // If all mandatory fields are filled, set onboarding to 0
-    if (onboarding === mandatoryFields.length) {
+    if (filledFields.length === mandatoryFields.length) {
       onboarding = 0;
     }
 
@@ -233,7 +238,6 @@ export const updateProject = mutation({
     await ctx.db.patch(_id, { ...finalUpdates, updatedAt: BigInt(Date.now()) });
 
     const finalProject = await ctx.db.get(_id);
-    console.log("Updated project:", finalProject); // Add this line for debugging
 
     return finalProject;
   },

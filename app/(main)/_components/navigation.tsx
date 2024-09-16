@@ -12,7 +12,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, PlusCircle } from "lucide-react";
+import { Car, ChevronsLeft, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,12 +25,12 @@ export const Navigation = () => {
   const projects = useQuery(api.projects.getProjects);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const createProject = useMutation(api.projects.createProject);
+  const [mandatoryFieldsFilled, setMandatoryFieldsFilled] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const currentProject = useQuery(api.projects.getProjectById,
     selectedProject ? { projectId: selectedProject as Id<"projects"> } : "skip"
   );
-
-  const [mandatoryFieldsFilled, setMandatoryFieldsFilled] = useState(false);
 
   useEffect(() => {
     if (currentProject) {
@@ -44,10 +44,8 @@ export const Navigation = () => {
 
   useEffect(() => {
     const updateSelectedProject = () => {
-
       const pathParts = pathname?.split('/') || [];
       const projectIdFromUrl = pathParts[pathParts.indexOf('projects') + 1];
-
 
       if (projectIdFromUrl && projects) {
         const matchingProject = projects.find(project => project._id === projectIdFromUrl);
@@ -63,7 +61,6 @@ export const Navigation = () => {
   }, [projects, pathname]);
 
   useEffect(() => {
-    // Refetch projects when the route changes
     router.refresh();
   }, [pathname]);
 
@@ -140,65 +137,74 @@ export const Navigation = () => {
     ? projects.find(project => project._id === selectedProject)?.title
     : "Select a project";
 
+  const toggleCollapse = () => {
+    setIsCollapsed(prev => !prev);
+  };
+
   return (
-    <div className="group/sidebar h-full w-80 bg-secondary overflow-y-auto relative z-[50] flex flex-col">
-      <div className="p-2 rounded-md">
-        <UserItems />
+    <div className={`group/sidebar h-full ${isCollapsed ? 'w-16' : 'w-80'} bg-secondary overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`}>
+      <div className="px-4 py-2 flex justify-between items-center">
+        {!isCollapsed && <UserItems />}
+        <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground">
+          {isCollapsed ? <Menu className="flex justify-center items-center" /> : <ChevronsLeft />}
+        </div>
       </div>
 
-      <div className="p-4">
-        <p className="text-sm font-semibold mb-2">Projects</p>
-        <Select onValueChange={handleProjectChange} value={selectedProject || undefined}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {projects?.map((project) => (
-              <SelectItem key={project._id} value={project._id} className="my-1">
-                {project.title}
-              </SelectItem>
-            ))}
-            <SelectSeparator className="my-2" />
-            <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
-            <SelectItem
-              value="new_project"
-              className="my-1 hover:bg-primary/10 text-primary"
-            >
-              <PlusCircle className="h-4 w-4 mr-2 inline-block" />
-              New Project
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {!isCollapsed && (
+        <>
+          <div className="p-4">
+            <p className="text-sm font-semibold mb-2">Projects</p>
+            <Select onValueChange={handleProjectChange} value={selectedProject || undefined}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {projects?.map((project) => (
+                  <SelectItem key={project._id} value={project._id} className="my-1">
+                    {project.title}
+                  </SelectItem>
+                ))}
+                <SelectSeparator className="my-2" />
+                <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
+                <SelectItem
+                  value="new_project"
+                  className="my-1 hover:bg-primary/10 text-primary"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2 inline-block" />
+                  New Project
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
-        {selectedProject && projects && (
-          <>
-            {navItems.map((item) => {
-              return (<NavItem
-                key={item.label}
-                label={item.label}
-                icon={item.icon}
-                onClick={() => handleNavItemClick(item.path)}
-                active={isActive(item.path)}
-                badge={item.badge}
-              />
-              )
-            }
+          <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+            {selectedProject && projects && (
+              <>
+                {navItems.map((item) => (
+                  <NavItem
+                    key={item.label}
+                    label={item.label}
+                    icon={item.icon}
+                    onClick={() => handleNavItemClick(item.path)}
+                    active={isActive(item.path)}
+                    badge={item.badge}
+                  />
+                ))}
+              </>
             )}
-          </>
-        )}
-      </ScrollArea>
+          </ScrollArea>
 
-      <div className="">
-        <p className="text-sm font-semibold mb-2 px-4">Settings</p>
-        <NavItem
-          label="Subscription"
-          icon={CreditCard}
-          onClick={() => router.push("/settings")}
-          active={pathname === "/settings"}
-        />
-      </div>
+          <div className="">
+            <p className="text-sm font-semibold mb-2 px-4">Settings</p>
+            <NavItem
+              label="Subscription"
+              icon={CreditCard}
+              onClick={() => router.push("/settings")}
+              active={pathname === "/settings"}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

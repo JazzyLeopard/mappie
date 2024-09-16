@@ -14,7 +14,7 @@ interface EditorListProps {
 const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat, onEditorBlur }: EditorListProps) => {
 
     return (
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className="h-full flex flex-col overflow-hidden mb-2">
             {components.map(c => (
                 <div key={c.key} id={c.key} className="h-full flex flex-col overflow-hidden">
                     <h1 className="text-slate-900 pl-0 text-2xl font-semibold sticky top-0 bg-white z-10">
