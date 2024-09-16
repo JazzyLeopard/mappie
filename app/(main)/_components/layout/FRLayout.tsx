@@ -25,7 +25,6 @@ interface FRLayoutProps {
     onEditorChange: (value: string) => void;
     propertyPrompts: any;
     isOnboardingComplete: boolean;
-    handleLocalEditorChange: (value: string) => void;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
@@ -109,10 +108,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="flex-1">
                     <h1 className="text-2xl font-bold">Functional Requirements</h1>
                 </div>
-
-                <DropdownMenu>
+                {frId ? (<DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button className="w-36">
+                        <Button disabled={content?.length <= 0} className="w-36">
                             <div className='flex items-center ml-auto'>
                                 <AiGenerationIconWhite />
                                 &nbsp;Generate
@@ -124,7 +122,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         <DropdownMenuItem>Use case</DropdownMenuItem>
                         <DropdownMenuItem>Epics</DropdownMenuItem>
                     </DropdownMenuContent>
-                </DropdownMenu>
+                 </DropdownMenu>) : '' }
             </div>
 
             <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">
@@ -135,7 +133,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             Please complete all mandatory fields in the Project Overview <br /> before proceeding to Functional Requirements..
                         </h2>
                     </div>)
-                    : isOnboardingComplete && !content ? (
+                    : isOnboardingComplete && !frId ? (
                         <div className="h-full flex flex-col items-center justify-center gap-6">
                             <Image src={Empty} alt="No functional requirements" width={100} height={100} />
                             <h2 className="text-xl font-semibold text-center">

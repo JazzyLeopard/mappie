@@ -12,8 +12,7 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
-import { debounce } from "lodash";
-import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, LucideSeparatorVertical, Strikethrough, Underline } from "lucide-react";
+import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -92,7 +91,7 @@ export default function BlockEditor({
     initializeEditor()
   }, [])
 
-  const handleOnBlur = async () => { 
+  const handleOnBlur = async () => {
     onBlur();
   }
 
@@ -279,10 +278,10 @@ export default function BlockEditor({
 
   // Renders the editor instance using a React component.
   return (
-    <div className="min-h-full flex flex-col overflow-hidden">
+    <div className="min-h-full flex flex-col">
       {/* @ts-ignore */}
       <BlockNoteContext.Provider value={editor}>
-        <div className="sticky top-0 z-20 bg-white w-full">
+        <div className="sticky top-0 z-20 bg-white w-full mb-2">
           <div className="flex justify-between rounded-lg pl-1 mt-2">
             <ToggleGroup className="py-1 laptop-1024:flex laptop-1024:flex-wrap laptop-1024:justify-start" type="single" defaultValue="none">
               <ToggleGroupItem value="bold" className="border mr-3" onClick={() => toggleStyle("bold")}>
@@ -314,7 +313,7 @@ export default function BlockEditor({
             </ToggleGroup>
           </div>
         </div>
-        <div className="flex-1 overflow-auto pt-4">
+        <div className="flex-1 overflow-y-auto pt-4">
           {isLoading ? (
             <div className="mt-4">
               <Skeleton className="h-4 w-full mb-2" />
