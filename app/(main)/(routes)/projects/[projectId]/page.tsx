@@ -1,11 +1,12 @@
 "use client";
-import { menuItems } from "@/app/(main)/_components/constants";
+import { useEffect, useState } from "react";
 import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { menuItems } from "@/app/(main)/_components/constants";
+import { serialize } from 'next-mdx-remote/serialize';
 
 interface ProjectIdPageProps {
   params: {

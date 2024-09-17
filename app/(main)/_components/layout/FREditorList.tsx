@@ -43,8 +43,12 @@ const FREditorList: React.FC<FREditorListProps> = ({
         <div className="h-full w-full flex flex-col overflow-hidden">
             <div className="flex-1 overflow-auto">
                 <BlockEditor
-                    key={`${frId || 'new'}-${content.length}`}
-                    projectDetails={{ _id: frId || 'new', content: content }}
+                    key={frId || 'new'}
+                    projectDetails={{ 
+                        _id: frId || 'new', 
+                        projectId: projectId, // Add this line
+                        content: content 
+                    }}
                     setProjectDetails={debouncedHandleEditorChange}
                     onOpenBrainstormChat={onOpenBrainstormChat}
                     attribute="content"

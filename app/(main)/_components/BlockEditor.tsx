@@ -11,13 +11,13 @@ import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
+import { useAuth } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
-import { FunctionalRequirement, Project, UseCase } from "@/lib/types";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -62,6 +62,8 @@ export default function BlockEditor({
   onOpenBrainstormChat,
   context,
 }: BlockEditorProps) {
+
+  const { getToken } = useAuth();
 
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
@@ -130,33 +132,46 @@ export default function BlockEditor({
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
     setPreviousContent(currentContent);
 
-    // Determine the correct prompt based on context and attribute
-    let prompt = promptMapping[context]?.[attribute] || "Enhance the following content:";
+    // Use the customPrompt if provided, otherwise use the default prompt
+    const promptToUse = customPrompt || propertyPrompts[attribute] || "Enhance the following content:";
 
-    // Log the selected prompt for debugging
-    console.log("Selected Prompt:", prompt);
-    console.log("Context:", context);
-    console.log("Attribute:", attribute);
+    // Determine the API endpoint based on context
+    let apiEndpoint = '/api/projects';
+    if (context === 'useCase') {
+      apiEndpoint = '/api/use-cases';
+    } else if (context === 'functionalRequirement') {
+      apiEndpoint = '/api/functional-requirements';
+    }
 
     try {
-      const response = await fetch('/api/projects', {
+      const token = await getToken({ template: "convex" });
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
+          projectId: projectDetails.projectId,
+          frId: projectDetails._id,
           type: attribute,
-          data: currentContent,
-          instructions: customPrompt || prompt,
+          data: currentContent || "Generate content based on the provided instructions",
+          instructions: promptToUse,
           projectDetails: projectDetails,
           context: context,
         }, jsonReplacer),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
 
-      if (response.ok) {
-        setNewAIContent(result.response);
+      if (result.content || result.response) {
+        const newContent = result.content || result.response;
+        setNewAIContent(newContent);
         setShowComparison(true);
 
         // Request a summary of changes
@@ -165,17 +180,18 @@ export default function BlockEditor({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             oldContent: currentContent,
-            newContent: result.response,
+            newContent: newContent,
           }),
         });
         const summaryResult = await summaryResponse.json();
         setChangeSummary(summaryResult.summary);
         setIsSummaryLoading(false);
       } else {
-        console.error('Error:', result.error);
+        console.error('Error: No content in the API response');
       }
     } catch (error) {
       console.error('Error fetching AI response:', error);
@@ -185,25 +201,45 @@ export default function BlockEditor({
   };
 
   const handleConfirmAIContent = async () => {
-    await handleAIResponse(newAIContent);
-
-    // Create a mapping for context to mutation functions
-    const mutationMap: { [key: string]: (data: any) => Promise<void> } = {
-      project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
-      useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
-      functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
-    };
-
     try {
-      // Call the appropriate mutation based on the context
-      await mutationMap[context](newAIContent); // Fixed to pass newAIContent as an argument
-      console.log("Content saved to convex Db", newAIContent);
-    } catch (error) {
-      console.log("Error saving content to db", error);
-      return;
-    }
+      // Update the editor with the new content
+      await handleAIResponse(newAIContent);
 
-    setShowComparison(false);
+      // Update the database based on the context
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent });
+          break;
+        default:
+          console.error('Unknown context:', context);
+          return;
+      }
+
+      console.log("Content saved to convex Db", newAIContent);
+
+      // Update the local state
+      setProjectDetails((prevDetails: any) => ({
+        ...prevDetails,
+        [attribute]: newAIContent
+      }));
+
+      // Close the comparison view
+      setShowComparison(false);
+    } catch (error) {
+      console.error("Error saving content to db", error);
+    }
+  };
+
+  const handleAIResponse = async (aiResponse: string) => {
+    editor.focus();
+    const blocks = await editor.tryParseMarkdownToBlocks(aiResponse);
+    editor.replaceBlocks(editor.document, blocks);
   };
 
   type StyleKeys = keyof typeof editor.schema.styleSchema;
@@ -247,47 +283,6 @@ export default function BlockEditor({
     );
   };
 
-  // Function to handle AI responses
-  const handleAIResponse = async (aiResponse: string) => {
-    // Focus the editor before making changes
-    editor.focus();
-
-    // Retrieve the block using getBlock
-    const block = await editor.tryParseMarkdownToBlocks(aiResponse)
-
-    //Function to save the Markdown content to db
-    const markDownContent = await editor.blocksToMarkdownLossy(block)
-
-    try {
-      switch (context) {
-        case 'project':
-          await updateProjectMutation({ [attribute]: markDownContent, _id: projectDetails._id });
-          break;
-        case 'useCase':
-          await updateUseCaseMutation({ id: projectDetails._id, description: markDownContent });
-          break;
-        case 'functionalRequirement':
-          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: markDownContent });
-          break;
-        default:
-          console.error('Unknown context:', context);
-          return;
-      }
-      console.log("Content saved to convex Db", markDownContent);
-    } catch (error) {
-      console.log("Error saving content to db", error);
-      return
-    }
-
-    editor.replaceBlocks(editor.document, block);
-
-    if (!block) {
-      console.error("Block not found!");
-      return;
-    }
-    console.log("Current Block:", block);
-  };
-
   const checkEditorContent = useCallback(async () => {
     const content = await editor.blocksToMarkdownLossy(editor.document);
     setIsEditorEmpty(content.trim() === '');
@@ -329,7 +324,7 @@ export default function BlockEditor({
               <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]}>
                 <AiPromptButton
                   onClick={(customPrompt) => handleAIEnhancement(customPrompt)}
-                  disabled={isEditorEmpty || isLoading}
+                  hasExistingContent={!isEditorEmpty}
                   loading={isLoading}
                   showingComparison={showComparison}
                 />
