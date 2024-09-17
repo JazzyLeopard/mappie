@@ -160,6 +160,7 @@ export const getProjectNameById = query({
 export const createProject = mutation({
   args: {
     title: v.string(),
+    description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -173,15 +174,15 @@ export const createProject = mutation({
     const project = await ctx.db.insert("projects", {
       title: args.title,
       userId: identity.subject,
-      description: "",
+      description: args.description || "",
       objectives: "",
       requirements: "",
       stakeholders: "",
       isArchived: false,
       isPublished: false,
       onboarding: 1,
-      createdAt: BigInt(Date.now()), // Use BigInt for timestamps
-      updatedAt: BigInt(Date.now()), // Use BigInt for timestamps
+      createdAt: BigInt(Date.now()),
+      updatedAt: BigInt(Date.now()),
     });
 
     return project;
