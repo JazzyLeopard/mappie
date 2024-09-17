@@ -29,11 +29,11 @@ export default async function handler(
     });
   }
 
-  
+
 
   // try {
-    // const prompt = `You're an experienced project manager and scrum master with over 10 years of hands-on experience in managing diverse teams and delivering successful projects using Agile methodologies. I am giving you a Project Property {${type}} help me follow the instructions passed by the user on the data provided below: ${JSON.stringify(data)} ${instructions} and give me response in complete MARKDOWN format only without any explanation also remove the headings or headers or titles if any and don't add extra information or fields just follow the instructions`;
-   const jsonReplacer = (key: string, value: any) => {
+  // const prompt = `You're an experienced project manager and scrum master with over 10 years of hands-on experience in managing diverse teams and delivering successful projects using Agile methodologies. I am giving you a Project Property {${type}} help me follow the instructions passed by the user on the data provided below: ${JSON.stringify(data)} ${instructions} and give me response in complete MARKDOWN format only without any explanation also remove the headings or headers or titles if any and don't add extra information or fields just follow the instructions`;
+  const jsonReplacer = (key: string, value: any) => {
     if (typeof value === 'bigint') {
       return value.toString();
     }
@@ -49,7 +49,7 @@ Now, for the project property "${type}", ${instructions}
 
 Current content for ${type}: ${data}
   
-  Please provide your response in complete MARKDOWN format, without headings or extra explanations. Only include information directly related to the instructions.`;
+  Please provide your response in complete MARKDOWN format.Do not include any JSON formatting or additional explanations or any top headings. Only include information directly related to the instructions.`;
 
     const completions = await openai.chat.completions.create({
       model: "gpt-4o",
