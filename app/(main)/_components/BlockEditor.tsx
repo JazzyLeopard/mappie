@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
+import { FunctionalRequirement, Project, UseCase } from "@/lib/types";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -28,13 +29,15 @@ function toTitleCase(str: string): string {
   );
 }
 
+type ContextType = 'project' | 'useCase' | 'functionalRequirement';
+
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
   attribute: string;
   projectDetails: any;
   setProjectDetails: (value: any) => void;
   onOpenBrainstormChat: () => void;
-  context: 'project' | 'useCase' | 'functionalRequirement'; // Add this line
+  context: ContextType;
 };
 
 const MarkdownContent = ({ children }: { children: string }) => (
@@ -99,20 +102,41 @@ export default function BlockEditor({
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Define the mapping for prompts based on context and attribute
+  const promptMapping: { [key: string]: { [key: string]: string } } = {
+    project: {
+      description: propertyPrompts['description'],
+      objectives: propertyPrompts['objectives'],
+      requirements: propertyPrompts['requirements'],
+      stakeholders: propertyPrompts['stakeholders'],
+      scope: propertyPrompts['scope'],
+      constraints: propertyPrompts['constraints'],
+      budget: propertyPrompts['budget'],
+      dependencies: propertyPrompts['dependencies'],
+      priorities: propertyPrompts['priorities'],
+      risks: propertyPrompts['risks'],
+      targetAudience: propertyPrompts['targetAudience'],
+    },
+    useCase: {
+      description: propertyPrompts['useCases'],
+    },
+    functionalRequirement: {
+      description: propertyPrompts['functionalRequirements'],
+    },
+  };
+
   const handleAIEnhancement = async (customPrompt?: string) => {
     setIsLoading(true);
     const currentContent = await editor.blocksToMarkdownLossy(editor.document);
     setPreviousContent(currentContent);
-    
+
     // Determine the correct prompt based on context and attribute
-    let prompt;
-    if (context === 'useCase' && attribute === 'description') {
-      prompt = propertyPrompts['useCases'];
-    } else if (context === 'functionalRequirement' && attribute === 'description') {
-      prompt = propertyPrompts['functionalRequirements'];
-    } else {
-      prompt = propertyPrompts[attribute] || "Enhance the following content:";
-    }
+    let prompt = promptMapping[context]?.[attribute] || "Enhance the following content:";
+
+    // Log the selected prompt for debugging
+    console.log("Selected Prompt:", prompt);
+    console.log("Context:", context);
+    console.log("Attribute:", attribute);
 
     try {
       const response = await fetch('/api/projects', {
@@ -162,26 +186,23 @@ export default function BlockEditor({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
+
+    // Create a mapping for context to mutation functions
+    const mutationMap: { [key: string]: (data: any) => Promise<void> } = {
+      project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
+      useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
+      functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
+    };
+
     try {
-      switch (context) {
-        case 'project':
-          await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id });
-          break;
-        case 'useCase':
-          await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent });
-          break;
-        case 'functionalRequirement':
-          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent });
-          break;
-        default:
-          console.error('Unknown context:', context);
-          return;
-      }
+      // Call the appropriate mutation based on the context
+      await mutationMap[context](newAIContent); // Fixed to pass newAIContent as an argument
       console.log("Content saved to convex Db", newAIContent);
     } catch (error) {
       console.log("Error saving content to db", error);
       return;
     }
+
     setShowComparison(false);
   };
 
@@ -305,7 +326,7 @@ export default function BlockEditor({
               <ToggleGroupItem value="code" className="border mr-3" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]} onClick={() => handleAIEnhancement()}>
+              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]}>
                 <AiPromptButton
                   onClick={(customPrompt) => handleAIEnhancement(customPrompt)}
                   disabled={isEditorEmpty || isLoading}
