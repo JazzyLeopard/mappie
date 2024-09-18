@@ -45,7 +45,6 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
     { id: "dependencies", icon: LinkIcon },
     { id: "priorities", icon: ListIcon },
     { id: "risks", icon: AlertTriangleIcon },
-    { id: "scope", icon: MaximizeIcon },
     { id: "targetAudience", icon: UsersIcon },
     { id: "timeline", icon: CalendarIcon },
     { id: "successMetrics", icon: BarChartIcon },

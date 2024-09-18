@@ -73,12 +73,6 @@ export const menuItems: MenuItemType[] = [
         required: true
     },
     {
-        key: "scope",
-        icon: <ScopeIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-    },
-    {
         key: "targetAudience",
         icon: <AudienceIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
@@ -238,7 +232,6 @@ export const propertyPrompts: { [key: string]: string } = {
     dependencies: "Improve the provided information on dependencies. Clearly define each dependency. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.Remove the top headings if any",
     priorities: "Improve the provided information on priorities. Clearly define each priority. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.Remove the top headings if any",
     risks: "Improve the provided information on risks. Clearly define each risk. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
-    scope: "Improve the provided information on scope. Clearly define each scope item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.Remove the top headings if any",
     targetAudience: "Improve the provided information on target audience. Clearly define each target audience item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.Remove the top headings if any",
     timeline: "Improve the provided information on timeline. Clearly define each timeline item. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",
     successMetrics: "Improve the provided information on success metrics. Clearly define each success metric. Use simple, easy-to-understand language. Give the response in complete MARKDOWN format only without any explanation and also remove the headings or headers or titles if any and don't add extra information or fields. Use the language of the inputted data.",

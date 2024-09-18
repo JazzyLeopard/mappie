@@ -5,7 +5,7 @@ import Spinner from "@/components/ui/spinner"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 interface UseCasesProps {
@@ -17,12 +17,17 @@ interface UseCasesProps {
 
 const UseCases = ({ params }: UseCasesProps) => {
     const projectId = params.projectId
-    const [title, setTitle] = useState("Use Cases");
-
+    const [content, setContent] = useState<any>([])
     const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId });
     const createUseCase = useMutation(api.useCases.createUseCase);
     const updateUseCase = useMutation(api.useCases.updateUseCase);
     const deleteUseCase = useMutation(api.useCases.deleteUseCase);
+
+    useEffect(() => {
+        if (useCases && useCases?.length > 0) {
+            setContent(useCases);
+        }
+    }, [useCases]);
 
     const project = useQuery(api.projects.getProjectById, {
         projectId: projectId
@@ -58,11 +63,6 @@ const UseCases = ({ params }: UseCasesProps) => {
         }
     }, [deleteUseCase]);
 
-    const updateLabel = useCallback((value: string) => {
-        setTitle(value);
-        // Implement updating the title in your database if needed
-    }, []);
-
     const handleOpenBrainstormChat = useCallback(() => {
         // Implement the logic for opening brainstorm chat
     }, []);
@@ -74,13 +74,12 @@ const UseCases = ({ params }: UseCasesProps) => {
     return (
         <UseCasesLayout
             projectId={projectId}
-            title={title}
             onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
             onAddUseCase={handleCreateUseCase}
             propertyPrompts={propertyPrompts}
             onOpenBrainstormChat={handleOpenBrainstormChat}
-            useCases={useCases || []}
+            useCases={content || []}
             isOnboardingComplete={project?.onboarding == 0}
         />
     );

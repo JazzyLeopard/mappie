@@ -21,11 +21,16 @@ export const createUseCase = mutation({
 export const getUseCasesByProjectId = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const useCases = await ctx.db
       .query("useCases")
       .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .order("desc")
       .collect();
+
+      if (useCases?.length > 0) {
+        return useCases
+      } 
+      return [];
   },
 });
 

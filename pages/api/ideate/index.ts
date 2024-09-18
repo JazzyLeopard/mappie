@@ -44,11 +44,11 @@ export default async function handler(
     }
 
     try {
-      const relevantPrompts = ['description', 'objectives', 'requirements', 'stakeholders', 'scope'];
+      const relevantPrompts = ['description', 'objectives', 'requirements', 'stakeholders'];
       const promptWithPropertyInstructions = `Generate a project based on the following description: ${prompt}. 
       For each field, use the following instructions:
       ${relevantPrompts.map(key => `For ${key}: ${propertyPrompts[key]}`).join('\n')}
-      Provide a title, description, objectives, requirements, stakeholders and scope as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
+      Provide a title, description, objectives, requirements, stakeholders as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
