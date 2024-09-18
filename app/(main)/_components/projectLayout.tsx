@@ -9,7 +9,6 @@ import RisksIcon from "@/icons/RisksIcon";
 import { toTitleCase } from "@/utils/helper";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import ScopeIcon from "@/icons/ScopeIcon";
 import DollarIcon from "@/icons/DollarIcon";
 import PrioritiesIcon from "@/icons/PrioritiesIcon";
 import DependenciesIcon from "@/icons/DependenciesIcon";
@@ -97,14 +96,6 @@ const menuItems: MenuItemType[] = [
     description:
       "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
     active: true,
-    required: false,
-  },
-  {
-    key: "scope",
-    icon: <ScopeIcon />,
-    description:
-      "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-    active: false,
     required: false,
   },
   {

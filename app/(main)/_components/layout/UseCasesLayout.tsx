@@ -12,14 +12,13 @@ import axios from 'axios';
 import { useMutation, useQuery } from "convex/react";
 import { GitPullRequest, MoreVertical, Plus, Trash } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { propertyPrompts } from '../constants';
 import UCEditorList from "./UCEditorList";
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
-    title: string;
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
     onAddUseCase: () => Promise<void>;
@@ -31,12 +30,12 @@ interface UseCasesLayoutProps {
 
 const UseCasesLayout = ({
     projectId,
-    title,
     onEditorBlur,
     handleEditorChange,
     onAddUseCase,
     propertyPrompts,
     onOpenBrainstormChat,
+    useCases,
     isOnboardingComplete
 
 }: UseCasesLayoutProps) => {
@@ -45,11 +44,21 @@ const UseCasesLayout = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const { getToken } = useAuth();
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId }) || [];
     const deleteUseCase = useMutation(api.useCases.deleteUseCase);
 
+    const searchParams = useSearchParams();
+    const hasGenerateRef = useRef(false);
+
     useEffect(() => {
-        if (useCases.length > 0 && !activeUseCase) {
+        const shouldGenerate = searchParams?.get('generate') === 'true';
+        if (shouldGenerate && !hasGenerateRef.current) {
+            handleGenerateUseCases();
+            hasGenerateRef.current = true;
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        if (useCases?.length > 0 && !activeUseCase) {
             setActiveUseCase(useCases[0]._id);
         }
     }, [useCases, activeUseCase]);
@@ -72,6 +81,10 @@ const UseCasesLayout = ({
     };
 
     const handleGenerateUseCases = async () => {
+        if (useCases?.length > 0) {
+            console.log('Use cases already exists, skipping generation...');
+            return;
+        }
         setIsGenerating(true);
         try {
             const token = await getToken({ template: "convex" });
@@ -80,6 +93,7 @@ const UseCasesLayout = ({
                     'Authorization': `Bearer ${token}`
                 }
             });
+            const newContent = response.data.useCases;
             console.log('Generated use cases:', response.data.useCases);
         } catch (error) {
             console.error("Failed to generate use cases:", error);

@@ -34,7 +34,7 @@ export const Navigation = () => {
 
   useEffect(() => {
     if (currentProject) {
-      const mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] as const;
+      const mandatoryFields = ["description", "objectives", "requirements", "stakeholders"] as const;
       const allFieldsFilled = mandatoryFields.every(field =>
         currentProject[field] && typeof currentProject[field] === 'string' && currentProject[field].trim() !== ''
       );

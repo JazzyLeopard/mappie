@@ -9,6 +9,36 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+function convertDescriptionToMarkdown(description: any): string {
+  let markdown = '';
+
+  if (typeof description === 'string') {
+    return description;
+  }
+
+  if (description.description) {
+    markdown += `## Description\n${description.description}\n\n`;
+  }
+
+  if (description.acceptance_criteria) {
+    markdown += `## Acceptance Criteria\n${description.acceptance_criteria}\n\n`;
+  }
+
+  if (description.business_value) {
+    markdown += `## Business Value\n${description.business_value}\n\n`;
+  }
+
+  if (description.dependencies) {
+    markdown += `## Dependencies\n${description.dependencies}\n\n`;
+  }
+
+  if (description.risks) {
+    markdown += `## Risks\n${description.risks}\n\n`;
+  }
+
+  return markdown.trim();
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -41,7 +71,30 @@ export default async function handler(
 
     const useCases = await convex.query(api.useCases.getUseCasesByProjectId, { projectId });
 
-    let basePrompt = `Create an epic based on the following functional requirements:\n${functionalRequirementsText}\n`;
+    let basePrompt = `As an expert EPICs analyst, generate a comprehensive list of EPICs for the following project. Each EPIC should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2 
+    {
+        "title": "Name of the epic should be short and concise. Example: Restaurant Menu Browsing and Search"
+        
+        "description": 
+        {
+          "Create a detailed description of the epic that addresses the business need it fulfills. Explain how this epic contributes to the overall project goals.Consider this example for generating description- 
+          This epic focuses on implementing the core functionality of the restaurant menu browsing and search system. It allows users to easily discover restaurants and their offerings, contributing to a seamless dining experience.",
+          
+          "business_value": "Articulate the business value delivered by this epic. Why is it essential? How does it align with strategic goals?
+          Consider this example - By enabling users to efficiently browse and search restaurant menus, this epic drives increased app usage and customer satisfaction, leading to higher order volumes and revenue growth.",
+          
+          "acceptance_criteria": "Define what success looks like for this Epic. What specific conditions or outcomes must be met for the Epic to be considered complete? It's like setting the finish line in a race.
+          Consider this example - Users must be able to filter restaurants by cuisine type, and search results should be displayed within 2 seconds.",
+          
+          "dependencies": "Identify any dependencies that could affect the completion of this Epic. Does it rely on other features, teams, or external systems? It's like making sure all the puzzle pieces fit together 
+          Consider this example - This epic is dependent on the completion of the restaurant onboarding process and integration with the external menu management system.",
+          
+          "risks": "Outline any risks that might prevent this Epic from being successfully completed. Think of this as identifying the potential potholes on the road to success
+          Consider this example - There is a risk that search functionality could slow down the app during peak usage times, affecting user experience."
+        }
+      }  
+    
+    Create epics based on the following functional requirements:\n${functionalRequirementsText}\n`;
 
     if (useCases?.length > 0) {
       const useCasesText = useCases.map(useCase => useCase.description).join('\n');
@@ -49,30 +102,9 @@ export default async function handler(
     }
 
     // Update the prompt to request a JSON response
-    const epicPrompt = `${basePrompt} The epic should include the following fields:
-      {
-        "name": "Name of the epic should be short and concise. Example: Restaurant Menu Browsing and Search"
-        "Description": [
-        "Create a detailed description of the epic that addresses the business need it fulfills. Explain how this epic contributes to the overall project goals.Consider this example for generating description- This epic focuses on implementing the core functionality of the restaurant menu browsing and search system. It allows users to easily discover restaurants and their offerings, contributing to a seamless dining experience."
-        ],
-        "Business value":[
-        "Articulate the business value delivered by this epic. Why is it essential? How does it align with strategic goals?
-        Consider this example - By enabling users to efficiently browse and search restaurant menus, this epic drives increased app usage and customer satisfaction, leading to higher order volumes and revenue growth."
-        ],
-        "Acceptance criteria":[
-        "Define what success looks like for this Epic. What specific conditions or outcomes must be met for the Epic to be considered complete? It’s like setting the finish line in a race.
-        Consider this example - Users must be able to filter restaurants by cuisine type, and search results should be displayed within 2 seconds."
-        ],
-        "Dependencies":[
-        "Identify any dependencies that could affect the completion of this Epic. Does it rely on other features, teams, or external systems? It’s like making sure all the puzzle pieces fit together 
-        Consider this example - This epic is dependent on the completion of the restaurant onboarding process and integration with the external menu management system."
-        ],
-        "Risks":[
-        "Outline any risks that might prevent this Epic from being successfully completed. Think of this as identifying the potential potholes on the road to success
-        Consider this example - There is a risk that search functionality could slow down the app during peak usage times, affecting user experience.
-        "
-        ]
-      }  
+    const epicPrompt = `${basePrompt} Be creative and consider edge cases that might not be immediately obvious. 
+    Format the output as a JSON array of objects, each containing 'title' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block
+    Use the language of the functional requirements, don't use Heading 1 and Heading 2 in Markdown.
     `;
 
     console.log("Calling OpenAI Api...");
@@ -105,15 +137,22 @@ export default async function handler(
     }
     console.log('Parsed epics', JSON.stringify(generatedEpic, null, 2));
 
+    
     console.log("Creating epic...");
-    const epicId = await convex.mutation(api.epics.createEpics, {
-      projectId: convexProjectId,
-      name: generatedEpic.name
-    });
+    for (const epic of generatedEpic) {
+      if (epic?.description) {
+        const formattedDescription = convertDescriptionToMarkdown(epic.description);
+        let epicId = await convex.mutation(api.epics.createEpics, {
+          projectId: convexProjectId,
+          name: epic.title || 'Untitled Epic',
+          description: formattedDescription,
+        });
+        epic['id'] = epicId
+      }
+    }
 
-    const createdEpic = await convex.query(api.epics.getEpicById, { epicId });
 
-    res.status(200).json({ message: "Epic generated successfully!", epic: createdEpic });
+    res.status(200).json({ message: "Epics generated successfully!", epics: generatedEpic });
   } catch (error) {
     console.error('Error generating Epics:', error);
     if (error instanceof Error) {

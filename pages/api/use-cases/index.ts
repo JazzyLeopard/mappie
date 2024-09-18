@@ -287,11 +287,12 @@ ${projectDetails}`;
     for (const useCase of generatedUseCases) {
       if (useCase && useCase.description) {
         const formattedDescription = convertDescriptionToMarkdown(useCase.description);
-        await convex.mutation(api.useCases.createUseCase, {
+        let useCaseId = await convex.mutation(api.useCases.createUseCase, {
           projectId: convexProjectId,
           title: useCase.title || 'Untitled Use Case',
           description: formattedDescription,
         });
+        useCase['id'] = useCaseId
       } else {
         console.warn('Skipping invalid use case:', useCase);
       }

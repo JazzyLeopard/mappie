@@ -18,7 +18,6 @@ export type Project = {
   onboarding: number; // Onboarding step number
   stakeholders?: string; // Optional stakeholders
   requirements?: string; // Optional requirements
-  scope?: string; // Optional scope
   targetAudience?: string; // Optional target audience
   constraints?: string; // Optional constraints
   budget?: string; // Optional budget

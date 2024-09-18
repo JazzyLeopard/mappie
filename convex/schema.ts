@@ -10,7 +10,6 @@ export default defineSchema({
     onboarding: v.number(),
     stakeholders: v.optional(v.string()),
     requirements: v.optional(v.string()),
-    scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
     constraints: v.optional(v.string()),
     budget: v.optional(v.string()),

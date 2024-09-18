@@ -28,7 +28,7 @@ interface CommonLayoutProps {
     mandatoryFields?: string[];
 }
 
-const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] }: CommonLayoutProps) => {
+const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle = true, mandatoryFields = ["description", "objectives", "requirements", "stakeholders"] }: CommonLayoutProps) => {
 
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -47,7 +47,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
 
     useEffect(() => {
         // Check if all required fields have content
-        const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders', 'scope'];
+        const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders'];
         const allFieldsHaveContent = requiredFields.every(field => {
             const value = data[field];
             return value && typeof value === 'string' && value.trim() !== '';

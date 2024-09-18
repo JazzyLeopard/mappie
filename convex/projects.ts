@@ -197,7 +197,6 @@ export const updateProject = mutation({
     objectives: v.optional(v.string()),
     stakeholders: v.optional(v.string()),
     requirements: v.optional(v.string()),
-    scope: v.optional(v.string()),
     targetAudience: v.optional(v.string()),
     constraints: v.optional(v.string()),
     budget: v.optional(v.string()),
@@ -216,7 +215,7 @@ export const updateProject = mutation({
 
     const updatedProject = { ...currentProject, ...updates };
 
-    const mandatoryFields = ["description", "objectives", "requirements", "stakeholders", "scope"] as const;
+    const mandatoryFields = ["description", "objectives", "requirements", "stakeholders"] as const;
     let filledFields = mandatoryFields.filter(field =>
       updatedProject[field] && typeof updatedProject[field] === 'string' && updatedProject[field].trim() !== ''
     );
