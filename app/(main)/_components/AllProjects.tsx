@@ -1,25 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { api } from "@/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
-import { useUser } from "@clerk/clerk-react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDiagramProject } from "@fortawesome/free-solid-svg-icons";
-import AiGenerationIcon from "@/icons/AI-Generation";
-import AiGenerationIconWhite from "@/icons/AI-Generation-White";
-import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
-import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Id } from "@/convex/_generated/dataModel";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from 'sonner';
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
+import { useUser } from "@clerk/clerk-react";
+import { faDiagramProject, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useMutation, useQuery } from "convex/react";
 import { Wand2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from 'sonner';
 
 export default function Component() {
 
@@ -88,7 +84,7 @@ export default function Component() {
           <h1 className="text-2xl font-bold">Projects</h1>
         </div>
         <div className="flex items-center space-x-2 mb-6">
-          <Button variant="outline"  className="">
+          <Button variant="outline" className="">
             <PlusIcon className="mr-2 w-4 h-4" />
             <p className="mr-4">Create new</p>
           </Button>
