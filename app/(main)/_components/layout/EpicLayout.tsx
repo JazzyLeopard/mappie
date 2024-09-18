@@ -31,15 +31,37 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
   const { getToken } = useAuth();
 
   const epics = useQuery(api.epics.getEpics, { projectId }) || [];
+  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId }) || [];
+  const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId }) || [];
 
-  // Fetch functional requirements specifically for the projectId
-  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId,
-    { projectId }) || [];
-
-  // Check if functional requirements exist for the specific projectId
   const areFunctionalRequirementsComplete = Array.isArray(functionalRequirements) && functionalRequirements.length > 0;
 
-  // In the render logic, use areFunctionalRequirementsComplete to control access to generating epics
+  const createEpic = useMutation(api.epics.createEpics);
+
+  const handleGenerateEpics = async () => {
+    setIsGenerating(true);
+    try {
+      const token = await getToken({ template: "convex" });
+      const response = await axios.post('/api/epics', { projectId }, {
+
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
+      });
+
+      console.log('Generated epics:', response.data);
+      router.push(`/projects/${projectId}/epics`);
+
+    } catch (error) {
+      console.error("Failed to generate epics:", error);
+      toast.error("Failed to generate epics");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const userStories = useQuery(api.userstories.getUserStories,
     activeEpicId ? { epicId: activeEpicId } : "skip"
@@ -51,7 +73,6 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
     selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
   )
 
-  const createEpic = useMutation(api.epics.createEpics)
   const createUserStory = useMutation(api.userstories.createUserStory)
   const updateEpic = useMutation(api.epics.updateEpic)
   const updateUserStory = useMutation(api.userstories.updateUserStory)
@@ -113,25 +134,6 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
     }
   }
 
-  const handleGenerateEpics = async () => {
-    setIsGenerating(true);
-    try {
-      const token = await getToken({ template: "convex" });
-      const response = await axios.post('/api/epics', { projectId }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      console.log('Generated epic and user stories:', response.data);
-      toast.success("Epics and User Stories generated successfully!");
-    } catch (error) {
-      console.error("Failed to generate epics and user stories:", error);
-      toast.error("Failed to generate epics and user stories");
-    } finally {
-      setIsGenerating(false);
-    }
-  }
-
   const handleGenerateUserStories = async (epicId: Id<"epics">) => {
     // Implement the logic to generate user stories for the given epic
     console.log('Generating user stories for epic:', epicId)
@@ -163,6 +165,15 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
           <h2 className="text-xl font-semibold text-center">
             Please complete functional requirements <br /> before proceeding to Epics...
           </h2>
+          <Button
+            className="gap-2 h-10"
+            variant="default"
+            onClick={handleGenerateEpics}
+            disabled={isGenerating}
+          >
+            <AiGenerationIconWhite />
+            {isGenerating ? "Generating..." : "Generate Epics"}
+          </Button>
         </div>
       ) : (
         <>
@@ -176,7 +187,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add an Epic
                 </Button>
-                <Button variant="default" className="gap-2" onClick={() => handleGenerateEpics()}
+                <Button variant="default" className="gap-2" onClick={handleGenerateEpics}
                   disabled={isGenerating}>
                   <AiGenerationIconWhite />
                   {isGenerating ? "Generating..." : "Generate an Epic"}

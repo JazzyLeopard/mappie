@@ -65,7 +65,7 @@ Do not include any main headings or titles at the top of the output. Provide the
 
     console.log('Calling OpenAI API...');
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
     });

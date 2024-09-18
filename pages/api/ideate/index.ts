@@ -51,7 +51,7 @@ export default async function handler(
       Provide a title, description, objectives, requirements, stakeholders and scope as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: "You are an experienced agile business analyst that generates project details based on user prompts." },
           { role: "user", content: promptWithPropertyInstructions }

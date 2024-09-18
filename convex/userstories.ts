@@ -8,6 +8,8 @@ export const createUserStory = mutation({
     description: v.string(),
     acceptanceCriteria: v.optional(v.string()),
     interfaceElements: v.optional(v.string()),
+    states: v.optional(v.string()),
+    errorMessages: v.optional(v.string()),
     inScope: v.optional(v.string()),
     outOfScope: v.optional(v.string()),
     accessibilityInfo: v.optional(v.string()),
