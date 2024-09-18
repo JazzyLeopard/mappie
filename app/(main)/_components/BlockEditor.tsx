@@ -109,7 +109,6 @@ export default function BlockEditor({
       objectives: propertyPrompts['objectives'],
       requirements: propertyPrompts['requirements'],
       stakeholders: propertyPrompts['stakeholders'],
-      scope: propertyPrompts['scope'],
       constraints: propertyPrompts['constraints'],
       budget: propertyPrompts['budget'],
       dependencies: propertyPrompts['dependencies'],

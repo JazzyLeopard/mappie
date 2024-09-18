@@ -14,15 +14,16 @@ import axios from "axios"
 import { useMutation, useQuery } from "convex/react"
 import { BookIcon, MoreVertical, PackageIcon, Plus, Trash } from "lucide-react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useRef, useState } from 'react'
 import { toast } from "sonner"
 
 interface EpicLayoutProps {
   projectId: Id<"projects">;
+  epics: any[]
 }
 
-export default function EpicLayout({ projectId }: EpicLayoutProps) {
+export default function EpicLayout({ projectId, epics }: EpicLayoutProps) {
   const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null)
   const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -30,11 +31,18 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
 
   const { getToken } = useAuth();
 
-  const epics = useQuery(api.epics.getEpics, { projectId }) || [];
-  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId }) || [];
-  const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId }) || [];
+  const searchParams = useSearchParams();
+  const hasGenerateRef = useRef(false);
 
-  const areFunctionalRequirementsComplete = Array.isArray(functionalRequirements) && functionalRequirements.length > 0;
+  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
+
+  useEffect(() => {
+    const shouldGenerate = searchParams?.get('generate') === 'true';
+    if (shouldGenerate && !hasGenerateRef.current) {
+      handleGenerateEpics();
+      hasGenerateRef.current = true;
+    }
+  }, [searchParams]);
 
   const createEpic = useMutation(api.epics.createEpics);
 
@@ -158,8 +166,7 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
 
   return (
     <div className="h-screen flex flex-col overflow-auto">
-      {(!areFunctionalRequirementsComplete && Array.isArray(functionalRequirements) &&
-        functionalRequirements.length === 0) ? (
+      {(!functionalRequirements || !functionalRequirements?.content) ? (
         <div className="h-full flex flex-col items-center justify-center gap-6">
           <Image src={Empty} alt="Incomplete requirements" width={100} height={100} />
           <h2 className="text-xl font-semibold text-center">

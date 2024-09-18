@@ -17,6 +17,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface FRLayoutProps {
     projectId: Id<"projects">;
@@ -37,6 +38,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 }) => {
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [confirmationModal, setConfirmationModal] = useState<string | null>(null)
     const { getToken } = useAuth();
     const updateFunctionalRequirements = useMutation(api.functionalRequirements.updateFunctionalRequirement);
     const createFunctionalRequirements = useMutation(api.functionalRequirements.createFunctionalRequirement);
@@ -102,6 +104,14 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         console.log("Generating Epics...");
     }, []);
 
+    const handleGenerateClick = (entity: string) => {
+        setConfirmationModal(entity)
+    }
+
+    const confirmGenerate = async () => {
+        router.push(`/projects/${projectId}/${confirmationModal}?generate=true`);
+    }
+
     return (
         <div className="h-screen flex flex-col z-top">
             <div className="bg-white sticky z-999 flex items-center justify-between px-12 pt-8 pb-2">
@@ -119,11 +129,26 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-36">
-                        <DropdownMenuItem>Use case</DropdownMenuItem>
-                        <DropdownMenuItem>Epics</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleGenerateClick('use-cases')}>Use case</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleGenerateClick('epics')}>Epics</DropdownMenuItem>
                     </DropdownMenuContent>
                  </DropdownMenu>) : '' }
             </div>
+
+            <Dialog open={confirmationModal != null} onOpenChange={() => setConfirmationModal}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="pb-2">Generate {confirmationModal?.split('-').join(' ').toUpperCase()}</DialogTitle>
+                        <DialogDescription className="pb-2">
+                            Are you confident that you've provided enough information about the project to generate comprehensive {confirmationModal?.split('-').join(' ').toUpperCase()}?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setConfirmationModal(null)}>Cancel</Button>
+                        <Button onClick={confirmGenerate}>Confirm</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">
                 {!isOnboardingComplete ? (
