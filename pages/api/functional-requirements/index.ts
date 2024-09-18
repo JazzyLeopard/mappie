@@ -10,6 +10,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -18,9 +19,8 @@ export default async function handler(
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { projectId, frId, instructions, type, data, context } = req.body;
-  const authHeader = req.headers.authorization;
-  const authToken = authHeader && authHeader.split(' ')[1];
+  const { projectId } = req.body;
+  const authToken = req.headers.authorization?.split(' ')[1];
 
   if (!authToken) {
     return res.status(401).json({ message: 'No authentication token provided' });
@@ -41,21 +41,27 @@ export default async function handler(
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    const projectDetailsString = Object.entries(project)
+    const projectDetails = Object.entries(project)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const prompt = `Please write functional requirements based on the following project details: ${projectDetailsString}. The requirement should include the following elements:
+    const prompt = `Please write functional requirements based on the following project details: ${projectDetails}. The requirements should include the following elements with each element starting on a new line:
 
-Requirement ID: A unique identifier for the requirement.
-Title: A brief, descriptive title summarizing the requirement.
-Requirement: A detailed description of the functionalities that the system should provide regarding this requirement. Create a list of sub-requirements that each start with 'The system shall ...'. Ensure the sub-requirements are clear, concise, and free of ambiguity.
-Priority: Indicate the importance of this requirement (e.g., Must have, Should have, Could have).
-Traceability: Link the requirement to a specific business goal or objective that it supports.
+- **Requirement ID**: A unique identifier for the requirement.
+- **Title**: A brief, descriptive title summarizing the requirement.
+- **Requirement**: A detailed description of the functionalities that the system should provide regarding this requirement. Create a list of sub-requirements that each start with "The system shall ...". Ensure the sub-requirements are clear, concise, and free of ambiguity.
+- **Priority**: Indicate the importance of this requirement (e.g., Must have, Should have, Could have).
+- **Traceability**: Link the requirement to a specific business goal or objective that it supports.
 
-Use the language of the project details to write the functional requirements. Order them from most important to least important. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete list. If the requirements can be made more granular by splitting them up, please do so. Use plain language that anyone can understand. Format the output as a markdown list, with each requirement as a separate item.
+Format the output as follows:
+- Each requirement should be presented as an H3 heading (### Requirement ID: ID).
+- Follow each heading with the details of the requirement, including the description, priority, and traceability.
+- Ensure that the requirements are ordered from most important to least important.
+- Use plain language that anyone can understand. 
+- If the input is too short or missing key points, add suggestions to make a complete list. 
+- If the requirements can be made more granular by splitting them up, please do so.
 
-Additional instructions: ${instructions}`;
+Do not include any main headings or titles at the top of the output. Provide the response in complete Markdown format only, without any additional explanations or information.`
 
     console.log('Calling OpenAI API...');
     const response = await openai.chat.completions.create({
@@ -65,17 +71,18 @@ Additional instructions: ${instructions}`;
     });
     console.log('OpenAI API response received');
 
-    const content = response.choices[0].message?.content;
+    const content = response.choices[0].message.content;
     if (!content) {
       throw new Error('No content generated from OpenAI');
     }
+
 
     console.log('Creating functional requirements...');
     const existingFR = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId: convexProjectId });
 
     if (existingFR) {
       await convex.mutation(api.functionalRequirements.updateFunctionalRequirement, {
-        id: frId as Id<"functionalRequirements">,
+        id: existingFR._id,
         content: content,
       });
     } else {
