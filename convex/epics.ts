@@ -87,6 +87,7 @@ export const createEpics = mutation({
   args: {
     projectId: v.id("projects"),
     name: v.string(),
+    description: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
