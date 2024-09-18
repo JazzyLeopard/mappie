@@ -1,21 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
 import BlockEditor from "@/app/(main)/_components/BlockEditor"
-import { useQuery, useMutation } from "convex/react"
+import LabelToInput from "@/app/(main)/_components/LabelToInput"
+import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronRight, ChevronDown, PackageIcon, BookIcon, MoreVertical, Trash, Plus, ArrowLeft } from "lucide-react"
-import AiGenerationIcon from '@/icons/AI-Generation'
 import AiGenerationIconWhite from '@/icons/AI-Generation-White'
-import LabelToInput from "@/app/(main)/_components/LabelToInput"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { toast } from "sonner"
+import Empty from "@/public/empty.png"; // Make sure this path is correct
+import { useAuth } from "@clerk/clerk-react"
+import axios from "axios"
+import { useMutation, useQuery } from "convex/react"
+import { BookIcon, MoreVertical, PackageIcon, Plus, Trash } from "lucide-react"
 import Image from "next/image"
-import Empty from "@/public/empty.png" // Make sure this path is correct
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from 'react'
+import { toast } from "sonner"
 
 interface EpicLayoutProps {
   projectId: Id<"projects">;
@@ -26,16 +27,19 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
   const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
+
+  const { getToken } = useAuth();
+
   const epics = useQuery(api.epics.getEpics, { projectId }) || [];
 
-  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId }) || [];
-  const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId }) || [];
-  const functionalRequirementsExist = functionalRequirements !== undefined;
-  const areFunctionalRequirementsComplete = functionalRequirementsExist && Array.isArray(functionalRequirements) && functionalRequirements.length > 0;
+  // Fetch functional requirements specifically for the projectId
+  const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId,
+    { projectId }) || [];
 
-  const useCasesExist = useCases !== undefined;
-  const areUseCasesComplete = useCasesExist && useCases.length > 0;
+  // Check if functional requirements exist for the specific projectId
+  const areFunctionalRequirementsComplete = Array.isArray(functionalRequirements) && functionalRequirements.length > 0;
 
+  // In the render logic, use areFunctionalRequirementsComplete to control access to generating epics
 
   const userStories = useQuery(api.userstories.getUserStories,
     activeEpicId ? { epicId: activeEpicId } : "skip"
@@ -110,15 +114,21 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
   }
 
   const handleGenerateEpics = async () => {
-    setIsGenerating(true)
+    setIsGenerating(true);
     try {
-      // Implement epic generation logic here
-      console.log('Generating epics...')
-      // After generation, you might want to refresh the epics list
+      const token = await getToken({ template: "convex" });
+      const response = await axios.post('/api/epics', { projectId }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log('Generated epic and user stories:', response.data);
+      toast.success("Epics and User Stories generated successfully!");
     } catch (error) {
-      console.error("Failed to generate epics:", error)
+      console.error("Failed to generate epics and user stories:", error);
+      toast.error("Failed to generate epics and user stories");
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
   }
 
@@ -146,11 +156,12 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
 
   return (
     <div className="h-screen flex flex-col overflow-auto">
-      {(!areFunctionalRequirementsComplete && !areUseCasesComplete) ? (
+      {(!areFunctionalRequirementsComplete && Array.isArray(functionalRequirements) &&
+        functionalRequirements.length === 0) ? (
         <div className="h-full flex flex-col items-center justify-center gap-6">
           <Image src={Empty} alt="Incomplete requirements" width={100} height={100} />
           <h2 className="text-xl font-semibold text-center">
-            Please complete functional requirements and use cases <br /> before proceeding to Epics...
+            Please complete functional requirements <br /> before proceeding to Epics...
           </h2>
         </div>
       ) : (
@@ -165,7 +176,8 @@ export default function EpicLayout({ projectId }: EpicLayoutProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add an Epic
                 </Button>
-                <Button variant="default" className="gap-2" onClick={handleGenerateEpics} disabled={isGenerating}>
+                <Button variant="default" className="gap-2" onClick={() => handleGenerateEpics()}
+                  disabled={isGenerating}>
                   <AiGenerationIconWhite />
                   {isGenerating ? "Generating..." : "Generate an Epic"}
                 </Button>

@@ -47,7 +47,7 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
 
     useEffect(() => {
         // Check if all required fields have content
-        const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders'];
+        const requiredFields = ['description', 'objectives', 'requirements', 'stakeholders', 'scope'];
         const allFieldsHaveContent = requiredFields.every(field => {
             const value = data[field];
             return value && typeof value === 'string' && value.trim() !== '';
