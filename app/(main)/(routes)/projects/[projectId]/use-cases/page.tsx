@@ -34,11 +34,12 @@ const UseCases = ({ params }: UseCasesProps) => {
     })
 
     const handleCreateUseCase = useCallback(async () => {
-        await createUseCase({
+        let newUc = {
             projectId,
             title: `Use Case ${useCases?.length ?? 0 + 1}`,
-            description: '',
-        });
+            description: ''
+        }
+        const newUseCaseId = await createUseCase(newUc);
     }, [createUseCase, useCases, projectId]);
 
     const handleUpdateUseCase = useCallback(async (id: Id<"useCases">, field: 'title' | 'description', value: any) => {
