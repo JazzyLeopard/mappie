@@ -30,12 +30,28 @@ export default function EpicLayout({ projectId, epics }: EpicLayoutProps) {
   const router = useRouter()
 
   const { getToken } = useAuth();
+  const createEpic = useMutation(api.epics.createEpics);
 
   const searchParams = useSearchParams();
   const hasGenerateRef = useRef(false);
 
   const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
+  const userStories = useQuery(api.userstories.getUserStories,
+    activeEpicId ? { epicId: activeEpicId } : "skip"
+  )
+  const selectedEpic = useQuery(api.epics.getEpicById,
+    activeEpicId ? { epicId: activeEpicId } : "skip"
+  )
+  const selectedUserStory = useQuery(api.userstories.getUserStoryById,
+    selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
+  )
 
+  const createUserStory = useMutation(api.userstories.createUserStory)
+  const updateEpic = useMutation(api.epics.updateEpic)
+  const updateUserStory = useMutation(api.userstories.updateUserStory)
+  const deleteEpic = useMutation(api.epics.deleteEpic)
+  const deleteUserStory = useMutation(api.userstories.deleteUserStory)
+  
   useEffect(() => {
     const shouldGenerate = searchParams?.get('generate') === 'true';
     if (shouldGenerate && !hasGenerateRef.current) {
@@ -44,7 +60,12 @@ export default function EpicLayout({ projectId, epics }: EpicLayoutProps) {
     }
   }, [searchParams]);
 
-  const createEpic = useMutation(api.epics.createEpics);
+  useEffect(() => {
+    if (epics && epics.length > 0 && !activeEpicId) {
+      setActiveEpicId(epics[0]._id)
+    }
+  }, [epics, activeEpicId])
+
 
   const handleGenerateEpics = async () => {
     setIsGenerating(true);
@@ -71,21 +92,7 @@ export default function EpicLayout({ projectId, epics }: EpicLayoutProps) {
     }
   };
 
-  const userStories = useQuery(api.userstories.getUserStories,
-    activeEpicId ? { epicId: activeEpicId } : "skip"
-  )
-  const selectedEpic = useQuery(api.epics.getEpicById,
-    activeEpicId ? { epicId: activeEpicId } : "skip"
-  )
-  const selectedUserStory = useQuery(api.userstories.getUserStoryById,
-    selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
-  )
 
-  const createUserStory = useMutation(api.userstories.createUserStory)
-  const updateEpic = useMutation(api.epics.updateEpic)
-  const updateUserStory = useMutation(api.userstories.updateUserStory)
-  const deleteEpic = useMutation(api.epics.deleteEpic)
-  const deleteUserStory = useMutation(api.userstories.deleteUserStory)
 
   const toggleEpic = (epicId: Id<"epics">) => {
     setActiveEpicId(epicId)
@@ -147,12 +154,6 @@ export default function EpicLayout({ projectId, epics }: EpicLayoutProps) {
     console.log('Generating user stories for epic:', epicId)
     // After generation, you might want to refresh the user stories list
   }
-
-  useEffect(() => {
-    if (epics && epics.length > 0 && !activeEpicId) {
-      setActiveEpicId(epics[0]._id)
-    }
-  }, [epics, activeEpicId])
 
   const handleEpicTitleClick = (epicId: Id<"epics">, event: React.MouseEvent) => {
     event.stopPropagation()
