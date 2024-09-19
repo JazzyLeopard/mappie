@@ -128,7 +128,7 @@ export default function Component() {
             Recently viewed
           </Button>
         </div>
-        <div className="pt-2 grid grid-cols-3 gap-8 ">
+        <div className="pt-2 flex flex-wrap gap-5">
           {projects?.map((proj) => (
             <Card
               key={proj._id}
