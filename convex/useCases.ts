@@ -24,7 +24,6 @@ export const getUseCasesByProjectId = query({
     const useCases = await ctx.db
       .query("useCases")
       .filter((q) => q.eq(q.field("projectId"), args.projectId))
-      .order("desc")
       .collect();
 
       if (useCases?.length > 0) {
