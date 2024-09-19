@@ -1,14 +1,13 @@
 'use client'
 
-import { Button } from "@/components/ui/button"
+import EpicLayout from "@/app/(main)/_components/layout/EpicLayout"
+import Spinner from "@/components/ui/spinner"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { useMutation, useQuery } from "convex/react"
-import { toast } from "sonner"
-import EpicLayout from "@/app/(main)/_components/layout/EpicLayout"
+import { useQuery, useMutation } from "convex/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Spinner } from "@chakra-ui/react"
+import { useCallback, useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface EpicsPageProps {
     params: {
@@ -17,12 +16,13 @@ interface EpicsPageProps {
 }
 
 const EpicsPage = ({ params }: EpicsPageProps) => {
-    const id = params.projectId
-
+    const projectId = params.projectId
+    const epics = useQuery(api.epics.getEpics, { projectId: projectId }) || [];
     const [content, setContent] = useState<any[]>([])
-    const epics = useQuery(api.epics.getEpics, { projectId: id }) || [];
-    const router = useRouter();
 
+    const createEpic = useMutation(api.epics.createEpics);
+    const deleteEpic = useMutation(api.epics.deleteEpic)
+    const updateEpic = useMutation(api.epics.updateEpic)
 
     useEffect(() => {
         if (epics && epics?.length > 0) {
@@ -30,13 +30,51 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         }
     }, [epics]);
 
+    const handleCreateEpic = useCallback(async () => {
+        const newEpicId = await createEpic({
+            projectId,
+            name: "New Epic"
+        })
+    }, [createEpic, epics, projectId])
+
+    const handleDeleteEpic = useCallback(async (id: Id<"epics">) => {
+        try {
+            await deleteEpic({ id })
+            toast.success("Epic deleted successfully")
+        } catch (error) {
+            console.error("Error deleting epic:", error)
+            toast.error("Failed to delete epic")
+        }
+    }, [deleteEpic])
+
+    const handleEpicNameChange = useCallback(
+        async (epicId: Id<"epics">, newName: string) => {
+            await updateEpic({ _id: epicId, name: newName })
+        },
+        [updateEpic])
+
+    const handleUpdateEpic = useCallback(
+        async (_id: Id<"epics">, field: 'description', value: any) => {
+            await updateEpic({ _id, [field]: value })
+        }, [updateEpic])
+
+
+    const handleEditorChange = useCallback((_id: Id<"epics">, field: string, value: any) => {
+        handleUpdateEpic(_id, field as 'description', value);
+    }, [handleUpdateEpic]);
+
+
     if (epics === undefined) {
         return <Spinner size={"lg"} />;
     }
 
     return (
         <EpicLayout
-            projectId={id}
+            projectId={projectId}
+            onAddEpics={handleCreateEpic}
+            onDeleteEpic={handleDeleteEpic}
+            onEpicNameChange={handleEpicNameChange}
+            handleEditorChange={handleEditorChange}
             epics={content}
         />
     )

@@ -9,19 +9,20 @@ import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import Empty from "@/public/empty.png"; // Make sure this path is correct
 import { useAuth } from "@clerk/nextjs";
 import axios from 'axios';
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { GitPullRequest, MoreVertical, Plus, Trash } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from 'react';
-import { toast } from "sonner";
 import { propertyPrompts } from '../constants';
 import UCEditorList from "./UCEditorList";
+
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
     onAddUseCase: () => Promise<void>;
+    onDeleteUseCase: (id: Id<"useCases">) => Promise<void>
     propertyPrompts: typeof propertyPrompts;
     onOpenBrainstormChat: () => void;
     useCases: any[]; // Add this line
@@ -33,6 +34,7 @@ const UseCasesLayout = ({
     onEditorBlur,
     handleEditorChange,
     onAddUseCase,
+    onDeleteUseCase,
     propertyPrompts,
     onOpenBrainstormChat,
     useCases,
@@ -44,7 +46,6 @@ const UseCasesLayout = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const { getToken } = useAuth();
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    const deleteUseCase = useMutation(api.useCases.deleteUseCase);
 
     const searchParams = useSearchParams();
     const hasGenerateRef = useRef(false);
@@ -62,19 +63,6 @@ const UseCasesLayout = ({
             setActiveUseCase(useCases[0]._id);
         }
     }, [useCases, activeUseCase]);
-
-    const handleDelete = async (id: Id<"useCases">) => {
-        try {
-            await deleteUseCase({ id });
-            if (activeUseCase === id) {
-                setActiveUseCase(null);
-            }
-            toast.success("Use case deleted successfully");
-        } catch (error) {
-            console.error("Error deleting use case:", error);
-            toast.error("Failed to delete use case");
-        }
-    };
 
     const handleRouteBack = () => {
         router.push(`/projects/${projectId}`);
@@ -168,7 +156,7 @@ const UseCasesLayout = ({
                                                 <DropdownMenuContent>
                                                     <DropdownMenuItem onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleDelete(useCase._id);
+                                                        onDeleteUseCase(useCase._id);
                                                     }}>
                                                         <Trash className="h-4 w-4 mr-2" />
                                                         Delete

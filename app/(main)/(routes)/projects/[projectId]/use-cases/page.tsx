@@ -78,6 +78,7 @@ const UseCases = ({ params }: UseCasesProps) => {
             onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
             onAddUseCase={handleCreateUseCase}
+            onDeleteUseCase={handleDelete}
             propertyPrompts={propertyPrompts}
             onOpenBrainstormChat={handleOpenBrainstormChat}
             useCases={content || []}
