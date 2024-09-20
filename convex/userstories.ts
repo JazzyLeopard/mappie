@@ -31,19 +31,14 @@ export const updateUserStory = mutation({
     id: v.id("userStories"),
     title: v.optional(v.string()),
     description: v.optional(v.string()),
-    acceptanceCriteria: v.optional(v.string()),
-    interfaceElements: v.optional(v.string()),
-    inScope: v.optional(v.string()),
-    outOfScope: v.optional(v.string()),
-    accessibilityInfo: v.optional(v.string()),
-    functionalFlow: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
-    await ctx.db.patch(id, {
+    const updatedFields = {
       ...updates,
       updatedAt: BigInt(Date.now()),
-    });
+    }
+    await ctx.db.patch(id, updatedFields);
   },
 });
 
@@ -67,6 +62,29 @@ export const getUserStories = query({
 export const getUserStoryById = query({
   args: { userStoryId: v.id("userStories") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.userStoryId);
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not Authenticated");
+    }
+
+    if (!args.userStoryId) {
+      throw new Error("Project ID is required");
+    }
+
+    const userStories = await ctx.db
+      .query("userStories")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("_id"), args.userStoryId)
+        ),
+      )
+      .first()
+
+    if (!userStories) {
+      throw new Error("userStories not found")
+    }
+
+    return userStories
   },
 });

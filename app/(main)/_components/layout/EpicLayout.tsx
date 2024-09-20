@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import AiGenerationIconWhite from '@/icons/AI-Generation-White'
-import Empty from "@/public/empty.png";
+import Empty from "@/public/empty.png"
 import { useAuth } from "@clerk/clerk-react"
 import axios from "axios"
 import { useMutation, useQuery } from "convex/react"
@@ -22,7 +22,6 @@ import { toast } from "sonner"
 interface EpicLayoutProps {
   projectId: Id<"projects">;
   onAddEpics: () => Promise<void>
-  onDeleteEpic: (epicId: Id<"epics">) => Promise<void>
   onEpicNameChange: (epicId: Id<"epics">, newName: string) => Promise<void>
   handleEditorChange: (_id: Id<"epics">, field: string, value: any) => void
   epics: any[]
@@ -32,15 +31,20 @@ export default function EpicLayout({
   projectId,
   epics,
   onAddEpics,
-  onDeleteEpic,
   onEpicNameChange,
   handleEditorChange
 }: EpicLayoutProps) {
-  const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null)
+  const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null);
+  const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null);
   const [epicDetails, setEpicDetails] = useState<any>();
-  const [userStoriesDetails, setUserStoriesDetails] = useState<any>()
+  const [userStoriesDetails, setUserStoriesDetails] = useState<any>();
 
-  const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null)
+  const [currentSelectedItem, setCurrentSelectedItem] = useState<"epic" | "userStories" | null>(null)
+
+  // currentSelectedItem = epic | userstory
+  // on epic click / on us click -> set also currentSelectedItem -> epic | us
+  // display labeltoinput -> if epic = currentSelectedItem (top) else (bottom)
+
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
 
@@ -54,19 +58,19 @@ export default function EpicLayout({
   const userStories = useQuery(api.userstories.getUserStories,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
+
   const selectedEpic = useQuery(api.epics.getEpicById,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
-
-  console.log("selected Epic", selectedEpic);
+  console.log("selected Epic", epicDetails);
 
   const selectedUserStory = useQuery(api.userstories.getUserStoryById,
     selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
   )
-
   console.log("selected userstory", selectedUserStory);
 
   const updateEpicMutation = useMutation(api.epics.updateEpic);
+  const deleteEpic = useMutation(api.epics.deleteEpic)
 
   const createUserStory = useMutation(api.userstories.createUserStory)
   const updateUserStory = useMutation(api.userstories.updateUserStory)
@@ -99,10 +103,10 @@ export default function EpicLayout({
   }, [selectedEpic]);
 
   useEffect(() => {
-    if (selectedUserStory) {
-      setUserStoriesDetails(selectedUserStory);
+    if (userStories) {
+      setUserStoriesDetails(userStories);
     }
-  }, [selectedUserStory]);
+  }, [userStories]);
 
   const handleEditorBlur = async () => {
     try {
@@ -126,22 +130,25 @@ export default function EpicLayout({
     [handleEditorChange]
   );
 
-  const onBlurForUS = async () => {
+  const onBlurForUS = async (id: Id<"userStories">) => {
     try {
       setUserStoriesDetails((prevDetails: any) => {
         console.log('time for API call', prevDetails);
-        const { _creationTime, createdAt, updatedAt, _id, epicId, ...payload } = prevDetails;
+        const { _creationTime, createdAt, updatedAt, epicId, ...payload } = prevDetails;
 
         const updatedPayload = {
-          id: _id,
-          ...payload,
-        };
+          id: id,
+          title: payload.title,
+          description: payload.description
+        }
+
+        console.log("updatedPayload", updatedPayload);
 
         updateUserStory(updatedPayload).catch(error => {
           console.log('Error updating user story:', error);
         });
 
-        return prevDetails; // Return the same state to avoid unnecessary re-renders
+        return prevDetails;
       });
     } catch (error) {
       console.log('Error updating user story:', error);
@@ -195,16 +202,29 @@ export default function EpicLayout({
     // After generation, you might want to refresh the user stories list
   }
 
-  const toggleEpic = (epicId: Id<"epics">) => {
-    setActiveEpicId(epicId)
-    setSelectedUserStoryId(null)
-    console.log("Toggled Epic");
-  }
+  const handleEpicToggle = (epicId: Id<"epics">) => {
+    setActiveEpicId(epicId);
+    setSelectedUserStoryId(null);
+  };
 
   const handleEpicTitleClick = (epicId: Id<"epics">, event: React.MouseEvent) => {
     event.stopPropagation()
     setActiveEpicId(epicId)
+    setCurrentSelectedItem("epic")
     console.log("Epic Title clicked");
+  }
+
+  const handleDeleteEpic = async (epicId: Id<"epics">) => {
+    try {
+      await deleteEpic({ id: epicId })
+      if (activeEpicId === epicId) {
+        setActiveEpicId(null)
+      }
+      toast.success("Epic deleted successfully")
+    } catch (error) {
+      console.error("Error deleting epic:", error)
+      toast.error("Failed to delete epic")
+    }
   }
 
   const handleCreateUserStory = async () => {
@@ -215,6 +235,8 @@ export default function EpicLayout({
         description: ""
       })
       setSelectedUserStoryId(newUserStoryId)
+      console.log("new user story", newUserStoryId);
+
     }
   }
 
@@ -237,6 +259,9 @@ export default function EpicLayout({
 
   const handleUserStoryClick = (userStoryId: Id<"userStories">) => {
     setSelectedUserStoryId(userStoryId)
+    setActiveEpicId(null)
+    setCurrentSelectedItem("userStories")
+    console.log("User story clicked");
   }
 
   return (
@@ -277,7 +302,7 @@ export default function EpicLayout({
                       <Collapsible
                         key={epic._id}
                         open={activeEpicId === epic._id}
-                        onOpenChange={() => toggleEpic(epic._id)}
+                        onOpenChange={() => handleEpicToggle(epic._id)}
                       >
                         <div className={`rounded-md overflow-hidden ${activeEpicId === epic._id ? 'bg-slate-100 p-4' : ''}`}>
                           <CollapsibleTrigger className="w-full rounded-md hover:bg-slate-200">
@@ -308,7 +333,7 @@ export default function EpicLayout({
                                   <DropdownMenuContent>
                                     <DropdownMenuItem onClick={(e) => {
                                       e.stopPropagation()
-                                      onDeleteEpic(epic._id)
+                                      handleDeleteEpic(epic._id)
                                     }}>
                                       <Trash className="h-4 w-4 mr-2" />
                                       Delete
@@ -380,31 +405,31 @@ export default function EpicLayout({
                   </div>
                 </aside>
                 <div className="flex-1 ml-1 p-4 pt-6 overflow-y-auto">
-                  {selectedUserStoryId && selectedUserStory ? (
+                  {currentSelectedItem === "userStories" && selectedUserStoryId && selectedUserStory ? (
                     <div className="flex flex-col h-full">
                       <header className="flex items-center justify-between pb-3 w-full">
                         <LabelToInput
-                          value={selectedUserStory?.title}
+                          value={selectedUserStory?.title || ''}
                           setValue={(newTitle) => handleUserStoryTitleChange(selectedUserStoryId, newTitle)}
                           onBlur={() => { }}
                         />
                       </header>
                       <div className='flex-1 overflow-y-auto'>
                         <BlockEditor
-                          onBlur={onBlurForUS}
+                          onBlur={() => onBlurForUS(selectedUserStoryId)}
                           attribute="description"
                           projectDetails={selectedUserStory}
-                          setProjectDetails={(value) => debouncedHandleEditorChangeForUS(selectedUserStory._id, "description", value)}
+                          setProjectDetails={(value) => selectedUserStory && debouncedHandleEditorChangeForUS(selectedUserStory._id, "description", value)}
                           onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
-                          context='project'
+                          context='userStories'
                         />
                       </div>
                     </div>
-                  ) : activeEpicId && selectedEpic ? (
+                  ) : currentSelectedItem === "epic" && activeEpicId && selectedEpic ? (
                     <div className='flex flex-col h-full'>
                       <header className="flex items-center justify-between pb-4 w-full">
                         <LabelToInput
-                          value={selectedEpic?.name}
+                          value={selectedEpic?.name || ''}
                           setValue={(newName) => onEpicNameChange(activeEpicId, newName)}
                           onBlur={() => { }}
                         />
@@ -414,9 +439,9 @@ export default function EpicLayout({
                           onBlur={handleEditorBlur}
                           attribute="description"
                           projectDetails={selectedEpic}
-                          setProjectDetails={(value) => debouncedHandleEditorChange(selectedEpic._id, "description", value)}
+                          setProjectDetails={(value) => debouncedHandleEditorChange(activeEpicId, "description", value)}
                           onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
-                          context='project'
+                          context='epics'
                         />
                       </div>
                     </div>
@@ -438,7 +463,8 @@ export default function EpicLayout({
                     Based on the project details, the AI can generate
                     streamlined epics that outline the main features
                     and functionalities of your project. Try it!
-                  </p>                  <Button
+                  </p>
+                  <Button
                     className="gap-2 h-10"
                     variant="default"
                     onClick={handleGenerateEpics}
