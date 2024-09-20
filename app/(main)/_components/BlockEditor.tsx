@@ -17,7 +17,8 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
-import { FunctionalRequirement, Project, UseCase } from "@/lib/types";
+import { updateEpic } from "@/convex/epics";
+import { Description } from "@radix-ui/react-dialog";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -29,7 +30,7 @@ function toTitleCase(str: string): string {
   );
 }
 
-type ContextType = 'project' | 'useCase' | 'functionalRequirement';
+type ContextType = 'project' | 'useCase' | 'functionalRequirement' | 'epics' | 'userStories';
 
 type BlockEditorProps = {
   onBlur: () => Promise<void>;
@@ -73,6 +74,8 @@ export default function BlockEditor({
   const updateProjectMutation = useMutation(api.projects.updateProject);
   const updateUseCaseMutation = useMutation(api.useCases.updateUseCase);
   const updateFunctionalRequirementMutation = useMutation(api.functionalRequirements.updateFunctionalRequirement);
+  const updateEpicMutation = useMutation(api.epics.updateEpic)
+  const updateUserStoryMutation = useMutation(api.userstories.updateUserStory)
 
   const editor = useCreateBlockNote({
     initialContent: undefined
@@ -122,6 +125,12 @@ export default function BlockEditor({
     functionalRequirement: {
       description: propertyPrompts['functionalRequirements'],
     },
+    epics: {
+      description: propertyPrompts['epics']
+    },
+    userStories: {
+      description: propertyPrompts['userStories']
+    }
   };
 
   const handleAIEnhancement = async (customPrompt?: string) => {
@@ -191,6 +200,8 @@ export default function BlockEditor({
       project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
       useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
       functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
+      epics: async () => await updateEpicMutation({ _id: projectDetails._id, description: newAIContent }).then(() => { }),
+      userStories: async () => await updateUserStoryMutation({ id: projectDetails._id, description: newAIContent }).then(() => { })
     };
 
     try {
@@ -267,6 +278,13 @@ export default function BlockEditor({
           break;
         case 'functionalRequirement':
           await updateFunctionalRequirementMutation({ id: projectDetails._id, content: markDownContent });
+          break;
+        //update epics and userStories here
+        case 'epics':
+          await updateEpicMutation({ _id: projectDetails._id, description: markDownContent })
+          break;
+        case 'userStories':
+          await updateUserStoryMutation({ id: projectDetails._id, description: markDownContent })
           break;
         default:
           console.error('Unknown context:', context);
