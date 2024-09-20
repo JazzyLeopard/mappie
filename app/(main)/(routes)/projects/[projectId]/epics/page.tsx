@@ -33,19 +33,10 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     const handleCreateEpic = useCallback(async () => {
         const newEpicId = await createEpic({
             projectId,
-            name: "New Epic"
+            name: `New Epic`,
+            description: ''
         })
-    }, [createEpic, epics, projectId])
-
-    const handleDeleteEpic = useCallback(async (id: Id<"epics">) => {
-        try {
-            await deleteEpic({ id })
-            toast.success("Epic deleted successfully")
-        } catch (error) {
-            console.error("Error deleting epic:", error)
-            toast.error("Failed to delete epic")
-        }
-    }, [deleteEpic])
+    }, [createEpic, projectId])
 
     const handleEpicNameChange = useCallback(
         async (epicId: Id<"epics">, newName: string) => {
@@ -57,7 +48,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         async (_id: Id<"epics">, field: 'description', value: any) => {
             await updateEpic({ _id, [field]: value })
         }, [updateEpic])
-
 
     const handleEditorChange = useCallback((_id: Id<"epics">, field: string, value: any) => {
         handleUpdateEpic(_id, field as 'description', value);
@@ -72,7 +62,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         <EpicLayout
             projectId={projectId}
             onAddEpics={handleCreateEpic}
-            onDeleteEpic={handleDeleteEpic}
             onEpicNameChange={handleEpicNameChange}
             handleEditorChange={handleEditorChange}
             epics={content}
