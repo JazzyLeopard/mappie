@@ -265,7 +265,7 @@ export default function EpicLayout({
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-auto">
+    <div className="h-screen flex flex-col overflow-y-auto">
       {(!functionalRequirements || !functionalRequirements?.content) ? (
         <div className="h-full flex flex-col items-center justify-center gap-6">
           <Image src={Empty} alt="Incomplete requirements" width={100} height={100} />
