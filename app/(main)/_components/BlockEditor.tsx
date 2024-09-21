@@ -63,7 +63,13 @@ export default function BlockEditor({
   onOpenBrainstormChat,
   context,
 }: BlockEditorProps) {
+  if (!projectDetails || !attribute || typeof setProjectDetails !== 'function') {
+    console.error('BlockEditor: Missing required props', { projectDetails, attribute, setProjectDetails });
+    return null; // or some fallback UI
+  }
 
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
@@ -82,14 +88,14 @@ export default function BlockEditor({
   })
 
   useEffect(() => {
+    if (!editor || !projectDetails || !projectDetails[attribute]) return;
+
     const initializeEditor = async () => {
-      if (projectDetails[attribute]) {
-        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
-        editor.replaceBlocks(editor.document, newBlock)
-      }
-    }
-    initializeEditor()
-  }, [])
+      const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute]);
+      editor.replaceBlocks(editor.document, newBlock);
+    };
+    initializeEditor();
+  }, [editor, projectDetails, attribute]);
 
   const handleOnBlur = async () => {
     onBlur();
@@ -101,9 +107,6 @@ export default function BlockEditor({
     }
     return value;
   };
-
-  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Define the mapping for prompts based on context and attribute
   const promptMapping: { [key: string]: { [key: string]: string } } = {
@@ -194,25 +197,6 @@ export default function BlockEditor({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
-
-    // Create a mapping for context to mutation functions
-    const mutationMap: { [key: string]: (data: any) => Promise<void> } = {
-      project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
-      useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
-      functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
-      epics: async () => await updateEpicMutation({ _id: projectDetails._id, description: newAIContent }).then(() => { }),
-      userStories: async () => await updateUserStoryMutation({ id: projectDetails._id, description: newAIContent }).then(() => { })
-    };
-
-    try {
-      // Call the appropriate mutation based on the context
-      await mutationMap[context](newAIContent); // Fixed to pass newAIContent as an argument
-      console.log("Content saved to convex Db", newAIContent);
-    } catch (error) {
-      console.log("Error saving content to db", error);
-      return;
-    }
-
     setShowComparison(false);
   };
 

@@ -419,7 +419,7 @@ export default function EpicLayout({
                           onBlur={() => onBlurForUS(selectedUserStoryId)}
                           attribute="description"
                           projectDetails={selectedUserStory}
-                          setProjectDetails={(value) => selectedUserStory && debouncedHandleEditorChangeForUS(selectedUserStory._id, "description", value)}
+                          setProjectDetails={(value) => debouncedHandleEditorChangeForUS(selectedUserStory._id, "description", value)}
                           onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
                           context='userStories'
                         />
