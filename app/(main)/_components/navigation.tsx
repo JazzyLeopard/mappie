@@ -180,7 +180,7 @@ export const Navigation = () => {
 
   return (
     <>
-      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'w-80'} bg-secondary overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
+      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-secondary w-80'} overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
         isResetting && "transition-all ease-in-out duration-300"
       )}>
 
