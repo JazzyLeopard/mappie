@@ -40,7 +40,7 @@ const ProjectsPage = () => {
 
   return (
     <>
-      <div className={projects?.length === 0 ? "flex flex-col items-center justify-center gap-6 h-full w-full" : "flex flex-col px-16 items-start"}>
+      <div className={projects?.length === 0 ? "flex flex-col items-center justify-center gap-6 h-full w-full" : "flex flex-col px-16 items-start overflow-y-auto max-h-screen"}>
         {(projects?.length ?? 0) > 0 ? (
           <AllProjects />
         ) : (

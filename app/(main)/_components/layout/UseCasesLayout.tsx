@@ -109,7 +109,7 @@ const UseCasesLayout = ({
     };
 
     return (
-        <div className="h-screen flex overflow-auto">
+        <div className="h-screen flex overflow-y-auto">
             {useCases.length > 0 && (
                 <aside className="w-96 flex flex-col">
                     <div className="flex-grow px-4 pt-8">

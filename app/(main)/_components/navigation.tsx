@@ -14,19 +14,27 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Car, ChevronsLeft, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
+import { cn } from "@/lib/utils";
+
 
 export const Navigation = () => {
+
   const router = useRouter();
   const pathname = usePathname();
   const projects = useQuery(api.projects.getProjects);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const createProject = useMutation(api.projects.createProject);
   const [mandatoryFieldsFilled, setMandatoryFieldsFilled] = useState(false);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const isResizingRef = useRef(false);
+  const sidebarRef = useRef<ElementRef<"aside">>(null)
+  const navbarRef = useRef<ElementRef<"div">>(null);
+  const [isResetting, setIsResetting] = useState(false)
 
   const currentProject = useQuery(api.projects.getProjectById,
     selectedProject ? { projectId: selectedProject as Id<"projects"> } : "skip"
@@ -141,70 +149,113 @@ export const Navigation = () => {
     setIsCollapsed(prev => !prev);
   };
 
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    isResizingRef.current = true
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  }
+
+  const handleMouseMove = (event: MouseEvent) => {
+    if (!isResizingRef.current) return
+    let newWidth = event.clientX;
+
+    if (newWidth < 240) newWidth = 240;
+    if (newWidth > 480) newWidth = 480;
+
+    if (sidebarRef.current && navbarRef.current) {
+      sidebarRef.current.style.width = `${newWidth}px`
+      navbarRef.current.style.setProperty("left", `${newWidth}px`)
+      navbarRef.current.style.setProperty("width", `calc(100% - ${newWidth})px`)
+    }
+  }
+
+  const handleMouseUp = () => {
+    isResizingRef.current = false
+    document.removeEventListener("mousemove", handleMouseMove)
+    document.removeEventListener("mouseup", handleMouseUp)
+  }
+
   return (
-    <div className={`group/sidebar h-full ${isCollapsed ? 'w-16' : 'w-80'} bg-secondary overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`}>
-      <div className="px-4 py-2 flex justify-between items-center">
-        {!isCollapsed && <UserItems />}
-        <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground">
-          {isCollapsed ? <Menu className="flex justify-center items-center" /> : <ChevronsLeft />}
+    <>
+      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'w-80'} bg-secondary overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
+        isResetting && "transition-all ease-in-out duration-300"
+      )}>
+
+        <div className="px-4 py-2 flex justify-between items-center">
+          {!isCollapsed && <UserItems />}
+          <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground">
+            {isCollapsed ? <Menu className="flex justify-center items-center" /> : <ChevronsLeft />}
+          </div>
         </div>
-      </div>
 
-      {!isCollapsed && (
-        <>
-          <div className="p-4">
-            <p className="text-sm font-semibold mb-2">Projects</p>
-            <Select onValueChange={handleProjectChange} value={selectedProject || undefined}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {projects?.map((project) => (
-                  <SelectItem key={project._id} value={project._id} className="my-1">
-                    {project.title}
-                  </SelectItem>
-                ))}
-                <SelectSeparator className="my-2" />
-                <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
-                <SelectItem
-                  value="new_project"
-                  className="my-1 hover:bg-primary/10 text-primary"
-                >
-                  <PlusCircle className="h-4 w-4 mr-2 inline-block" />
-                  New Project
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div ref={navbarRef} className={cn(isResetting && "transition-all ease-in-out duration-300")}
+        >
+          {!isCollapsed && (
+            <>
+              <div className="p-4">
+                <p className="text-sm font-semibold mb-2">Projects</p>
+                <Select onValueChange={handleProjectChange} value={selectedProject || undefined} >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects?.map((project) => (
+                      <SelectItem key={project._id} value={project._id} className="my-1">
+                        {project.title}
+                      </SelectItem>
+                    ))}
+                    <SelectSeparator className="my-2" />
+                    <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
+                    <SelectItem
+                      value="new_project"
+                      className="my-1 hover:bg-primary/10 text-primary"
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2 inline-block" />
+                      New Project
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
-            {selectedProject && projects && (
-              <>
-                {navItems.map((item) => (
-                  <NavItem
-                    key={item.label}
-                    label={item.label}
-                    icon={item.icon}
-                    onClick={() => handleNavItemClick(item.path)}
-                    active={isActive(item.path)}
-                    badge={item.badge}
-                  />
-                ))}
-              </>
-            )}
-          </ScrollArea>
+              <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+                {selectedProject && projects && (
+                  <>
+                    {navItems.map((item) => (
+                      <NavItem
+                        key={item.label}
+                        label={item.label}
+                        icon={item.icon}
+                        onClick={() => handleNavItemClick(item.path)}
+                        active={isActive(item.path)}
+                        badge={item.badge}
+                      />
+                    ))}
+                  </>
+                )}
+              </ScrollArea>
 
-          <div className="">
-            <p className="text-sm font-semibold mb-2 px-4">Settings</p>
-            <NavItem
-              label="Subscription"
-              icon={CreditCard}
-              onClick={() => router.push("/settings")}
-              active={pathname === "/settings"}
-            />
-          </div>
-        </>
-      )}
-    </div>
+              <div className="">
+                <p className="text-sm font-semibold mb-2 px-4">Settings</p>
+                <NavItem
+                  label="Subscription"
+                  icon={CreditCard}
+                  onClick={() => router.push("/settings")}
+                  active={pathname === "/settings"}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div
+          onMouseDown={handleMouseDown}
+          onClick={() => { }}
+          className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-[3px] bg-primary/10 right-0 top-0" />
+      </aside>
+    </>
   );
+
 };
