@@ -17,8 +17,6 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
-import { updateEpic } from "@/convex/epics";
-import { Description } from "@radix-ui/react-dialog";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -197,6 +195,7 @@ export default function BlockEditor({
 
   const handleConfirmAIContent = async () => {
     await handleAIResponse(newAIContent);
+
     setShowComparison(false);
   };
 
@@ -252,32 +251,22 @@ export default function BlockEditor({
     //Function to save the Markdown content to db
     const markDownContent = await editor.blocksToMarkdownLossy(block)
 
+    // Create a mapping for context to mutation functions
+    const mutationMap: { [key: string]: (data: any) => Promise<void> } = {
+      project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
+      useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
+      functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
+      epics: async () => await updateEpicMutation({ _id: projectDetails._id, description: newAIContent }).then(() => { }),
+      userStories: async () => await updateUserStoryMutation({ id: projectDetails._id, description: newAIContent }).then(() => { })
+    };
+
     try {
-      switch (context) {
-        case 'project':
-          await updateProjectMutation({ [attribute]: markDownContent, _id: projectDetails._id });
-          break;
-        case 'useCase':
-          await updateUseCaseMutation({ id: projectDetails._id, description: markDownContent });
-          break;
-        case 'functionalRequirement':
-          await updateFunctionalRequirementMutation({ id: projectDetails._id, content: markDownContent });
-          break;
-        //update epics and userStories here
-        case 'epics':
-          await updateEpicMutation({ _id: projectDetails._id, description: markDownContent })
-          break;
-        case 'userStories':
-          await updateUserStoryMutation({ id: projectDetails._id, description: markDownContent })
-          break;
-        default:
-          console.error('Unknown context:', context);
-          return;
-      }
-      console.log("Content saved to convex Db", markDownContent);
+      // Call the appropriate mutation based on the context
+      await mutationMap[context](newAIContent); // Fixed to pass newAIContent as an argument
+      console.log("Content saved to convex Db", newAIContent);
     } catch (error) {
       console.log("Error saving content to db", error);
-      return
+      return;
     }
 
     editor.replaceBlocks(editor.document, block);
