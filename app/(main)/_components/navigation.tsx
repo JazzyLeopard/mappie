@@ -12,7 +12,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Car, ChevronsLeft, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle } from "lucide-react";
+import { ArrowRight, Car, ChevronRight, ChevronsLeft, CreditCard, FileText, GitPullRequest, Home, Layers, LucideChevronRight, LucideExpand, Menu, PlusCircle, SidebarOpen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -186,8 +186,9 @@ export const Navigation = () => {
 
         <div className="px-4 py-2 flex justify-between items-center">
           {!isCollapsed && <UserItems />}
-          <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground">
-            {isCollapsed ? <Menu className="flex justify-center items-center" /> : <ChevronsLeft />}
+          <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground flex items-center justify-center h-full">
+            {isCollapsed ? 
+            <SidebarOpen /> : <ChevronsLeft />}
           </div>
         </div>
 

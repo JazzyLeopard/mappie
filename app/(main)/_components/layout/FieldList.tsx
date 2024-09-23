@@ -2,6 +2,7 @@
 import { MenuItemType } from "@/lib/types";
 import { toTitleCase } from "@/utils/helper"
 import Link from "next/link"
+import FileUpload from "./Context";
 
 interface FieldListProps {
     components: MenuItemType[];
@@ -23,6 +24,7 @@ const FieldList = ({ components, activeSection, setActiveSection, mandatoryField
     };
 
     return (
+        <div className="">
         <div className="w-60 bg-secondary p-4 rounded-md self-start h-auto overflow-y-auto">
             <nav className="space-y-2">
                 {components.map((component) => (
@@ -38,8 +40,10 @@ const FieldList = ({ components, activeSection, setActiveSection, mandatoryField
                             <span className="text-red-600 ml-1">*</span>
                         )}
                     </Link>
-                ))}
-            </nav>
+                    ))}
+                </nav>
+            </div>
+            <FileUpload />
         </div>
     )
 }
