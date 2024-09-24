@@ -160,7 +160,7 @@ export const getProjectNameById = query({
 export const createProject = mutation({
   args: {
     title: v.string(),
-    description: v.optional(v.string()),
+    overview: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -174,10 +174,10 @@ export const createProject = mutation({
     const project = await ctx.db.insert("projects", {
       title: args.title,
       userId: identity.subject,
-      description: args.description || "",
-      objectives: "",
-      requirements: "",
-      stakeholders: "",
+      overview: args.overview || "",
+      problemStatement: "",
+      featurePrioritization: "",
+      featuresInOut: "",
       isArchived: false,
       isPublished: false,
       onboarding: 1,
@@ -193,16 +193,14 @@ export const updateProject = mutation({
   args: {
     _id: v.id("projects"),
     title: v.optional(v.string()),
-    description: v.optional(v.string()),
-    objectives: v.optional(v.string()),
-    stakeholders: v.optional(v.string()),
-    requirements: v.optional(v.string()),
-    targetAudience: v.optional(v.string()),
-    constraints: v.optional(v.string()),
-    budget: v.optional(v.string()),
-    dependencies: v.optional(v.string()),
-    priorities: v.optional(v.string()),
-    risks: v.optional(v.string()),
+    overview: v.optional(v.string()),
+    problemStatement: v.optional(v.string()),
+    userPersonas: v.optional(v.string()),
+    featuresInOut: v.optional(v.string()),
+    successMetrics: v.optional(v.string()),
+    userScenarios: v.optional(v.string()),
+    featurePrioritization: v.optional(v.string()),
+    risksDependencies: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
     isPublished: v.optional(v.boolean()),
     onboarding: v.optional(v.number()),
@@ -215,7 +213,7 @@ export const updateProject = mutation({
 
     const updatedProject = { ...currentProject, ...updates };
 
-    const mandatoryFields = ["description", "objectives", "requirements", "stakeholders"] as const;
+    const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"] as const;
     let filledFields = mandatoryFields.filter(field =>
       updatedProject[field] && typeof updatedProject[field] === 'string' && updatedProject[field].trim() !== ''
     );
@@ -233,6 +231,8 @@ export const updateProject = mutation({
     }
 
     const finalUpdates = { ...updates, onboarding };
+
+    console.log("finalUpdates", finalUpdates)
 
     await ctx.db.patch(_id, { ...finalUpdates, updatedAt: BigInt(Date.now()) });
 
