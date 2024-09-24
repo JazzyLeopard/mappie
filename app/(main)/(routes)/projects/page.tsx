@@ -40,28 +40,19 @@ const ProjectsPage = () => {
 
   return (
     <>
-      <div className={projects?.length === 0 ? "flex flex-col items-center justify-center gap-6 h-full w-full" : "flex flex-col px-16 items-start overflow-y-auto max-h-screen"}>
-        {(projects?.length ?? 0) > 0 ? (
+      <div className="flex flex-col px-16 items-start overflow-y-auto max-h-screen">
           <AllProjects />
-        ) : (
-          <>
-            <h1 className="text-3xl font-semibold mb-8">
-              {user?.firstName || user?.primaryEmailAddress?.emailAddress.split("@")[0]}
-              &apos;s space
-            </h1>
-
-            <Image src={Empty} alt="documents" width={100} height={100} />
-
-            <h2 className="text-xl font-semibold">
-              You haven't created any projects...
-            </h2>
-
-            <Button variant="default" onClick={onCreate}>
-              <PlusCircle className="h-4 w-4 mr-2 " />
-              <p>Create your first project</p>
-            </Button>
-          </>
-        )}
+          {projects && projects?.length <= 0 ? (
+            <div className="flex flex-col items-center justify-center gap-6 h-full w-full">
+              <h2 className="text-xl font-semibold">
+                You haven't created any projects...
+              </h2>
+              <Image src={Empty} alt="documents" width={100} height={100} />
+              <h3 className="text-xl font-semibold">
+                Click on "Create New" or "Ideate with AI"
+              </h3>
+            </div>
+          ) : ''}
       </div>
     </>
   );
