@@ -61,13 +61,7 @@ export default function BlockEditor({
   onOpenBrainstormChat,
   context,
 }: BlockEditorProps) {
-  if (!projectDetails || !attribute || typeof setProjectDetails !== 'function') {
-    console.error('BlockEditor: Missing required props', { projectDetails, attribute, setProjectDetails });
-    return null; // or some fallback UI
-  }
 
-  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
@@ -86,14 +80,14 @@ export default function BlockEditor({
   })
 
   useEffect(() => {
-    if (!editor || !projectDetails || !projectDetails[attribute]) return;
-
     const initializeEditor = async () => {
-      const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute]);
-      editor.replaceBlocks(editor.document, newBlock);
-    };
-    initializeEditor();
-  }, [editor, projectDetails, attribute]);
+      if (projectDetails[attribute]) {
+        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
+        editor.replaceBlocks(editor.document, newBlock)
+      }
+    }
+    initializeEditor()
+  }, [])
 
   const handleOnBlur = async () => {
     onBlur();
@@ -106,19 +100,20 @@ export default function BlockEditor({
     return value;
   };
 
+  const [isEditorEmpty, setIsEditorEmpty] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
   // Define the mapping for prompts based on context and attribute
   const promptMapping: { [key: string]: { [key: string]: string } } = {
     project: {
-      description: propertyPrompts['description'],
-      objectives: propertyPrompts['objectives'],
-      requirements: propertyPrompts['requirements'],
-      stakeholders: propertyPrompts['stakeholders'],
-      constraints: propertyPrompts['constraints'],
-      budget: propertyPrompts['budget'],
-      dependencies: propertyPrompts['dependencies'],
-      priorities: propertyPrompts['priorities'],
-      risks: propertyPrompts['risks'],
-      targetAudience: propertyPrompts['targetAudience'],
+      overview: propertyPrompts['overview'],
+      problemStatement: propertyPrompts['problemStatement'],
+      userPersonas: propertyPrompts['userPersonas'],
+      featuresInOut: propertyPrompts['featuresInOut'],
+      successMetrics: propertyPrompts['successMetrics'],
+      userScenarios: propertyPrompts['userScenarios'],
+      featurePrioritization: propertyPrompts['featurePrioritization'],
+      risksDependencies: propertyPrompts['risksDependencies'],
     },
     useCase: {
       description: propertyPrompts['useCases'],
