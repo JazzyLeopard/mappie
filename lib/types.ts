@@ -12,18 +12,16 @@ export type MenuItemType = {
 export type Project = {
   _id: Id<"projects">; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
-  'title': string; // Title of the project
-  description: string; // Description of the project
-  objectives: string; // Objectives of the project
   onboarding: number; // Onboarding step number
-  stakeholders?: string; // Optional stakeholders
-  requirements?: string; // Optional requirements
-  targetAudience?: string; // Optional target audience
-  constraints?: string; // Optional constraints
-  budget?: string; // Optional budget
-  dependencies?: string; // Optional dependencies
-  priorities?: string; // Optional priorities
-  risks?: string; // Optional risks
+  'title': string; // Title of the project
+  overview: string;
+  problemStatement: string;
+  userPersonas: string;
+  featuresInOut: string;
+  successMetrics?: string;
+  userScenarios?: string;
+  featurePrioritization?: string;
+  risksDependencies?: string;
   isArchived: boolean; // Indicates if the project is archived
   isPublished?: boolean; // Indicates if the project is published
   createdAt: bigint; // Timestamp for when the project was created (as number)

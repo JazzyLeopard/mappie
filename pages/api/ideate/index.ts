@@ -1,8 +1,8 @@
+import { ideatePrompts } from "@/app/(main)/_components/constants";
+import { api } from "@/convex/_generated/api";
+import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from "openai";
-import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
-import { propertyPrompts } from "@/app/(main)/_components/constants";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,11 +44,12 @@ export default async function handler(
     }
 
     try {
-      const relevantPrompts = ['description', 'objectives', 'requirements', 'stakeholders'];
+      const relevantPrompts = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
       const promptWithPropertyInstructions = `Generate a project based on the following description: ${prompt}. 
       For each field, use the following instructions:
-      ${relevantPrompts.map(key => `For ${key}: ${propertyPrompts[key]}`).join('\n')}
-      Provide a title, description, objectives, requirements, stakeholders as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
+      ${relevantPrompts.map(key => `For ${key}: ${ideatePrompts[key]}`).join('\n')}
+      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
+
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",

@@ -25,7 +25,7 @@ const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat
                             attribute={c.key}
                             projectDetails={data}
                             setProjectDetails={(value) => {
-                                console.log('EditorList: Calling handleEditorChange', { key: c.key, value });
+                                // console.log('EditorList: Calling handleEditorChange', { key: c.key, value });
                                 handleEditorChange(c.key, value);
                             }}
                             onOpenBrainstormChat={onOpenBrainstormChat}
