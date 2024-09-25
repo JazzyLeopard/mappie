@@ -2,14 +2,16 @@
 
 import Spinner from "@/components/ui/spinner";
 import { useUser } from "@clerk/clerk-react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { redirect } from "next/navigation";
-import React from "react";
 import { Navigation } from "./_components/navigation";
+import { api } from "@/convex/_generated/api";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useConvexAuth();
   const { user, isSignedIn } = useUser();
+
+  const projects = useQuery(api.projects.getProjects);
 
   if (isLoading) {
     return (
@@ -25,7 +27,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-[calc(100vh)] overflow-hidden">
-      <Navigation />
+      {(projects?.length ?? 0) > 0 &&
+        <Navigation />
+      }
       <main className="overflow-y-hidden w-full">{children}</main>
     </div>
   );
