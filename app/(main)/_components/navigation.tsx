@@ -19,6 +19,8 @@ import React, { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 
 export const Navigation = () => {
@@ -197,19 +199,25 @@ export const Navigation = () => {
         {!isCollapsed && (
           <>
             <div className="p-4">
-              <p className="text-sm font-semibold mb-2">Projects</p>
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm font-semibold">Projects</p>
+                <Link href="/projects">
+                  <button className="text-sm underline p-1">All</button>
+                </Link>
+              </div>
               <Select onValueChange={handleProjectChange} value={selectedProject || undefined} >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
+                  <SelectSeparator className="my-2" />
                   {projects?.map((project) => (
                     <SelectItem key={project._id} value={project._id} className="my-1">
                       {project.title}
                     </SelectItem>
                   ))}
                   <SelectSeparator className="my-2" />
-                  <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
                   <SelectItem
                     value="new_project"
                     className="my-1 hover:bg-primary/10 text-primary"
