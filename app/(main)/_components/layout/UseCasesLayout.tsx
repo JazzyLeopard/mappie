@@ -3,43 +3,33 @@
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import Empty from "@/public/empty.png"; // Make sure this path is correct
 import { useAuth } from "@clerk/nextjs";
 import axios from 'axios';
-import { useMutation } from "convex/react";
 import { GitPullRequest, MoreVertical, Plus, Trash } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from 'react';
-import { propertyPrompts } from '../constants';
 import UCEditorList from "./UCEditorList";
 
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
-    onEditorBlur: () => Promise<void>;
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
     onAddUseCase: () => Promise<void>;
     onDeleteUseCase: (id: Id<"useCases">) => Promise<void>
-    propertyPrompts: typeof propertyPrompts;
-    onOpenBrainstormChat: () => void;
     useCases: any[]; // Add this line
     isOnboardingComplete: boolean
 }
 
 const UseCasesLayout = ({
     projectId,
-    onEditorBlur,
     handleEditorChange,
     onAddUseCase,
     onDeleteUseCase,
-    propertyPrompts,
-    onOpenBrainstormChat,
     useCases,
     isOnboardingComplete
-
 }: UseCasesLayoutProps) => {
     const [activeUseCase, setActiveUseCase] = useState<string | null>(null);
     const router = useRouter();
@@ -92,20 +82,6 @@ const UseCasesLayout = ({
 
     const handlePresentationMode = () => {
         console.log("Presentation mode");
-    };
-
-    const handleAIEnhance = async (content: string, promptType: string) => {
-        try {
-            const token = await getToken({ template: "convex" });
-            const response = await axios.post('/api/enhance-content',
-                { content, promptType, projectId },
-                { headers: { 'Authorization': `Bearer ${token}` } }
-            );
-            return response.data.enhancedContent;
-        } catch (error) {
-            console.error("Failed to enhance content:", error);
-            return content;
-        }
     };
 
     return (
@@ -210,10 +186,7 @@ const UseCasesLayout = ({
                         <UCEditorList
                             useCases={useCases}
                             activeUseCase={activeUseCase}
-                            onEditorBlur={onEditorBlur}
                             handleEditorChange={handleEditorChange}
-                            propertyPrompts={propertyPrompts}
-                            onOpenBrainstormChat={onOpenBrainstormChat}
                         />
                     )}
                 </div>

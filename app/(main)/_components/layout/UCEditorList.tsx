@@ -1,22 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import BlockEditor from "../BlockEditor";
-import LabelToInput from "../LabelToInput";
+import { Button } from '@/components/ui/button';
 import { Id } from "@/convex/_generated/dataModel";
 import { debounce } from "lodash";
-import { propertyPrompts } from "../constants";
-import { Button } from '@/components/ui/button';
 import { PresentationIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import BlockEditor from "../BlockEditor";
+import LabelToInput from "../LabelToInput";
 
 interface UCEditorListProps {
     useCases: any[];
     activeUseCase: string | null;
-    onEditorBlur: () => Promise<void>;
     handleEditorChange: (id: Id<"useCases">, field: string, value: any) => void;
-    propertyPrompts: typeof propertyPrompts;
-    onOpenBrainstormChat: () => void; // Added this line
 }
 
-const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChange, propertyPrompts, onOpenBrainstormChat }: UCEditorListProps) => {
+const UCEditorList = ({ useCases, activeUseCase, handleEditorChange }: UCEditorListProps) => {
     const [activeUC, setActiveUC] = useState<any>(null);
 
     useEffect(() => {
@@ -39,13 +35,17 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
         handleEditorChange(activeUC._id, "title", newTitle);
     };
 
+    const handleEditorBlur = async () => {
+        // Implement if needed
+    };
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             <div className="px-4 pb-2 pt-6 bg-white z-10 flex flex-row items-end">
                 <LabelToInput
                     value={activeUC.title}
                     setValue={handleTitleChange}
-                    onBlur={onEditorBlur}
+                    onBlur={() => { }}
                 />
                 <div className="">
                     <Button className="w-full gap-2 h-10" variant="ghost" onClick={() => { }}>
@@ -54,15 +54,15 @@ const UCEditorList = ({ useCases, activeUseCase, onEditorBlur, handleEditorChang
                     </Button>
                 </div>
             </div>
-                <BlockEditor
-                    key={activeUC._id}
-                    attribute="description"
-                    projectDetails={activeUC}
-                    setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
-                    onBlur={onEditorBlur}
-                    onOpenBrainstormChat={onOpenBrainstormChat}
-                    context="useCase" // Add this line
-                />
+            <BlockEditor
+                key={activeUC._id}
+                attribute="description"
+                projectDetails={activeUC}
+                setProjectDetails={(value) => debouncedHandleEditorChange(activeUC._id, "description", value)}
+                onBlur={() => handleEditorBlur()}
+                onOpenBrainstormChat={() => { }}
+                context="useCase" // Add this line
+            />
         </div>
     );
 };
