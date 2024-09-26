@@ -68,6 +68,7 @@ export default function BlockEditor({
   const [showSummary, setShowSummary] = useState(false);
   const [changeSummary, setChangeSummary] = useState("");
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [generatedProperties, setGeneratedProperties] = useState<Record<string, boolean>>({});
 
   const updateProjectMutation = useMutation(api.projects.updateProject);
   const updateUseCaseMutation = useMutation(api.useCases.updateUseCase);
@@ -131,8 +132,12 @@ export default function BlockEditor({
 
   const handleAIEnhancement = async (customPrompt?: string) => {
     setIsLoading(true);
-    const currentContent = await editor.blocksToMarkdownLossy(editor.document);
-    setPreviousContent(currentContent);
+
+    let currentContent = null;
+    if (!isEditorEmpty) {
+      currentContent = await editor.blocksToMarkdownLossy(editor.document);
+      setPreviousContent(currentContent);
+    }
 
     // Determine the correct prompt based on context and attribute
     let prompt = promptMapping[context]?.[attribute] || "Enhance the following content:";
@@ -159,9 +164,17 @@ export default function BlockEditor({
 
       const result = await response.json();
 
+      currentContent = await editor.blocksToMarkdownLossy(editor.document);
+      setPreviousContent(currentContent);
+
       if (response.ok) {
         setNewAIContent(result.response);
         setShowComparison(true);
+
+        setGeneratedProperties(prev => ({
+          ...prev,
+          [attribute]: true, // Mark this specific attribute as generated
+        }));
 
         // Request a summary of changes
         setIsSummaryLoading(true);
@@ -311,10 +324,10 @@ export default function BlockEditor({
               <ToggleGroupItem value="code" className="border mr-3" onClick={() => toggleStyle("code")}>
                 <Code className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItemNoHover value="ai" disabled={!projectDetails[attribute]}>
+              <ToggleGroupItemNoHover value="ai">
                 <AiPromptButton
                   onClick={(customPrompt) => handleAIEnhancement(customPrompt)}
-                  hasExistingContent={!isEditorEmpty}
+                  hasExistingContent={generatedProperties[attribute] || !isEditorEmpty}
                   loading={isLoading}
                   showingComparison={showComparison}
                 />

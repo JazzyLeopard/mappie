@@ -11,8 +11,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { isLoading } = useConvexAuth();
   const { user, isSignedIn } = useUser();
 
-  const projects = useQuery(api.projects.getProjects);
-
   if (isLoading) {
     return (
       <div className="h-full w-full flex items-center justify-center ">
@@ -27,9 +25,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex h-[calc(100vh)] overflow-hidden">
-      {(projects?.length ?? 0) > 0 &&
-        <Navigation />
-      }
+      <Navigation />
       <main className="overflow-y-hidden w-full">{children}</main>
     </div>
   );
