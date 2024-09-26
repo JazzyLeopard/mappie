@@ -77,9 +77,10 @@ export const updateEpic = mutation({
 });
 
 export const deleteEpic = mutation({
-  args: { id: v.id("epics") },
+  args: { _id: v.id("epics") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    const { _id } = args;
+    await ctx.db.delete(_id);
   },
 });
 

@@ -73,7 +73,7 @@ export default async function handler(
 
     let basePrompt = `As an expert EPICs analyst, generate a comprehensive list of EPICs for the following project. Each EPIC should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2 
     {
-        "title": "Name of the epic should be short and concise. Example: Restaurant Menu Browsing and Search"
+        "name": "Name of the epic should be short and concise. Example: Restaurant Menu Browsing and Search"
         
         "description": 
         {
@@ -103,7 +103,7 @@ export default async function handler(
 
     // Update the prompt to request a JSON response
     const epicPrompt = `${basePrompt} Be creative and consider edge cases that might not be immediately obvious. 
-    Format the output as a JSON array of objects, each containing 'title' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block
+    Format the output as a JSON array of objects, each containing 'name' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block
     Use the language of the functional requirements, don't use Heading 1 and Heading 2 in Markdown.
     `;
 
@@ -137,14 +137,14 @@ export default async function handler(
     }
     console.log('Parsed epics', JSON.stringify(generatedEpic, null, 2));
 
-    
+
     console.log("Creating epic...");
     for (const epic of generatedEpic) {
       if (epic?.description) {
         const formattedDescription = convertDescriptionToMarkdown(epic.description);
         let epicId = await convex.mutation(api.epics.createEpics, {
           projectId: convexProjectId,
-          name: epic.title || 'Untitled Epic',
+          name: epic.name || 'Untitled Epic',
           description: formattedDescription,
         });
         epic['id'] = epicId

@@ -22,6 +22,7 @@ import { toast } from "sonner"
 interface EpicLayoutProps {
   projectId: Id<"projects">;
   onAddEpics: () => Promise<void>
+  onDeleteEpic: (_id: Id<"epics">) => Promise<void>
   onEpicNameChange: (epicId: Id<"epics">, newName: string) => Promise<void>
   handleEditorChange: (_id: Id<"epics">, field: string, value: any) => void
   epics: any[]
@@ -31,11 +32,14 @@ export default function EpicLayout({
   projectId,
   epics,
   onAddEpics,
+  onDeleteEpic,
   onEpicNameChange,
   handleEditorChange
 }: EpicLayoutProps) {
+
   const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null);
   const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null);
+
   const [epicDetails, setEpicDetails] = useState<any>();
   const [userStoriesDetails, setUserStoriesDetails] = useState<any>();
 
@@ -62,12 +66,12 @@ export default function EpicLayout({
   const selectedEpic = useQuery(api.epics.getEpicById,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
-  console.log("selected Epic", epicDetails);
+  // console.log("selected Epic", epicDetails);
 
   const selectedUserStory = useQuery(api.userstories.getUserStoryById,
     selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
   )
-  console.log("selected userstory", selectedUserStory);
+  // console.log("selected userstory", selectedUserStory);
 
   const updateEpicMutation = useMutation(api.epics.updateEpic);
   const deleteEpic = useMutation(api.epics.deleteEpic)
@@ -172,22 +176,31 @@ export default function EpicLayout({
   );
 
   const handleGenerateEpics = async () => {
+    // if epics already exists, don't generate
+    if (epics?.length > 0) {
+      console.log('Epics already exists, skipping generation...');
+      return;
+    }
     setIsGenerating(true);
     try {
       const token = await getToken({ template: "convex" });
       const response = await axios.post('/api/epics', { projectId }, {
-
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-
       });
 
-      console.log('Generated epics:', response.data);
-      router.push(`/projects/${projectId}/epics`);
+      if (response && response.data.epics) {
+        response.data.epics.forEach((epic: any) => {
+          handleEditorChange(epic.id, 'name', epic.name);
+          handleEditorChange(epic.id, 'description', epic.description.description);
+          console.log("Data saved for epics");
+        });
+      }
 
+      console.log('Generated epics:', response.data);
     } catch (error) {
       console.error("Failed to generate epics:", error);
       toast.error("Failed to generate epics");
@@ -212,19 +225,6 @@ export default function EpicLayout({
     setActiveEpicId(epicId)
     setCurrentSelectedItem("epic")
     console.log("Epic Title clicked");
-  }
-
-  const handleDeleteEpic = async (epicId: Id<"epics">) => {
-    try {
-      await deleteEpic({ id: epicId })
-      if (activeEpicId === epicId) {
-        setActiveEpicId(null)
-      }
-      toast.success("Epic deleted successfully")
-    } catch (error) {
-      console.error("Error deleting epic:", error)
-      toast.error("Failed to delete epic")
-    }
   }
 
   const handleCreateUserStory = async () => {
@@ -333,7 +333,7 @@ export default function EpicLayout({
                                   <DropdownMenuContent>
                                     <DropdownMenuItem onClick={(e) => {
                                       e.stopPropagation()
-                                      handleDeleteEpic(epic._id)
+                                      onDeleteEpic(epic._id)
                                     }}>
                                       <Trash className="h-4 w-4 mr-2" />
                                       Delete
