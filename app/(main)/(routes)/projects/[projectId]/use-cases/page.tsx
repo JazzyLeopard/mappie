@@ -50,9 +50,6 @@ const UseCases = ({ params }: UseCasesProps) => {
         handleUpdateUseCase(id, field as 'title' | 'description', value);
     }, [handleUpdateUseCase]);
 
-    const handleEditorBlur = useCallback(async () => {
-        // Implement if needed
-    }, []);
 
     const handleDelete = useCallback(async (id: Id<"useCases">) => {
         try {
@@ -75,12 +72,9 @@ const UseCases = ({ params }: UseCasesProps) => {
     return (
         <UseCasesLayout
             projectId={projectId}
-            onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
             onAddUseCase={handleCreateUseCase}
             onDeleteUseCase={handleDelete}
-            propertyPrompts={propertyPrompts}
-            onOpenBrainstormChat={handleOpenBrainstormChat}
             useCases={content || []}
             isOnboardingComplete={project?.onboarding == 0}
         />
