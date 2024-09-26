@@ -367,15 +367,21 @@ export const ideatePrompts: { [key: string]: string } = {
     userPersonas: `Create detailed user personas for the primary and secondary users of "[Insert Project Name]". For each persona, include demographic information, goals, frustrations, and motivations. Describe their typical day, tech-savviness, and how they might interact with your product. Ensure these personas are diverse and representative of your target user base. Create at least one primary user persona and 1-2 secondary user personas. 
 
     Here is the example template:
-    
-    ### User Personas
+
     ### Primary User: Alex, the Busy Professional
+
     ### Demographics: 30, Marketing Manager, lives in a metropolitan city.
+
     ### Goals: Alex wants to incorporate mindfulness into his daily routine and manage his stress more effectively to improve work-life balance.
+
     ### Frustrations: Often feels overwhelmed by work, has difficulty finding time for self-care, and isn’t sure which mindfulness techniques will work best.
+
     ### Motivations: Alex wants to stay productive without burning out and seeks ways to enhance his mental resilience.
+
     ### Tech-savviness: Moderate to high; uses productivity and fitness apps regularly but is not a tech expert.
+
     ### Typical Day: Alex spends most of his day in meetings, juggling work deadlines, and interacting with clients. In his free time, he tries to stay active with workouts but struggles to maintain a mindfulness routine.
+    
     ### Interaction with Product: Alex will use MindMap to track his mood and receive personalized wellness tips. He will benefit from guided meditations during work breaks and the daily reminders to focus on mindfulness.
 
     [Repeat this structure for secondary users] `,
@@ -383,8 +389,6 @@ export const ideatePrompts: { [key: string]: string } = {
     featuresInOut: `For the project, create a comprehensive feature list. Divide this into "Features In" (included in this version) and "Features Out" (explicitly not included). For Features In, describe each feature concisely but clearly, focusing on user benefits. Aim for 5-8 key features that directly address the pain points identified in the Problem Statement and align with the project goals. For Features Out, briefly explain the rationale for exclusion. This could include features that are out of scope, technically challenging, or planned for future versions. Ensure the feature set aligns with project goals, user needs, and the defined success metrics. 
 
     Here is the example template:
-    ### Features
-
     ### Features In-
     ### Mood Tracker: A simple tool allowing users to log their daily emotions and mental state, helping them identify patterns and triggers.
     User benefit: Helps users become more self-aware and track their mental health over time.
