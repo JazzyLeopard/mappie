@@ -12,7 +12,7 @@ import { useUser } from "@clerk/clerk-react";
 import { faDiagramProject, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "convex/react";
-import { Wand2 } from "lucide-react";
+import { Rocket, Wand2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from 'sonner';
@@ -28,11 +28,7 @@ export default function Component() {
   const [openDialog, setOpenDialog] = useState(false);
   const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
   const archiveProject = useMutation(api.projects.archiveProject);
-  const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
-    await archiveProject({ _id: id, isArchived: !isArchived });
-    setOpenDialog(false);
-    router.push(`/projects`);
-  };
+
 
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -78,7 +74,6 @@ export default function Component() {
     }
   };
 
-
   const handleGenerateProject = async () => {
     if (!aiPrompt.trim()) {
       toast.error("Please enter a project description.");
@@ -106,8 +101,12 @@ export default function Component() {
         body: JSON.stringify({ prompt: aiPrompt, projectId }),
       });
 
+
       if (!response.ok) {
         throw new Error('Failed to generate project details');
+      }
+      else {
+        console.log("Ideate response:", response);
       }
 
       toast.success("Project details generated successfully!");
@@ -117,6 +116,12 @@ export default function Component() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
+    await archiveProject({ _id: id, isArchived: !isArchived });
+    setOpenDialog(false);
+    router.push(`/projects`);
   };
 
   return (
@@ -153,6 +158,7 @@ export default function Component() {
                 </div>
               </PopoverContent>
             </Popover>
+
           </div>
           <div className="flex items-center mb-6">
             <Button
@@ -286,26 +292,6 @@ function ClockIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function FileIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-    </svg>
-  );
-}
-
 function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -321,27 +307,6 @@ function FolderIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinejoin="round"
     >
       <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-    </svg>
-  );
-}
-
-function MoveHorizontalIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="18 8 22 12 18 16" />
-      <polyline points="6 8 2 12 6 16" />
-      <line x1="2" x2="22" y1="12" y2="12" />
     </svg>
   );
 }
@@ -362,26 +327,6 @@ function PlusIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <path d="M5 12h14" />
       <path d="M12 5v14" />
-    </svg>
-  );
-}
-
-function XIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
     </svg>
   );
 }
