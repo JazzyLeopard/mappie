@@ -12,18 +12,30 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 function convertToMarkdown(content: Record<string, string>): Record<string, string> {
   const markdownContent: Record<string, string> = {};
+
   for (const [key, value] of Object.entries(content)) {
+    // Capitalize the key for display purposes
+    const formattedKey = key.charAt(0).toUpperCase() + key.slice(1);
+
+    // Format the content based on the key
     if (key === 'title') {
-      markdownContent[key] = value;
+      markdownContent[key] = value.trim(); // Keep title as is
     } else {
-      const lines = value.split('\n');
-      if (lines.length > 1) {
-        markdownContent[key] = `# ${key.charAt(0).toUpperCase() + key.slice(1)}\n\n${lines.map(line => `- ${line}`).join('\n')}`;
-      } else {
-        markdownContent[key] = `# ${key.charAt(0).toUpperCase() + key.slice(1)}\n\n${value}`;
+      // Prepare formatted content
+      let formattedValue = `**${formattedKey}:**\n\n${value.trim()}`;
+
+      // Handle specific formatting for goals and objectives or other sections
+      if (formattedKey === 'Goals and Objectives' || formattedKey === 'Key Stakeholders') {
+        const lines = value.split('\n').map(line => line.trim()).filter(line => line); // Split and trim lines
+        formattedValue += '\n\n' + lines.map((line, index) => `${index + 1}. ${line}`).join('\n'); // Numbered list
+      } else if (formattedKey === 'Current Situation' || formattedKey === 'Pain Points' || formattedKey === 'Opportunity') {
+        const lines = value.split('\n').map(line => line.trim()).filter(line => line); // Split and trim lines
+        formattedValue += '\n\n' + lines.join('\n\n'); // Separate paragraphs with double line breaks
       }
+      markdownContent[key] = formattedValue;
     }
   }
+
   return markdownContent;
 }
 
