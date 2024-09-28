@@ -54,10 +54,6 @@ const UseCasesLayout = ({
         }
     }, [useCases, activeUseCase]);
 
-    const handleRouteBack = () => {
-        router.push(`/projects/${projectId}`);
-    };
-
     const handleGenerateUseCases = async () => {
         if (useCases?.length > 0) {
             console.log('Use cases already exists, skipping generation...');
@@ -73,6 +69,26 @@ const UseCasesLayout = ({
             });
             const newContent = response.data.useCases;
             console.log('Generated use cases:', response.data.useCases);
+
+        } catch (error) {
+            console.error("Failed to generate use cases:", error);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleGenerateSingleUseCase = async () => {
+        setIsGenerating(true);
+        try {
+            const token = await getToken({ template: "convex" });
+            const response = await axios.post('/api/use-cases/single', { projectId }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log("Response from API:", response, response?.data);
+
         } catch (error) {
             console.error("Failed to generate use cases:", error);
         } finally {
@@ -99,7 +115,7 @@ const UseCasesLayout = ({
                                         className="w-full rounded-xl gap-2 h-10 bg-gradient-to-r from-blue-400 to-pink-400"
                                         variant="default"
                                         size="sm"
-                                        onClick={handleGenerateUseCases}
+                                        onClick={handleGenerateSingleUseCase}
                                         disabled={isGenerating}
                                     >
                                         <AiGenerationIconWhite />
