@@ -232,8 +232,6 @@ export const updateProject = mutation({
 
     const finalUpdates = { ...updates, onboarding };
 
-    console.log("finalUpdates", finalUpdates)
-
     await ctx.db.patch(_id, { ...finalUpdates, updatedAt: BigInt(Date.now()) });
 
     const finalProject = await ctx.db.get(_id);

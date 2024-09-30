@@ -22,13 +22,18 @@ function convertToMarkdown(content: Record<string, string>): Record<string, stri
       markdownContent[key] = value.trim(); // Keep title as is
     } else {
       // Prepare formatted content
-      let formattedValue = `**${formattedKey}:**\n\n${value.trim()}`;
+      let formattedValue = `${formattedKey}:\n\n${value.trim()}`;
 
       // Handle specific formatting for goals and objectives or other sections
       if (formattedKey === 'Goals and Objectives' || formattedKey === 'Key Stakeholders') {
         const lines = value.split('\n').map(line => line.trim()).filter(line => line); // Split and trim lines
         formattedValue += '\n\n' + lines.map((line, index) => `${index + 1}. ${line}`).join('\n'); // Numbered list
-      } else if (formattedKey === 'Current Situation' || formattedKey === 'Pain Points' || formattedKey === 'Opportunity') {
+      }
+      if (formattedKey === 'Current Situation' || formattedKey === 'Pain Points' || formattedKey === 'Opportunity') {
+        const lines = value.split('\n').map(line => line.trim()).filter(line => line); // Split and trim lines
+        formattedValue += '\n\n' + lines.join('\n\n'); // Separate paragraphs with double line breaks
+      }
+      if (formattedKey === 'Features In' || formattedKey === 'Features Out') {
         const lines = value.split('\n').map(line => line.trim()).filter(line => line); // Split and trim lines
         formattedValue += '\n\n' + lines.join('\n\n'); // Separate paragraphs with double line breaks
       }
@@ -40,7 +45,8 @@ function convertToMarkdown(content: Record<string, string>): Record<string, stri
 }
 
 function extractJSONFromResponse(response: string): string {
-  const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+  // const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+  const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
   return jsonMatch ? jsonMatch[1] : response;
 }
 
@@ -58,11 +64,12 @@ export default async function handler(
     try {
       const relevantPrompts = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
       const promptWithPropertyInstructions = `Generate a project based on the following description: ${prompt}. 
+      Ensure the response is in valid JSON format with double-quoted property keys being bold and values also ensure that the generated response follows the exact example template as given in the ${ideatePrompts} for each field. 
       For each field, use the following instructions:
       ${relevantPrompts.map(key => `For ${key}: ${ideatePrompts[key]}`).join('\n')}
-      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
+      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.Don't add "overview", "problemStatement", "userPersonas", "featuresInOut" as headings on the top or start of the data.`;
 
-
+      console.log("Calling OpenAi Api...");
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -70,11 +77,15 @@ export default async function handler(
           { role: "user", content: promptWithPropertyInstructions }
         ],
       });
+      console.log("OpenAi response received");
+
 
       let generatedContent;
       try {
         const jsonString = extractJSONFromResponse(completion.choices[0].message.content || '{}');
         generatedContent = JSON.parse(jsonString);
+
+        console.log('Parsed data:', JSON.stringify(generatedContent, null, 2))
       } catch (parseError) {
         console.error('Error parsing AI response:', parseError);
         console.log('Raw AI response:', completion.choices[0].message.content);
