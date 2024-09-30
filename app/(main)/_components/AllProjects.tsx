@@ -18,7 +18,6 @@ import { useState, useEffect } from "react";
 import { toast } from 'sonner';
 
 export default function Component() {
-
   const projects = useQuery(api.projects.getProjects);
   const { user } = useUser();
   const router = useRouter();
@@ -29,12 +28,12 @@ export default function Component() {
   const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
   const archiveProject = useMutation(api.projects.archiveProject);
 
-
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+
   const createProject = useMutation(api.projects.createProject);
 
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
   useEffect(() => {
     const updateSelectedProject = () => {
       const pathParts = pathname?.split('/') || [];
@@ -89,9 +88,6 @@ export default function Component() {
 
       toast.success("Project created. Generating details...");
 
-      // Navigate to the new project
-      router.push(`/projects/${projectId}`);
-
       // Phase 2: Generate and populate project details
       const response = await fetch('/api/ideate', {
         method: 'POST',
@@ -101,7 +97,6 @@ export default function Component() {
         body: JSON.stringify({ prompt: aiPrompt, projectId }),
       });
 
-
       if (!response.ok) {
         throw new Error('Failed to generate project details');
       }
@@ -110,6 +105,9 @@ export default function Component() {
       }
 
       toast.success("Project details generated successfully!");
+
+      // Navigate to the new project
+      router.push(`/projects/${projectId}`);
     } catch (error) {
       console.error('Error generating project:', error);
       toast.error("Failed to generate project. Please try again.");
@@ -133,7 +131,7 @@ export default function Component() {
 
           </div>
           <div className="flex items-center space-x-2 mb-6">
-            <Button variant="outline" onClick={onCreate}>
+            <Button variant="outline" id="create-new-button" onClick={onCreate}>
               <PlusIcon className="mr-2 w-4 h-4" />
               <p className="mr-4">Create new</p>
             </Button>
@@ -158,7 +156,6 @@ export default function Component() {
                 </div>
               </PopoverContent>
             </Popover>
-
           </div>
           <div className="flex items-center mb-6">
             <Button
