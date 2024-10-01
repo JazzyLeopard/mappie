@@ -8,10 +8,13 @@
 import '@/app/custom.css';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { Epic, MenuItemType, Project } from "@/lib/types";
-import { Presentation, Rocket, X } from "lucide-react";
-import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Spinner from '@/components/ui/spinner';
+import { api } from '@/convex/_generated/api';
+import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import type { MenuItemType, Project } from "@/lib/types";
+import { useQuery } from 'convex/react';
+import { Presentation, Rocket, X } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LabelToInput from "../LabelToInput";
@@ -28,7 +31,14 @@ interface CommonLayoutProps {
     mandatoryFields?: string[];
 }
 
-const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle = true, mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"] }: CommonLayoutProps) => {
+const CommonLayout = ({
+    data,
+    menu,
+    onEditorBlur,
+    handleEditorChange,
+    showTitle = true,
+    mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"]
+}: CommonLayoutProps) => {
 
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -36,8 +46,8 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
     const [showAlert, setShowAlert] = useState(false);
     const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [isFrGenerated, setIsFrGenerated] = useState(false)
     const router = useRouter();
-
 
     useEffect(() => {
         if (!activeSection && menu.length > 0) {
@@ -55,6 +65,15 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
         setIsGenerateButtonActive(allFieldsHaveContent);
     }, [data]);
 
+    // Check if the functional requirements are already generated
+    const checkFunctionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId: data._id });
+
+    useEffect(() => {
+        if (checkFunctionalRequirements && checkFunctionalRequirements?.content) {
+            setIsFrGenerated(true); // Disable button if already generated
+        }
+    }, [checkFunctionalRequirements]);
+
     const togglePresentationMode = () => {
         setIsPresentationMode(!isPresentationMode);
     };
@@ -69,10 +88,16 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
         setIsConfirmModalOpen(true);
     };
 
-    const confirmGenerateFR = () => {
+    const confirmGenerateFR = async () => {
         setIsConfirmModalOpen(false);
-        // Navigate to the Functional Requirements page and trigger generation
-        router.push(`/projects/${data._id}/functional-requirements?generate=true`);
+
+        try {
+            // Navigate to the Functional Requirements page and trigger generation\
+            await router.push(`/projects/${data._id}/functional-requirements?generate=true`);
+        }
+        catch (error) {
+            console.log("Error routing", error)
+        }
     };
     // console.log("Current data in CommonLayout:", data);
 
@@ -112,10 +137,10 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
                     <Button
                         className="gap-2"
                         onClick={handleGenerateFR}
-                        disabled={!isGenerateButtonActive}
+                        disabled={!isGenerateButtonActive || isFrGenerated}
                     >
                         <AiGenerationIconWhite />
-                        Generate Functional Requirements
+                        {isFrGenerated ? "Functional Requirements Generated" : "Generate Functional Requirements"}
                     </Button>
                     <Button
                         className="bg-white text-black border border-gray-300 hover:bg-gray-200"
@@ -137,7 +162,9 @@ const CommonLayout = ({ data, menu, onEditorBlur, handleEditorChange, showTitle 
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
-                        <Button onClick={confirmGenerateFR}>Confirm</Button>
+                        <Button onClick={confirmGenerateFR}>
+                            Confirm
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

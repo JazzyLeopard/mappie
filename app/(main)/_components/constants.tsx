@@ -331,7 +331,7 @@ export const placeholders = {
 };
 
 export const ideatePrompts: { [key: string]: string } = {
-    overview: `Based on the project idea, create a comprehensive project overview. Include this important points- a concise yet informative project description, 3-5 specific and measurable project goals and objectives, and identify key stakeholders. Consider industry trends, potential impact, and unique value propositions in your overview and don't use heading 1 and 2   
+    overview: `Based on the project idea, create a comprehensive project overview. Include this important points- a concise yet informative project description, 3-5 specific and measurable project goals and objectives, and key stakeholders. Consider industry trends, potential impact, and unique value propositions in your overview and don't use heading 1 and 2   
     
     Follow this exact example template:
     **Description**: MindMap is a comprehensive mobile application designed to support individuals in managing their mental health and practicing mindfulness. With tailored resources, community support, and interactive tools, users can track their emotions, access guided meditations, and cultivate emotional resilience in a time-efficient manner.\n
@@ -381,43 +381,43 @@ export const ideatePrompts: { [key: string]: string } = {
 
     **Typical Day**: Alex spends most of his day in meetings, juggling work deadlines, and interacting with clients. In his free time, he tries to stay active with workouts but struggles to maintain a mindfulness routine.\n
     
-    **Interaction with Product**: Alex will use MindMap to track his mood and receive personalized wellness tips. He will benefit from guided meditations during work breaks and the daily reminders to focus on mindfulness.\n\n
+    **Interaction with Product**: Alex will use MindMap to track his mood and receive personalized wellness tips. He will benefit from guided meditations during work breaks and the daily reminders to focus on mindfulness.\n
 
     [Repeat this structure for secondary users] `,
 
-    featuresInOut: `For the project, create a comprehensive feature list. Divide this into "Features In" (included in this version) and "Features Out" (explicitly not included). For Features In, describe each feature concisely but clearly, focusing on user benefits with bold styling on "user benefits". Aim for 3-5 key features that directly address the pain points identified in the Problem Statement and align with the project goals. For Features Out, briefly explain the rationale for exclusion with bold styling on "rationale for exclusion". This could include features that are out of scope, technically challenging, or planned for future versions. Ensure the feature set aligns with project goals, user needs, and the defined success metrics. 
+    featuresInOut: `For the project, create a comprehensive feature list. Divide this into "Features In" (included in this version) and "Features Out" (explicitly not included). For Features In, describe each feature concisely but clearly, focusing on user benefits. Aim for 3-5 key features that directly address the pain points identified in the Problem Statement and align with the project goals. For Features Out, briefly explain the rationale for exclusion. This could include features that are out of scope, technically challenging, or planned for future versions. Ensure the feature set aligns with project goals, user needs, and the defined success metrics. 
 
     Here is the example template:
     ### Features In-\n
-    **1.Mood Tracker**: A simple tool allowing users to log their daily emotions and mental state, helping them identify patterns and triggers.\n
-    **User benefit**: Helps users become more self-aware and track their mental health over time.\n\n
-\n
-    **2.Guided Meditations**: A library of audio-guided mindfulness exercises, categorized by goals like stress relief, sleep, and focus.\n
-    **User benefit**: Provides easy access to mindfulness exercises for specific needs and helps users integrate meditation into their routine.\n\n
+    **1. Mood Tracker**: A simple tool allowing users to log their daily emotions and mental state, helping them identify patterns and triggers.\n
+    **User benefit**: Helps users become more self-aware and track their mental health over time.\n
 
-    **3.Personalized Wellness Plans**: Tailored plans based on the user’s mood tracker and mental wellness goals.\n
-    **User benefit**: Offers a customized roadmap for mental health improvement, making it easier for users to start and stick with a wellness routine.\n\n
+    **2. Guided Meditations**: A library of audio-guided mindfulness exercises, categorized by goals like stress relief, sleep, and focus.\n
+    **User benefit**: Provides easy access to mindfulness exercises for specific needs and helps users integrate meditation into their routine.\n
 
-    **4.Community Support Groups**: Virtual spaces where users can connect with like-minded individuals, share their experiences, and support each other.\n
-    **User benefit**: Builds a sense of community and reduces feelings of isolation, especially for those seeking peer support.\n\n
+    **3. Personalized Wellness Plans**: Tailored plans based on the user’s mood tracker and mental wellness goals.\n
+    **User benefit**: Offers a customized roadmap for mental health improvement, making it easier for users to start and stick with a wellness routine.\n
 
-    **5.Daily Mindfulness Reminders**: Push notifications encouraging users to take mindful breaks or engage in wellness activities throughout the day.\n
-    **User benefit**: Keeps mindfulness practices top of mind and integrates them into daily life.\n\n
+    **4. Community Support Groups**: Virtual spaces where users can connect with like-minded individuals, share their experiences, and support each other.\n
+    **User benefit**: Builds a sense of community and reduces feelings of isolation, especially for those seeking peer support.\n
+
+    **5. Daily Mindfulness Reminders**: Push notifications encouraging users to take mindful breaks or engage in wellness activities throughout the day.\n
+    **User benefit**: Keeps mindfulness practices top of mind and integrates them into daily life.\n
 
     ### Features Out-\n
-    **1.In-Person Therapy Booking**: Not included in the initial version to focus on self-guided resources.\n
-    **Rationale for exclusion**: Adding therapy services would require significant additional resources and partnerships, which can be considered for future \nversions.\n
+    **1. In-Person Therapy Booking**: Not included in the initial version to focus on self-guided resources.\n
+    **Rationale for exclusion**: Adding therapy services would require significant additional resources and partnerships, which can be considered for future versions.\n
 
-    **2.Extensive Customization Options**: Simplified user interface without overwhelming customization options.\n
-    **Rationale for exclusion**: Keeping the app user-friendly and streamlined is essential for the target demographic.\n\n
+    **2. Extensive Customization Options**: Simplified user interface without overwhelming customization options.\n
+    **Rationale for exclusion**: Keeping the app user-friendly and streamlined is essential for the target demographic.\n
 
-    **3.Social Media Integration**: Direct sharing on social media is not included to prioritize privacy.\n
-    **Rationale for exclusion**: Focusing on personal mental wellness rather than public sharing supports user privacy and reduces external pressure.\n\n
+    **3. Social Media Integration**: Direct sharing on social media is not included to prioritize privacy.\n
+    **Rationale for exclusion**: Focusing on personal mental wellness rather than public sharing supports user privacy and reduces external pressure.\n
 
-    **4.Complex Analytics**: Detailed insights and analytics are not included at launch.\n
-    **Rationale for exclusion**: Initially, the focus is on encouraging engagement with basic tracking, with more complex features to be developed later.\n\n
+    **4. Complex Analytics**: Detailed insights and analytics are not included at launch.\n
+    **Rationale for exclusion**: Initially, the focus is on encouraging engagement with basic tracking, with more complex features to be developed later.\n
 
-    **5.Multilingual Support**: The app will launch only in English.\n
+    **5. Multilingual Support**: The app will launch only in English.\n
     **Rationale for exclusion**: Resources for translation and support across multiple languages will be developed based on user demand in future iterations.
 `,
 
