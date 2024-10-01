@@ -57,6 +57,7 @@ Format the output as follows:
 - Each requirement should be presented as an H3 heading (### Requirement ID: ID).
 - Follow each heading with the details of the requirement, including the description, priority, and traceability.
 - Ensure that the requirements are ordered from most important to least important.
+- Ensure that all the elements are indented and aligned properly for each element - Title, Requirement, Priority and Traceability.
 - Use plain language that anyone can understand. 
 - If the input is too short or missing key points, add suggestions to make a complete list. 
 - If the requirements can be made more granular by splitting them up, please do so.
@@ -67,7 +68,7 @@ Do not include any main headings or titles at the top of the output. Provide the
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
+      temperature: 0.7,
     });
     console.log('OpenAI API response received');
 
