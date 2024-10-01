@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Spinner from '@/components/ui/spinner';
 
 interface FRLayoutProps {
     projectId: Id<"projects">;
@@ -109,7 +110,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     }
 
     const confirmGenerate = async () => {
-        router.push(`/projects/${projectId}/${confirmationModal}?generate=true`);
+        <Spinner size={"lg"} />
+        await router.push(`/projects/${projectId}/${confirmationModal}?generate=true`);
     }
 
     return (
@@ -132,7 +134,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         <DropdownMenuItem onClick={() => handleGenerateClick('use-cases')}>Use case</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleGenerateClick('epics')}>Epics</DropdownMenuItem>
                     </DropdownMenuContent>
-                 </DropdownMenu>) : '' }
+                </DropdownMenu>) : ''}
             </div>
 
             <Dialog open={confirmationModal != null} onOpenChange={() => setConfirmationModal}>
@@ -186,19 +188,19 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             </Button>
                         </div>
                     ) :
-                    (
-                        <FREditorList
-                        projectId={projectId}
-                        frId={frId}
-                        content={content}
-                        onEditorChange={onEditorChange}
-                        onOpenBrainstormChat={handleOpenBrainstormChat}
-                        propertyPrompts={propertyPrompts}
-                        onEditorBlur={async () => {
-                            // Implement if needed
-                        }}
-                    />
-                    )
+                        (
+                            <FREditorList
+                                projectId={projectId}
+                                frId={frId}
+                                content={content}
+                                onEditorChange={onEditorChange}
+                                onOpenBrainstormChat={handleOpenBrainstormChat}
+                                propertyPrompts={propertyPrompts}
+                                onEditorBlur={async () => {
+                                    // Implement if needed
+                                }}
+                            />
+                        )
                 }
             </div>
         </div>

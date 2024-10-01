@@ -64,10 +64,10 @@ export default async function handler(
     try {
       const relevantPrompts = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
       const promptWithPropertyInstructions = `Generate a project based on the following description: ${prompt}. 
-      Ensure the response is in valid JSON format with double-quoted property keys being bold and values also ensure that the generated response follows the exact example template as given in the ${ideatePrompts} for each field. 
+      Ensure the response is in valid JSON format with double-quoted property keys being bold and values also ensure that the generated response follows the exact example template with each attribute as given in the ${ideatePrompts} for each field. 
       For each field, use the following instructions:
       ${relevantPrompts.map(key => `For ${key}: ${ideatePrompts[key]}`).join('\n')}
-      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.Don't add "overview", "problemStatement", "userPersonas", "featuresInOut" as headings on the top or start of the data.`;
+      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       console.log("Calling OpenAi Api...");
       const completion = await openai.chat.completions.create({
