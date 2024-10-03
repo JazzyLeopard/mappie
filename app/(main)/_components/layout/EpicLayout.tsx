@@ -313,7 +313,7 @@ export default function EpicLayout({
                               <div className="flex-grow flex items-center space-x-4" onClick={(e) => handleEpicTitleClick(epic._id, e)}>
                                 <PackageIcon className="h-4 w-4" />
                                 <p className="text-sm font-semibold cursor-pointer">
-                                  {epic.name}
+                                  {epic.name.length > 13 ? `${epic.name.substring(0, 13)}...` : epic.name}
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2">
