@@ -260,7 +260,7 @@ export default async function handler(
 }`;
 
     // Update the prompt to request a JSON response
-    const singleUseCasePrompt = `Create one unique additional use case based on the following project details- ${projectDetails}, functional requirements- ${functionalRequirementsText}, and existing usecases-${useCasesText} generate the use case using this format- ${basePrompt}. If no additional use case is needed and the existing use cases suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading h1 and h2 in the Markdown.
+    const singleUseCasePrompt = `Based on the following project details- ${projectDetails}, functional requirements- ${functionalRequirementsText}, and existing usecases-${useCasesText} generate one more use case using this format- ${basePrompt}. If no additional use case is needed and the existing use cases suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading h1 and h2 in the Markdown.
     `;
 
     console.log('Calling OpenAI API...');
@@ -278,6 +278,19 @@ export default async function handler(
 
     console.log('Parsing OpenAI response...');
 
+    // Handle 'NULL' response
+    if (content.trim() === 'NULL') {
+      console.log('AI determined that no new use case is needed.');
+      return res.status(200).json({ message: 'NULL' });  // Send 'NULL' to the UI
+    }
+
+    // Utility function to handle BigInt serialization
+    const serializeBigInt = (obj: any) => {
+      return JSON.parse(JSON.stringify(obj, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    };
+
     let generatedUseCase;
     const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
     if (jsonMatch) {
@@ -286,23 +299,26 @@ export default async function handler(
 
       console.log('Parsed use cases:', JSON.stringify(generatedUseCase, null, 2));
 
-      if (generatedUseCase && generatedUseCase?.description) {
+      if (generatedUseCase && generatedUseCase[0]?.description) {
         const formattedDescription = convertDescriptionToMarkdown
-          (generatedUseCase?.description)
+          (generatedUseCase[0]?.description)
 
         let useCaseId = await convex.mutation(api.useCases.createUseCase, {
           projectId: convexProjectId,
-          title: generatedUseCase?.title || "Untitled Use Case",
+          title: generatedUseCase[0]?.title || "Untitled Use Case",
           description: formattedDescription
         })
-        generatedUseCase['id'] = useCaseId
+        generatedUseCase[0]['id'] = useCaseId
+
+        const serializedUseCase = serializeBigInt(useCaseId);
+        console.log("use case id", serializedUseCase);
       }
     } else {
       console.warn('Skipping invalid use case:', generatedUseCase);
     }
     console.log('Use cases created successfully');
 
-    res.status(200).json({ useCases: generatedUseCase, markdown: convertDescriptionToMarkdown(generatedUseCase[0]?.description || {}) });
+    res.status(200).json({ useCases: serializeBigInt(generatedUseCase), markdown: convertDescriptionToMarkdown(generatedUseCase[0]?.description || {}) });
   }
   catch (error) {
     console.error('Detailed error:', error);
