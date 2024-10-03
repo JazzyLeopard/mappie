@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from 'react';
 import UCEditorList from "./UCEditorList";
+import { toast } from "sonner";
 
 interface UseCasesLayoutProps {
     projectId: Id<"projects">;
@@ -31,10 +32,10 @@ const UseCasesLayout = ({
     useCases,
     isOnboardingComplete
 }: UseCasesLayoutProps) => {
-    const [activeUseCase, setActiveUseCase] = useState<string | null>(null);
     const router = useRouter();
-    const [isGenerating, setIsGenerating] = useState(false);
     const { getToken } = useAuth();
+    const [activeUseCase, setActiveUseCase] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
     const [isPresentationMode, setIsPresentationMode] = useState(false);
 
     const searchParams = useSearchParams();
@@ -87,10 +88,21 @@ const UseCasesLayout = ({
                 }
             });
 
-            console.log("Response from API:", response, response?.data);
+            const useCaseData = response?.data?.useCase?.[0]
+
+            console.log("use case data:", useCaseData);
+            console.log("use case id:", useCaseData?.id);
+
+            if (useCaseData === 'NULL') {
+                toast.success("No additional use case needed")
+            }
+            else {
+                toast.success("New use case generated")
+            }
 
         } catch (error) {
             console.error("Failed to generate use cases:", error);
+            toast.error("Failed to generate the use case. Please try again")
         } finally {
             setIsGenerating(false);
         }

@@ -8,13 +8,16 @@ export const createUseCase = mutation({
     description: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("useCases", {
+    const useCaseId = await ctx.db.insert("useCases", {
       projectId: args.projectId,
       title: args.title,
       description: args.description,
       createdAt: BigInt(Date.now()),
       updatedAt: BigInt(Date.now()),
     });
+
+    const useCase = await ctx.db.get(useCaseId)
+    return useCase;
   },
 });
 
@@ -26,10 +29,20 @@ export const getUseCasesByProjectId = query({
       .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .collect();
 
-      if (useCases?.length > 0) {
-        return useCases
-      } 
-      return [];
+    if (useCases?.length > 0) {
+      return useCases
+    }
+    return [];
+  },
+});
+
+export const getUseCases = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("useCases")
+      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .collect();
   },
 });
 
