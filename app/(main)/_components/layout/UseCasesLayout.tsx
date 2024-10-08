@@ -71,8 +71,10 @@ const UseCasesLayout = ({
             const newContent = response.data.useCases;
             console.log('Generated use cases:', response.data.useCases);
 
+            toast.success("New Use Cases generated")
         } catch (error) {
             console.error("Failed to generate use cases:", error);
+            toast.error("Failed to generate the use case. Please try again")
         } finally {
             setIsGenerating(false);
         }
@@ -97,7 +99,7 @@ const UseCasesLayout = ({
                 toast.success("No additional use case needed")
             }
             else {
-                toast.success("New use case generated")
+                toast.success("New Use Case generated")
             }
 
         } catch (error) {

@@ -16,6 +16,7 @@ import { debounce } from "lodash"
 import { BookIcon, MoreVertical, PackageIcon, Plus, Trash } from "lucide-react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
+import React from "react"
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from "sonner"
 
@@ -38,18 +39,13 @@ export default function EpicLayout({
 }: EpicLayoutProps) {
 
   const [activeEpicId, setActiveEpicId] = useState<Id<"epics"> | null>(null);
-  const [selectedUserStoryId, setSelectedUserStoryId] = useState<Id<"userStories"> | null>(null);
+  const [activeUserStoryId, setActiveUserStoryId] = useState<Id<"userStories"> | null>(null);
 
   const [epicDetails, setEpicDetails] = useState<any>();
   const [userStoriesDetails, setUserStoriesDetails] = useState<any>();
 
-  const [currentSelectedItem, setCurrentSelectedItem] = useState<"epic" | "userStories" | null>(null)
-
-  // currentSelectedItem = epic | userstory
-  // on epic click / on us click -> set also currentSelectedItem -> epic | us
-  // display labeltoinput -> if epic = currentSelectedItem (top) else (bottom)
-
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isGeneratingUS, setIsGeneratingUS] = useState(false)
   const router = useRouter()
 
   const { getToken } = useAuth();
@@ -66,15 +62,13 @@ export default function EpicLayout({
   const selectedEpic = useQuery(api.epics.getEpicById,
     activeEpicId ? { epicId: activeEpicId } : "skip"
   )
-  // console.log("selected Epic", epicDetails);
 
   const selectedUserStory = useQuery(api.userstories.getUserStoryById,
-    selectedUserStoryId ? { userStoryId: selectedUserStoryId } : "skip"
+    activeUserStoryId ? { userStoryId: activeUserStoryId } : "skip"
   )
   // console.log("selected userstory", selectedUserStory);
 
   const updateEpicMutation = useMutation(api.epics.updateEpic);
-  const deleteEpic = useMutation(api.epics.deleteEpic)
 
   const createUserStory = useMutation(api.userstories.createUserStory)
   const updateUserStory = useMutation(api.userstories.updateUserStory)
@@ -95,10 +89,10 @@ export default function EpicLayout({
   }, [epics, activeEpicId])
 
   useEffect(() => {
-    if (userStories && userStories.length > 0 && !selectedUserStoryId) {
-      setSelectedUserStoryId(userStories[0]._id)
+    if (userStories && userStories.length > 0 && !activeUserStoryId) {
+      setActiveUserStoryId(userStories[0]._id)
     }
-  }, [userStories, selectedUserStoryId])
+  }, [userStories, activeUserStoryId])
 
   useEffect(() => {
     if (selectedEpic) {
@@ -107,10 +101,10 @@ export default function EpicLayout({
   }, [selectedEpic]);
 
   useEffect(() => {
-    if (userStories) {
-      setUserStoriesDetails(userStories);
+    if (selectedUserStory) {
+      setUserStoriesDetails(selectedUserStory);
     }
-  }, [userStories]);
+  }, [selectedUserStory]);
 
   const handleEditorBlur = async () => {
     try {
@@ -169,38 +163,38 @@ export default function EpicLayout({
   }, [handleUpdateUS]);
 
   const debouncedHandleEditorChangeForUS = useCallback(
-    debounce((_id: Id<"userStories">, field: string, value: any) => {
-      handleEditorChangeForUS(_id, field, value);
+    debounce((id: Id<"userStories">, field: string, value: any) => {
+      handleEditorChangeForUS(id, field, value);
     }, 1000),
     [handleEditorChangeForUS]
   );
 
   const handleGenerateEpics = async () => {
-    // if epics already exists, don't generate
-    if (epics?.length > 0) {
-      console.log('Epics already exists, skipping generation...');
-      return;
-    }
     setIsGenerating(true);
     try {
       const token = await getToken({ template: "convex" });
       const response = await axios.post('/api/epics', { projectId }, {
-        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
       });
 
+      console.log('Generated epics:', response?.data?.epics);
+
       if (response && response.data.epics) {
         response.data.epics.forEach((epic: any) => {
-          handleEditorChange(epic.id, 'name', epic.name);
-          handleEditorChange(epic.id, 'description', epic.description.description);
+          handleEditorChange(epic.id, 'name', epic?.name);
+          handleEditorChange(epic.id, 'description', epic?.description);
+          handleEditorChange(epic.id, 'description', epic?.description?.description);
+          handleEditorChange(epic.id, 'description', epic?.description?.business_value);
+          handleEditorChange(epic.id, 'description', epic?.description?.acceptance_criteria);
+          handleEditorChange(epic.id, 'description', epic?.description?.dependencies);
+          handleEditorChange(epic.id, 'description', epic?.description?.risks);
           console.log("Data saved for epics");
         });
       }
+      toast.success("Epics Generated")
 
-      console.log('Generated epics:', response.data);
     } catch (error) {
       console.error("Failed to generate epics:", error);
       toast.error("Failed to generate epics");
@@ -209,21 +203,131 @@ export default function EpicLayout({
     }
   };
 
+  const handleGenerateSingleEpic = async () => {
+    setIsGenerating(true);
+    try {
+      const token = await getToken({ template: "convex" });
+      const response = await axios.post('/api/epics/single', { projectId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+      const epicData = response?.data?.epics
+      console.log("Response from API:", response, response?.data);
+
+      if (response && epicData) {
+        response.data.epics.forEach((epic: any) => {
+          handleEditorChange(epic.id, 'name', epic?.name);
+          handleEditorChange(epic.id, 'description', epic?.description);
+          handleEditorChange(epic.id, 'description', epic?.description?.description);
+          handleEditorChange(epic.id, 'description', epic?.description?.business_value);
+          handleEditorChange(epic.id, 'description', epic?.description?.acceptance_criteria);
+          handleEditorChange(epic.id, 'description', epic?.description?.dependencies);
+          handleEditorChange(epic.id, 'description', epic?.description?.risks);
+          console.log("Data saved for epics");
+        });
+      }
+
+      if (epicData === 'NULL') {
+        toast.success("No additional epic needed")
+      }
+      else {
+        toast.success("New Epic generated")
+      }
+
+    } catch (error) {
+      console.error("Failed to generate epic:", error);
+      toast.error("Failed to generate epic. Please try again")
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleGenerateUserStories = async (epicId: Id<"epics">) => {
-    // Implement the logic to generate user stories for the given epic
-    console.log('Generating user stories for epic:', epicId)
-    // After generation, you might want to refresh the user stories list
+    setIsGeneratingUS(true);
+    try {
+      const token = await getToken({ template: "convex" });
+      const response = await axios.post('/api/userstories', { epicId, projectId }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      console.log('Generated userStories:', response?.data);
+
+      if (response && response?.data?.userStories) {
+        response.data.userStories.forEach((userStories: any) => {
+          handleEditorChangeForUS(userStories.id, 'title', userStories?.title);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.Description);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.acceptance_criteria);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.interface_elements);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.functional_flow);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.states_and_emptyStates);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.errorMessages_and_validation);
+          console.log("Data saved for epics");
+        });
+      }
+      toast.success("User Stories generated")
+
+    } catch (error) {
+      console.error("Failed to generate user Stories:", error);
+      toast.error("Failed to generate user Stories");
+    } finally {
+      setIsGeneratingUS(false);
+    }
   }
+
+  const handleGenerateSingleUserStory = async (epicId: Id<"epics">) => {
+    setIsGeneratingUS(true);
+    try {
+      const token = await getToken({ template: "convex" });
+      const response = await axios.post('/api/userstories/single', { epicId, projectId },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+      console.log("Response from API:", response, response?.data);
+
+      if (response && response?.data?.userStories) {
+        response.data.userStories.forEach((userStories: any) => {
+          handleEditorChangeForUS(userStories.id, 'title', userStories?.title);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.Description);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.acceptance_criteria);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.interface_elements);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.functional_flow);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.states_and_emptyStates);
+          handleEditorChangeForUS(userStories.id, 'description', userStories?.description?.errorMessages_and_validation);
+          console.log("Data saved for epics");
+        });
+      }
+
+      if (response?.data?.userStories === 'NULL') {
+        toast.success("No additional user story needed")
+      }
+      else {
+        toast.success("New User story generated")
+      }
+
+    } catch (error) {
+      console.error("Failed to generate user story:", error);
+    } finally {
+      setIsGeneratingUS(false);
+    }
+  };
 
   const handleEpicToggle = (epicId: Id<"epics">) => {
     setActiveEpicId(epicId);
-    setSelectedUserStoryId(null);
+    setActiveUserStoryId(null);
   };
 
   const handleEpicTitleClick = (epicId: Id<"epics">, event: React.MouseEvent) => {
     event.stopPropagation()
     setActiveEpicId(epicId)
-    setCurrentSelectedItem("epic")
     console.log("Epic Title clicked");
   }
 
@@ -234,7 +338,7 @@ export default function EpicLayout({
         title: "New User Story",
         description: ""
       })
-      setSelectedUserStoryId(newUserStoryId)
+      setActiveUserStoryId(newUserStoryId)
       console.log("new user story", newUserStoryId);
 
     }
@@ -247,8 +351,8 @@ export default function EpicLayout({
   const handleDeleteUserStory = async (userStoryId: Id<"userStories">) => {
     try {
       await deleteUserStory({ id: userStoryId })
-      if (selectedUserStoryId === userStoryId) {
-        setSelectedUserStoryId(null)
+      if (activeUserStoryId === userStoryId) {
+        setActiveUserStoryId(null)
       }
       toast.success("User story deleted successfully")
     } catch (error) {
@@ -258,9 +362,8 @@ export default function EpicLayout({
   }
 
   const handleUserStoryClick = (userStoryId: Id<"userStories">) => {
-    setSelectedUserStoryId(userStoryId)
+    setActiveUserStoryId(userStoryId)
     setActiveEpicId(null)
-    setCurrentSelectedItem("userStories")
     console.log("User story clicked");
   }
 
@@ -285,7 +388,7 @@ export default function EpicLayout({
                   <Plus className="h-4 w-4 mr-2" />
                   Add an Epic
                 </Button>
-                <Button variant="default" className="gap-2" onClick={handleGenerateEpics}
+                <Button variant="default" className="gap-2" onClick={handleGenerateSingleEpic}
                   disabled={isGenerating}>
                   <AiGenerationIconWhite />
                   {isGenerating ? "Generating..." : "Generate an Epic"}
@@ -307,8 +410,8 @@ export default function EpicLayout({
                         <div className={`rounded-md overflow-hidden ${activeEpicId === epic._id ? 'bg-slate-100 p-4' : ''}`}>
                           <CollapsibleTrigger className="w-full rounded-md hover:bg-slate-200">
                             <div
-                              className={`flex items-center p-4 group ${activeEpicId === epic._id && !selectedUserStoryId ?
-                                'bg-white rounded-md' : 'border border-slate-100 bg-transparent rounded-md'}`}
+                              className={`flex items-center p-4 group ${activeEpicId === epic._id && !activeUserStoryId ?
+                                'bg-white rounded-md' : 'border border-slate-100 bg-slate-200 rounded-md'}`}
                             >
                               <div className="flex-grow flex items-center space-x-4" onClick={(e) => handleEpicTitleClick(epic._id, e)}>
                                 <PackageIcon className="h-4 w-4" />
@@ -348,7 +451,7 @@ export default function EpicLayout({
                               {userStories?.filter(story => story.epicId === epic._id).map((story) => (
                                 <div
                                   key={story._id}
-                                  className={`flex items-center space-x-2 p-2 text-sm font-light rounded cursor-pointer group ${selectedUserStoryId === story._id ? 'bg-white font-bold' : 'hover:bg-slate-200'}`}
+                                  className={`flex items-center space-x-2 p-2 text-sm font-light rounded cursor-pointer group ${activeUserStoryId === story._id ? 'bg-white font-bold' : 'hover:bg-slate-200'}`}
                                 >
                                   <div className="flex-grow flex items-center space-x-2" onClick={() => handleUserStoryClick(story._id)}>
                                     <BookIcon className="h-4 w-4" />
@@ -373,20 +476,22 @@ export default function EpicLayout({
                               {userStories?.filter(story => story.epicId === epic._id).length === 0 ? (
                                 <Button
                                   variant="ghost"
+                                  disabled={isGeneratingUS}
                                   className="w-full bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl text-xs mt-2"
                                   onClick={() => handleGenerateUserStories(epic._id)}
                                 >
-                                  <p className="">Generate User Stories with AI</p>
+                                  {isGeneratingUS ? "Generating..." : "Generate User Stories with AI"}
                                 </Button>
                               ) : (
                                 <div className="flex flex-col items-center space-y-1">
                                   <Button
                                     variant="default"
-                                    className="w-full text-xs bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl space-x-2 mt-2 px-2"
-                                    onClick={handleCreateUserStory}
+                                    disabled={isGeneratingUS}
+                                    className="w-full text-xs bg-gradient-to-r from-blue-400 to-pink-400 text-white rounded-xl space-x-2 mt-2 px-2 ml-2"
+                                    onClick={() => handleGenerateSingleUserStory(epic._id)}
                                   >
                                     <AiGenerationIconWhite />
-                                    <p className="ml-2">Generate a User Story</p>
+                                    {isGeneratingUS ? "Generating..." : "Generate a User Story"}
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -405,27 +510,27 @@ export default function EpicLayout({
                   </div>
                 </aside>
                 <div className="flex-1 ml-1 p-4 pt-6 overflow-y-auto">
-                  {currentSelectedItem === "userStories" && selectedUserStoryId && selectedUserStory ? (
+                  {activeUserStoryId && selectedUserStory ? (
                     <div className="flex flex-col h-full">
                       <header className="flex items-center justify-between pb-3 w-full">
                         <LabelToInput
                           value={selectedUserStory?.title || ''}
-                          setValue={(newTitle) => handleUserStoryTitleChange(selectedUserStoryId, newTitle)}
+                          setValue={(newTitle) => handleUserStoryTitleChange(activeUserStoryId, newTitle)}
                           onBlur={() => { }}
                         />
                       </header>
                       <div className='flex-1 overflow-y-auto'>
                         <BlockEditor
-                          onBlur={() => onBlurForUS(selectedUserStoryId)}
+                          onBlur={() => onBlurForUS(activeUserStoryId)}
                           attribute="description"
                           projectDetails={selectedUserStory}
-                          setProjectDetails={(value) => debouncedHandleEditorChangeForUS(selectedUserStory._id, "description", value)}
+                          setProjectDetails={(value) => debouncedHandleEditorChangeForUS(activeUserStoryId, "description", value)}
                           onOpenBrainstormChat={() => {/* Open brainstorm chat */ }}
                           context='userStories'
                         />
                       </div>
                     </div>
-                  ) : currentSelectedItem === "epic" && activeEpicId && selectedEpic ? (
+                  ) : activeEpicId && selectedEpic ? (
                     <div className='flex flex-col h-full'>
                       <header className="flex items-center justify-between pb-4 w-full">
                         <LabelToInput
