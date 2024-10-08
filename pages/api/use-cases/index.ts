@@ -1,9 +1,8 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
 import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
-import { getAuth } from "@clerk/nextjs/server"; // Import getAuth
+import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import OpenAI from 'openai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
@@ -256,7 +255,7 @@ ${projectDetails}`;
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.1,
+      temperature: 0.7,
     });
     console.log('OpenAI API response received');
 
@@ -266,6 +265,14 @@ ${projectDetails}`;
     }
 
     console.log('Parsing OpenAI response...');
+
+    // Utility function to handle BigInt serialization
+    const serializeBigInt = (obj: any) => {
+      return JSON.parse(JSON.stringify(obj, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+      ));
+    };
+
     let generatedUseCases;
     try {
       // Extract JSON from Markdown code block
@@ -293,13 +300,17 @@ ${projectDetails}`;
           description: formattedDescription,
         });
         useCase['id'] = useCaseId
+
+        const serializedUseCase = serializeBigInt(useCaseId);
+        console.log("use case id", serializedUseCase);
+
       } else {
         console.warn('Skipping invalid use case:', useCase);
       }
     }
     console.log('Use cases created successfully');
 
-    res.status(200).json({ useCases: generatedUseCases, markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {}) });
+    res.status(200).json({ useCases: serializeBigInt(generatedUseCases), markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {}) });
   } catch (error) {
     console.error('Detailed error:', error);
     if (error instanceof Error) {

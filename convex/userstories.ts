@@ -5,24 +5,26 @@ export const createUserStory = mutation({
   args: {
     epicId: v.id("epics"),
     title: v.string(),
-    description: v.string(),
-    acceptanceCriteria: v.optional(v.string()),
-    interfaceElements: v.optional(v.string()),
-    states: v.optional(v.string()),
-    errorMessages: v.optional(v.string()),
-    inScope: v.optional(v.string()),
-    outOfScope: v.optional(v.string()),
-    accessibilityInfo: v.optional(v.string()),
-    functionalFlow: v.optional(v.string()),
+    description: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
-    const userStoryId = await ctx.db.insert("userStories", {
-      ...args,
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not Authenticated");
+    }
+
+    const userId = identity.subject;
+
+    const userStory = await ctx.db.insert("userStories", {
+      title: args.title,
+      description: "",
+      epicId: args.epicId,
       createdAt: BigInt(Date.now()),
       updatedAt: BigInt(Date.now()),
     });
-    return userStoryId;
+    return userStory;
   },
 });
 
@@ -61,14 +63,14 @@ export const getUserStories = query({
 
 export const getUserStoryById = query({
   args: { userStoryId: v.id("userStories") },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { userStoryId }) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
       throw new Error("Not Authenticated");
     }
 
-    if (!args.userStoryId) {
+    if (!userStoryId) {
       throw new Error("Project ID is required");
     }
 
@@ -76,7 +78,7 @@ export const getUserStoryById = query({
       .query("userStories")
       .filter((q) =>
         q.and(
-          q.eq(q.field("_id"), args.userStoryId)
+          q.eq(q.field("_id"), userStoryId)
         ),
       )
       .first()
