@@ -9,7 +9,6 @@ import '@/app/custom.css';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import Spinner from '@/components/ui/spinner';
 import { api } from '@/convex/_generated/api';
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import type { MenuItemType, Project } from "@/lib/types";
@@ -176,6 +175,7 @@ const CommonLayout = ({
                         activeSection={activeSection}
                         setActiveSection={setActiveSection}
                         mandatoryFields={mandatoryFields}
+                        projectId={data._id}
                     />
                 </div>
                 <div className="overflow-hidden">
