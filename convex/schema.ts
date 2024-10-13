@@ -58,5 +58,16 @@ export default defineSchema({
   })
     .index("by_epicId", ["epicId"]) // Index to query user stories by epicId
     .index("by_createdAt", ["createdAt"]), // Index to query user stories by creation time
+
+  documents: defineTable({
+    projectId: v.id("projects"), // Associate the document with a project
+    storageId: v.id("_storage"),
+    filename: v.string(), // Store the file name
+    summarizedContent: v.string(), // Store the summarized content
+    createdAt: v.int64(), // Storing timestamp as bigint
+    updatedAt: v.int64(), // Storing timestamp as bigint
+  })
+    .index("by_projectId", ["projectId"]) // Index to query documents by projectId  
+    .index("by_createdAt", ["createdAt"]), // Index to query epics by creation time
 });
 
