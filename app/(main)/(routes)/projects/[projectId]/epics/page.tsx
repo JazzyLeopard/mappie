@@ -22,7 +22,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     const updateEpic = useMutation(api.epics.updateEpic)
     const deleteEpic = useMutation(api.epics.deleteEpic)
 
-
     useEffect(() => {
         if (epics && epics?.length > 0) {
             setContent(epics);
@@ -59,6 +58,9 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         }
     }, [deleteEpic]);
 
+    const handleEditorBlur = async () => {
+        // Implement if needed
+    }
 
     if (epics === undefined) {
         return <Spinner size={"lg"} />;
@@ -70,6 +72,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
             handleEditorChange={handleEditorChange}
             onAddEpics={handleCreateEpic}
             onDeleteEpic={handleDeleteEpic}
+            onEditorBlur={handleEditorBlur}
             onEpicNameChange={handleEpicNameChange}
             epics={content || []}
         />
