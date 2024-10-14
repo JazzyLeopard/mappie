@@ -1,11 +1,14 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Id } from '@/convex/_generated/dataModel';
+import { api } from '@/convex/_generated/api';
 import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
-import { InfoIcon } from 'lucide-react';
+import { useMutation, useQuery } from 'convex/react';
+import { InfoIcon, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import Dropzone from "react-dropzone";
 import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 
 interface ContextProps {
     projectId: Id<"projects">
@@ -15,42 +18,57 @@ export default function Component({ projectId }: ContextProps) {
 
     const { getToken } = useAuth();
     const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [uploadedFiles, setUploadedFiles] = useState<{ name: string, size: number }[]>([])
+    const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
+
+    const referenceDocs = useQuery(api.documents.getDocuments, { projectId: projectId })
+    console.log("Reference Docs", referenceDocs);
+
 
     const onDropRejected = () => { }
+
     const onDropAccepted = async (acceptedFiles: File[]) => {
-        console.log("File accepted");
         setIsUploading(true)
+        setUploadProgress(0);
 
         acceptedFiles.forEach(async (file) => {
             // Create a new FormData object to hold the file
             const formData = new FormData();
             formData.append('file', file);
-            formData.append("projectId", projectId)
-            console.log(projectId, typeof (projectId));
             console.log(file)
 
+
             try {
-                // Send the file to the backend API
                 const token = await getToken({ template: "convex" });
-                const response = await axios.post('/api/upload', formData, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
+
+                const postUrl = await generateUploadUrl();
+                const result = await fetch(postUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": file!.type },
+                    body: file,
                 });
+                const { storageId } = await result.json();
+                console.log("result", result)
+
+                setUploadProgress(45)
+
+                const summarizedRes = await axios.post('/api/generate/summary', { projectId, storageId, filename: file.name }, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
 
                 // Check if the API response is successful
-                if (response.status === 200) { // Adjusted this to check the HTTP status directly
-                    console.log("API Response: ", response.data);
-                    toast.success("File processed and uploaded");
+                if (summarizedRes.status === 200) {
+                    console.log("API Response: ", summarizedRes.data);
 
-                    // Log the extracted content from the file
-                    console.log("Summarized content:", response.data.summarizedContent);
+                    toast.success("File uploaded successfully")
 
                     // Update the uploaded files state
                     setUploadedFiles(prevFiles => [...prevFiles, { name: file.name, size: file.size }]);
                 } else {
-                    toast.error("File upload failed: " + response?.data?.message || "Unknown error");
+                    toast.error("File upload failed: " + summarizedRes?.data?.message || "Unknown error");
                 }
             } catch (error) {
                 console.error("Error uploading file: ", error);
@@ -98,14 +116,24 @@ export default function Component({ projectId }: ContextProps) {
                         >
                             <input {...getInputProps()} />
 
-                            <div className="space-y-1">
-                                <CloudUploadIcon className="mx-auto h-5 w-5 text-primary" />
-                                <h3 className="text-xs font-medium">Upload files</h3>
-                                <p className="text-xs text-muted-foreground">
-                                    Drag & drop or <button type="button" className="font-medium underline underline-offset-2">browse</button>
-                                </p>
-                                <p className="text-xs text-muted-foreground">PDF, Word (.doc, .docx)</p>
-                            </div>
+                            {isUploading && (
+                                <div className="flex flex-col items-center">
+                                    <Loader2 className="animate-spin h-6 w-6 text-zinc-500 mb-2" />
+                                    <p className='text-xs font-medium'>Uploading...</p>
+                                    <Progress value={uploadProgress} className='w-40 mt-2 h-2 bg-gray-300 ' />
+                                </div>
+                            )}
+
+                            {!isUploading && (
+                                <div className="space-y-1">
+                                    <CloudUploadIcon className="mx-auto h-5 w-5 text-primary" />
+                                    <h3 className="text-xs font-medium">Upload files</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        Drag & drop or <button type="button" className="font-medium underline underline-offset-2">browse</button>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">PDF, Word (.doc, .docx)</p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </Dropzone>
