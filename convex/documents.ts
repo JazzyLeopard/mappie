@@ -1,30 +1,26 @@
 
-import { action } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
-export const storeFile = action({
-    args: {
-        fileBuffer: v.string(), // Assuming fileBuffer is a base64-encoded string
-    },
+export const generateUploadUrl = mutation(async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+});
+
+export const getStorageById = query({
+    args: { storageId: v.id("_storage") },
     handler: async (ctx, args) => {
-        // Convert the base64-encoded string into a binary Buffer
-        const binaryData = Uint8Array.from(atob(args.fileBuffer), (c) => c.charCodeAt(0));
-
-        // Convert the Buffer into a Blob (required by ctx.storage.store)
-        const blob = new Blob([binaryData]);
-
-        // Store the file in Convex storage
-        const storageId: Id<"_storage"> = await ctx.storage.store(blob);
-
-        console.log("File stored in Convex storage with storageId:", storageId);
-
-        // Return the storageId to the frontend
-        return storageId;
+        return await ctx.db.system.query("_storage")
+            .filter((q) => q.eq(q.field("_id"), args.storageId))
+            .first();
     },
 });
 
+export const getStorageURL = query({
+    args: { storageId: v.id("_storage") },
+    handler: async (ctx, args) => {
+        return await ctx.storage.getUrl(args.storageId)
+    },
+});
 
 export const saveDocument = mutation({
     args: {
@@ -49,11 +45,23 @@ export const saveDocument = mutation({
             updatedAt: BigInt(Date.now()),
         });
 
-        console.log("Document saved", document);
-
         return document;
     },
 });
 
+export const getDocuments = query({
+    args: { projectId: v.id("projects") },
+
+    handler: async (ctx, args) => {
+
+        const documents = await ctx.db
+            .query("documents")
+            .filter((q) => q.eq(q.field("projectId"), args.projectId),
+            )
+            ?.collect();
+
+        return documents;
+    },
+});
 
 
