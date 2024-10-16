@@ -22,10 +22,6 @@ export default function Component({ projectId }: ContextProps) {
     const [uploadedFiles, setUploadedFiles] = useState<{ name: string, size: number }[]>([])
     const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
 
-    const referenceDocs = useQuery(api.documents.getDocuments, { projectId: projectId })
-    console.log("Reference Docs", referenceDocs);
-
-
     const onDropRejected = () => { }
 
     const onDropAccepted = async (acceptedFiles: File[]) => {

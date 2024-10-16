@@ -1,7 +1,10 @@
 // pages/api/projects/index.ts
+import { useContextChecker } from '@/utils/useContextChecker';
+import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from "openai"
+import OpenAI from "openai";
 
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -15,12 +18,26 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader && authHeader.split(' ')[1];
+
+  if (!authToken) {
+    return res.status(401).json({ message: 'No authentication token provided' });
+  }
+
+  convex.setAuth(authToken);
+
   const { type, data, instructions, projectDetails } = req.body;
+
+  const projectId = projectDetails?._id
+  console.log(projectId);
+
+  const context = await useContextChecker({ projectId })
+  console.log("context", context);
 
   console.log("type", type);
   console.log("type", data);
   console.log("type", instructions);
-
 
   // Validate the request body contains all required fields
   if (!type || !instructions || !projectDetails) {
@@ -37,7 +54,7 @@ export default async function handler(
   };
 
   try {
-    let prompt;
+    let prompt = context;
     if (data) {
       prompt = `You're an experienced project manager and scrum master. You're working on a project with the following details:
 
@@ -49,7 +66,7 @@ export default async function handler(
         
         Please provide your response in complete MARKDOWN format.Do not include any JSON formatting or additional explanations or any top headings. Only include information directly related to the instructions.`;
     } else {
-      prompt = `You're an experienced project manager and scrum master. You're working on a project with the following details:
+      prompt += `You're an experienced project manager and scrum master. You're working on a project with the following details:
 
       ${JSON.stringify(projectDetails, jsonReplacer, 2)}
 

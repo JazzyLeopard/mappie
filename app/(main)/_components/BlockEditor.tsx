@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
+import { useAuth } from "@clerk/nextjs";
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -62,6 +63,7 @@ export default function BlockEditor({
   context,
 }: BlockEditorProps) {
 
+  const { getToken } = useAuth();
   const [previousContent, setPreviousContent] = useState<string>('');
   const [newAIContent, setNewAIContent] = useState<string>('');
   const [showComparison, setShowComparison] = useState(false);
@@ -148,10 +150,12 @@ export default function BlockEditor({
     console.log("Attribute:", attribute);
 
     try {
+      const token = await getToken({ template: "convex" });
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           type: attribute,
