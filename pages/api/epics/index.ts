@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
+import { useContextChecker } from "@/utils/useContextChecker";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
@@ -62,6 +63,9 @@ export default async function handler(
     convex.setAuth(authToken);
     const convexProjectId = projectId as Id<"projects">;
 
+    const context = await useContextChecker({ projectId })
+    console.log("context", context);
+
     // Fetch functional requirements for the project
     const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
 
@@ -103,7 +107,9 @@ export default async function handler(
       basePrompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
     }
 
-    const epicPrompt = `Based on the following functional requirements- ${functionalRequirementsText} generate a comprehensive list of epics using this format- ${basePrompt}. Be creative and consider edge cases that might not be immediately obvious.Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block don't use Heading 1 and Heading 2 in Markdown.
+    let epicPrompt = context
+
+    epicPrompt += `Based on the following functional requirements- ${functionalRequirementsText} generate a comprehensive list of epics using this format- ${basePrompt}. Be creative and consider edge cases that might not be immediately obvious.Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block don't use Heading 1 and Heading 2 in Markdown.
     `;
 
     console.log("Calling OpenAI Api...");

@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
+import { useContextChecker } from "@/utils/useContextChecker";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
@@ -64,6 +65,9 @@ export default async function handler(
     convex.setAuth(authToken);
     const convexEpicId = epicId as Id<"epics">;
 
+    const context = await useContextChecker({ projectId })
+    console.log("context", context);
+
     const epics = await convex.query(api.epics.getEpics, { projectId });
 
     if (!epics) {
@@ -109,8 +113,8 @@ export default async function handler(
           Present the description as a single cohesive string, combining all these elements in a clear and engaging manner.Also ensure that each element starts from a new line" 
     }`
 
-    // Update the prompt to request a JSON response
-    const userStoryPrompt = `Based on the following epics- ${epicsText} generate a comprehensive list of user stories using this format- ${userStoryBasePrompt}. Be creative and consider edge cases that might not be immediately obvious. 
+    let userStoryPrompt = context
+    userStoryPrompt += `Based on the following epics- ${epicsText} generate a comprehensive list of user stories using this format- ${userStoryBasePrompt}. Be creative and consider edge cases that might not be immediately obvious. 
     Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block don't use Heading 1 and Heading 2 in Markdown.
     `;
 

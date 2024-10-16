@@ -1,15 +1,14 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
 import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
-import { getAuth } from "@clerk/nextjs/server";
+import { useContextChecker } from "@/utils/useContextChecker";
+import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import OpenAI from 'openai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
 
 export default async function handler(
   req: NextApiRequest,
@@ -37,6 +36,9 @@ export default async function handler(
     const convexProjectId = projectId as Id<"projects">;
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
+    const context = await useContextChecker({ projectId: convexProjectId })
+    console.log("context", context);
+
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
@@ -45,7 +47,9 @@ export default async function handler(
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const prompt = `Please write functional requirements based on the following project details: ${projectDetails}. The requirements should include the following elements with each element starting on a new line:
+    let prompt = context
+
+    prompt += `Please write functional requirements based on the following project details: ${projectDetails}. The requirements should include the following elements with each element starting on a new line:
 
 - **Requirement ID**: A unique identifier for the requirement.
 - **Title**: A brief, descriptive title summarizing the requirement.
@@ -76,8 +80,6 @@ Do not include any main headings or titles at the top of the output. Provide the
     if (!content) {
       throw new Error('No content generated from OpenAI');
     }
-
-
     console.log('Creating functional requirements...');
     const existingFR = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId: convexProjectId });
 
