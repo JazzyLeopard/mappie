@@ -1,6 +1,9 @@
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Id } from '@/convex/_generated/dataModel';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
 import { useMutation, useQuery } from 'convex/react';
@@ -8,7 +11,6 @@ import { InfoIcon, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import Dropzone from "react-dropzone";
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
 
 interface ContextProps {
     projectId: Id<"projects">
@@ -21,6 +23,12 @@ export default function Component({ projectId }: ContextProps) {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [uploadedFiles, setUploadedFiles] = useState<{ name: string, size: number }[]>([])
     const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+    const document = useQuery(api.documents.getDocumentById, { projectId })
+    console.log("document id", document?._id);
+
+    const deleteFile = useMutation(api.documents.deleteDocument)
 
     const onDropRejected = () => { }
 
@@ -33,7 +41,6 @@ export default function Component({ projectId }: ContextProps) {
             const formData = new FormData();
             formData.append('file', file);
             console.log(file)
-
 
             try {
                 const token = await getToken({ template: "convex" });
@@ -75,9 +82,28 @@ export default function Component({ projectId }: ContextProps) {
         });
     };
 
-    const handleDeleteFile = (filename: string) => {
-        setUploadedFiles(prevFiles => prevFiles.filter(file => file.name !== filename));
-        toast.success("File has been deleted")
+    const handleDeleteFile = () => {
+        setIsConfirmModalOpen(true)
+    };
+
+    const confirmDelete = async (documentId: Id<"documents"> | undefined) => {
+        if (!documentId) {
+            console.error("Document ID is undefined");
+            toast.error("Failed to delete: Document ID is undefined");
+            return;
+        }
+
+        setIsConfirmModalOpen(false);
+        try {
+            await deleteFile({ documentId });
+            //Set the upload files here write the code for updating the state to remove file or hide it
+            setUploadedFiles(prevFiles => prevFiles.filter(file => file.name !== document?.filename));
+
+            toast.success("File deleted successfully");
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            toast.error("Failed to delete file");
+        }
     };
 
     return (
@@ -134,6 +160,22 @@ export default function Component({ projectId }: ContextProps) {
                     )}
                 </Dropzone>
             </div>
+            <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="pb-2">Delete File</DialogTitle>
+                        <DialogDescription className="pb-2">
+                            Are you sure you want to delete the uploaded file?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
+                        <Button onClick={() => confirmDelete(document?._id)}>
+                            Confirm
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <div className="space-y-2">
                 {uploadedFiles.map((file, index) => (
                     <FileItem
@@ -148,7 +190,7 @@ export default function Component({ projectId }: ContextProps) {
     )
 }
 
-function FileItem({ filename, filesize, onDelete }: { filename: string, filesize: string, onDelete: (filename: string) => void }) {
+function FileItem({ filename, filesize, onDelete }: { filename: string, filesize: string, onDelete: () => void }) {
     return (
         <div className="flex items-center justify-between rounded-md border bg-background p-1.5 text-xs">
             <div className="flex items-center gap-1.5">
@@ -161,7 +203,7 @@ function FileItem({ filename, filesize, onDelete }: { filename: string, filesize
             <button
                 type="button"
                 className="text-muted-foreground hover:text-destructive"
-                onClick={() => onDelete(filename)} // Call the delete function on click
+                onClick={onDelete}
             >
                 <XIcon className="h-3 w-3" />
             </button>
