@@ -21,6 +21,6 @@
       "@/*": ["./*"],
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(main)/(routes)/projects/[projectId]/use-cases"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(main)/(routes)/projects/[projectId]/use-cases", "pages/_error.js"],
   "exclude": ["node_modules"]
 }
