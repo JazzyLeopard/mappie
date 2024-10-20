@@ -1,5 +1,6 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
@@ -118,6 +119,9 @@ export default async function handler(
     const convexProjectId = projectId as Id<"projects">;
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
+    const context = await useContextChecker({ projectId: convexProjectId })
+    console.log("context", context);
+
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
@@ -126,7 +130,8 @@ export default async function handler(
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const prompt = `As an expert use case analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
+    let prompt = context;
+    prompt += `As an expert use case analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
 
 {
   "title": "Withdraw Cash from ATM",

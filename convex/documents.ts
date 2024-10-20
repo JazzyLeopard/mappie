@@ -22,6 +22,45 @@ export const getStorageURL = query({
     },
 });
 
+export const getDocumentById = query({
+    args: {
+        projectId: v.id("projects"),
+    },
+    handler: async (ctx, args) => {
+        const document = await ctx.db
+            .query("documents")
+            .filter((q) => q.eq(q.field("projectId"), args.projectId))
+            .first();
+
+        return document
+    },
+});
+
+export const deleteDocument = mutation({
+    args: {
+        documentId: v.id("documents"),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new Error("Not Authenticated");
+        }
+
+        const document = await ctx.db.get(args.documentId);
+
+        if (!document) {
+            throw new Error("Document not found");
+        }
+
+        await ctx.db.delete(args.documentId);
+
+        if (document.storageId) {
+            await ctx.storage.delete(document.storageId);
+        }
+    },
+});
+
 export const saveDocument = mutation({
     args: {
         projectId: v.id("projects"),
@@ -63,5 +102,3 @@ export const getDocuments = query({
         return documents;
     },
 });
-
-

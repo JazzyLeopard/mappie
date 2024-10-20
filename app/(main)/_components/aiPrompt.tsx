@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import Draggable from "react-draggable";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@clerk/nextjs";
 
 interface AiPromptbarProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ interface AiPromptbarProps {
 }
 
 export default function AiPromptBar({ onClose, attribute, data, onAIResponse }: AiPromptbarProps) {
+
+  const { getToken } = useAuth();
 
   const [inputValue, setInputValue] = useState("");
 
@@ -27,10 +30,12 @@ export default function AiPromptBar({ onClose, attribute, data, onAIResponse }: 
     }
 
     try {
+      const token = await getToken({ template: "convex" });
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           type: attribute, // Pass the attribute as type
