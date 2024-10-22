@@ -28,7 +28,7 @@ export const Navbar = () => {
           {isSignedIn ? (
             <div className="flex items-center gap-x-6">
               <Button variant="default" className="h-7 md:h-7 lg:h-9" asChild>
-                <Link href="/projects">Enter Listoriq</Link>
+                <Link href="/projects">Enter Projeqtly</Link>
               </Button>
 
               <UserButton afterSignOutUrl="/" />

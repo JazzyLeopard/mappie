@@ -11,7 +11,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Projeqtly",
-  description: "Analyse Epics & Stories on the fly",
+  description: "Projeqtly helps you analyse epics and stories with AI-powered insights in real-time.",
+  keywords: "Projeqtly, Epics, Stories, Project Management, AI-powered Insights",
   icons: {
     icon: [
       {
@@ -26,6 +27,17 @@ export const metadata: Metadata = {
       },
     ],
   },
+  openGraph: {
+    title: "projeqtly",
+    description: "Projeqtly helps you analyse epics and stories with AI-powered insights in real-time.",
+    url: "https://projeqtly.vercel.app/",
+    images: [
+      {
+        url: "https://projeqtly.vercel.app/thumbnail.png",
+        alt: "Projeqtly logo",
+      },
+    ],
+  }
 };
 
 export default function RootLayout({
