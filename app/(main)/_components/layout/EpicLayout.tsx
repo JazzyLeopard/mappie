@@ -67,6 +67,8 @@ export default function EpicLayout({
   const updateUserStory = useMutation(api.userstories.updateUserStory)
   const deleteUserStory = useMutation(api.userstories.deleteUserStory)
 
+  const [selectedItemType, setSelectedItemType] = useState<'epic' | 'userStory' | null>(null)
+
   useEffect(() => {
     const shouldGenerate = searchParams?.get('generate') === 'true';
     if (shouldGenerate && !hasGenerateRef.current) {
@@ -75,17 +77,17 @@ export default function EpicLayout({
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (epics && epics.length > 0 && !activeEpicId) {
-      setActiveEpicId(epics[0]._id)
-    }
-  }, [epics, activeEpicId])
+  // useEffect(() => {
+  //   if (epics && epics.length > 0 && !activeEpicId) {
+  //     // setActiveEpicId(epics[0]._id)
+  //   }
+  // }, [epics, activeEpicId])
 
-  useEffect(() => {
-    if (userStories && userStories.length > 0 && !activeUserStoryId) {
-      setActiveUserStoryId(userStories[0]._id)
-    }
-  }, [userStories, activeUserStoryId])
+  // useEffect(() => {
+  //   if (userStories && userStories.length > 0 && !activeUserStoryId) {
+  //     // setActiveUserStoryId(userStories[0]._id)
+  //   }
+  // }, [userStories, activeUserStoryId])
 
   const debouncedHandleEditorChange = useCallback(
     debounce((_id: Id<"epics">, field: string, value: any) => {
@@ -270,6 +272,7 @@ export default function EpicLayout({
     event.stopPropagation()
     setActiveEpicId(epicId)
     setActiveUserStoryId(null);
+    setSelectedItemType("epic")
     console.log("Epic Title clicked");
   }
 
@@ -306,7 +309,8 @@ export default function EpicLayout({
   const handleUserStoryClick = (userStoryId: Id<"userStories">, event: React.MouseEvent) => {
     event.stopPropagation()
     setActiveUserStoryId(userStoryId)
-    setActiveEpicId(null)
+    console.log("setActive user story", userStoryId);
+    setSelectedItemType("userStory")
     console.log("User story clicked");
   }
 
@@ -457,7 +461,7 @@ export default function EpicLayout({
                     </div>
                   </aside>
                   <div className="flex-1 ml-1 p-4 pt-6 overflow-y-auto">
-                    {activeUserStoryId && selectedUserStory ? (
+                    {selectedItemType === "userStory" && activeUserStoryId && selectedUserStory ? (
                       <div className="flex flex-col h-full">
                         <header className="flex items-center justify-between pb-3 w-full">
                           <LabelToInput
@@ -477,7 +481,7 @@ export default function EpicLayout({
                           />
                         </div>
                       </div>
-                    ) : activeEpicId && selectedEpic ? (
+                    ) : selectedItemType === "epic" && activeEpicId && selectedEpic ? (
                       <div className='flex flex-col h-full'>
                         <header className="flex items-center justify-between pb-4 w-full">
                           <LabelToInput
