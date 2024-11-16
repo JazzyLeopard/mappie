@@ -1,5 +1,0 @@
-0000000000000000000000000000000000000000 7a7f13f4c29e45519206dc4b81226604b4846e8e JazzyLeopard <kursad@hey.com> 1729451849 +0200	branch: Created from HEAD
-7a7f13f4c29e45519206dc4b81226604b4846e8e 52fca198e1e326c1223caa62a7aaf66fe1e9debd JazzyLeopard <kursad@hey.com> 1731757952 +0100	commit: editor and new layout
-52fca198e1e326c1223caa62a7aaf66fe1e9debd 7a7f13f4c29e45519206dc4b81226604b4846e8e JazzyLeopard <kursad@hey.com> 1731758020 +0100	reset: moving to HEAD~1
-7a7f13f4c29e45519206dc4b81226604b4846e8e 03ef6d7b7077f06dd78363418aca28de897b3970 JazzyLeopard <kursad@hey.com> 1731758051 +0100	commit: Remove API key and update gitignore
-03ef6d7b7077f06dd78363418aca28de897b3970 2cf07fc20c19b654549b84ab8b96afcd0484d516 JazzyLeopard <kursad@hey.com> 1731758259 +0100	commit: remove sensitive data and update gitignore
