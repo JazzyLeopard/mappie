@@ -9,16 +9,19 @@ import { useMutation } from 'convex/react';
 import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import FREditorList from './FREditorList';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Spinner from '@/components/ui/spinner';
+import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor';
+import AIStoryCreator from '@/ai/ai-chat';
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Plus, ChevronDown, ChevronRight, BookOpen, Trash } from 'lucide-react'
+import AiGenerationIcon from '@/icons/AI-Generation';
 
 interface FRLayoutProps {
     projectId: Id<"projects">;
@@ -27,6 +30,7 @@ interface FRLayoutProps {
     onEditorChange: (value: string) => void;
     propertyPrompts: any;
     isOnboardingComplete: boolean;
+    updateProject: (payload: any) => Promise<void>;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
@@ -35,7 +39,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     content,
     onEditorChange,
     propertyPrompts,
-    isOnboardingComplete
+    isOnboardingComplete,
+    updateProject
 }) => {
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
@@ -114,30 +119,117 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         await router.push(`/projects/${projectId}/${confirmationModal}?generate=true`);
     }
 
+    const handleInsertMarkdown = useCallback((markdown: string) => {
+        onEditorChange(markdown);
+        if (frId) {
+            updateFunctionalRequirements({ id: frId, content: markdown });
+        }
+    }, [frId, onEditorChange, updateFunctionalRequirements]);
+
     return (
-        <div className="h-screen flex flex-col z-top">
-            <div className="bg-white sticky z-999 flex items-center justify-between px-12 pt-8 pb-2">
-                <div className="flex-1">
-                    <h1 className="text-2xl font-bold">Functional Requirements</h1>
-                </div>
-                {frId ? (<DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button disabled={content?.length <= 0} className="w-36">
-                            <div className='flex items-center ml-auto'>
-                                <AiGenerationIconWhite />
-                                &nbsp;Generate
-                                <ChevronDown className="h-4 w-4 ml-4" />
+        <div className="flex h-screen gap-2 p-4">
+            <div className="w-72">
+                <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
+                    <div className="p-2 pt-4">
+                        <div className="flex flex-col items-center space-y-2 mb-4">
+                            <Button 
+                                onClick={handleGenerateFR} 
+                                variant='ghost' 
+                                className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
+                            >
+                                <Plus className="mr-2 h-4 w-4" /> Add FR
+                            </Button>
+                            <Button 
+                                onClick={handleGenerateFR} 
+                                variant='ghost' 
+                                className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
+                            >
+                                <AiGenerationIcon /> 
+                                <span className="ml-2 font-semibold">Generate FR</span>
+                            </Button>
+                        </div>
+                    </div>
+                    <ScrollArea className="h-[calc(100vh-220px)]">
+                        <div className="px-2">
+                            <span className="text-sm pl-2 font-semibold">Functional Requirements</span>
+                            <div className="pt-2">
+                                {/* FR list items will go here */}
                             </div>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-36">
-                        <DropdownMenuItem onClick={() => handleGenerateClick('use-cases')}>Use case</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleGenerateClick('epics')}>Epics</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>) : ''}
+                        </div>
+                    </ScrollArea>
+                </div>
             </div>
 
-            <Dialog open={confirmationModal != null} onOpenChange={() => setConfirmationModal}>
+            <div className="flex flex-1 gap-2">
+                {isOnboardingComplete ? (
+                    <>
+                        <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-4 bg-white rounded-xl">
+                            {frId ? (
+                                <div className="flex flex-col h-full">
+                                    <div className="flex-1 overflow-y-auto flex">
+                                        <LexicalEditor
+                                            key={frId}
+                                            itemId={frId as Id<'functionalRequirements'>}
+                                            onBlur={async () => {
+                                                // Handle blur if needed
+                                            }}
+                                            attribute="content"
+                                            projectDetails={{
+                                                _id: frId,
+                                                content: content || ''
+                                            }}
+                                            setProjectDetails={(newDetails) => {
+                                                onEditorChange(newDetails.content);
+                                                if (frId) {
+                                                    updateFunctionalRequirements({
+                                                        id: frId,
+                                                        content: newDetails.content
+                                                    });
+                                                }
+                                            }}
+                                            context="functionalRequirement"
+                                            isRichText={true}
+                                            updateProject={updateProject}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">Select a functional requirement to edit</p>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="w-2/5">
+                            <div className="shadow-sm bg-white rounded-xl h-full">
+                                <AIStoryCreator
+                                    key={`fr-${frId}`}
+                                    onInsertMarkdown={handleInsertMarkdown}
+                                    selectedItemContent={content}
+                                    selectedItemType="functionalRequirement"
+                                    selectedItemName="Functional Requirements"
+                                    selectedEpic={null}
+                                    projectId={projectId}
+                                    selectedItemId={frId as string}
+                                    isCollapsed={false}
+                                    toggleCollapse={() => {}}
+                                />
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex-1 overflow-hidden w-full">
+                        <div className="h-full flex flex-col items-center justify-center gap-6">
+                            <Image src={Empty} alt="No functional requirements" width={100} height={100} />
+                            <h2 className="text-xl font-semibold text-center">
+                                Please complete all mandatory fields in the Project Overview <br /> before proceeding to Functional Requirements.
+                            </h2>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <Dialog open={confirmationModal != null} onOpenChange={() => setConfirmationModal(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="pb-2">Generate {confirmationModal?.split('-').join(' ').toUpperCase()}</DialogTitle>
@@ -151,58 +243,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <div className="flex-1 flex justify-center items-center w-full overflow-hidden px-12 pt-0">
-                {!isOnboardingComplete ? (
-                    <div className=" h-full flex flex-col items-center justify-center gap-6">
-                        <Image src={Empty} alt="No functional requirements" width={100} height={100} />
-                        <h2 className="text-xl font-semibold text-center">
-                            Please complete all mandatory fields in the Project Overview <br /> before proceeding to Functional Requirements..
-                        </h2>
-                    </div>)
-                    : isOnboardingComplete && !frId ? (
-                        <div className="h-full flex flex-col items-center justify-center gap-6">
-                            <Image src={Empty} alt="No functional requirements" width={100} height={100} />
-                            <h2 className="text-xl font-semibold text-center">
-                                You haven't created any functional requirements<br />for this project yet.
-                            </h2>
-                            <p className="text-center text-gray-600 max-w-md">
-                                Based on the project details, the AI can generate
-                                comprehensive functional requirements that outline
-                                the system's behavior and capabilities. Give it a try!
-                            </p>
-                            <Button
-                                className="gap-2 h-10"
-                                variant="default"
-                                onClick={handleGenerateFR}
-                                disabled={isGenerating}
-                            >
-                                <AiGenerationIconWhite />
-                                {isGenerating ? "Generating..." : "Generate Functional Requirements"}
-                            </Button>
-                            <div className="text-center">
-                                <span className="text-gray-500">or</span>
-                            </div>
-                            <Button variant="outline" onClick={() => onEditorChange("")}>
-                                Add Functional Requirements manually
-                            </Button>
-                        </div>
-                    ) :
-                        (
-                            <FREditorList
-                                projectId={projectId}
-                                frId={frId}
-                                content={content}
-                                onEditorChange={onEditorChange}
-                                onOpenBrainstormChat={handleOpenBrainstormChat}
-                                propertyPrompts={propertyPrompts}
-                                onEditorBlur={async () => {
-                                    // Implement if needed
-                                }}
-                            />
-                        )
-                }
-            </div>
         </div>
     );
 };

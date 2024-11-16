@@ -74,7 +74,7 @@ export default async function handler(
         const epicsText = epics.map(epic => epic?.description).join('\n');
 
         //Fetch the existing user stories
-        const userStories = await convex.query(api.userstories.getUserStories, { epicId })
+        const userStories = await convex.query(api.userstories.getUserStories, { projectId })
 
         if (!userStories) {
             return res.status(400).json({ message: "No userStories found for the project" });

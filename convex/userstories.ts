@@ -52,12 +52,33 @@ export const deleteUserStory = mutation({
 });
 
 export const getUserStories = query({
-  args: { epicId: v.id("epics") },
+  args: {
+    projectId: v.id("projects"),
+    epicId: v.optional(v.id("epics")),
+  },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("userStories")
-      .filter((q) => q.eq(q.field("epicId"), args.epicId))
+    const { projectId, epicId } = args;
+
+    const epics = await ctx.db
+      .query("epics")
+      .filter((q) => q.eq(q.field("projectId"), projectId))
       .collect();
+
+    const epicIds = epics.map(epic => epic._id);
+
+    let userStoriesQuery = ctx.db
+      .query("userStories")
+      .filter((q) => 
+        q.or(
+          ...epicIds.map(epicId => q.eq(q.field("epicId"), epicId))
+        )
+      );
+
+    if (epicId) {
+      userStoriesQuery = userStoriesQuery.filter(q => q.eq(q.field("epicId"), epicId));
+    }
+
+    return await userStoriesQuery.collect();
   },
 });
 

@@ -78,7 +78,6 @@ export default async function handler(
 
     let userStoryBasePrompt = `As an expert user stories analyst, generate a comprehensive list of user stories for the following project. Each user stories should be detailed and specific to the project's need following this exact structure and level of detail, and should not use Heading 1 and 2.
     {
-      "title": "User Registration"
 
       "description": "Create a detailed description of the user story that addresses the business need it fulfills, including the following elements:
 
@@ -88,28 +87,10 @@ export default async function handler(
           - **Scenario 1**: Given I am on the registration page, when I enter valid personal details and click Submit, then I should receive a confirmation email with an activation link.
           - **Scenario 2**: Given I am on the registration page, when I submit the form with an already registered email, then I should see an error message saying Email is already registered. Please log in.
           - **Scenario 3**: Given I have received a confirmation email, when I click the activation link, then my account should be activated, and I should be able to log in.
+          ...
 
-        - **Interface Elements**: Registration Form, including fields for First Name, Last Name, Email, Password, and Confirm Password.
+        - **Additional considerations**:
 
-        - **Functional Flow**:
-          - **Flow 1**: 
-            Action: User enters valid personal details and clicks Submit. 
-            Response: The system validates the input, sends a confirmation email with an activation link, and displays a success message on the registration page.
-          - **Flow 2**:
-            Action: User enters an email that is already registered.  
-            Response: The system displays an error message indicating the email is already registered and suggests logging in.
-          - **Flow 3**:
-            Action: User clicks the activation link in the confirmation email. 
-            Response: The system activates the user's account, and the user is redirected to the login page.
-
-        - **States and Empty states**:
-          - **Initial State**: The registration form is displayed with all fields empty, and the Submit button is disabled until all required fields are filled.
-          - **EmptyState**: If the user tries to submit the form without completing all fields, the system displays a message: Please fill out all required fields before submitting.
-
-        - **Error messages and Validation: 
-          - **Condition**: User submits the form without filling out all required fields.
-          - **Message**: Please fill out all required fields.
-      
           Present the description as a single cohesive string, combining all these elements in a clear and engaging manner.Also ensure that each element starts from a new line" 
     }`
 

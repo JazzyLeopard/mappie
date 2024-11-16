@@ -68,6 +68,41 @@ export default defineSchema({
     updatedAt: v.int64(), // Storing timestamp as bigint
   })
     .index("by_projectId", ["projectId"]) // Index to query documents by projectId  
-    .index("by_createdAt", ["createdAt"]), // Index to query epics by creation time
-});
+    .index("by_createdAt", ["createdAt"]), // Index to query epics by creation time,
 
+  messages: defineTable({
+    itemId: v.string(),
+    itemType: v.string(),
+    messages: v.array(v.object({
+      role: v.union(v.literal('system'), v.literal('user'), v.literal('assistant'), 
+                   v.literal('function'), v.literal('data'), v.literal('tool')),
+      content: v.string(),
+      id: v.string(),
+      toolInvocations: v.optional(v.array(v.object({
+        toolName: v.string(),
+        toolCallId: v.string(),
+        state: v.string(),
+        args: v.optional(v.object({
+          content: v.string(),
+          metadata: v.optional(v.object({
+            title: v.optional(v.string()),
+            type: v.optional(v.string())
+          }))
+        })),
+        result: v.optional(v.object({
+          content: v.string(),
+          metadata: v.optional(v.object({
+            title: v.optional(v.string()),
+            type: v.optional(v.string())
+          }))
+        }))
+      })))
+    })),
+    projectId: v.id("projects"),
+    createdAt: v.int64(),
+    updatedAt: v.int64()
+  })
+    .index("by_itemId_and_type", ["itemId", "itemType"])
+    .index("by_projectId", ["projectId"])
+    .index("by_createdAt", ["createdAt"]),
+});

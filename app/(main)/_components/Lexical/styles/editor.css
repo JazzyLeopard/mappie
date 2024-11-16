@@ -1,0 +1,52 @@
+.editor-shell {
+  margin: 0;
+  border-radius: 2px;
+  width: 100%;
+  max-width: 100%;
+  color: #000;
+  position: relative;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.editor-shell .editor-container {
+  background: #fff;
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+}
+
+.editor-scroller {
+  min-height: 150px;
+  max-height: calc(100vh - 200px);
+  border: 0;
+  resize: none;
+  cursor: text;
+  display: block;
+  position: relative;
+  outline: 0;
+  overflow: auto;
+  padding: 1rem;
+  width: 100%;
+}
+
+.editor {
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+.toolbar {
+  width: 100%;
+  overflow-x: auto;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ContentEditable__root {
+  padding: 1rem;
+  min-height: 150px;
+  width: 100%;
+} 

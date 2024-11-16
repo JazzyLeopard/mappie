@@ -11,13 +11,17 @@ import { propertyPrompts } from '@/app/(main)/_components/constants';
 
 interface FunctionalRequirementsProps {
     params: {
-        projectId: Id<"projects">;
-        frId: Id<"functionalRequirements">;
+        projectId: Id<"projects">;  // Ensure this is typed correctly
     };
 }
 
 const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => {
-    const projectId = params.projectId;
+    // Add validation
+    if (!params.projectId || typeof params.projectId !== 'string') {
+        throw new Error('Invalid project ID');
+    }
+
+    const projectId = params.projectId as Id<"projects">;
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
     const updateFunctionalRequirement = useMutation(api.functionalRequirements.updateFunctionalRequirement);
     const createFunctionalRequirement = useMutation(api.functionalRequirements.createFunctionalRequirement);

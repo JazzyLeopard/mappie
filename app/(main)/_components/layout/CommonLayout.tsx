@@ -1,25 +1,26 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/39pYKzqyX3o
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
 "use client"
 
 import '@/app/custom.css';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from '@/convex/_generated/api';
+import AiGenerationIcon from "@/icons/AI-Generation";
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
 import type { MenuItemType, Project } from "@/lib/types";
-import { useQuery } from 'convex/react';
-import { Presentation, Rocket, X } from "lucide-react";
+import { useQuery, useMutation, ReactMutation } from 'convex/react';
+import { BookOpen, ChevronDown, ChevronRight, Plus, Presentation, Rocket, Trash, X, FileText, Users, Target, List, BarChart2, Layers, AlertTriangle, InfoIcon } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import LabelToInput from "../LabelToInput";
 import PresentationMode from '../PresentationMode';
-import EditorList from "./EditorList";
-import FieldList from "./FieldList";
+import LexicalEditor from "../Lexical/LexicalEditor";
+import FileUpload from "./Context";
+import { toTitleCase } from "@/utils/helper";
+import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 interface CommonLayoutProps {
     data: Project;
@@ -28,7 +29,19 @@ interface CommonLayoutProps {
     handleEditorChange: (attribute: string, value: any) => void,
     showTitle?: boolean;
     mandatoryFields?: string[];
+    updateProject: ReactMutation<any>;
 }
+
+const sectionIcons = {
+    overview: <FileText className="w-4 h-4 inline-block mr-2" />,
+    problemStatement: <AlertTriangle className="w-4 h-4 inline-block mr-2" />,
+    userPersonas: <Users className="w-4 h-4 inline-block mr-2" />,
+    featuresInOut: <List className="w-4 h-4 inline-block mr-2" />,
+    successMetrics: <BarChart2 className="w-4 h-4 inline-block mr-2" />,
+    userScenarios: <Target className="w-4 h-4 inline-block mr-2" />,
+    featurePrioritization: <Layers className="w-4 h-4 inline-block mr-2" />,
+    risksDependencies: <AlertTriangle className="w-4 h-4 inline-block mr-2" />
+};
 
 const CommonLayout = ({
     data,
@@ -36,16 +49,16 @@ const CommonLayout = ({
     onEditorBlur,
     handleEditorChange,
     showTitle = true,
-    mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"]
+    mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"],
+    updateProject
 }: CommonLayoutProps) => {
 
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    const [isBrainstormChatOpen, setIsBrainstormChatOpen] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [isFrGenerated, setIsFrGenerated] = useState(false)
+    const [isFrGenerated, setIsFrGenerated] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -55,7 +68,6 @@ const CommonLayout = ({
     }, [menu, activeSection]);
 
     useEffect(() => {
-        // Check if all required fields have content
         const requiredFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
         const allFieldsHaveContent = requiredFields.every(field => {
             const value = data[field];
@@ -64,12 +76,11 @@ const CommonLayout = ({
         setIsGenerateButtonActive(allFieldsHaveContent);
     }, [data]);
 
-    // Check if the functional requirements are already generated
     const checkFunctionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId: data._id });
 
     useEffect(() => {
         if (checkFunctionalRequirements && checkFunctionalRequirements?.content) {
-            setIsFrGenerated(true); // Disable button if already generated
+            setIsFrGenerated(true);
         }
     }, [checkFunctionalRequirements]);
 
@@ -81,73 +92,150 @@ const CommonLayout = ({
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
     }
 
-    // console.log("Current data in CommonLayout:", data);
-
     const handleGenerateFR = () => {
         setIsConfirmModalOpen(true);
     };
 
     const confirmGenerateFR = async () => {
         setIsConfirmModalOpen(false);
-
         try {
-            // Navigate to the Functional Requirements page and trigger generation\
             await router.push(`/projects/${data._id}/functional-requirements?generate=true`);
         }
         catch (error) {
             console.log("Error routing", error)
         }
     };
-    // console.log("Current data in CommonLayout:", data);
+
+    const handleSectionClick = (sectionId: string) => {
+        setActiveSection(sectionId);
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    };
+
+    const handleSectionChange = useCallback(async (field: string, value: any) => {
+        try {
+            // Skip if no changes
+            if (!value || data[field as keyof typeof data] === value) {
+                return;
+            }
+
+            await updateProject({
+                ...data,
+                [field]: value
+            });
+
+            // Call the parent handler if provided
+            handleEditorChange(field, value);
+        } catch (error) {
+            console.error("Error updating project section:", error);
+        }
+    }, [data, handleEditorChange, updateProject]);
+
+    const activeComponent = useMemo(() => 
+        menu.find(c => c.key === activeSection),
+        [menu, activeSection]
+    );
+
+    const editorProps = useMemo(() => ({
+        key: `${activeComponent?.key}-${data[activeComponent?.key as keyof typeof data]}`,
+        onBlur: onEditorBlur,
+        attribute: activeComponent?.key || '',
+        projectDetails: data,
+        setProjectDetails: (value: any) => {
+            console.log('Editor change:', {
+                section: activeComponent?.key,
+                value
+            });
+            handleSectionChange(activeComponent?.key || '', value);
+        },
+        isRichText: true,
+        context: "project",
+        itemId: data._id,
+        updateProject
+    }), [activeComponent?.key, data, onEditorBlur, handleSectionChange, updateProject]);
 
     return (
-        <div className="h-screen flex flex-col z-top">
-            {showAlert && (
-                <Alert className="mt-16 ml-8 mr-8 bg-primary/5 w-4/4 text-primary relative">
-                    <Rocket className="h-5 w-5" />
-                    <AlertTitle className="text-md">Welcome!</AlertTitle>
-                    <AlertDescription>
-                        This is your PRD, your product/project requirements document. This is where all of the business information related to your product or project lives.<br />
-                        This tool uses the information you specify here to help you create all the necessary parts of your analysis to have development-ready user stories.
-                    </AlertDescription>
-                    <Button
-                        className="absolute top-2 right-2 p-1"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowAlert(false)}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                </Alert>
-            )}
-
-            <div className="bg-white sticky z-999 flex items-center justify-between px-8 pt-8 pb-2">
-                {showTitle && (
-                    <div className="flex-1 mr-4">
-                        <LabelToInput
-                            value={data?.title}
-                            setValue={(val) => handleEditorChange('title', val)}
-                            onBlur={onEditorBlur}
-                        />
+        <div className="flex h-screen gap-2 p-4">
+            <div className="w-72">
+                <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
+                    <div className="p-2 pt-4">
+                        <div className="flex flex-col items-center space-y-2 mb-4">
+                            <Button 
+                                onClick={handleGenerateFR} 
+                                variant='ghost' 
+                                className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
+                                disabled={!isGenerateButtonActive || isFrGenerated}
+                            >
+                                <AiGenerationIcon />
+                                <span className="ml-2 font-semibold">
+                                    {isFrGenerated ? "FR Generated" : "Generate FR"}
+                                </span>
+                            </Button>
+                        </div>
                     </div>
-                )}
+                    <div className="flex-col items-center px-2 pb-4">
+                        <span className="text-sm font-semibold pl-2">Context</span>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <InfoIcon className="h-3 w-3 ml-2 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    Add documents to provide more context for the AI when generating content for any section.
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <div className="px-2">
+                            <FileUpload projectId={data._id} />
+                        </div>
+                    </div>
+                    <ScrollArea className="h-[calc(100vh-220px)]">
+                        <div className="px-2">
+                            <span className="text-sm pl-2 font-semibold">Sections</span>
+                            <nav className="space-y-1 items-center pt-2">
+                                {menu.map((component) => (
+                                    <Link
+                                        key={component.key}
+                                        href="#"
+                                        className={`block p-2 py-3 rounded-md text-sm ${activeSection === component.key ? "font-semibold bg-white" : "hover:bg-gray-200"}`}
+                                        onClick={() => handleSectionClick(component.key)}
+                                        prefetch={false}
+                                    >
+                                        {sectionIcons[component.key as keyof typeof sectionIcons]}
+                                        {toTitleCase(component.key)}
+                                        {mandatoryFields.includes(component.key) && (
+                                            <span className="text-red-600 ml-1">*</span>
+                                        )}
+                                    </Link>
+                                ))}
+                            </nav>
+                        </div>
+                    </ScrollArea>
+                </div>
+            </div>
 
-                <div className="flex items-center gap-4 ml-auto">
+            <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-4 bg-white rounded-xl">
+                <div className="flex items-center justify-between px-4 pb-3 w-full">
+                    {activeComponent && (
+                        <h1 className="text-2xl font-semibold">
+                            {toTitleCase(activeComponent.key)}
+                        </h1>
+                    )}
                     <Button
-                        className="gap-2"
-                        onClick={handleGenerateFR}
-                        disabled={!isGenerateButtonActive || isFrGenerated}
-                    >
-                        <AiGenerationIconWhite />
-                        {isFrGenerated ? "Functional Requirements Generated" : "Generate Functional Requirements"}
-                    </Button>
-                    <Button
-                        className="bg-white text-black border border-gray-300 hover:bg-gray-200"
+                        className="bg-white text-black border border-gray-300 hover:bg-gray-200 ml-auto"
                         onClick={togglePresentationMode}
                     >
                         <Presentation className="pr-2" />
                         Presentation Mode
                     </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto flex px-4">
+                    {activeComponent && <LexicalEditor {...{...editorProps, context: "project" as const}} />}
                 </div>
             </div>
 
@@ -167,26 +255,6 @@ const CommonLayout = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <div className="overflow-hidden grid grid-cols-[250px,1fr] gap-8 px-8 pt-10 laptop-1024:overflow-auto">
-                <div className="align-top">
-                    <FieldList
-                        components={menu}
-                        activeSection={activeSection}
-                        setActiveSection={setActiveSection}
-                        mandatoryFields={mandatoryFields}
-                        projectId={data._id}
-                    />
-                </div>
-                <div className="overflow-hidden">
-                    <EditorList
-                        components={menu.filter(c => c.key === activeSection)}
-                        data={data}
-                        handleEditorChange={handleEditorChange}
-                        onEditorBlur={onEditorBlur}
-                        onOpenBrainstormChat={async () => { }} />
-                </div>
-            </div>
         </div>
     );
 };

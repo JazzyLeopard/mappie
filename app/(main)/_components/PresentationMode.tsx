@@ -3,7 +3,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AlertTriangleIcon, BarChartIcon, CalendarIcon, ListIcon, XIcon, ChevronUpIcon, ChevronDownIcon } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
-import { serialize } from 'next-mdx-remote/serialize'
 import { MDXRemote } from 'next-mdx-remote'
 import remarkGfm from 'remark-gfm'
 import Spinner from "@/components/ui/spinner"
@@ -441,4 +440,9 @@ function LinkIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+const serialize = async (content: any) => {
+    const { serialize: mdxSerialize } = await import('next-mdx-remote/serialize');
+    return mdxSerialize(content);
+};
 

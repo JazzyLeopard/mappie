@@ -10,14 +10,15 @@ import { toast } from "sonner"
 
 interface EpicsPageProps {
     params: {
-        projectId: Id<"projects">
+        projectId: Id<"projects">;
+        epicId?: Id<"epics">;  // Add epicId as optional parameter
     }
 }
 
 const EpicsPage = ({ params }: EpicsPageProps) => {
-    const projectId = params.projectId
+    const { projectId, epicId } = params  // Destructure both IDs
     const [content, setContent] = useState<any>([])
-    const epics = useQuery(api.epics.getEpics, { projectId: projectId });
+    const epics = useQuery(api.epics.getEpics, { projectId });
     const createEpic = useMutation(api.epics.createEpics);
     const updateEpic = useMutation(api.epics.updateEpic)
     const deleteEpic = useMutation(api.epics.deleteEpic)
@@ -44,8 +45,8 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         await updateEpic({ _id, [field]: value })
     }, [updateEpic])
 
-    const handleEditorChange = useCallback((_id: Id<"epics">, field: string, value: any) => {
-        handleUpdateEpic(_id, field as 'name' | 'description', value);
+    const handleEditorChange = useCallback(async (_id: Id<"epics">, field: string, value: any) => {
+        await handleUpdateEpic(_id, field as 'name' | 'description', value);
     }, [handleUpdateEpic]);
 
     const handleDeleteEpic = useCallback(async (_id: Id<"epics">) => {
@@ -68,7 +69,10 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
 
     return (
         <EpicLayout
-            projectId={projectId}
+            params={{
+                projectId,
+                epicId
+            }}
             handleEditorChange={handleEditorChange}
             onAddEpics={handleCreateEpic}
             onDeleteEpic={handleDeleteEpic}

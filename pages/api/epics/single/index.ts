@@ -63,7 +63,9 @@ export default async function handler(
         const convexProjectId = projectId as Id<"projects">;
 
         // Fetch functional requirements for the project
-        const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId });
+        const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
+            projectId: convexProjectId 
+        });
 
         if (!functionalRequirements) {
             return res.status(400).json({ message: "No functional requirements found for the project" });
@@ -72,14 +74,14 @@ export default async function handler(
         const functionalRequirementsText = functionalRequirements.content;
 
         //Fetch the useCases
-        const useCases = await convex.query(api.useCases.getUseCases, { projectId });
+        const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
 
         if (!useCases) {
             return res.status(400).json({ message: "No Use cases found for the project" });
         }
 
         //Fetch the existing epics
-        const epics = await convex.query(api.epics.getEpics, { projectId })
+        const epics = await convex.query(api.epics.getEpics, { projectId: convexProjectId });
 
         if (!epics) {
             return res.status(400).json({ message: "No Use cases found for the project" });

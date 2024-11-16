@@ -13,11 +13,12 @@ import "@blocknote/mantine/style.css";
 import { BlockNoteContext, DefaultReactSuggestionItem, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "convex/react";
 import { Bold, ChevronDown, ChevronUp, Code, Italic, Loader2, Strikethrough, Underline } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { propertyPrompts } from "./constants";
 import { useAuth } from "@clerk/nextjs";
+import debounce from 'lodash/debounce';
 
 // Add this utility function at the top of your file
 function toTitleCase(str: string): string {
@@ -36,7 +37,6 @@ type BlockEditorProps = {
   attribute: string;
   projectDetails: any;
   setProjectDetails: (value: any) => void;
-  onOpenBrainstormChat: () => void;
   context: ContextType;
 };
 
@@ -59,7 +59,6 @@ export default function BlockEditor({
   attribute,
   projectDetails,
   setProjectDetails,
-  onOpenBrainstormChat,
   context,
 }: BlockEditorProps) {
 
@@ -79,18 +78,36 @@ export default function BlockEditor({
   const updateUserStoryMutation = useMutation(api.userstories.updateUserStory)
 
   const editor = useCreateBlockNote({
-    initialContent: undefined
-  })
-
+    initialContent: undefined // Don't set initial content here
+  });
+  
+  // Track if we're currently initializing content
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initialContent, setInitialContent] = useState<string>('');
+  
+  // Initialize content only once when component mounts
   useEffect(() => {
     const initializeEditor = async () => {
-      if (projectDetails[attribute]) {
-        const newBlock = await editor.tryParseMarkdownToBlocks(projectDetails[attribute])
-        editor.replaceBlocks(editor.document, newBlock)
+      if (projectDetails && projectDetails[attribute] && 
+          projectDetails[attribute] !== initialContent) {
+        try {
+          const blocks = await editor.tryParseMarkdownToBlocks(
+            projectDetails[attribute] || ''
+          );
+          editor.replaceBlocks(editor.document, blocks);
+          setInitialContent(projectDetails[attribute]);
+          setIsInitializing(false);
+        } catch (error) {
+          console.error("Error initializing editor:", error);
+          setIsInitializing(false);
+        }
+      } else {
+        setIsInitializing(false);
       }
-    }
-    initializeEditor()
-  }, [])
+    };
+
+    initializeEditor();
+  }, [editor, projectDetails, attribute]);
 
   const handleOnBlur = async () => {
     onBlur();
@@ -226,20 +243,40 @@ export default function BlockEditor({
     console.log("updated active styles:", editor.getActiveStyles());
   };
 
+  // Track the last cursor position
+  const [lastCursorPosition, setLastCursorPosition] = useState<any>(null);
 
-  const saveContent = async () => {
-    const content = await editor.blocksToMarkdownLossy(editor.document)
-    //const content = JSON.stringify(editor.document); // Retrieve the document content
-    setProjectDetails(content);
-  };
+  const saveContent = useCallback(async () => {
+    if (isInitializing) return;
 
-  useEffect(() => {
-    if (editor) {
-      editor.onChange(() => {
-        saveContent();
-      });
+    try {
+      const markdownContent = await editor.blocksToMarkdownLossy(editor.document);
+      
+      // Update local state
+      setProjectDetails((prev: any) => ({
+        ...prev,
+        [attribute]: markdownContent
+      }));
+
+      // Save to database
+      switch (context) {
+        case 'userStories':
+          await updateUserStoryMutation({
+            id: projectDetails._id,
+            description: markdownContent
+          });
+          break;
+        case 'epics':
+          await updateEpicMutation({
+            _id: projectDetails._id,
+            description: markdownContent
+          });
+          break;
+      }
+    } catch (error) {
+      console.error("Error saving content:", error);
     }
-  }, [editor, attribute, setProjectDetails]);
+  }, [editor, projectDetails._id, attribute, context, isInitializing]);
 
   // Custom function to get filtered Slash Menu items
   const getCustomSlashMenuItems = (
@@ -254,40 +291,57 @@ export default function BlockEditor({
 
   // Function to handle AI responses
   const handleAIResponse = async (aiResponse: string) => {
-    // Focus the editor before making changes
-    editor.focus();
-
-    // Retrieve the block using getBlock
-    const block = await editor.tryParseMarkdownToBlocks(aiResponse)
-
-    //Function to save the Markdown content to db
-    const markDownContent = await editor.blocksToMarkdownLossy(block)
-
-    // Create a mapping for context to mutation functions
-    const mutationMap: { [key: string]: (data: any) => Promise<void> } = {
-      project: async () => await updateProjectMutation({ [attribute]: newAIContent, _id: projectDetails._id }).then(() => { }),
-      useCase: async () => await updateUseCaseMutation({ id: projectDetails._id, description: newAIContent }).then(() => { }),
-      functionalRequirement: async () => await updateFunctionalRequirementMutation({ id: projectDetails._id, content: newAIContent }).then(() => { }),
-      epics: async () => await updateEpicMutation({ _id: projectDetails._id, description: newAIContent }).then(() => { }),
-      userStories: async () => await updateUserStoryMutation({ id: projectDetails._id, description: newAIContent }).then(() => { })
-    };
-
     try {
-      // Call the appropriate mutation based on the context
-      await mutationMap[context](newAIContent); // Fixed to pass newAIContent as an argument
-      console.log("Content saved to convex Db", newAIContent);
+      // Parse the markdown to blocks
+      const blocks = await editor.tryParseMarkdownToBlocks(aiResponse);
+      
+      // Replace the current content with new blocks
+      editor.replaceBlocks(editor.document, blocks);
+      
+      // Update local state
+      setProjectDetails({
+        ...projectDetails,
+        [attribute]: aiResponse
+      });
+
+      // Create mutation payload based on context
+      switch (context) {
+        case 'project':
+          await updateProjectMutation({
+            _id: projectDetails._id,
+            [attribute]: aiResponse
+          });
+          break;
+        case 'useCase':
+          await updateUseCaseMutation({
+            id: projectDetails._id,
+            [attribute]: aiResponse
+          });
+          break;
+        case 'functionalRequirement':
+          await updateFunctionalRequirementMutation({
+            id: projectDetails._id,
+            content: aiResponse
+          });
+          break;
+        case 'epics':
+          await updateEpicMutation({
+            _id: projectDetails._id,
+            [attribute]: aiResponse
+          });
+          break;
+        case 'userStories':
+          await updateUserStoryMutation({
+            id: projectDetails._id,
+            [attribute]: aiResponse
+          });
+          break;
+      }
+
+      console.log("Content saved to convex Db", aiResponse);
     } catch (error) {
-      console.log("Error saving content to db", error);
-      return;
+      console.error("Error handling AI response:", error);
     }
-
-    editor.replaceBlocks(editor.document, block);
-
-    if (!block) {
-      console.error("Block not found!");
-      return;
-    }
-    console.log("Current Block:", block);
   };
 
   const checkEditorContent = useCallback(async () => {
@@ -304,6 +358,31 @@ export default function BlockEditor({
       // The editor instance will be destroyed when the component unmounts
     };
   }, [editor, checkEditorContent]);
+
+  // Update the editor when projectDetails changes
+  useEffect(() => {
+    const updateEditorContent = async () => {
+      if (projectDetails && projectDetails[attribute]) {
+        const blocks = await editor.tryParseMarkdownToBlocks(
+          typeof projectDetails[attribute] === 'string' 
+            ? projectDetails[attribute] 
+            : ''
+        );
+        editor.replaceBlocks(editor.document, blocks);
+      }
+    };
+
+    updateEditorContent();
+  }, [editor, projectDetails, attribute]);
+
+  // Add this state to track selection
+  const [hasSelection, setHasSelection] = useState(false);
+
+  // Add a selection change handler
+  const handleSelectionChange = useCallback(() => {
+    const selection = editor.getSelection();
+    setHasSelection(!!selection);
+  }, [editor]);
 
   // Renders the editor instance using a React component.
   return (
@@ -350,21 +429,19 @@ export default function BlockEditor({
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
-            <BlockNoteView className=""
+            <BlockNoteView
               editor={editor}
               formattingToolbar={false}
               data-theming-css
               sideMenu={true}
               slashMenu={false}
               onBlur={handleOnBlur}
-            >
-              <SuggestionMenuController
-                triggerCharacter={"/"}
-                getItems={async (query) =>
-                  filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+              onChange={() => {
+                if (!isInitializing) {
+                  saveContent();
                 }
-              />
-            </BlockNoteView>
+              }}
+            />
           )}
         </div>
       </BlockNoteContext.Provider>
@@ -426,3 +503,4 @@ export default function BlockEditor({
 }
 
 {/* <AiPromptButton onToggle={toggleAiPrompt} {...{isAiPromptOpen}}/> */ }
+

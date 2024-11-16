@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 type EpicsPageProps = {
     params: {
+        projectId: Id<"projects">;
         epicId: Id<"epics">;
     };
 }
