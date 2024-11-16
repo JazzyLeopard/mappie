@@ -1,0 +1,13 @@
+0000000000000000000000000000000000000000 d6e5eebe47ad71ae33de0810bd436a34da4b61cd JazzyLeopard <kursad@hey.com> 1722717516 +0200	branch: Created from origin/develop
+d6e5eebe47ad71ae33de0810bd436a34da4b61cd 861fa8cb5363f97c39e40b32850e2d41a0dc5e51 JazzyLeopard <kursad@hey.com> 1722789581 +0200	commit: new button for ai prompt
+861fa8cb5363f97c39e40b32850e2d41a0dc5e51 4a4e9b6ad96a131012a8e0a96709f3552b5fdc53 JazzyLeopard <kursad@hey.com> 1722809666 +0200	commit: Changed the AI Generation experience, changed the badge in the navigation, added skeleton
+4a4e9b6ad96a131012a8e0a96709f3552b5fdc53 00665fa5039944960ccd10efb3bbc5526b9bb5ff JazzyLeopard <kursad@hey.com> 1722864102 +0200	commit: new Presentation mode, table formatting for requirements
+00665fa5039944960ccd10efb3bbc5526b9bb5ff 278301aaf0657e681765bfdd5e67218647367d23 JazzyLeopard <kursad@hey.com> 1723023778 +0200	commit: changes to Presentation Mode
+278301aaf0657e681765bfdd5e67218647367d23 822b8da241382309d4e185ef09ce52035edc17ee JazzyLeopard <kursad@hey.com> 1723023816 +0200	pull origin develop --rebase (finish): refs/heads/develop onto 5248f95edae28ae1aa3c32fb5622797492849a10
+822b8da241382309d4e185ef09ce52035edc17ee 86a14555ba3c0b305383e8b4a59af5df6d0cba24 JazzyLeopard <kursad@hey.com> 1723290542 +0200	commit: Brainstorm functionality (still need to refine)
+86a14555ba3c0b305383e8b4a59af5df6d0cba24 e1590770c995503616321c07a12c98a8623557ff JazzyLeopard <kursad@hey.com> 1723290558 +0200	commit: Brainstorm chat
+e1590770c995503616321c07a12c98a8623557ff d828dbbab46b050a54989e96c8766c22f7d41da9 JazzyLeopard <kursad@hey.com> 1723383094 +0200	commit: to button
+d828dbbab46b050a54989e96c8766c22f7d41da9 8044fd095bc293adab3b803ba64f788c3c7a80be JazzyLeopard <kursad@hey.com> 1723383978 +0200	commit (merge): Merge remote-tracking branch 'origin/develop' into develop
+8044fd095bc293adab3b803ba64f788c3c7a80be d828dbbab46b050a54989e96c8766c22f7d41da9 JazzyLeopard <kursad@hey.com> 1723384266 +0200	reset: moving to HEAD~
+d828dbbab46b050a54989e96c8766c22f7d41da9 093af945a02d4eb492dee48d7e442ec5a50ff5e8 JazzyLeopard <kursad@hey.com> 1723384467 +0200	commit: Merge remote-tracking branch 'origin/develop' into develop
+093af945a02d4eb492dee48d7e442ec5a50ff5e8 9c10dafdaff2044605e4f4fac190fcea61bc69dc JazzyLeopard <kursad@hey.com> 1723473373 +0200	commit (merge): Merge remote-tracking branch 'origin/develop' into develop

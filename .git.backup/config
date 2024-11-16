@@ -1,0 +1,42 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = https://github.com/jazzyleopard/listoriq.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[pull]
+	ff = only
+[extensions]
+	worktreeConfig = true
+[branch "kursad/new-editor"]
+	remote = origin
+	merge = refs/heads/kursad/new-editor
+[branch "develop"]
+	remote = origin
+	merge = refs/heads/develop
+[submodule "brainstorm-chat-source"]
+	url = https://github.com/JazzyLeopard/nextjs-chat.git
+	active = true
+[branch "features/analysis"]
+	remote = origin
+	merge = refs/heads/features/analysis
+[branch "new-structure"]
+	vscode-merge-base = origin/develop
+	remote = origin
+	merge = refs/heads/new-structure
+[branch "api-integration"]
+	remote = origin
+	merge = refs/heads/api-integration
+[branch "main"]
+	remote = origin
+	merge = refs/heads/new-structure
+[branch "new-epics-layout"]
+	vscode-merge-base = origin/new-structure
+	gk-merge-base = origin/new-structure
