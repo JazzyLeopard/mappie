@@ -13,7 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { Car, ChevronsLeft, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle } from "lucide-react";
+import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle, Folders, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +21,9 @@ import NavItem from "./NavItem";
 import UserItems from "./UserItems";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 export const Navigation = () => {
@@ -109,12 +112,6 @@ export const Navigation = () => {
       path: "",
     },
     {
-      label: "User Journeys",
-      icon: Car,
-      path: "user-journeys",
-      badge: "Coming soon",
-    },
-    {
       label: "Functional Requirements",
       icon: FileText,
       path: "functional-requirements",
@@ -185,18 +182,22 @@ export const Navigation = () => {
 
   return (
     <>
-      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-secondary w-80'} overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
+      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-slate-200 w-80'} overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
         isResetting && "transition-all ease-in-out duration-300"
       )}>
 
-        <div ref={navbarRef} className={cn("px-4 py-2 flex justify-between items-center", isResetting && "transition-all ease-in-out duration-300")}>
+        <div ref={navbarRef} className={cn("pr-4 pl-6 flex justify-between items-center mb-4", isCollapsed ? "pt-6 pb-2" : "py-1", isResetting && "transition-all ease-in-out duration-300")}>
           {!isCollapsed && <UserItems />}
-          <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground">
-            {isCollapsed ? <Menu className="flex justify-center items-center" /> : <ChevronsLeft />}
+          <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground hover:text-foreground transition">
+            {isCollapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
           </div>
         </div>
 
-        {!isCollapsed && (
+        {!isCollapsed ? (
           <>
             <div className="p-4">
               <div className="flex justify-between items-center mb-2">
@@ -239,7 +240,6 @@ export const Navigation = () => {
                       icon={item.icon}
                       onClick={() => handleNavItemClick(item.path)}
                       active={isActive(item.path)}
-                      badge={item.badge}
                     />
                   ))}
                 </>
@@ -255,6 +255,91 @@ export const Navigation = () => {
                 active={pathname === "/settings"}
               />
             </div>
+          </>
+        ) : (
+          <>
+            <div className="flex justify-center mb-4">
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className={cn(
+                            "hover:bg-primary/10",
+                            selectedProject && "text-primary"
+                          )}
+                        >
+                          <Folders className="h-5 w-5" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent 
+                      side="right" 
+                      align="start"
+                      className="w-72 p-0 ml-2"
+                      sideOffset={0}
+                    >
+                      <div className="p-2">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start mb-1"
+                          onClick={() => handleProjectChange("all_projects")}
+                        >
+                          All Projects
+                        </Button>
+                        <Separator className="my-1" />
+                        {projects?.map((project) => (
+                          <Button
+                            key={project._id}
+                            variant="ghost"
+                            className="w-full justify-start mb-1 text-sm"
+                            onClick={() => handleProjectChange(project._id)}
+                          >
+                            {project.title}
+                          </Button>
+                        ))}
+                        <Separator className="my-1" />
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-primary pt-1"
+                          onClick={() => handleProjectChange("new_project")}
+                        >
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          New Project
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <TooltipContent 
+                    side="right" 
+                    align="center" 
+                    sideOffset={10}
+                  >
+                    <p>Projects</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Separator className="bg-slate-300 ml-2 mb-2" />
+            <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+              {selectedProject && projects && (
+                <>
+                  {navItems.map((item) => (
+                    <NavItem
+                      key={item.label}
+                      label={item.label}
+                      icon={item.icon}
+                      onClick={() => handleNavItemClick(item.path)}
+                      active={isActive(item.path)}
+                      collapsed={true}
+                    />
+                  ))}
+                </>
+              )}
+            </ScrollArea>
           </>
         )}
 

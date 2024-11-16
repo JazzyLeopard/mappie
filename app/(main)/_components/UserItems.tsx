@@ -20,10 +20,10 @@ const UserItems = () => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div
-            className="flex items-center text-sm p-3 w-full hover:bg-primary/5"
+            className="flex p-4 pl-0 items-start rounded-lg text-sm w-full hover:bg-primary/5"
             role="button"
           >
-            <div className="gap-x-2 flex items-center max-w-[200px]">
+            <div className="gap-x-2 flex max-w-[200px]">
               <Avatar className="h-5 w-5">
                 <AvatarImage src={user?.imageUrl} />
               </Avatar>

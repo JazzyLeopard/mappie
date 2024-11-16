@@ -24,7 +24,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="flex h-[calc(100vh)] overflow-hidden">
+    <div className="flex h-[calc(100vh)] overflow-hidden bg-slate-200">
       <Navigation />
       <main className="overflow-y-hidden w-full">{children}</main>
     </div>

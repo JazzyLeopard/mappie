@@ -6,7 +6,6 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { menuItems } from "@/app/(main)/_components/constants";
-import { serialize } from 'next-mdx-remote/serialize';
 
 interface ProjectIdPageProps {
   params: {
@@ -16,10 +15,8 @@ interface ProjectIdPageProps {
 
 const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   const id = params.projectId;
-
-  const [projectDetails, setProjectDetails] = useState<any>()
-
-  const updateProjectMutation = useMutation(api.projects.updateProject)
+  const [projectDetails, setProjectDetails] = useState<any>();
+  const updateProjectMutation = useMutation(api.projects.updateProject);
 
   const project = useQuery(api.projects.getProjectById, {
     projectId: id,
@@ -27,40 +24,50 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
 
   useEffect(() => {
     if (project && project?._id) {
-      setProjectDetails(project)
+      setProjectDetails(project);
     }
-  }, [project])
+  }, [project]);
 
   if (projectDetails === undefined) {
     return <div className="flex justify-center items-center mx-auto"><Spinner size={"lg"} /></div>;
   }
 
-
   const handleEditorBlur = async () => {
+    // No need to do anything on blur since changes are handled by handleEditorChange
+    return Promise.resolve();
+  };
+
+  const handleEditorChange = async (attribute: string, value: any) => {
     try {
-      setProjectDetails((prevDetails: any) => {
-        console.log('time for API call', prevDetails);
-        const { _creationTime, createdAt, updatedAt, userId, ...payload } = prevDetails;
-        updateProjectMutation(payload).catch(error => {
-          console.log('error updating project', error);
-        });
-        return prevDetails;  // Return the same state to avoid unnecessary re-renders
+      // Update local state
+      setProjectDetails((prevDetails: any) => ({
+        ...prevDetails,
+        [attribute]: value
+      }));
+
+      // Prepare payload for database update by removing non-mutable fields
+      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
+      
+      // Update database
+      await updateProjectMutation({
+        ...payload,
+        [attribute]: value
       });
+
     } catch (error) {
-      console.log('error updating project', error);
+      console.error('Error updating project:', error);
     }
   };
 
-  const handleEditorChange = (attribute: string, data: any) => {
-    setProjectDetails({ ...projectDetails, [attribute]: data });
-  };
-
-
-  return <CommonLayout
-    data={projectDetails}
-    menu={menuItems}
-    onEditorBlur={handleEditorBlur}
-    handleEditorChange={handleEditorChange} />
+  return (
+    <CommonLayout
+      data={projectDetails}
+      menu={menuItems}
+      onEditorBlur={handleEditorBlur}
+      handleEditorChange={handleEditorChange}
+      updateProject={updateProjectMutation}
+    />
+  );
 };
 
 export default ProjectIdPage;

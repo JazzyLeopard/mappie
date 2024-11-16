@@ -19,10 +19,12 @@ export const createFunctionalRequirement = mutation({
 export const getFunctionalRequirementsByProjectId = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const requirements = await ctx.db
       .query("functionalRequirements")
       .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .first();
+    
+    return requirements;
   },
 });
 

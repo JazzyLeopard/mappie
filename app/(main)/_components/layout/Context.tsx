@@ -108,19 +108,6 @@ export default function Component({ projectId }: ContextProps) {
 
     return (
         <div className="max-w-sm space-y-3 pr-2 mt-4">
-            <div className="flex items-center mb-2">
-                <h2 className="text-lg font-semibold">Context</h2>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <InfoIcon className="h-4 w-4 ml-2 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            Add documents to provide more context for the AI when generating content for any section.
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
             <div className="rounded-lg cursor-pointer border border-dashed border-primary p-3 text-center">
                 <Dropzone
                     onDropRejected={onDropRejected}

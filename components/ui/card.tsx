@@ -9,7 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-lg bg-card text-card-foreground shadow-[0_0_2px_rgba(0,0,0,0.1)] scrollbar-thin relative [&::-webkit-scrollbar]:h-[60%] [&::-webkit-scrollbar]:my-auto",
       className
     )}
     {...props}

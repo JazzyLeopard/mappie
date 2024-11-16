@@ -124,10 +124,10 @@ export default function Component() {
 
   return (
     <>
-      <div className="">
+      <div className="bg-white rounded-lg w-full h-screen">
         <div className="p-6 pt-16 min-w-100% ">
           <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-bold">Projects</h1>
+            <h1 className="text-2xl font-semibold">Projects</h1>
 
           </div>
           <div className="flex items-center space-x-2 mb-6">

@@ -36,7 +36,7 @@ export function AiPromptButton({
       <p className="pl-2">
         {loading ? "Generating..." : 
          showingComparison ? "New content below" : 
-         hasExistingContent ? "Enhance with AI" : "Generate with AI"}
+         hasExistingContent ? "Enhance" : "Generate"}
       </p>
       <ChevronDown className="h-4 w-4 ml-2" />
     </div>
@@ -64,7 +64,7 @@ export function AiPromptButton({
             <DropdownMenuContent className="w-96 p-2" onClick={(e) => e.stopPropagation()}>
               <div className="w-full p-2 rounded-md">
                 <p className="mb-2 text-sm font-medium">
-                  {hasExistingContent ? "Enhance with AI" : "Generate with AI"}
+                  {hasExistingContent ? "Enhance" : "Generate"}
                 </p>
                 <div className="flex flex-col">
                   <Input
@@ -94,7 +94,7 @@ export function AiPromptButton({
         <TooltipContent>
           {loading ? "Generating content..." : 
            showingComparison ? "New content generated" : 
-           hasExistingContent ? "Enhance with AI" : "Generate with AI"}
+           hasExistingContent ? "Enhance" : "Generate"}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

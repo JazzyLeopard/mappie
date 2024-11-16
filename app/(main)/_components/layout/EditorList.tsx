@@ -28,7 +28,6 @@ const EditorList = ({ data, components, handleEditorChange, onOpenBrainstormChat
                                 // console.log('EditorList: Calling handleEditorChange', { key: c.key, value });
                                 handleEditorChange(c.key, value);
                             }}
-                            onOpenBrainstormChat={onOpenBrainstormChat}
                             onBlur={onEditorBlur}
                             context="project"
                         />
