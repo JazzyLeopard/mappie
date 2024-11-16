@@ -6,8 +6,7 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "patch-package"
+    "lint": "next lint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.60",
@@ -127,7 +126,9 @@
     "y-protocols": "^1.0.6",
     "y-websocket": "^2.0.4",
     "yjs": "^13.6.20",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "glob": "^10.0.0",
+    "rimraf": "^5.0.0"
   },
   "devDependencies": {
     "@types/diff": "^5.2.3",
@@ -141,11 +142,12 @@
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
-    "eslint": "^8",
+    "eslint": "^8.0.0",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "patch-package": "^8.0.0"
   },
   "resolutions": {
     "yjs": "^13.6.18"
