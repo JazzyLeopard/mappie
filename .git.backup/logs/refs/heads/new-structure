@@ -1,0 +1,40 @@
+0000000000000000000000000000000000000000 9c10dafdaff2044605e4f4fac190fcea61bc69dc JazzyLeopard <kursad@hey.com> 1723993365 +0200	branch: Created from HEAD
+9c10dafdaff2044605e4f4fac190fcea61bc69dc bb5584b33c505c1d8f06880a94af42acfd22fde9 JazzyLeopard <kursad@hey.com> 1723993379 +0200	commit: Your commit message describing the changes
+bb5584b33c505c1d8f06880a94af42acfd22fde9 e0f944d0669ddc31b4a8578d2aae2bb143432697 JazzyLeopard <kursad@hey.com> 1724331280 +0200	commit: changes to layout
+e0f944d0669ddc31b4a8578d2aae2bb143432697 bb2f439b227fa8bda5bb5d7a07ae05f4dbc37037 JazzyLeopard <kursad@hey.com> 1724930441 +0200	commit: new side bar
+bb2f439b227fa8bda5bb5d7a07ae05f4dbc37037 ddc5fbba8e8bb341d8699996bd7b4538d1d9987f JazzyLeopard <kursad@hey.com> 1724932465 +0200	commit: Update submodule path and URL
+ddc5fbba8e8bb341d8699996bd7b4538d1d9987f bb2f439b227fa8bda5bb5d7a07ae05f4dbc37037 JazzyLeopard <kursad@hey.com> 1724934643 +0200	reset: moving to HEAD~
+bb2f439b227fa8bda5bb5d7a07ae05f4dbc37037 ddc5fbba8e8bb341d8699996bd7b4538d1d9987f JazzyLeopard <kursad@hey.com> 1724944695 +0200	pull --tags origin new-structure: Fast-forward
+ddc5fbba8e8bb341d8699996bd7b4538d1d9987f 936d53d2c166722260fe1e94f5cbafd0e89328e8 JazzyLeopard <kursad@hey.com> 1725394432 +0200	reset: moving to origin/new-structure
+936d53d2c166722260fe1e94f5cbafd0e89328e8 4b2ea66589d63b50419e282e156636ecd052177c JazzyLeopard <kursad@hey.com> 1725645346 +0200	commit: LAyout changes
+4b2ea66589d63b50419e282e156636ecd052177c 9aed44043b3ff978378cf89eb4eb63985b1bbac9 JazzyLeopard <kursad@hey.com> 1725949086 +0200	pull --tags origin new-structure: Fast-forward
+9aed44043b3ff978378cf89eb4eb63985b1bbac9 b260a2366f9c11742229b62fdc0cfedfa9bd2196 JazzyLeopard <kursad@hey.com> 1726053768 +0200	commit: logo changes
+b260a2366f9c11742229b62fdc0cfedfa9bd2196 98e4a75c2358d86d77fcecbc4bf264aedfe0af64 JazzyLeopard <kursad@hey.com> 1726082299 +0200	commit (merge): Merge remote-tracking branch 'refs/remotes/origin/new-structure' into new-structure
+98e4a75c2358d86d77fcecbc4bf264aedfe0af64 e6d8e059c281da771d86cde5575a12f15924113c JazzyLeopard <kursad@hey.com> 1726239446 +0200	commit: new logo
+e6d8e059c281da771d86cde5575a12f15924113c 3853c455329012411a1c9a531b208b53b254e1a9 JazzyLeopard <kursad@hey.com> 1726239570 +0200	commit (merge): Merge remote-tracking branch 'origin/new-structure' into new-structure
+3853c455329012411a1c9a531b208b53b254e1a9 0742487b81f9677de7461f3f6b2b6ad05c29f6ff JazzyLeopard <kursad@hey.com> 1726262185 +0200	commit: changes to gpt and constant
+0742487b81f9677de7461f3f6b2b6ad05c29f6ff 49e3472bc5c06f5b41ad52890b93742827702fac JazzyLeopard <kursad@hey.com> 1726296755 +0200	commit: Fixed the 'Enhance with AI button for FR and UC
+49e3472bc5c06f5b41ad52890b93742827702fac a9a1adce4f1f7ac2ebed7a483ecdd8f37a95fb78 JazzyLeopard <kursad@hey.com> 1726316678 +0200	commit: changes to editor toolbar - new enhance button + seperate toggles
+a9a1adce4f1f7ac2ebed7a483ecdd8f37a95fb78 fa801cb73847431fdb05247a9216250f12057510 JazzyLeopard <kursad@hey.com> 1726492347 +0200	commit: changes to enhance with ai and AllProjects
+fa801cb73847431fdb05247a9216250f12057510 aa9e05c87af6a4bd2ef2d170aca98b0ce99065b6 JazzyLeopard <kursad@hey.com> 1726492680 +0200	commit (merge): Merge remote-tracking branch 'origin/new-structure' into new-structure
+aa9e05c87af6a4bd2ef2d170aca98b0ce99065b6 2a84734d4615486a62784c52c85e857e2b43998b JazzyLeopard <kursad@hey.com> 1726859077 +0200	pull --tags origin new-structure: Fast-forward
+2a84734d4615486a62784c52c85e857e2b43998b 6bd63c82f45ac799969cc6bc56852f097d2c574f JazzyLeopard <kursad@hey.com> 1727028330 +0200	pull --tags origin new-structure: Fast-forward
+6bd63c82f45ac799969cc6bc56852f097d2c574f 19991522dbb9b631a1c5e136f3d4c2795b20033b JazzyLeopard <kursad@hey.com> 1727096077 +0200	commit: changed icon sidebar + new upload field
+19991522dbb9b631a1c5e136f3d4c2795b20033b a57348f37f2a30564ca4d51f39dd525d00e5fbee JazzyLeopard <kursad@hey.com> 1727096222 +0200	commit (merge): Merge remote-tracking branch 'origin/new-structure' into new-structure
+a57348f37f2a30564ca4d51f39dd525d00e5fbee 0742487b81f9677de7461f3f6b2b6ad05c29f6ff JazzyLeopard <kursad@hey.com> 1727097007 +0200	reset: moving to 0742487
+0742487b81f9677de7461f3f6b2b6ad05c29f6ff a57348f37f2a30564ca4d51f39dd525d00e5fbee JazzyLeopard <kursad@hey.com> 1727097015 +0200	pull --tags origin new-structure: Fast-forward
+a57348f37f2a30564ca4d51f39dd525d00e5fbee 19991522dbb9b631a1c5e136f3d4c2795b20033b JazzyLeopard <kursad@hey.com> 1727097149 +0200	reset: moving to 1999152
+19991522dbb9b631a1c5e136f3d4c2795b20033b a57348f37f2a30564ca4d51f39dd525d00e5fbee JazzyLeopard <kursad@hey.com> 1727097160 +0200	pull --tags origin new-structure: Fast-forward
+a57348f37f2a30564ca4d51f39dd525d00e5fbee 310beb14138343bc313c4acbaf333d63fb0460f1 JazzyLeopard <kursad@hey.com> 1727097688 +0200	reset: moving to 310beb14138343bc313c4acbaf333d63fb0460f1
+310beb14138343bc313c4acbaf333d63fb0460f1 ba18177326be5a43b92d3f821090e613778303b5 JazzyLeopard <kursad@hey.com> 1727182485 +0200	pull --tags origin new-structure: Fast-forward
+ba18177326be5a43b92d3f821090e613778303b5 9c37633d5919f95eb389a76362588417d77256a8 JazzyLeopard <kursad@hey.com> 1727250404 +0200	pull --tags origin new-structure: Fast-forward
+9c37633d5919f95eb389a76362588417d77256a8 5bc05db6325f3c0024a36db2226f0c53e8640ad1 JazzyLeopard <kursad@hey.com> 1727261489 +0200	commit: changes to Projects dropdown
+5bc05db6325f3c0024a36db2226f0c53e8640ad1 e9fe5802a67c594acaf0d78176fbe0048819fd6f JazzyLeopard <kursad@hey.com> 1727332348 +0200	commit (merge): Merge remote-tracking branch 'refs/remotes/origin/new-structure' into new-structure
+e9fe5802a67c594acaf0d78176fbe0048819fd6f bf88ebd43c48b0c542dd2db0004a33891b9f25a1 JazzyLeopard <kursad@hey.com> 1727769673 +0300	pull --tags origin new-structure: Fast-forward
+bf88ebd43c48b0c542dd2db0004a33891b9f25a1 0b96d3d68068c255bcc76746c0f44eb361807af5 JazzyLeopard <kursad@hey.com> 1727958137 +0200	pull --tags origin new-structure: Fast-forward
+0b96d3d68068c255bcc76746c0f44eb361807af5 7ffadcf84ad89b430a3838d39f653b274454965b JazzyLeopard <kursad@hey.com> 1727958400 +0200	commit: Truncated epic names to 13 characters
+7ffadcf84ad89b430a3838d39f653b274454965b ac4e33cecf3af4b6a1715833e0eb936844242b94 JazzyLeopard <kursad@hey.com> 1728466478 +0200	pull --tags origin new-structure: Fast-forward
+ac4e33cecf3af4b6a1715833e0eb936844242b94 819fc5d6464da06e2110aa4e4a3b1f12f0be4c41 JazzyLeopard <kursad@hey.com> 1728889972 +0200	pull --tags origin new-structure: Fast-forward
+819fc5d6464da06e2110aa4e4a3b1f12f0be4c41 0e551a70ea13f61c0b929f2756938fd95eb62817 JazzyLeopard <kursad@hey.com> 1728922816 +0200	pull --tags origin new-structure: Fast-forward
+0e551a70ea13f61c0b929f2756938fd95eb62817 c6c6443bb815e5ac56f688d2817624008fac81eb JazzyLeopard <kursad@hey.com> 1729436406 +0200	commit: packages
+c6c6443bb815e5ac56f688d2817624008fac81eb 7a7f13f4c29e45519206dc4b81226604b4846e8e JazzyLeopard <kursad@hey.com> 1729436449 +0200	commit (merge): Merge remote-tracking branch 'refs/remotes/origin/new-structure' into new-structure
