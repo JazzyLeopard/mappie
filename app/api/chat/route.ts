@@ -3,6 +3,8 @@ import { tools } from '@/ai/tools';
 import { openai } from '@ai-sdk/openai';
 
 export async function POST(request: Request) {
+  console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+
   const { messages, selectedItemContent, selectedItemType, selectedEpic } = await request.json();
 
   // Add system prompt based on content type
