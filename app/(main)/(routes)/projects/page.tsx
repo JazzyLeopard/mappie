@@ -21,7 +21,6 @@ const ProjectsPage = () => {
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-
   if (!isSignedIn) {
     return <>Not signed in..</>;
   }
@@ -92,20 +91,11 @@ const ProjectsPage = () => {
           <AllProjects />
         ) : (
           <>
-            {/* <h1 className="text-3xl font-semibold mb-8">
-              {user?.firstName || user?.primaryEmailAddress?.emailAddress.split("@")[0]}
-              &apos;s space
-            </h1> */}
-
             <h2 className="text-2xl font-semibold mb-4">
               You haven't created any projects...
             </h2>
-
             <Image src={Empty} alt="documents" width={100} height={100} />
-
             <p className="text-gray-700">Click on "Create New" or "Ideate with AI" to get started</p>
-
-
             <div className="flex justify-center gap-4 mb-6">
               <Button variant="outline" className="flex items-center" onClick={onCreate}>
                 <PlusIcon className="w-4 h-4 mr-2" />

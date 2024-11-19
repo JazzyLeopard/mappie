@@ -3,12 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { SignInButton, useUser } from "@clerk/clerk-react";
 import { ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export const Hero = () => {
   const { isSignedIn } = useUser();
+
   return (
-    <section className="container grid place-items-center py-20 md:py-32 gap-10 max-w-[1100px]">
+    <section className="container grid place-items-center py-16 gap-10 max-w-[1100px]">
       <div className="text-center space-y-8">
         <main className="text-5xl md:text-6xl font-bold">
           <h1 className="inline">
@@ -40,9 +42,7 @@ export const Hero = () => {
             <span className="text-md font-medium">Requirements</span>
           </div>
           <div className="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <ChevronRight className="text-muted-foreground" />
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center hover:bg-gradient-to-r hover:from-[#F7B8E4] hover:to-[#6CCEF5] transition-colors" style={{ background: 'linear-gradient(to right, #F7B8E4, #6CCEF5)', padding: '2px' }}>
@@ -53,9 +53,7 @@ export const Hero = () => {
             <span className="text-md font-medium">Analysis</span>
           </div>
           <div className="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <ChevronRight className="text-muted-foreground" />
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center hover:bg-gradient-to-r hover:from-[#F7B8E4] hover:to-[#6CCEF5] transition-colors" style={{ background: 'linear-gradient(to right, #F7B8E4, #6CCEF5)', padding: '2px' }}>
@@ -66,9 +64,7 @@ export const Hero = () => {
             <span className="text-md font-medium">Epic</span>
           </div>
           <div className="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <ChevronRight className="text-muted-foreground" />
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center hover:bg-gradient-to-r hover:from-[#F7B8E4] hover:to-[#6CCEF5] transition-colors" style={{ background: 'linear-gradient(to right, #F7B8E4, #6CCEF5)', padding: '2px' }}>
