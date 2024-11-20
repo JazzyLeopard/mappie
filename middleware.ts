@@ -12,7 +12,7 @@ const restrictedRoutes = ['functional-requirements', 'user-journeys', 'use-cases
 export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   if (isProtectedRoute(req)) {
-    const { userId, getToken } = auth()
+    const { userId, getToken } = await auth()
     const token = await getToken({ template: 'convex' })
     if (!userId || !token) {
       // User is not authenticated, redirect to login
