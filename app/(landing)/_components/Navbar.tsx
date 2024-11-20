@@ -1,19 +1,17 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Logo } from "./Logo";
+import { Button } from "@/components/ui/button";
 import {
   SignInButton,
   SignUpButton,
   UserButton,
   useUser,
 } from "@clerk/clerk-react";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useConvexAuth } from "convex/react";
+import { Logo } from "./Logo";
 
 export const Navbar = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
 
   return (
     <>
@@ -22,13 +20,13 @@ export const Navbar = () => {
           "border-b shadow-sm z-50 bg-background fixed top-0 w-full"
         }
       >
-        <div className="max-w-[1100px] mx-auto flex justify-between items-center p-6">
+        <div className="max-w-[1300px] mx-auto flex justify-between items-center h-20 p-4">
           <Logo />
 
           {isSignedIn ? (
             <div className="flex items-center gap-x-6">
               <Button variant="default" className="h-7 md:h-7 lg:h-9" asChild>
-                <Link href="/projects">Enter Listoriq</Link>
+                <Link href="/projects">Enter Projeqtly</Link>
               </Button>
 
               <UserButton afterSignOutUrl="/" />
