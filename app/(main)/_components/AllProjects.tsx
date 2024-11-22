@@ -97,11 +97,11 @@ export default function Component() {
         body: JSON.stringify({ prompt: aiPrompt, projectId }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate project details');
+      if (response.ok) {
+        console.log("Ideate response:", response);
       }
       else {
-        console.log("Ideate response:", response);
+        throw new Error('Failed to generate project details');
       }
 
       toast.success("Project details generated successfully!");
