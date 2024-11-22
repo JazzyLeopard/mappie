@@ -1,32 +1,24 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Id } from "@/convex/_generated/dataModel"
-import AiGenerationIconWhite from "@/icons/AI-Generation-White"
-import empty from "@/public/empty.png"
-import { useAuth } from "@clerk/nextjs"
-import { GitPullRequest, Loader2, MoreVertical, Plus, Trash } from "lucide-react"
-import Image from "next/image"
-import { useRouter } from 'next/navigation'
-import { toast } from "sonner"
-import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
 import AIStoryCreator from '@/ai/ai-chat'
 import LabelToInput from "@/app/(main)/_components/LabelToInput"
+import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Id } from "@/convex/_generated/dataModel"
 import AiGenerationIcon from '@/icons/AI-Generation'
+import AiGenerationIconWhite from "@/icons/AI-Generation-White"
+import empty from "@/public/empty.png"
+import { GitPullRequest, Plus, Trash } from "lucide-react"
+import Image from "next/image"
+import { useCallback, useEffect, useState } from 'react'
 
 type SelectedItems = {
   useCase: string | null;
 }
 
 interface UseCasesLayoutProps {
-  params: {
-    projectId: Id<"projects">;
-    useCaseId?: Id<"useCases">;
-  };
+  projectId: Id<"projects">
   handleEditorChange: (useCaseId: Id<"useCases">, field: string, value: any) => Promise<void>;
   onAddUseCase: () => Promise<void>;
   onDeleteUseCase: (id: Id<"useCases">) => Promise<void>;
@@ -34,11 +26,10 @@ interface UseCasesLayoutProps {
   onUseCaseNameChange: (useCaseId: Id<"useCases">, name: string) => Promise<void>;
   useCases: any[];
   isOnboardingComplete: boolean;
-  updateProject: (payload: any) => Promise<void>;
 }
 
 export default function UseCasesLayout({
-  params,
+  projectId,
   handleEditorChange,
   onAddUseCase,
   onDeleteUseCase,
@@ -46,10 +37,7 @@ export default function UseCasesLayout({
   onUseCaseNameChange,
   useCases,
   isOnboardingComplete,
-  updateProject
 }: UseCasesLayoutProps) {
-  const router = useRouter()
-  const { getToken } = useAuth()
 
   // Initialize selected items with the first use case if available, otherwise null
   const [selectedItems, setSelectedItems] = useState<SelectedItems>({
@@ -76,36 +64,6 @@ export default function UseCasesLayout({
     }
   }, [useCases, selectedItems.useCase, selectItem])
 
-  const renderUseCase = (useCase: any) => {
-    const isSelected = selectedItems.useCase === useCase._id
-
-    return (
-      <div key={useCase._id} className="">
-        <div
-          className={`flex items-center rounded-lg px-4 py-1 hover:bg-slate-200 transition-colors ${
-            isSelected ? 'bg-white font-semibold' : ''
-          } cursor-pointer group`}
-          onClick={() => selectItem(useCase._id)}
-        >
-          <span className="flex-grow text-left text-sm w-3/4">
-            {useCase.title}
-          </span>
-          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity w-1/4 justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeleteUseCase(useCase._id)
-              }}
-            >
-              <Trash className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   if (!isOnboardingComplete) {
     return (
@@ -128,7 +86,7 @@ export default function UseCasesLayout({
                 <Plus className="mr-2 h-4 w-4" /> Add Use Case
               </Button>
               <Button onClick={onAddUseCase} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
-                <AiGenerationIcon /> 
+                <AiGenerationIcon />
                 <span className="ml-2 font-semibold">Generate Use Case</span>
               </Button>
             </div>
@@ -144,9 +102,8 @@ export default function UseCasesLayout({
                   return (
                     <div key={useCase._id} className="">
                       <div
-                        className={`flex items-center rounded-lg pl-3 pr-1 py-1 hover:bg-slate-200 transition-colors ${
-                          selectedItems.useCase === useCase._id ? 'bg-white font-semibold' : ''
-                        } cursor-pointer group`}
+                        className={`flex items-center rounded-lg pl-3 pr-1 py-1 hover:bg-slate-200 transition-colors ${selectedItems.useCase === useCase._id ? 'bg-white font-semibold' : ''
+                          } cursor-pointer group`}
                         onClick={() => selectItem(useCase._id)}
                       >
                         <GitPullRequest className="h-3 w-3 mr-3" />
@@ -185,7 +142,7 @@ export default function UseCasesLayout({
                     <LabelToInput
                       value={selectedUseCase.title}
                       setValue={(newTitle) => onUseCaseNameChange(selectedItems.useCase as Id<"useCases">, newTitle)}
-                      onBlur={() => {}}
+                      onBlur={() => { }}
                     />
                   </header>
                   <div className="flex-1 overflow-y-auto flex px-4">
@@ -198,7 +155,6 @@ export default function UseCasesLayout({
                       setProjectDetails={(value) => handleEditorChange(selectedUseCase._id, 'description', value)}
                       context="useCase"
                       isRichText={true}
-                      updateProject={updateProject}
                     />
                   </div>
                 </div>
@@ -218,11 +174,10 @@ export default function UseCasesLayout({
                     selectedItemContent={selectedUseCase?.description || ''}
                     selectedItemType="useCase"
                     selectedEpic={null}
-                    projectId={params?.projectId as Id<'projects'>}
+                    projectId={projectId as Id<'projects'>}
                     selectedItemId={selectedItems.useCase as Id<'useCases'>}
-                    selectedItemName={selectedUseCase?.title || 'Untitled'}
                     isCollapsed={false}
-                    toggleCollapse={() => {}}
+                    toggleCollapse={() => { }}
                   />
                 )}
               </div>

@@ -17,7 +17,7 @@ interface UseCasesProps {
 
 const UseCases = ({ params }: UseCasesProps) => {
     const projectId = params.projectId
-    const [content, setContent] = useState<any>([])
+    const [content, setContent] = useState<any[]>([])
     const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId });
     const createUseCase = useMutation(api.useCases.createUseCase);
     const updateUseCase = useMutation(api.useCases.updateUseCase);
@@ -46,14 +46,15 @@ const UseCases = ({ params }: UseCasesProps) => {
         await updateUseCase({ id, [field]: value });
     }, [updateUseCase]);
 
-    const handleEditorChange = useCallback((id: Id<"useCases">, field: string, value: any) => {
-        handleUpdateUseCase(id, field as 'title' | 'description', value);
+    const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
+        await handleUpdateUseCase(id, field as 'title' | 'description', value);
     }, [handleUpdateUseCase]);
 
 
     const handleDelete = useCallback(async (id: Id<"useCases">) => {
         try {
             await deleteUseCase({ id });
+            setContent(prevContent => prevContent.filter(useCase => useCase._id !== id));
             toast.success("Use case deleted successfully");
         } catch (error) {
             console.error("Error deleting use case:", error);
@@ -64,6 +65,10 @@ const UseCases = ({ params }: UseCasesProps) => {
     const handleOpenBrainstormChat = useCallback(() => {
         // Implement the logic for opening brainstorm chat
     }, []);
+
+    const handleUseCaseNameChange = useCallback(async (useCaseId: Id<"useCases">, newName: string) => {
+        await updateUseCase({ id: useCaseId, title: newName })
+    }, [updateUseCase])
 
     if (useCases === undefined) {
         return <Spinner size={"lg"} />;
@@ -77,6 +82,8 @@ const UseCases = ({ params }: UseCasesProps) => {
             onDeleteUseCase={handleDelete}
             useCases={content || []}
             isOnboardingComplete={project?.onboarding == 0}
+            onEditorBlur={async () => { }}
+            onUseCaseNameChange={handleUseCaseNameChange}
         />
     );
 };
