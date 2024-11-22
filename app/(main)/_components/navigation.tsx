@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -9,21 +11,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { Car, CreditCard, FileText, GitPullRequest, Home, Layers, Menu, PlusCircle, Folders, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 export const Navigation = () => {
@@ -186,7 +186,7 @@ export const Navigation = () => {
         isResetting && "transition-all ease-in-out duration-300"
       )}>
 
-        <div ref={navbarRef} className={cn("pr-4 pl-6 flex justify-between items-center mb-4", isCollapsed ? "pt-6 pb-2" : "py-1", isResetting && "transition-all ease-in-out duration-300")}>
+        <div ref={navbarRef} className={cn("px-5 flex justify-between items-center", isCollapsed ? "pt-6 pb-2" : "py-1", isResetting && "transition-all ease-in-out duration-300")}>
           {!isCollapsed && <UserItems />}
           <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground hover:text-foreground transition">
             {isCollapsed ? (
@@ -264,8 +264,8 @@ export const Navigation = () => {
                   <Popover>
                     <TooltipTrigger asChild>
                       <PopoverTrigger asChild>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           className={cn(
                             "hover:bg-primary/10",
@@ -276,8 +276,8 @@ export const Navigation = () => {
                         </Button>
                       </PopoverTrigger>
                     </TooltipTrigger>
-                    <PopoverContent 
-                      side="right" 
+                    <PopoverContent
+                      side="right"
                       align="start"
                       className="w-72 p-0 ml-2"
                       sideOffset={0}
@@ -313,9 +313,9 @@ export const Navigation = () => {
                       </div>
                     </PopoverContent>
                   </Popover>
-                  <TooltipContent 
-                    side="right" 
-                    align="center" 
+                  <TooltipContent
+                    side="right"
+                    align="center"
                     sideOffset={10}
                   >
                     <p>Projects</p>
