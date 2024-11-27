@@ -11,6 +11,7 @@ import {DraggableBlockPlugin_EXPERIMENTAL} from '@lexical/react/LexicalDraggable
 import {useRef} from 'react';
 
 const DRAGGABLE_BLOCK_MENU_CLASSNAME = 'draggable-block-menu';
+const DRAGGABLE_BLOCK_MENU_CONTAINER_CLASSNAME = 'draggable-block-menu-container';
 
 function isOnMenu(element: HTMLElement): boolean {
   return !!element.closest(`.${DRAGGABLE_BLOCK_MENU_CLASSNAME}`);
@@ -30,8 +31,14 @@ export default function DraggableBlockPlugin({
       menuRef={menuRef}
       targetLineRef={targetLineRef}
       menuComponent={
-        <div ref={menuRef} className="icon draggable-block-menu">
-          <div className="icon" />
+        <div className={DRAGGABLE_BLOCK_MENU_CONTAINER_CLASSNAME}>
+          <div 
+            ref={menuRef} 
+            className={DRAGGABLE_BLOCK_MENU_CLASSNAME}
+            title="Drag to move"
+          >
+            <div className="icon" />
+          </div>
         </div>
       }
       targetLineComponent={

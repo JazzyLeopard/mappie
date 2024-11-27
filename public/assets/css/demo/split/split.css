@@ -1,0 +1,78 @@
+.has-module .module-content {
+	padding-right: 150px;
+	padding-left: 150px;
+}
+
+@media (max-width: 991px) {
+	.has-module .module-content {
+		padding-right: 15px;
+		padding-left: 15px;
+		padding-top: 160px;
+		padding-bottom: 5vh;
+	}
+	.has-module .module-bg {
+		padding-top: 25vh;
+		padding-bottom: 25vh;
+	}
+	.has-module .module-content-bottom {
+		padding-top: 150px;
+		padding-bottom: 150px;
+	}
+}
+
+@media (max-width: 767px) {
+	.has-module .module-content-bottom {
+		padding-top: 110px;
+		padding-bottom: 60px;
+		padding-right: 15px;
+		padding-left: 15px;
+	}
+}
+
+/* ABOUT */
+.about .module-heading {
+	font-size: 7vmin;
+}
+.about .module-bg {
+	padding-top: 20vh;
+	padding-bottom: 20vh;
+}
+
+@media (max-width: 991px) {
+	.about .module-heading {
+		font-size: 8vw;
+	}
+}
+
+@media (max-width: 767px) {
+	.about .module-heading {
+		font-size: 11vw;
+	}
+}
+
+
+/* Insider Magazine */
+.insider-magazine .module-content {
+	padding-left: 15px;
+}
+
+/* Android Cast */
+.android-cast .module-hover-scale:hover .row-bg-inner {
+	transform: scale(1.075);
+}
+@media (max-width: 991px) {
+	.android-cast .module-bg {
+		padding-top: 20vh;
+		padding-bottom: 20vh;
+	}
+	.android-cast .module-content {
+		padding-top: 150px;
+		padding-bottom: 150px;
+	}
+}
+@media (max-width: 767px) {
+	.android-cast .module-content {
+		padding-top: 60px;
+		padding-bottom: 60px;
+	}
+}

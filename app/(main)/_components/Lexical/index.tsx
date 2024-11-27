@@ -49,6 +49,7 @@ createRoot(document.getElementById('root') as HTMLElement).render(
       setProjectDetails={() => Promise.resolve()}
       context="epics"
       isRichText={true}
+      itemId=""
     />
   </React.StrictMode>,
 );

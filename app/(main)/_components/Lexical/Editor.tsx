@@ -73,13 +73,16 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
-import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, createCommand, LexicalCommand } from 'lexical';
+import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
 import { DEFAULT_TRANSFORMERS } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Doc } from 'yjs';
 import {Provider} from '@lexical/yjs';
 import {WebsocketProvider} from 'y-websocket';
 import { Id } from '@/convex/_generated/dataModel';
+import { PASTE_COMMAND } from 'lexical';
+import AIEditPlugin, { SuggestionCardNode } from './plugins/AiEditPlugin';
+import { TableNode, TableRowNode, TableCellNode } from '@lexical/table';
 
 const skipCollaborationInit =
   // @ts-expect-error
@@ -155,32 +158,109 @@ export default function Editor({
   const updateUserStory = useMutation(api.userstories.updateUserStory);
 
   const handleChange = useCallback((editorStateJSON: string) => {
-    setProjectDetails(editorStateJSON);
-  }, [setProjectDetails]);
+    if (context === 'epics') {
+        try {
+            const parsedState = JSON.parse(editorStateJSON);
+            let formattedText = '';
+            
+            const traverseNodes = (nodes: any[]) => {
+                for (const node of nodes) {
+                    // Handle headings
+                    if (node.type === 'heading') {
+                        const hLevel = node.tag.length; // h1, h2, etc.
+                        formattedText += '#'.repeat(hLevel) + ' ';
+                        if (node.children) traverseNodes(node.children);
+                        formattedText += '\n\n';
+                    }
+                    // Handle text nodes
+                    else if (node.type === 'text') {
+                        // Handle formatting
+                        let text = node.text;
+                        if (node.format & 1) text = `**${text}**`; // Bold
+                        if (node.format & 2) text = `*${text}*`;   // Italic
+                        formattedText += text;
+                    }
+                    // Handle lists
+                    else if (node.type === 'list') {
+                        if (node.children) {
+                            node.children.forEach((item: any) => {
+                                formattedText += '- ';
+                                if (item.children) traverseNodes(item.children);
+                                formattedText += '\n';
+                            });
+                        }
+                        formattedText += '\n';
+                    }
+                    // Handle paragraphs
+                    else if (node.type === 'paragraph') {
+                        if (node.children) traverseNodes(node.children);
+                        formattedText += '\n\n';
+                    }
+                    // Handle other nodes with children
+                    else if (node.children) {
+                        traverseNodes(node.children);
+                    }
+                }
+            };
+            
+            if (parsedState.root && parsedState.root.children) {
+                traverseNodes(parsedState.root.children);
+            }
+            
+            // Clean up extra line breaks while preserving formatting
+            const cleanedText = formattedText
+                .replace(/\n\n\n+/g, '\n\n')  // Replace triple+ line breaks with double
+                .trim();  // Remove leading/trailing whitespace
+            
+            setProjectDetails({
+                description: cleanedText
+            });
+        } catch (error) {
+            console.error('Error parsing editor state:', error);
+        }
+    } else {
+        setProjectDetails({
+            content: editorStateJSON
+        });
+    }
+  }, [setProjectDetails, context]);
 
   // Initialize editor content
   useEffect(() => {
     if (editor && initialContent && !isInitialized.current) {
-      isInitialized.current = true; // Set the flag to true to prevent reinitialization
+      isInitialized.current = true;
 
       editor.update(() => {
         try {
+          // First try to parse as JSON
           const parsedContent = JSON.parse(initialContent);
-          const state = editor.parseEditorState(parsedContent);
-          editor.setEditorState(state);
+          
+          // Check if this is a markdown string stored in JSON
+          if (typeof parsedContent === 'string' && parsedContent.includes('**')) {
+            // Convert markdown to Lexical nodes
+            $convertFromMarkdownString(parsedContent, TRANSFORMERS);
+          } else {
+            // If it's a Lexical state JSON, use it directly
+            const state = editor.parseEditorState(parsedContent);
+            editor.setEditorState(state);
+          }
         } catch (error) {
-          console.error('Error initializing editor state:', error);
-          // Fallback to creating a new paragraph with the content
-          const root = $getRoot();
-          root.clear();
-          const paragraph = $createParagraphNode();
-          const text = $createTextNode(String(initialContent));
-          paragraph.append(text);
-          root.append(paragraph);
+          // If JSON parsing fails, treat the content as direct markdown
+          if (typeof initialContent === 'string' && initialContent.includes('**')) {
+            $convertFromMarkdownString(initialContent, TRANSFORMERS);
+          } else {
+            // Fallback to creating a new paragraph with plain text
+            const root = $getRoot();
+            root.clear();
+            const paragraph = $createParagraphNode();
+            const text = $createTextNode(String(initialContent));
+            paragraph.append(text);
+            root.append(paragraph);
+          }
         }
       });
     }
-  }, [editor, initialContent]); // Ensure this runs only when editor or initialContent changes
+  }, [editor, initialContent]);
 
   // Viewport size handling
   useEffect(() => {
@@ -205,7 +285,8 @@ export default function Editor({
 
   const placeholder = isCollab
     ? 'Enter some collaborative rich text...'
-    : 'Enter some rich text...';
+    :
+    'Enter your text here...';
 
   // Modify the insertMarkdown function to handle immediate updates
   const insertMarkdown = useCallback((markdown: string) => {
@@ -239,6 +320,35 @@ export default function Editor({
     }
   }, [editor]);
 
+  useEffect(() => {
+    // Register paste handler
+    return editor.registerCommand(
+      PASTE_COMMAND,
+      (event: ClipboardEvent) => {
+        const pastedText = event.clipboardData?.getData('text/plain');
+        if (pastedText && pastedText.trim()) {
+          // Check if the pasted content looks like markdown
+          if (pastedText.includes('#') || 
+            pastedText.includes('-') || 
+            pastedText.includes('*') ||
+            pastedText.includes('```')) {
+            
+            event.preventDefault();
+            
+            editor.update(() => {
+              // Convert markdown to Lexical nodes
+              $convertFromMarkdownString(pastedText, TRANSFORMERS);
+            });
+            
+            return true;
+          }
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [editor]);
+
   return (
     <>
       {isRichText && <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />}
@@ -254,10 +364,10 @@ export default function Editor({
         <MarkdownInsertionPlugin onInsertMarkdown={insertMarkdown} />
         <RichTextPlugin
           contentEditable={
-            <div className="min-h-[150px] w-full overflow-auto">
-              <div className="w-full relative" ref={onRef}>
+            <div className="h-full w-full overflow-auto">
+              <div className="w-full min-h-[900px] relative" ref={onRef}>
                 <ContentEditable 
-                  className="min-h-[150px] p-4 outline-none" 
+                  className="h-full w-full pl-6 outline-none" 
                   placeholder={placeholder}
                 />
               </div>
@@ -295,6 +405,7 @@ export default function Editor({
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
+            <AIEditPlugin anchorElem={floatingAnchorElem} />
             <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             <FloatingLinkEditorPlugin
               anchorElem={floatingAnchorElem}

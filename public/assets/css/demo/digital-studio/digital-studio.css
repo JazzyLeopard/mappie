@@ -1,0 +1,159 @@
+/* BANNER */
+.banner {
+	padding-right: 8vw;
+	padding-left: 8vw;
+}
+
+.banner h1 {
+	font-size: 7.5vw;
+}
+
+@media (max-width: 1199px){
+	.banner h1 {
+		font-size: 110px;
+	}
+}
+
+@media (max-width: 991px){
+	.banner {
+		padding-right: 0;
+		padding-left: 0;
+	}
+	.banner h1 {
+		font-size: 12vw;
+	}
+}
+
+@media (max-width: 767px){
+	.banner h1 {
+		font-size: 25vw;
+	}
+}
+
+/* SERViCES */
+.services .module-box {
+	padding-right: 7%;
+	padding-left: 7%;
+}
+
+.services .module-box:hover {
+	transform: translateY(-3px);
+}
+
+@media (max-width: 991px){
+	.services {
+		padding-top: 30px;
+	}
+	.services .module-box {
+		margin-bottom: 45px;
+	}
+}
+
+/* TAB ITEMS */
+.tab-items .lqd-tabs-nav li a.active {
+	color: #ff4d12;
+	background: #fff;
+}
+
+@media (max-width: 991px){
+	.tab-items {
+		padding-bottom: 25px;
+	}
+	.tab-items .lqd-tabs-nav li {
+		margin-bottom: 5px;
+	}
+}
+
+.case-studies .filter-list li {
+	color: #000;
+}
+
+.case-studies .filter-list li.active {
+	color: var(--lqd-color-red-500);
+}
+
+/* APPROACH */
+@media (max-width: 991px) {
+	.approach {
+		padding-bottom: 40px;
+	}
+
+	.approach .lqd-imggrp-single {
+		margin-bottom: 50px;
+	}
+}
+
+@media (max-width: 767px) {
+	.approach .module-spacer {
+		height: 10px;
+	}
+}
+
+/* EXPERIENCES */
+@media (max-width: 767px) {
+	.experiences .module-box {
+		padding: 15px 30px 0 30px;
+	}
+
+	.experiences .module-box-last{
+		padding: 15px 30px 65px 30px;
+	}
+}
+
+/* MARKETING ACCORDION */
+@media (max-width: 991px) {
+	.marketing-accordion {
+		padding-top: 30px;
+	}
+}
+
+/* TESTIMONIALS */
+@media (max-width: 991px) {
+	.testimonials .module-testi {
+		padding-right: 45px;
+	}
+}
+
+@media (max-width: 767px) {
+	.testimonials .module-testi {
+		padding-right: 0;
+	}
+}
+
+/* Clients */
+@media (max-width: 991px) {
+	.clients {
+		padding-top: 40px;
+	}
+}
+
+/* BLOG */
+.blog h2.lqd-lp-title a {
+	color: #fff;
+}
+
+@media (max-width: 767px) {
+	.blog {
+		padding-top: 40px;
+	}
+}
+
+/* CONTACT */ 
+@media (max-width: 1199px) {
+	.contact .module-box {
+		padding-right: 20px;
+		padding-left: 20px;
+	}
+}
+
+@media (max-width: 991px) {
+	.contact {
+		padding-top: 70px;
+	}
+}
+
+@media (max-width: 767px) {
+	.contact {
+		padding-top: 50px;
+	}
+}

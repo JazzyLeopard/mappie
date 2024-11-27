@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { menuItems } from "@/app/(main)/_components/constants";
+import { toast } from "react-hot-toast";
 
 interface ProjectIdPageProps {
   params: {
@@ -45,17 +46,15 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
         [attribute]: value
       }));
 
-      // Prepare payload for database update by removing non-mutable fields
-      const { _creationTime, createdAt, updatedAt, userId, ...payload } = projectDetails;
-      
-      // Update database
+      // Only send the specific field being updated plus the ID
       await updateProjectMutation({
-        ...payload,
+        _id: id,
         [attribute]: value
       });
 
     } catch (error) {
       console.error('Error updating project:', error);
+      toast.error('Failed to update project section');
     }
   };
 
@@ -63,9 +62,10 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     <CommonLayout
       data={projectDetails}
       menu={menuItems}
-      onEditorBlur={handleEditorBlur}
+      onEditorBlur={async () => {}}
       handleEditorChange={handleEditorChange}
       updateProject={updateProjectMutation}
+      projectId={params.projectId as Id<"projects">}
     />
   );
 };

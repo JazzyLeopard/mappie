@@ -4,105 +4,291 @@ import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
+import { getAuth } from "@clerk/nextjs/server";
 
+// Initialize clients
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Helper function to convert BigInt to number
+const convertBigIntToNumber = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'bigint') return Number(obj);
+  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+  if (typeof obj === 'object') {
+    return Object.entries(obj).reduce((acc, [key, value]) => ({
+      ...acc,
+      [key]: convertBigIntToNumber(value)
+    }), {});
+  }
+  return obj;
+};
+
+// Add function to create Lexical editor state
+function createLexicalEditorState(requirement: any) {
+  return {
+    root: {
+      children: [
+        {
+          children: [
+            {
+              detail: 0,
+              format: 0,
+              mode: "normal",
+              style: "",
+              text: `Requirement ID: ${requirement.id}`,
+              type: "text",
+              version: 1
+            }
+          ],
+          direction: "ltr",
+          format: "",
+          indent: 0,
+          type: "heading",
+          tag: "h3",
+          version: 1
+        },
+        {
+          type: "table",
+          version: 1,
+          children: [
+            // Header row
+            {
+              type: "tablerow",
+              version: 1,
+              children: [
+                {
+                  type: "tablecell",
+                  headerState: 1,
+                  children: [{ type: "text", text: "Req ID" }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 1,
+                  children: [{ type: "text", text: "Priority" }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 1,
+                  children: [{ type: "text", text: "Description" }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 1,
+                  children: [{ type: "text", text: "Comments" }]
+                }
+              ]
+            },
+            // Data rows
+            ...requirement.table.rows.map((row: any) => ({
+              type: "tablerow",
+              version: 1,
+              children: [
+                {
+                  type: "tablecell",
+                  headerState: 0,
+                  children: [{ type: "text", text: row.reqId }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 0,
+                  children: [{ type: "text", text: row.priority }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 0,
+                  children: [{ type: "text", text: row.description }]
+                },
+                {
+                  type: "tablecell",
+                  headerState: 0,
+                  children: [{ type: "text", text: row.comments || "" }]
+                }
+              ]
+            }))
+          ]
+        }
+      ],
+      direction: "ltr",
+      format: "",
+      indent: 0,
+      type: "root",
+      version: 1
+    }
+  };
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+  // Setup SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-  const { projectId } = req.body;
-  const authToken = req.headers.authorization?.split(' ')[1];
-
-  if (!authToken) {
-    return res.status(401).json({ message: 'No authentication token provided' });
-  }
-
-  if (!projectId || typeof projectId !== 'string') {
-    return res.status(400).json({ message: 'Valid project ID is required' });
-  }
+  const sendEvent = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
 
   try {
-    // Set the auth token for this request
-    convex.setAuth(authToken);
-
-    const convexProjectId = projectId as Id<"projects">;
-    const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
-
-    const context = await useContextChecker({ projectId: convexProjectId })
-    console.log("context", context);
-
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
+    // Check if it's an SSE request
+    const isSSE = req.headers.accept === 'text/event-stream';
+    if (!isSSE) {
+      throw new Error('Invalid request type');
     }
 
-    const projectDetails = Object.entries(project)
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
+    // Authentication
+    sendEvent({ progress: 5, status: 'Generating...' });
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+    
+    if (!token || !userId) {
+      throw new Error('Authentication failed');
+    }
+
+    // Setup Convex client
+    sendEvent({ progress: 15, status: 'Setting up connection...' });
+    convex.setAuth(token);
+    const { projectId, singleFR } = req.body;
+
+    // Fetch project
+    sendEvent({ progress: 25, status: 'Loading project...' });
+    const project = await convex.query(api.projects.getProjectById, { 
+      projectId: projectId as Id<"projects"> 
+    });
+    
+    if (!project) {
+      throw new Error('Project not found');
+    }
+    if (project.userId !== userId) {
+      throw new Error('Unauthorized access to project');
+    }
+
+    // Prepare context and project details
+    sendEvent({ progress: 35, status: 'Preparing project context...' });
+    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+
+    const projectFields = {
+      overview: project.overview || '',
+      problemStatement: project.problemStatement || '',
+      userPersonas: project.userPersonas || '',
+      featuresInOut: project.featuresInOut || '',
+      successMetrics: project.successMetrics || '',
+    };
+
+    const projectDetails = Object.entries(projectFields)
+      .filter(([_, value]) => value)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    let prompt = context
+    // Prepare prompt
+    sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
+    const prompt = singleFR 
+      ? `${context}\n\nPlease write a single functional requirement based on the following project details:\n\n${projectDetails}`
+      : `${context}\n\nGenerate 5-10 functional requirements, with detailed subrequirements based on the following project details. Return the response in this exact JSON structure:
 
-    prompt += `Please write functional requirements based on the following project details: ${projectDetails}. The requirements should include the following elements with each element starting on a new line:
+{
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "User Authentication System",
+      "table": {
+        "rows": [
+          {
+            "reqId": "FR_001",
+            "priority": "Must have",
+            "description": "The system shall provide a secure user authentication mechanism",
+          },
+          {
+            "reqId": "FR_001.1",
+            "priority": "Must have",
+            "description": "The system shall allow users to register with email and password",
+          }
+        ]
+      }
+    }
+  ]
+}
 
-- **Requirement ID**: A unique identifier for the requirement.
-- **Title**: A brief, descriptive title summarizing the requirement.
-- **Requirement**: A detailed description of the functionalities that the system should provide regarding this requirement. Create a list of sub-requirements that each start with "The system shall ...". Ensure the sub-requirements are clear, concise, and free of ambiguity.
-- **Priority**: Indicate the importance of this requirement (e.g., Must have, Should have, Could have).
-- **Traceability**: Link the requirement to a specific business goal or objective that it supports.
+Project details:
+${projectDetails}`;
 
-Format the output as follows:
-- Each requirement should be presented as an H3 heading (### Requirement ID: ID).
-- Follow each heading with the details of the requirement, including the description, priority, and traceability.
-- Ensure that the requirements are ordered from most important to least important.
-- Ensure that all the elements are indented and aligned properly for each element - Title, Requirement, Priority and Traceability.
-- Use plain language that anyone can understand. 
-- If the input is too short or missing key points, add suggestions to make a complete list. 
-- If the requirements can be made more granular by splitting them up, please do so.
-
-Do not include any main headings or titles at the top of the output. Provide the response in complete Markdown format only, without any additional explanations or information.`
-
-    console.log('Calling OpenAI API...');
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    // Generate requirements with OpenAI
+    sendEvent({ progress: 55, status: 'Generating requirements...' });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
+      max_tokens: 2000,
     });
-    console.log('OpenAI API response received');
 
-    const content = response.choices[0].message.content;
+    const content = completion.choices[0].message.content;
     if (!content) {
       throw new Error('No content generated from OpenAI');
     }
-    console.log('Creating functional requirements...');
-    const existingFR = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { projectId: convexProjectId });
 
-    if (existingFR) {
-      await convex.mutation(api.functionalRequirements.updateFunctionalRequirement, {
-        id: existingFR._id,
-        content: content,
-      });
+    // Process AI response
+    sendEvent({ progress: 75, status: 'Processing AI response...' });
+
+    // Handle the OpenAI response
+    if (!content) {
+        throw new Error('No content generated from OpenAI');
+    }
+
+    console.log('Parsing OpenAI response...');
+
+    // Handle 'NULL' response
+    if (content.trim() === 'NULL') {
+        console.log('AI determined that no new requirements are needed.');
+        return res.status(200).json({ message: 'NULL' });
+    }
+
+    let parsedContent;
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+
+    if (jsonMatch) {
+        const jsonContent = jsonMatch[1];
+        parsedContent = JSON.parse(jsonContent);
+        console.log('Parsed requirements:', JSON.stringify(parsedContent, null, 2));
+
+        if (parsedContent && parsedContent.requirements) {
+            // Create functional requirements
+            sendEvent({ progress: 85, status: 'Saving requirements...' });
+            const createdFRs = await Promise.all(parsedContent.requirements.map(async (requirement: any) => {
+                const editorState = createLexicalEditorState(requirement);
+                
+                return await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
+                    projectId: projectId as Id<"projects">,
+                    title: `${requirement.id}: ${requirement.title}`,
+                    description: JSON.stringify(editorState),
+                });
+            }));
+
+            // Send final response
+            sendEvent({ progress: 95, status: 'Finalizing...' });
+            const serializedFRs = convertBigIntToNumber(createdFRs);
+            
+            sendEvent({ progress: 100, status: 'Complete!' });
+            sendEvent({ done: true, content: serializedFRs });
+        }
     } else {
-      await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
-        projectId: convexProjectId,
-        content: content,
-      });
+        console.warn('Invalid response format from AI');
+        throw new Error('Invalid response format from AI');
     }
-    console.log('Functional requirements created successfully');
 
-    res.status(200).json({ content: content });
   } catch (error) {
-    console.error('Detailed error:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({ message: 'Error generating functional requirements', error: error instanceof Error ? error.message : String(error) });
+    console.error('API Error:', error);
+    sendEvent({ 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      progress: 100,
+      status: 'Error'
+    });
+  } finally {
+    res.end();
   }
 }

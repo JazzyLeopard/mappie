@@ -1,4 +1,5 @@
 "use client"
+import { ErrorBoundary } from 'react-error-boundary';
 import { propertyPrompts } from "@/app/(main)/_components/constants"
 import UseCasesLayout from "@/app/(main)/_components/layout/UseCasesLayout"
 import Spinner from "@/components/ui/spinner"
@@ -7,10 +8,11 @@ import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
+import { useAuth } from "@clerk/nextjs";
 
 interface UseCasesProps {
     params: {
-        projectId: Id<"projects">;
+        projectId: string;
         propertyPrompts: typeof propertyPrompts;
     };
 }
@@ -18,6 +20,30 @@ interface UseCasesProps {
 const UseCases = ({ params }: UseCasesProps) => {
     const projectId = params.projectId
     const [content, setContent] = useState<any[]>([])
+function UseCasesErrorFallback({ error, resetErrorBoundary }: { 
+  error: Error, 
+  resetErrorBoundary: () => void 
+}) {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold">Error loading use cases</h2>
+        <p className="text-gray-600">{error.message}</p>
+        <button 
+          onClick={resetErrorBoundary}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const UseCasesContent = ({ params }: UseCasesProps) => {
+    const projectId = params.projectId as Id<"projects">;
+    const [error, setError] = useState<Error | null>(null);
+    const [content, setContent] = useState<any>([])
     const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId });
     const createUseCase = useMutation(api.useCases.createUseCase);
     const updateUseCase = useMutation(api.useCases.updateUseCase);
@@ -48,6 +74,8 @@ const UseCases = ({ params }: UseCasesProps) => {
 
     const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
         await handleUpdateUseCase(id, field as 'title' | 'description', value);
+    const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
+        await handleUpdateUseCase(id, field as 'title' | 'description', value);
     }, [handleUpdateUseCase]);
 
 
@@ -62,30 +90,47 @@ const UseCases = ({ params }: UseCasesProps) => {
         }
     }, [deleteUseCase]);
 
-    const handleOpenBrainstormChat = useCallback(() => {
-        // Implement the logic for opening brainstorm chat
-    }, []);
 
-    const handleUseCaseNameChange = useCallback(async (useCaseId: Id<"useCases">, newName: string) => {
-        await updateUseCase({ id: useCaseId, title: newName })
-    }, [updateUseCase])
+    if (error) {
+        return <div>Error loading use cases: {error.message}</div>;
+    }
 
-    if (useCases === undefined) {
+    if (useCases === undefined || project === undefined) {
         return <Spinner size={"lg"} />;
     }
 
     return (
         <UseCasesLayout
-            projectId={projectId}
             handleEditorChange={handleEditorChange}
             onAddUseCase={handleCreateUseCase}
             onDeleteUseCase={handleDelete}
             useCases={content || []}
-            isOnboardingComplete={project?.onboarding == 0}
-            onEditorBlur={async () => { }}
-            onUseCaseNameChange={handleUseCaseNameChange}
+            isOnboardingComplete={project?.onboarding === 0}
+            params={{
+                projectId: projectId as Id<"projects">,
+                useCaseId: undefined
+            }}
+            onEditorBlur={async () => {}}
+            onUseCaseNameChange={async (useCaseId, name) => {
+                await handleUpdateUseCase(useCaseId, 'title', name);
+            }}
+            updateProject={async () => {}}
         />
     );
+};
+
+const UseCases = (props: UseCasesProps) => {
+  return (
+    <ErrorBoundary 
+      FallbackComponent={UseCasesErrorFallback}
+      onReset={() => {
+        // Reset any state that might have caused the error
+        window.location.reload();
+      }}
+    >
+      <UseCasesContent {...props} />
+    </ErrorBoundary>
+  );
 };
 
 export default UseCases;

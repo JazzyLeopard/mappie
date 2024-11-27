@@ -1,5 +1,5 @@
 "use client";
-import ProjectNavbar from "@/app/(main)/_components/ProjectNavbar";
+
 import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";

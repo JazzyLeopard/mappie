@@ -7,18 +7,22 @@ export const getChatHistory = query({
   args: {
     itemId: v.string(),
     itemType: v.string(),
-    projectId: v.id("projects")
+    projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const messages = await ctx.db
+    const { itemId, itemType, projectId} = args;
+    
+    // Get only the most recent message history entry
+    const latestMessage = await ctx.db
       .query("messages")
-      .filter(q => q.eq(q.field("itemId"), args.itemId))
-      .filter(q => q.eq(q.field("itemType"), args.itemType))
-      .filter(q => q.eq(q.field("projectId"), args.projectId))
+      .withIndex("by_itemId_and_type_and_created", q => 
+        q.eq("itemId", itemId)
+        .eq("itemType", itemType)
+      )
       .order("desc")
       .first();
-    
-    return messages;
+
+    return latestMessage;
   }
 });
 
@@ -26,7 +30,7 @@ export const storeChatHistory = mutation({
   args: {
     itemId: v.string(),
     itemType: v.string(),
-    projectId: v.id('projects'),
+    projectId: v.id("projects"),
     messages: v.array(
       v.object({
         content: v.string(),
@@ -70,46 +74,39 @@ export const storeChatHistory = mutation({
     )
   },
   handler: async (ctx, args) => {
-    const now = BigInt(Date.now());
-    
-    // Transform messages to ensure all required fields are present
-    const transformedMessages = args.messages.map(message => ({
-      id: message.id || nanoid(),
-      content: message.content,
-      role: message.role,
-      toolInvocations: message.toolInvocations?.map(invocation => ({
-        toolName: invocation.toolName,
-        toolCallId: invocation.toolCallId,
-        state: invocation.state || 'completed',
-        result: invocation.args ? {
-          content: invocation.args.content,
-          metadata: invocation.args.metadata
-        } : undefined,
-        args: undefined
-      }))
-    }));
+    const { itemId, itemType, projectId, messages } = args;
 
-    const existingRecord = await ctx.db
+    // Get the latest message history for this item
+    const existingHistory = await ctx.db
       .query("messages")
-      .filter(q => q.eq(q.field("itemId"), args.itemId))
-      .filter(q => q.eq(q.field("itemType"), args.itemType))
-      .filter(q => q.eq(q.field("projectId"), args.projectId))
+      .filter(q => q.eq(q.field("itemId"), itemId))
+      .order("desc")
       .first();
 
-    if (existingRecord) {
-      await ctx.db.patch(existingRecord._id, {
-        messages: transformedMessages,
-        updatedAt: now
-      });
-    } else {
-      await ctx.db.insert('messages', {
-        itemId: args.itemId,
-        itemType: args.itemType,
-        projectId: args.projectId,
-        messages: transformedMessages,
-        createdAt: now,
-        updatedAt: now,
-      });
+    if (existingHistory) {
+      // Check if the last message in existing history matches our last message
+      const existingLastMessage = existingHistory.messages[existingHistory.messages.length - 1];
+      const newLastMessage = messages[messages.length - 1];
+      
+      if (existingLastMessage.id === newLastMessage.id) {
+        // If the last messages match, no need to save
+        return existingHistory;
+      }
     }
+
+    // Only save if we have new messages
+    const result = await ctx.db.insert("messages", {
+      itemId,
+      itemType,
+      projectId,
+      messages: messages.map((msg: any) => ({
+        ...msg,
+        id: msg.id || nanoid()
+      })),
+      createdAt: BigInt(Date.now()),
+      updatedAt: BigInt(Date.now())
+    });
+
+    return result;
   }
 });

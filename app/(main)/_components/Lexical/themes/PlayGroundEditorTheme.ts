@@ -1,6 +1,6 @@
 import type {EditorThemeClasses} from 'lexical';
 
-import './PlaygroundEditorTheme.css';
+import '@/app/(main)/_components/Lexical/themes/PlayGroundEditorTheme.css';
 
 const theme: EditorThemeClasses = {
   autocomplete: 'PlaygroundEditorTheme__autocomplete',
@@ -45,11 +45,12 @@ const theme: EditorThemeClasses = {
   },
   hashtag: 'PlaygroundEditorTheme__hashtag',
   heading: {
-    h1: 'text-3xl font-bold my-4',
-    h2: 'text-2xl font-bold my-3',
-    h3: 'text-xl font-bold my-2',
-    h4: 'text-lg font-bold my-2',
-    h5: 'text-base font-bold my-1',
+    h1: 'text-2xl font-bold my-3',
+    h2: 'text-xl font-bold my-2',
+    h3: 'text-lg font-bold my-2',
+    h4: 'text-base font-bold my-1',
+    h5: 'text-sm font-bold my-1',
+    h6: 'text-xs font-bold my-1',
   },
   hr: 'PlaygroundEditorTheme__hr',
   image: 'editor-image',

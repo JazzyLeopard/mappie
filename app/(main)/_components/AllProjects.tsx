@@ -145,7 +145,7 @@ export default function Component() {
               <PopoverContent className="min-w-96">
                 <div className="space-y-4">
                   <Textarea
-                    placeholder="Describe the type of project/product/app/feature you want to create. Projeqtly will generate a project with populated fields as a starting point for you to build upon."
+                    placeholder="Describe the type of project/product/app/feature you want to create. Mappie will generate a project with populated fields as a starting point for you to build upon."
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     rows={4}
@@ -195,7 +195,7 @@ export default function Component() {
                       </Avatar>
                       <div className="text-xs">
                         {<p>Created by {user?.emailAddresses[0].emailAddress.split("@")[0] || "Unknown"}</p>}
-                        <p className="text-muted-foreground">Created {new Date(proj._creationTime).toLocaleDateString()}</p>
+                        <p className="text-muted-foreground">Created {new Date(Number(proj.createdAt)).toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>

@@ -55,12 +55,11 @@ export type UseCase = {
   [key: string]: any;
 };
 
-export type FunctionalRequirement = {
-  _id: string;
-  projectId: string;
+export interface FunctionalRequirement {
+  _id: Id<"functionalRequirements">;
+  projectId: Id<"projects">;
   title: string;
   description: string;
-  createdAt: bigint;
-  updatedAt: bigint;
-  [key: string]: any;
-};
+  createdAt: number;
+  updatedAt: number;
+}

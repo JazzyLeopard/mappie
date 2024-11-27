@@ -33,7 +33,7 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
     const handleEditorBlur = async () => {
         try {
             console.log('time for API call', epicDetails);
-            const { _creationTime, createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
+            const { createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
             await updateEpicMutation(payload)
             console.log("epic", epicDetails);
         } catch (error) {
@@ -56,6 +56,8 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
+            updateProject={updateEpicMutation}
+            projectId={params.projectId}
         />
     }
 }

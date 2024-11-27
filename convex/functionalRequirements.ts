@@ -4,38 +4,65 @@ import { v } from "convex/values";
 export const createFunctionalRequirement = mutation({
   args: {
     projectId: v.id("projects"),
-    content: v.string(),
+    title: v.string(),
+    description: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("functionalRequirements", {
+    const timestamp = Date.now();
+    const frId = await ctx.db.insert("functionalRequirements", {
       projectId: args.projectId,
-      content: args.content,
-      createdAt: BigInt(Date.now()),
-      updatedAt: BigInt(Date.now()),
+      title: args.title,
+      description: args.description,
+      createdAt: BigInt(timestamp),
+      updatedAt: BigInt(timestamp),
     });
+
+    return await ctx.db.get(frId);
   },
 });
 
 export const getFunctionalRequirementsByProjectId = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const requirements = await ctx.db
-      .query("functionalRequirements")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
-      .first();
-    
-    return requirements;
+    try {
+      const frs = await ctx.db
+        .query("functionalRequirements")
+        .withIndex("by_projectId", q => q.eq("projectId", args.projectId))
+        .collect();
+
+      return frs || [];
+    } catch (error) {
+      console.error("Error fetching functional requirements:", error);
+      return [];
+    }
   },
 });
 
 export const updateFunctionalRequirement = mutation({
   args: {
     id: v.id("functionalRequirements"),
-    content: v.string(),
+    title: v.optional(v.string()),
+    description: v.optional(v.string())
   },
   handler: async (ctx, args) => {
-    const { id, content } = args;
-    await ctx.db.patch(id, { content, updatedAt: BigInt(Date.now()) });
-    return { success: true };
+    const { id, ...updates } = args;
+    const timestamp = Date.now();
+    
+    const updateFields: Record<string, any> = {
+      updatedAt: BigInt(timestamp)
+    };
+    
+    if (updates.title !== undefined) updateFields.title = updates.title;
+    if (updates.description !== undefined) updateFields.description = updates.description;
+
+    await ctx.db.patch(id, updateFields);
+  },
+});
+
+export const deleteFunctionalRequirement = mutation({
+  args: { id: v.id("functionalRequirements") },
+  handler: async (ctx, args) => {
+    const { id } = args;
+    await ctx.db.delete(id);
   },
 });

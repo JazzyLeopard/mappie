@@ -192,52 +192,35 @@ export const createProject = mutation({
 export const updateProject = mutation({
   args: {
     _id: v.id("projects"),
-    title: v.optional(v.string()),
-    overview: v.optional(v.string()),
-    problemStatement: v.optional(v.string()),
-    userPersonas: v.optional(v.string()),
-    featuresInOut: v.optional(v.string()),
-    successMetrics: v.optional(v.string()),
-    userScenarios: v.optional(v.string()),
     featurePrioritization: v.optional(v.string()),
-    risksDependencies: v.optional(v.string()),
+    featuresInOut: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
     isPublished: v.optional(v.boolean()),
-    onboarding: v.optional(v.number()),
+    onboarding: v.optional(v.float64()),
+    overview: v.optional(v.string()),
+    problemStatement: v.optional(v.string()),
+    risksDependencies: v.optional(v.string()),
+    successMetrics: v.optional(v.string()),
+    title: v.optional(v.string()),
+    userPersonas: v.optional(v.string()),
+    userScenarios: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
 
-    const currentProject = await ctx.db.get(_id);
-    if (!currentProject) throw new Error("Project not found");
-
-    const updatedProject = { ...currentProject, ...updates };
-
-    const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"] as const;
-    let filledFields = mandatoryFields.filter(field =>
-      updatedProject[field] && typeof updatedProject[field] === 'string' && updatedProject[field].trim() !== ''
+    // Remove internal Convex fields if they exist
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([key]) => !key.startsWith('_'))
     );
 
-    let onboarding = 1; // Start onboarding at 1
+    // Add updatedAt timestamp
+    const updateData = {
+      ...cleanUpdates,
+      updatedAt: BigInt(Date.now())
+    };
 
-    // Set onboarding based on the number of filled mandatory fields
-    if (filledFields.length > 0) {
-      onboarding = filledFields.length; // Set onboarding to the number of filled fields
-    }
-
-    // If all mandatory fields are filled, set onboarding to 0
-    if (filledFields.length === mandatoryFields.length) {
-      onboarding = 0;
-    }
-
-    const finalUpdates = { ...updates, onboarding };
-
-    await ctx.db.patch(_id, { ...finalUpdates, updatedAt: BigInt(Date.now()) });
-
-    const finalProject = await ctx.db.get(_id);
-
-    return finalProject;
-  },
+    return await ctx.db.patch(_id, updateData);
+  }
 });
 
 export const archiveProject = mutation({
