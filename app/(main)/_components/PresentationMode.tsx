@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 import Spinner from "@/components/ui/spinner"
 import "./markdown-styles.css";
 import { ChakraProvider } from "@chakra-ui/react"
-import { UnorderedList, OrderedList, ListItem } from "@chakra-ui/react";
+import { List, ListItem } from "@chakra-ui/react";
 import {
   Table,
   TableBody,
@@ -206,8 +206,8 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
                   <MDXRemote
                     {...serializedContent[id]}
                     components={{
-                      ul: (props: React.HTMLAttributes<HTMLUListElement>) => <UnorderedList {...props} />,
-                      ol: (props: React.HTMLAttributes<HTMLOListElement>) => <OrderedList {...props} />,
+                      ul: (props: React.HTMLAttributes<HTMLUListElement>) => <List.Root as="ul" {...props} />,
+                      ol: (props: React.HTMLAttributes<HTMLOListElement>) => <List.Root as="ol" {...props} />,
                       li: (props: React.HTMLAttributes<HTMLLIElement>) => <ListItem {...props} />,
                       strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                       table: (props) => (

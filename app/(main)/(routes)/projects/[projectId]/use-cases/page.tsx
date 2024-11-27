@@ -11,36 +11,36 @@ import { toast } from "sonner"
 import { useAuth } from "@clerk/nextjs";
 
 interface UseCasesProps {
-    params: {
-        projectId: string;
-        propertyPrompts: typeof propertyPrompts;
-    };
+  params: {
+    projectId: string;
+    propertyPrompts: typeof propertyPrompts;
+  };
 }
 
 const UseCases = ({ params }: UseCasesProps) => {
-    const projectId = params.projectId
-    const [content, setContent] = useState<any[]>([])
-function UseCasesErrorFallback({ error, resetErrorBoundary }: { 
-  error: Error, 
-  resetErrorBoundary: () => void 
-}) {
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center">
-        <h2 className="text-lg font-semibold">Error loading use cases</h2>
-        <p className="text-gray-600">{error.message}</p>
-        <button 
-          onClick={resetErrorBoundary}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
-        >
-          Try again
-        </button>
+  const projectId = params.projectId
+  const [content, setContent] = useState<any[]>([])
+  function UseCasesErrorFallback({ error, resetErrorBoundary }: {
+    error: Error,
+    resetErrorBoundary: () => void
+  }) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Error loading use cases</h2>
+          <p className="text-gray-600">{error.message}</p>
+          <button
+            onClick={resetErrorBoundary}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Try again
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-const UseCasesContent = ({ params }: UseCasesProps) => {
+  const UseCasesContent = ({ params }: UseCasesProps) => {
     const projectId = params.projectId as Id<"projects">;
     const [error, setError] = useState<Error | null>(null);
     const [content, setContent] = useState<any>([])
@@ -50,87 +50,82 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
     const deleteUseCase = useMutation(api.useCases.deleteUseCase);
 
     useEffect(() => {
-        if (useCases && useCases?.length > 0) {
-            setContent(useCases);
-        }
+      if (useCases && useCases?.length > 0) {
+        setContent(useCases);
+      }
     }, [useCases]);
 
     const project = useQuery(api.projects.getProjectById, {
-        projectId: projectId
+      projectId: projectId
     })
 
     const handleCreateUseCase = useCallback(async () => {
-        let newUc = {
-            projectId,
-            title: `Use Case ${useCases?.length ?? 0 + 1}`,
-            description: ''
-        }
-        const newUseCaseId = await createUseCase(newUc);
+      let newUc = {
+        projectId,
+        title: `Use Case ${useCases?.length ?? 0 + 1}`,
+        description: ''
+      }
+      const newUseCaseId = await createUseCase(newUc);
     }, [createUseCase, useCases, projectId]);
 
     const handleUpdateUseCase = useCallback(async (id: Id<"useCases">, field: 'title' | 'description', value: any) => {
-        await updateUseCase({ id, [field]: value });
+      await updateUseCase({ id, [field]: value });
     }, [updateUseCase]);
 
     const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
-        await handleUpdateUseCase(id, field as 'title' | 'description', value);
-    const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
-        await handleUpdateUseCase(id, field as 'title' | 'description', value);
+      await handleUpdateUseCase(id, field as 'title' | 'description', value);
     }, [handleUpdateUseCase]);
 
 
     const handleDelete = useCallback(async (id: Id<"useCases">) => {
-        try {
-            await deleteUseCase({ id });
-            setContent(prevContent => prevContent.filter(useCase => useCase._id !== id));
-            toast.success("Use case deleted successfully");
-        } catch (error) {
-            console.error("Error deleting use case:", error);
-            toast.error("Failed to delete use case");
-        }
+      try {
+        await deleteUseCase({ id });
+        setContent((prevContent: any) => prevContent.filter((useCase: any) => useCase._id !== id));
+        toast.success("Use case deleted successfully");
+      } catch (error) {
+        console.error("Error deleting use case:", error);
+        toast.error("Failed to delete use case");
+      }
     }, [deleteUseCase]);
 
 
     if (error) {
-        return <div>Error loading use cases: {error.message}</div>;
+      return <div>Error loading use cases: {error.message}</div>;
     }
 
     if (useCases === undefined || project === undefined) {
-        return <Spinner size={"lg"} />;
+      return <Spinner size={"lg"} />;
     }
 
     return (
-        <UseCasesLayout
-            handleEditorChange={handleEditorChange}
-            onAddUseCase={handleCreateUseCase}
-            onDeleteUseCase={handleDelete}
-            useCases={content || []}
-            isOnboardingComplete={project?.onboarding === 0}
-            params={{
-                projectId: projectId as Id<"projects">,
-                useCaseId: undefined
-            }}
-            onEditorBlur={async () => {}}
-            onUseCaseNameChange={async (useCaseId, name) => {
-                await handleUpdateUseCase(useCaseId, 'title', name);
-            }}
-            updateProject={async () => {}}
-        />
+      <UseCasesLayout
+        handleEditorChange={handleEditorChange}
+        onAddUseCase={handleCreateUseCase}
+        onDeleteUseCase={handleDelete}
+        useCases={content || []}
+        isOnboardingComplete={project?.onboarding === 0}
+        projectId={projectId}
+        onEditorBlur={async () => { }}
+        onUseCaseNameChange={async (useCaseId, name) => {
+          await handleUpdateUseCase(useCaseId, 'title', name);
+        }}
+      />
     );
-};
+  }
 
-const UseCases = (props: UseCasesProps) => {
-  return (
-    <ErrorBoundary 
-      FallbackComponent={UseCasesErrorFallback}
-      onReset={() => {
-        // Reset any state that might have caused the error
-        window.location.reload();
-      }}
-    >
-      <UseCasesContent {...props} />
-    </ErrorBoundary>
-  );
-};
+  const UseCases = (props: UseCasesProps) => {
+    return (
+      <ErrorBoundary
+        FallbackComponent={UseCasesErrorFallback}
+        onReset={() => {
+          // Reset any state that might have caused the error
+          window.location.reload();
+        }}
+      >
+        <UseCasesContent {...props} />
+      </ErrorBoundary>
+    );
+  };
+}
 
 export default UseCases;
