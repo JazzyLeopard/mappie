@@ -2,11 +2,15 @@
 const nextConfig = {
     eslint: {
         ignoreDuringBuilds: true,
-    },
+},
     reactStrictMode: true,
     swcMinify: true,
     images: {
-        domains: ['your-image-domains.com'],
+        remotePatterns: [{
+            protocol: 'http',
+            hostname: 'your-image-domains.com',
+            pathname: '**',
+        }],
     },
 }
 

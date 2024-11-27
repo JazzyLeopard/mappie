@@ -20,8 +20,6 @@ import type {
 } from 'lexical';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Tr } from '@chakra-ui/react';
-import { diffLines } from 'diff';
 
 type AIEditPayload = {
   prompt: string;

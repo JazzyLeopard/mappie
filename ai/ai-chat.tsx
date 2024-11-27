@@ -191,7 +191,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
         isInitialized.current = true;
         return messages.map(msg => ({
           id: msg.id,
-          role: msg.role as 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool',
+          role: msg.role as 'system' | 'user' | 'assistant' | 'data', // function | tool
           content: msg.content,
           toolInvocations: msg.toolInvocations?.filter(tool => 
             tool.state === "result" && tool.result?.content
