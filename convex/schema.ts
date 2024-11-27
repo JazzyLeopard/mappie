@@ -33,11 +33,11 @@ export default defineSchema({
 
   functionalRequirements: defineTable({
     projectId: v.id("projects"),
-    content: v.string(),
+    title: v.string(),
+    description: v.string(),
     createdAt: v.int64(),
     updatedAt: v.int64(),
-  }).index("by_projectId", ["projectId"])
-    .index("by_createdAt", ["createdAt"]), // Index to query functional requirements by creation time
+  }).index("by_projectId", ["projectId"]),
 
   epics: defineTable({
     projectId: v.id("projects"),
@@ -102,7 +102,12 @@ export default defineSchema({
     createdAt: v.int64(),
     updatedAt: v.int64()
   })
-    .index("by_itemId_and_type", ["itemId", "itemType"])
+    .index("by_itemId_and_type_and_created", [
+      "itemId",
+      "itemType", 
+      "projectId",
+      "createdAt"
+    ])
     .index("by_projectId", ["projectId"])
     .index("by_createdAt", ["createdAt"]),
 });

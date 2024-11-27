@@ -6,7 +6,6 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
 import { useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
 
 interface EpicsPageProps {
     params: {
@@ -42,20 +41,24 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     }, [updateEpic])
 
     const handleUpdateEpic = useCallback(async (_id: Id<"epics">, field: 'name' | 'description', value: any) => {
-        await updateEpic({ _id, [field]: value })
-    }, [updateEpic])
+        console.log('Updating epic:', { _id, field, value });
+        try {
+            await updateEpic({ _id, [field]: value });
+        } catch (error) {
+            console.error("Error updating epic:", error);
+        }
+    }, [updateEpic]);
 
     const handleEditorChange = useCallback(async (_id: Id<"epics">, field: string, value: any) => {
+        console.log('Editor change:', { _id, field, value });
         await handleUpdateEpic(_id, field as 'name' | 'description', value);
     }, [handleUpdateEpic]);
 
     const handleDeleteEpic = useCallback(async (_id: Id<"epics">) => {
         try {
             await deleteEpic({ _id });
-            toast.success("Epic deleted successfully");
         } catch (error) {
             console.error("Error deleting epic:", error);
-            toast.error("Failed to delete epic");
         }
     }, [deleteEpic]);
 

@@ -96,6 +96,7 @@ import {
   import {INSERT_PAGE_BREAK} from '../PageBreakPlugin';
   import {InsertPollDialog} from '../PollPlugin';
   import {InsertTableDialog} from '../TablePlugin';
+  import { AI_EDIT_COMMAND } from '../AiEditPlugin';
   
   const blockTypeToBlockName = {
     bullet: 'Bulleted List',
@@ -922,7 +923,6 @@ import {
             /> */}
             {canViewerSeeInsertDropdown && (
               <>
-                <Divider />
                 <DropDown
                   disabled={!isEditable}
                   buttonClassName="toolbar-item spaced"
@@ -1098,6 +1098,22 @@ import {
           editor={activeEditor}
           isRTL={isRTL}
         />
+  
+        <button
+          type="button"
+          onClick={() => {
+            const selection = window.getSelection();
+            if (selection && selection.toString()) {
+              editor.dispatchCommand(AI_EDIT_COMMAND, {
+                prompt: '',
+                selectedText: selection.toString(),
+              });
+            }
+          }}
+          className={'toolbar-item spaced'}
+          aria-label="AI Edit">
+          <i className="format ai-edit" />
+        </button>
   
         {modal}
       </div>

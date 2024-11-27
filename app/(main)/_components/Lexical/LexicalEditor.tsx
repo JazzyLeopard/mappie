@@ -29,6 +29,7 @@ import PlaygroundNodes from './nodes/PlaygroundNodes';
 import { FlashMessageContext } from './context/FlashMessageContext';
 import './index.css';
 import { useSettings } from './context/SettingsContext';
+import { SuggestionCardNode } from './plugins/AiEditPlugin';
 
 type LexicalEditorProps = {
   onBlur: () => Promise<void>;
@@ -54,7 +55,7 @@ function LexicalEditor({
   const initialConfig = useMemo(() => ({
     namespace: 'MyEditor',
     theme: PlaygroundEditorTheme,
-    nodes: [...PlaygroundNodes],
+    nodes: [...PlaygroundNodes, SuggestionCardNode],
     onError: (error: Error) => {
       console.error(error);
     },

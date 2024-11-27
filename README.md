@@ -1,3 +1,3 @@
-# Projeqtly
+# Mappie
 
 Epic and story generator

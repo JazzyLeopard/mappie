@@ -6,10 +6,11 @@ const editorTheme = {
     quote: "editor-quote",
     heading: {
       h1: "text-3xl font-extrabold dark:text-white",
-      h2: "text-2xl font-bold dark:text-white",
-      h3: "text-xl font-bold dark:text-white",
-      h4: "text-lg font-bold dark:text-white",
-      h5: "font-bold dark:text-white",
+      h2: "text-xl font-bold dark:text-white",
+      h3: "text-lg font-bold dark:text-white",
+      h4: "text-base font-bold dark:text-white",
+      h5: "text-sm font-bold dark:text-white",
+      h6: "text-xs font-bold dark:text-white",
     },
     list: {
       nested: {

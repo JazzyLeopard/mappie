@@ -5,24 +5,24 @@ import ConvexClientProvider from "./ConvexClientProvider";
 
 import "./globals.css";
 
-import { Toaster } from 'sonner';
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Projeqtly",
-  description: "Analyse Epics & Stories on the fly",
+  title: "Mappie - AI-Powered Product Management",
+  description: "From requirements to stories, superfast.",
   icons: {
     icon: [
       {
         media: "(prefers-color-scheme: light)",
-        url: "/Projeqtly.svg",
-        href: "/Projeqtly.svg",
+        url: "/Mappie.svg",
+        href: "/Mappie.svg",
       },
       {
         media: "(prefers-color-scheme: dark)",
-        url: "/Projeqtly.svg",
-        href: "/Projeqtly.svg",
+        url: "/Mappie.svg",
+        href: "/Mappie.svg",
       },
     ],
   },
@@ -38,7 +38,6 @@ export default function RootLayout({
       <html lang="en">
         <body className={inter.className}>
           {children}
-          <Toaster />
         </body>
       </html>
     </ConvexClientProvider>

@@ -3,6 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
+import { getAuth } from "@clerk/nextjs/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const openai = new OpenAI({
@@ -46,22 +47,38 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method not allowed' });
-    }
+    // Setup SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    const { projectId } = req.body;
-    const authHeader = req.headers.authorization;
-    const authToken = authHeader && authHeader.split(' ')[1];
-
-    if (!authToken) {
-        return res.status(401).json({ message: 'No authentication token provided' });
-    }
+    const sendEvent = (data: any) => {
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
 
     try {
-        convex.setAuth(authToken);
+        if (req.method !== 'POST') {
+            throw new Error('Method not allowed');
+        }
+
+        // Authentication
+        sendEvent({ progress: 5, status: 'Authenticating...' });
+        const { userId, getToken } = getAuth(req);
+        const token = await getToken({ template: "convex" });
+        
+        if (!userId || !token) {
+            throw new Error('Unauthorized');
+        }
+
+        // Set the auth token for the Convex client
+        convex.setAuth(token);
+
+        const { projectId } = req.body;
         const convexProjectId = projectId as Id<"projects">;
 
+        // Fetch project data
+        sendEvent({ progress: 15, status: 'Fetching project data...' });
+        
         // Fetch functional requirements for the project
         const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
             projectId: convexProjectId 
@@ -71,7 +88,7 @@ export default async function handler(
             return res.status(400).json({ message: "No functional requirements found for the project" });
         }
 
-        const functionalRequirementsText = functionalRequirements.content;
+        const functionalRequirementsText = functionalRequirements.map(fr => fr.description).join('\n');
 
         //Fetch the useCases
         const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
@@ -90,25 +107,25 @@ export default async function handler(
         const existingEpicNames = epics.map(epic => epic?.name);
         const epicsText = epics.map(epic => epic?.description).join('\n');
 
-        let basePrompt = `As an expert Epic analyst, generate one unique additional epic for the following project. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2. Ensure that the epic name  should be different and unique not one of these: [${existingEpicNames.join(', ')}]. Do not repeat any themes or ideas related to sustainability, eco-friendliness, or green initiatives. 
+        let basePrompt = `As an expert Epic analyst, generate one unique additional epic for the following project. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail. Ensure the epic name is different and unique from these: [${existingEpicNames.join(', ')}].
+
+{
+    "name": "Keep the name very short (2-4 words max). Example: 'User Authentication' or 'Payment Processing'",
     
-        {
-            "name": "Name of the epic should be short and concise. Example: Restaurant Menu Search",
-            
-            "description": "Include the following elements:
-        
-            - **Description**: This epic focuses on implementing the core functionality of the restaurant menu browsing and search system. It allows users to easily discover restaurants and their offerings, contributing to a seamless dining experience.
-        
-            - **Business Value**: Articulate the business value delivered by this epic. By enabling users to efficiently browse and search restaurant menus, this epic drives increased app usage and customer satisfaction, leading to higher order volumes and revenue growth.
-        
-            - **Acceptance Criteria**: Define what success looks like for this Epic. Users must be able to filter restaurants by cuisine type, and search results should be displayed within 2 seconds.
-        
-            - **Dependencies**: Identify any dependencies that could affect the completion of this Epic. This epic is dependent on the completion of the restaurant onboarding process and integration with the external menu management system.
-        
-            - **Risks**: Outline any risks that might prevent this Epic from being successfully completed. There is a risk that search functionality could slow down the app during peak usage times, affecting user experience.
-        
-            Present the description as a single cohesive string, combining all these elements in a clear and engaging manner. Also ensure that each element starts from a new line with correct styling on each element"
-        }`;
+    "description": "Include the following elements:
+    
+    - **Description**: [Concise description of the epic's core functionality]
+    
+    - **Business Value**: [Clear statement of value delivered]
+    
+    - **Acceptance Criteria**: [List 3-4 key criteria]
+    
+    - **Dependencies**: [List any critical dependencies]
+    
+    - **Risks**: [List 2-3 key risks]
+    
+    Present the description as a single cohesive string, with each element on a new line."
+}`;
 
 
         if (useCases?.length > 0) {
@@ -119,9 +136,12 @@ export default async function handler(
         const singleEpicPrompt = `Based on the following functional requirements- ${functionalRequirementsText} and existing epics- ${epicsText} generate one more epic using this format- ${basePrompt}.Be creative and consider edge cases that might not be immediately obvious. If no additional epic is needed and the existing epic suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading 1 and Heading 2 in Markdown.
     `;
 
+        sendEvent({ progress: 35, status: 'Analyzing requirements...' });
+        
         console.log("Calling OpenAI Api...");
+        sendEvent({ progress: 55, status: 'Generating epic...' });
         const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             messages: [{ role: "user", content: singleEpicPrompt }],
             temperature: 0.7,
         });
@@ -174,13 +194,25 @@ export default async function handler(
         }
         console.log('Epic created successfully');
 
+        sendEvent({ progress: 75, status: 'Processing AI response...' });
         res.status(200).json({ epics: serializeBigInt(generatedEpic), markdown: convertDescriptionToMarkdown(generatedEpic[0]?.description || {}) });
+
+        sendEvent({ progress: 95, status: 'Finalizing...' });
+        sendEvent({ progress: 100, status: 'Complete!' });
+        sendEvent({ done: true, content: serializeBigInt(generatedEpic) });
+
     } catch (error) {
         console.error('Error generating Epic:', error);
         if (error instanceof Error) {
             console.error('Error message:', error.message);
             console.error('Error stack:', error.stack);
         }
-        res.status(500).json({ message: 'Error generating Epic', error: error instanceof Error ? error.message : String(error) });
+        sendEvent({ 
+            error: error instanceof Error ? error.message : 'An unexpected error occurred',
+            progress: 100,
+            status: 'Error'
+        });
+    } finally {
+        res.end();
     }
 }

@@ -80,12 +80,7 @@ export default function PresentationMode({ data, onClose }: PresentationModeProp
       const serialized: Record<string, MDXRemoteSerializeResult> = {};
       for (const [key, value] of Object.entries(data)) {
         if (typeof value === 'string') {
-          serialized[key] = await serialize(value, {
-            mdxOptions: {
-              remarkPlugins: [remarkGfm],
-            },
-            parseFrontmatter: false
-          });
+          serialized[key] = await serialize(value);
         }
       }
       setSerializedContent(serialized);

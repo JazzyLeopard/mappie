@@ -2,39 +2,30 @@
 
 import { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react'
 import { ChevronDown, ChevronRight, Plus, MoreVertical, Trash, Edit, Save, BookOpen, X, ArrowRight, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
-import BlockEditor from "@/app/(main)/_components/BlockEditor"
 import LabelToInput from "@/app/(main)/_components/LabelToInput"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useQuery, useMutation, useConvex } from "convex/react"
 import { useAuth } from "@clerk/clerk-react"
 import { toast } from "sonner"
-import { debounce } from "lodash"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import AiGenerationIcon from '@/icons/AI-Generation'
 import AiGenerationIconWhite from '@/icons/AI-Generation-White'
 import AIStoryCreator from '@/ai/ai-chat'
-import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
 import empty from '@/public/empty.png'
 import { useRouter } from 'next/navigation'
 import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
-import {
-  $convertFromMarkdownString,
-  $convertToMarkdownString,
-  TRANSFORMERS
-} from '@lexical/markdown';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { cn } from '@/lib/utils'
+import { Progress } from "@/components/ui/progress"
 
 type SelectedItems = {
   epic: string | null;
   story: string | null;
 }
 
-export default function EpicLayout({ params, handleEditorChange }: { 
+export default function EpicLayout({ params, handleEditorChange, onAddEpics, onDeleteEpic, onEditorBlur, onEpicNameChange, }: { 
   params: { 
     projectId: Id<"projects">;
     epicId?: Id<"epics">;
@@ -128,13 +119,13 @@ export default function EpicLayout({ params, handleEditorChange }: {
   // Select an item (epic or story)
   const selectItem = useCallback((type: 'epic' | 'story', id: string, epicId?: string) => {
     setSelectedItems(prev => {
-      const newEpic = type === 'epic' ? id : epicId || prev.epic;
-      const newStory = type === 'story' ? id : null;
-      
-      if (prev.epic === newEpic && prev.story === newStory) {
-        return prev;
+      if (type === 'epic') {
+        // When selecting an epic, clear the story selection
+        return { epic: id, story: null };
+      } else {
+        // When selecting a story, keep track of both epic and story
+        return { epic: epicId || prev.epic, story: id };
       }
-      return { epic: newEpic, story: newStory };
     });
   }, []);
 
@@ -233,17 +224,19 @@ export default function EpicLayout({ params, handleEditorChange }: {
   // Render an epic
   const renderEpic = useCallback((epic: any) => {
     const isExpanded = expandedEpics.has(epic._id)
-    const isSelected = selectedItems.epic === epic._id && !selectedItems.story
-    // Get all user stories for this epic
+    const isSelected = selectedItems.epic === epic._id && selectedItems.story === null
     const epicUserStories = allUserStories?.filter((story: any) => story.epicId === epic._id) || []
 
     return (
       <div key={epic._id} className="">
         <div
-          className={`flex items-center rounded-lg px-4 py-1 hover:bg-slate-200 transition-colors ${
+          className={`flex items-center rounded-lg px-4 py-1 hover:bg-white transition-colors ${
             isSelected ? 'bg-white font-semibold' : ''
           } cursor-pointer group`}
-          onClick={() => selectItem('epic', epic._id)}
+          onClick={() => {
+            selectItem('epic', epic._id)
+            setSelectedItems({ epic: epic._id, story: null })
+          }}
         >
           <button
             className="mr-2 focus:outline-none"
@@ -283,7 +276,7 @@ export default function EpicLayout({ params, handleEditorChange }: {
         {isExpanded && epicUserStories.length > 0 && renderUserStories(epicUserStories)}
       </div>
     )}, 
-    [expandedEpics, selectedItems.epic]
+    [expandedEpics, selectedItems.epic, selectedItems.story]
   )
 
   // Render user stories
@@ -460,8 +453,8 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     if (!selectedEpic) return null;
     
     return (
-      <div className='flex flex-col h-full'>
-        <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
+      <div className="flex flex-col h-full">
+                <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
           <LabelToInput
             key={`${selectedEpic._id}-${selectedEpic.name}`}
             value={selectedEpic.name}
@@ -469,27 +462,32 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             onBlur={() => {}}
           />
         </header>
-        <div className='flex-1 overflow-y-auto flex'>
-          <div className='flex-1 px-0'>
-            <LexicalEditor
-              key={`${selectedEpic._id}`}
-              attribute="description"
-              projectDetails={selectedEpic}
-              setProjectDetails={(value) => {
-                if (value !== selectedEpic.description) {
-                  handleEpicChange(selectedEpic._id, 'description', value);
-                }
-              }}
-              isRichText={true}
-              context="epics"
-              itemId={selectedEpic._id}
-              onBlur={async () => {}}
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto h-[calc(100%-100px)] flex">
+          <LexicalEditor
+            key={selectedItems.epic as string}
+            itemId={selectedItems.epic as Id<"epics">}
+            onBlur={onEditorBlur}
+            attribute="description"
+            projectDetails={{
+              _id: selectedItems.epic,
+              description: selectedEpic?.description || ''
+            }}
+            setProjectDetails={(newDetails) => {
+              if (selectedItems.epic) {
+                handleEditorChange(
+                  selectedItems.epic as Id<"epics">,
+                  'description',
+                  newDetails.description
+                );
+              }
+            }}
+            context="epics"
+            isRichText={true}
+          />
         </div>
       </div>
     );
-  }, [selectedEpic, handleEpicChange]);
+  }, [selectedEpic, handleEpicChange, handleEditorChange]);
 
   // Create a memoized UserStory editor component
   const UserStoryEditor = useMemo(() => {
@@ -505,22 +503,29 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             onBlur={() => {}}
           />
         </header>
-        <div className='flex-1 overflow-y-auto flex'>
-          <div className='flex-1 px-0'>
+        <div className='flex-1 overflow-y-auto flex h-full'>
+          <div className='flex-1 px-0 h-[500px]'>
             <LexicalEditor
-              key={`${selectedUserStory._id}`}
+              key={selectedItems.story as string}
+              itemId={selectedItems.story as Id<"userStories">}
+              onBlur={async () => {}}
               attribute="description"
-              projectDetails={selectedUserStory}
-              setProjectDetails={(value) => {
-                // Only update if value has changed
-                if (value !== selectedUserStory.description) {
-                  handleUserStoryChange(selectedUserStory._id, 'description', value);
+              projectDetails={{
+                _id: selectedItems.story,
+                description: selectedUserStory?.description || ''
+              }}
+              setProjectDetails={(newDetails) => {
+                console.log('Updating user story with:', newDetails);
+                if (selectedItems.story) {
+                  handleUserStoryChange(
+                    selectedItems.story as Id<"userStories">,
+                    'description',
+                    newDetails.description
+                  );
                 }
               }}
-              isRichText={true}
               context="userStories"
-              itemId={selectedUserStory._id}
-              onBlur={async () => {}}
+              isRichText={true}
             />
           </div>
         </div>
@@ -528,17 +533,231 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     );
   }, [selectedUserStory, handleUserStoryChange]);
 
-  // Add this before rendering AIStoryCreator
-  const handleGenerateEpics = () => {
+  // Add these state variables at the top of the component
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
+
+  // Add this state for the simulation interval
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Add this function to handle the simulated progress
+  const simulateProgress = () => {
+    setGenerationProgress(prev => {
+      if (prev >= 99) return prev;
+      // Slow down progress as it gets higher
+      const remaining = 99 - prev;
+      const increment = Math.max(0.5, remaining * 0.1);
+      return Math.min(99, prev + increment);
+    });
+  };
+
+  // Update the handleGenerateEpics function
+  const handleGenerateEpics = async () => {
     if (!params.projectId) {
-      toast.error("Please select a project first")
-      return
+      toast.error("Please select a project first");
+      return;
     }
-    // ... rest of generate epics logic
-  }
+
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Initializing...');
+
+    // Start progress simulation
+    progressInterval.current = setInterval(simulateProgress, 300);
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/epics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          projectId: params.projectId,
+        }),
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+              
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              
+              if (data.done) {
+                // Clear the simulation interval
+                if (progressInterval.current) {
+                  clearInterval(progressInterval.current);
+                }
+                setGenerationProgress(100);
+                setGenerationStatus('Complete!');
+                toast.success("Epics generated successfully");
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 1000);
+                if (onAddEpics) {
+                  await onAddEpics();
+                }
+                return;
+              }
+              
+              // Update status message from the server if provided
+              if (data.status) {
+                setGenerationStatus(data.status);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating epics:", error);
+      toast.error("Failed to generate epics. Please try again.");
+    } finally {
+      // Clean up the interval if it's still running
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setIsGenerating(false);
+    }
+  };
+
+  // Clean up the interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, []);
 
   // Memoize the projectId if it's being transformed
   const stableProjectId = useMemo(() => params.projectId?.toString(), [params.projectId]);
+
+  // Add useEffect to log selection changes
+  useEffect(() => {
+    console.log('Selected epic changed:', selectedItems.epic);
+    console.log('Selected epic data:', selectedEpic);
+  }, [selectedItems.epic, selectedEpic]);
+
+  // Modify your selection handler
+  const handleEpicSelect = useCallback((epicId: string) => {
+    setSelectedItems(prev => ({
+      ...prev,
+      epic: epicId,
+      story: null
+    }));
+  }, []);
+
+  // Add this new handler for single epic generation
+  const handleGenerateSingleEpic = async () => {
+    if (!params.projectId) {
+      toast.error("Please select a project first");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Generating a new epic...');
+    progressInterval.current = setInterval(simulateProgress, 300);
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/epics/single', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          projectId: params.projectId,
+        }),
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+              
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              
+              if (data.done) {
+                // Clear the simulation interval
+                if (progressInterval.current) {
+                  clearInterval(progressInterval.current);
+                }
+                setGenerationProgress(100);
+                setGenerationStatus('Complete!');
+                toast.success("New epic generated successfully");
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 1000);
+                if (onAddEpics) {
+                  await onAddEpics();
+                }
+                return;
+              }
+              
+              // Update status message from the server if provided
+              if (data.status) {
+                setGenerationStatus(data.status);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating epic:", error);
+      toast.error("Failed to generate epic. Please try again.");
+    } finally {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setIsGenerating(false);
+    }
+  };
+
+  // Rename existing handler to be more specific
+  const handleGenerateMultipleEpics = async () => {
+    // ... existing handleGenerateEpics code ...
+  };
 
   // Render the main layout
   return (
@@ -550,7 +769,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
               <Button onClick={handleAddEpic} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
                 <Plus className="mr-2 h-4 w-4" /> Add Epic
               </Button>
-              <Button onClick={handleAddEpic} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
+              <Button onClick={handleGenerateSingleEpic} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
                 <AiGenerationIcon /> 
                 <span className="ml-2 font-semibold ">Generate Epic</span>
               </Button>
@@ -594,6 +813,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                       name: selectedEpic.name,
                       description: selectedEpic.description
                     } : null}
+                    selectedUserStory={selectedUserStory}
                     selectedItemId={selectedItems.story}
                     projectId={stableProjectId}
                     isCollapsed={isCollapsed}
@@ -605,7 +825,10 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                     onInsertMarkdown={handleInsertMarkdown} 
                     selectedItemContent={selectedEpic?.description || ''}
                     selectedItemType="epic"
-                    selectedEpic={null}
+                    selectedEpic={selectedEpic ? {
+                      name: selectedEpic.name,
+                      description: selectedEpic.description
+                    } : null}
                     selectedItemId={selectedItems.epic}
                     projectId={stableProjectId}
                     isCollapsed={isCollapsed}
@@ -630,7 +853,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
               <Button
                 className="gap-2 h-10"
                 variant="default"
-                onClick={handleGenerateEpics}
+                onClick={handleGenerateMultipleEpics}
                 disabled={!projectId}
               >
                 <AiGenerationIconWhite />
@@ -646,6 +869,18 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           </div>
         )}
       </div>
+
+      {isGenerating && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
+            <div className="flex flex-col space-y-4">
+              <h3 className="text-lg font-semibold">Generating Epics</h3>
+              <Progress value={generationProgress} className="w-full" />
+              <p className="text-sm text-muted-foreground">{generationStatus}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

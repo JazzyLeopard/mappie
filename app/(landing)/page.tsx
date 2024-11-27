@@ -1,18 +1,24 @@
-
-import React, { useEffect } from "react";
-import { Hero } from "./_components/Hero";
-
-const LandingPage = () => {
-  return (
-    <div className="pt-20 min-h-full flex flex-col">
-      <div
-        className="flex flex-col items-center justify-center
-                            md:justify-start text-center gap-y-8 flex-1 px-6 pb-10"
-      >
-        <Hero />
-      </div>
-    </div>
-  );
+export const metadata = {
+  title: "Home - Mappie",
+  description: "Page description",
 };
 
-export default LandingPage;
+import Hero from "@/components/components-landing/hero-home";
+import BusinessCategories from "@/components/components-landing/business-categories";
+import LargeTestimonial from "@/components/components-landing/large-testimonial";
+import Features from "@/components/components-landing/features-home";
+import TestimonialsCarousel from "@/components/components-landing/testimonials-carousel";
+import Cta from "@/components/components-landing/cta";
+
+export default function Home() {
+  return (
+    <div className="overflow-x-hidden">
+      <Hero />
+      <BusinessCategories />
+      <LargeTestimonial />
+      <Features />
+      <TestimonialsCarousel />
+      <Cta />
+    </div>
+  );
+}

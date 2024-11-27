@@ -448,7 +448,11 @@ import type {
                 {isCollabActive ? (
                   <CollaborationPlugin
                     id={caption.getKey()}
-                    providerFactory={createWebsocketProvider}
+                    providerFactory={(id, yjsDocMap) => {
+                        const provider = createWebsocketProvider(id, yjsDocMap);
+                        if (!provider) throw new Error('Failed to create websocket provider');
+                        return provider;
+                    }}
                     shouldBootstrap={true}
                   />
                 ) : (

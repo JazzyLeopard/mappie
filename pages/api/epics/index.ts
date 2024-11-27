@@ -1,179 +1,194 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
+import { ConvexHttpClient } from "convex/browser";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import OpenAI from 'openai';
+import { getAuth } from "@clerk/nextjs/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-function convertDescriptionToMarkdown(description: any): string {
-  let markdown = '';
-
-  if (typeof description === 'string') {
-    return description;
+const convertBigIntToNumber = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'bigint') return Number(obj);
+  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+  if (typeof obj === 'object') {
+    return Object.entries(obj).reduce((acc, [key, value]) => ({
+      ...acc,
+      [key]: convertBigIntToNumber(value)
+    }), {});
   }
-
-  if (description.Description) {
-    markdown += `## Description\n${description.Description}\n\n`;
-  }
-
-  if (description.creation_date) markdown += `**Creation Date:** ${description.creation_date}\n`;
-  if (description.update_date) markdown += `**Update Date:** ${description.update_date}\n`;
-
-  if (description.business_value) {
-    markdown += `## Business Value\n${description.business_value}\n\n`;
-  }
-
-  if (description.acceptance_criteria) {
-    markdown += `## Acceptance Criteria\n${description.acceptance_criteria}\n\n`;
-  }
-
-  if (description.dependencies) {
-    markdown += `## Dependencies\n${description.dependencies}\n\n`;
-  }
-
-  if (description.risks) {
-    markdown += `## Risks\n${description.risks}\n\n`;
-  }
-
-  return markdown;
-}
+  return obj;
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+  // Setup SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-  const { projectId } = req.body;
-  const authHeader = req.headers.authorization;
-  const authToken = authHeader && authHeader.split(' ')[1];
-
-  if (!authToken) {
-    return res.status(401).json({ message: 'No authentication token provided' });
-  }
+  const sendEvent = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
 
   try {
-    convex.setAuth(authToken);
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
+    // Authentication
+    sendEvent({ progress: 5, status: 'Authenticating...' });
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+    
+    if (!token || !userId) {
+      throw new Error('Authentication failed');
+    }
+
+    // Setup Convex client
+    sendEvent({ progress: 15, status: 'Setting up connection...' });
+    convex.setAuth(token);
+    const { projectId } = req.body;
     const convexProjectId = projectId as Id<"projects">;
 
-    const context = await useContextChecker({ projectId: convexProjectId })
-    console.log("context", context);
+    // Fetch project and context
+    sendEvent({ progress: 25, status: 'Loading project...' });
+    const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
+    
+    if (!project) throw new Error('Project not found');
+    if (project.userId !== userId) throw new Error('Unauthorized access to project');
 
-    // Fetch functional requirements for the project
+    // Get functional requirements
+    sendEvent({ progress: 35, status: 'Loading requirements...' });
     const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
-        projectId: convexProjectId 
+      projectId: convexProjectId 
     });
 
-    if (!functionalRequirements) {
-      return res.status(400).json({ message: "No functional requirements found for the project" });
-    }
+    // Prepare context
+    sendEvent({ progress: 45, status: 'Preparing context...' });
+    const context = await useContextChecker({ projectId: convexProjectId });
+    const functionalRequirementsText = functionalRequirements
+      .map(fr => `${fr.title}\n${fr.description}`)
+      .join('\n\n');
 
-    const functionalRequirementsText = functionalRequirements.content;
+    // Generate epics with OpenAI
+    sendEvent({ progress: 55, status: 'Generating epics...' });
+    const prompt = `
+Project Context:
+${context}
 
-    //Fetch the useCases
-    const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
+Functional Requirements:
+${functionalRequirementsText}
 
-    if (!useCases) {
-      return res.status(400).json({ message: "No Use cases found for the project" });
-    }
+Based on the above project context and functional requirements, please generate a reasonable number of high-level epics. Each epic name should be kept short and unique. Each epic should follow this format:
 
-    let basePrompt = `As an expert EPICs analyst, generate a comprehensive list of EPICs for the following project. Each EPIC should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2 
-    {
-        "name": "Name of the epic should be short and concise. Example: Restaurant Menu Search",
-        
-        "description": "Create a detailed description of the epic that addresses the business need it fulfills, including the following elements: 
-    
-        - **Description**: This epic focuses on implementing the core functionality of the restaurant menu browsing and search system. It allows users to easily discover restaurants and their offerings, contributing to a seamless dining experience.
-    
-        - **Business Value**: Articulate the business value delivered by this epic. By enabling users to efficiently browse and search restaurant menus, this epic drives increased app usage and customer satisfaction, leading to higher order volumes and revenue growth.
-    
-        - **Acceptance Criteria**: Define what success looks like for this Epic. Users must be able to filter restaurants by cuisine type, and search results should be displayed within 2 seconds.
-    
-        - **Dependencies**: Identify any dependencies that could affect the completion of this Epic. This epic is dependent on the completion of the restaurant onboarding process and integration with the external menu management system.
-    
-        - **Risks**: Outline any risks that might prevent this Epic from being successfully completed. There is a risk that search functionality could slow down the app during peak usage times, affecting user experience.
-    
-        Present the description as a single cohesive string, combining all these elements in a clear and engaging manner."
-    }`;
+### Epic: [Epic Name]
+**Description**: [Detailed description of what this epic entails]
+**Business Value**: [Clear statement of the business value this epic delivers]
+**Acceptance Criteria**:
+- [Criterion 1]
+- [Criterion 2]
+- [Criterion 3]
 
+**Dependencies**:
+- [Dependency 1]
+- [Dependency 2]
 
-    if (useCases?.length > 0) {
-      const useCasesText = useCases.map(useCase => useCase?.description).join('\n');
-      basePrompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
-    }
+**Risks**:
+- [Risk 1]
+- [Risk 2]
 
-    let epicPrompt = context
+Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.`;
 
-    epicPrompt += `Based on the following functional requirements- ${functionalRequirementsText} generate a comprehensive list of epics using this format- ${basePrompt}. Be creative and consider edge cases that might not be immediately obvious.Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block don't use Heading 1 and Heading 2 in Markdown.
-    `;
-
-    console.log("Calling OpenAI Api...");
-    const response = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: epicPrompt }],
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
+      max_tokens: 7000,
     });
-    console.log('OpenAI API response received');
 
-    const epicContent = response.choices[0].message.content;
-    if (!epicContent) {
-      throw new Error('No content generated from OpenAI');
-    }
+    const content = completion.choices[0].message.content;
+    if (!content) throw new Error('No content generated from OpenAI');
 
-    console.log('Parsing OpenAI response...');
+    // Process AI response
+    sendEvent({ progress: 75, status: 'Processing epics...' });
+    const epics = content
+      .split(/(?=###\s*Epic:\s*)/g)
+      .filter(section => section.trim())
+      .map(section => {
+        const nameMatch = section.match(/Epic:\s*(.+?)(?=\n|$)/);
+        const descriptionMatch = section.match(/\*\*Description\*\*:\s*(.+?)(?=\*\*|$)/m);
+        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*(.+?)(?=\*\*|$)/m);
+        const acceptanceCriteriaMatch = section.match(/\*\*Acceptance Criteria\*\*:\s*((?:-.+?\n?)+)/m);
+        const dependenciesMatch = section.match(/\*\*Dependencies\*\*:\s*((?:-.+?\n?)+)/m);
+        const risksMatch = section.match(/\*\*Risks\*\*:\s*((?:-.+?\n?)+)/m);
 
-    // Extract JSON from Markdown code block
-    const jsonMatch = epicContent.match(/```json\s*([\s\S]*?)\s*```/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in the response');
-    }
-    const jsonContent = jsonMatch[1];
+        const formatList = (match: RegExpMatchArray | null): string[] => {
+          if (!match?.[1]) return [];
+          return match[1]
+            .split('\n')
+            .map(item => item.trim())
+            .filter(item => item.startsWith('-'))
+            .map(item => item.slice(1).trim())
+            .filter(Boolean);
+        };
 
-    let generatedEpics;
-    try {
-      generatedEpics = JSON.parse(jsonContent);
-    } catch (parseError) {
-      console.error('Error parsing OpenAI response for epics:', parseError);
-      console.log('Raw OpenAI response', epicContent);
-      return res.status(500).json({ message: 'Invalid JSON response from OpenAI for epics', parseError });
-    }
+        return {
+          name: nameMatch?.[1]?.trim() || 'Untitled Epic',
+          description: {
+            Description: descriptionMatch?.[1]?.trim() || '',
+            "Business Value": businessValueMatch?.[1]?.trim() || '',
+            "Acceptance Criteria": formatList(acceptanceCriteriaMatch),
+            Dependencies: formatList(dependenciesMatch),
+            Risks: formatList(risksMatch)
+          }
+        };
+      });
 
-    console.log('Parsed epics', JSON.stringify(generatedEpics, null, 2));
+    // Create epics in database
+    sendEvent({ progress: 85, status: 'Saving epics...' });
+    const createdEpics = await Promise.all(epics.map(async (epic) => {
+      const markdownDescription = `# ${epic.name}
 
-    console.log("Creating epic...");
+## Description
+${epic.description.Description}
 
-    for (const epic of generatedEpics) {
-      if (epic && epic?.description) {
-        const formattedDescription = convertDescriptionToMarkdown(epic?.description);
+## Business Value
+${epic.description["Business Value"]}
 
-        let epicId = await convex.mutation(api.epics.createEpics, {
-          projectId: convexProjectId,
-          name: epic.name || 'Untitled Epic',
-          description: formattedDescription
-        });
+## Acceptance Criteria
+${epic.description["Acceptance Criteria"].map(criterion => `- ${criterion}`).join('\n')}
 
-        epic['id'] = epicId
-      }
-      else {
-        console.warn('Skipping invalid epics:', epic)
-      }
-    }
-    console.log('Epics created successfully');
+## Dependencies
+${epic.description.Dependencies.map(dep => `- ${dep}`).join('\n')}
 
-    res.status(200).json({ epics: generatedEpics, markdown: convertDescriptionToMarkdown(generatedEpics?.description || {}) });
+## Risks
+${epic.description.Risks.map(risk => `- ${risk}`).join('\n')}`;
+
+      return await convex.mutation(api.epics.createEpics, {
+        projectId: convexProjectId,
+        name: epic.name,
+        description: markdownDescription
+      });
+    }));
+
+    // Send final response
+    const serializedEpics = convertBigIntToNumber(createdEpics);
+    sendEvent({ progress: 100, status: 'Complete!' });
+    sendEvent({ done: true, content: serializedEpics });
+
   } catch (error) {
-    console.error('Error generating Epics:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({ message: 'Error generating Epics', error: error instanceof Error ? error.message : String(error) });
+    console.error('API Error:', error);
+    sendEvent({ 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      progress: 100,
+      status: 'Error'
+    });
+  } finally {
+    res.end();
   }
 }

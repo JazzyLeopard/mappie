@@ -87,25 +87,20 @@ export const createEpics = mutation({
   args: {
     projectId: v.id("projects"),
     name: v.string(),
-    description: v.optional(v.string())
+    description: v.string(),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-
-    if (!identity) {
-      throw new Error("Not Authenticated");
-    }
-
-    const userId = identity.subject;
+    if (!identity) throw new Error("Not Authenticated");
 
     const epic = await ctx.db.insert("epics", {
       name: args.name,
-      description: "",
+      description: args.description,
       projectId: args.projectId,
-      createdAt: BigInt(Date.now()), // Use BigInt for timestamps
+      createdAt: BigInt(Date.now()),
       updatedAt: BigInt(Date.now()),
     });
 
     return epic;
   },
-})
+});

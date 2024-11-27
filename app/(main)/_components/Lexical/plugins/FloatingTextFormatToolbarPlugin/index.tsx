@@ -28,6 +28,10 @@ import {
   FORMAT_TEXT_COMMAND,
   LexicalEditor,
   SELECTION_CHANGE_COMMAND,
+  INDENT_CONTENT_COMMAND,
+  OUTDENT_CONTENT_COMMAND,
+  KEY_MODIFIER_COMMAND,
+  createCommand,
 } from 'lexical';
 import {Dispatch, useCallback, useEffect, useRef, useState} from 'react';
 import * as React from 'react';
@@ -38,6 +42,12 @@ import {getSelectedNode} from '../../utils/getSelectedNode';
 import {setFloatingElemPosition} from '../../utils/setFloatingElemPosition';
 import {INSERT_INLINE_COMMAND} from '../CommentPlugin';
 import DropdownColorPicker from '../../ui/DropdownColorPicker';
+import { AI_EDIT_COMMAND } from '../AiEditPlugin';
+import AiGenerationIcon from '@/icons/AI-Generation';
+
+const KEYBOARD_SHORTCUT = {
+  AI_EDIT: 'mod+shift+m',
+};
 
 function TextFormatFloatingToolbar({
   editor,
@@ -71,6 +81,7 @@ function TextFormatFloatingToolbar({
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
 
   const [activeEditor, setActiveEditor] = useState(editor);
+  const [isRTL, setIsRTL] = useState(false);
 
   const insertLink = useCallback(() => {
     if (!isLink) {
@@ -225,6 +236,43 @@ function TextFormatFloatingToolbar({
     );
   }, [editor, $updateTextFormatFloatingToolbar]);
 
+  useEffect(() => {
+    return editor.registerCommand(
+      KEY_MODIFIER_COMMAND,
+      (payload) => {
+        const event: KeyboardEvent = payload;
+        const {keyCode, metaKey, ctrlKey, shiftKey} = event;
+
+        // Handle link shortcut (Cmd/Ctrl + Shift + K)
+        if ((metaKey || ctrlKey) && shiftKey && keyCode === 75) {
+          event.preventDefault();
+          insertLink();
+          return true;
+        }
+
+        // Handle AI edit shortcut (Cmd/Ctrl + E)
+        if ((metaKey || ctrlKey) && keyCode === 69) {
+          event.preventDefault();
+          editor.update(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+              const selectedText = selection.getTextContent();
+              if (selectedText) {
+                editor.dispatchCommand(AI_EDIT_COMMAND, {
+                  prompt: '',
+                  selectedText,
+                });
+              }
+            }
+          });
+          return true;
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [editor, insertLink]);
+
   return (
     <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
       {editor.isEditable() && (
@@ -298,7 +346,8 @@ function TextFormatFloatingToolbar({
             type="button"
             onClick={insertLink}
             className={'popup-item spaced ' + (isLink ? 'active' : '')}
-            aria-label="Insert link">
+            aria-label="Insert link (⌘⇧K)"
+            title="Insert link (⌘⇧K)">
             <i className="format link" />
           </button>
           <DropdownColorPicker
@@ -319,15 +368,64 @@ function TextFormatFloatingToolbar({
             onChange={onBgColorSelect}
             title="bg color"
             />
+
+          <button
+            type="button"
+            onClick={() => {
+              editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
+            }}
+            className="popup-item spaced"
+            aria-label="Indent">
+            <i className={'icon ' + (isRTL ? 'outdent' : 'indent')} />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+            }}
+            className="popup-item spaced"
+            aria-label="Outdent">
+            <i className={'icon ' + (isRTL ? 'indent' : 'outdent')} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              editor.update(() => {
+                const selection = $getSelection();
+                if ($isRangeSelection(selection)) {
+                  const selectedText = selection.getTextContent();
+                  console.log('Selected text in toolbar:', selectedText);
+                  if (selectedText) {
+                    console.log('Dispatching AI_EDIT_COMMAND with payload:', {
+                      prompt: '',
+                      selectedText,
+                    });
+                    editor.dispatchCommand(AI_EDIT_COMMAND, {
+                      prompt: '',
+                      selectedText,
+                    });
+                  }
+                }
+              });
+            }}
+            className="popup-item spaced"
+            aria-label="AI Edit (⌘E)"
+            title="AI Edit (⌘E)">
+            <i className="format magic-wand">
+              <span className="sr-only">CMD+E</span>
+              <AiGenerationIcon />
+            </i>
+          </button>
         </>
       )}
-      <button
+      {/* <button
         type="button"
         onClick={insertComment}
         className={'popup-item spaced insert-comment'}
         aria-label="Insert comment">
         <i className="format add-comment" />
-      </button>
+      </button> */}
     </div>
   );
 }

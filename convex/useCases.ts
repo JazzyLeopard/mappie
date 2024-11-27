@@ -24,15 +24,17 @@ export const createUseCase = mutation({
 export const getUseCasesByProjectId = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const useCases = await ctx.db
-      .query("useCases")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
-      .collect();
+    try {
+      const useCases = await ctx.db
+        .query("useCases")
+        .withIndex("by_projectId", q => q.eq("projectId", args.projectId))
+        .collect();
 
-    if (useCases?.length > 0) {
-      return useCases
+      return useCases || [];
+    } catch (error) {
+      console.error("Error fetching use cases:", error);
+      return [];
     }
-    return [];
   },
 });
 

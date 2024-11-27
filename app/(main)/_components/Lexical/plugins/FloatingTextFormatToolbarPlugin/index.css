@@ -156,3 +156,17 @@
   .icon.font-color {
     background-image: url(../../images/icons/font-color.svg);
   }
+
+  .format.magic-wand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    opacity: 0.6;
+  }
+
+  .format.magic-wand.active,
+  .popup-item:hover:not([disabled]) .format.magic-wand {
+    opacity: 1;
+  }
