@@ -285,7 +285,7 @@ export const Navigation = () => {
                       <div className="p-2">
                         <Button
                           variant="ghost"
-                          className="w-full justify-start mb-1"
+                          className="w-full justify-start"
                           onClick={() => handleProjectChange("all_projects")}
                         >
                           All Projects
@@ -295,7 +295,7 @@ export const Navigation = () => {
                           <Button
                             key={project._id}
                             variant="ghost"
-                            className="w-full justify-start mb-1 text-sm"
+                            className="w-full justify-start text-sm"
                             onClick={() => handleProjectChange(project._id)}
                           >
                             {project.title}
