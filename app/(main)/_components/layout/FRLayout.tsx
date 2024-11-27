@@ -296,12 +296,12 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     <li>User Personas</li>
                     <li>Features In/Out</li>
                 </ul>
-                <Button
+                <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                     onClick={() => router.push(`/projects/${projectId}`)}
                     variant="default"
                 >
                     Go to Project Overview
-                </Button>11
+                </Button>
             </div>
         );
     }
