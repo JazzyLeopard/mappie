@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     };
 
     const result = await streamText({
-      model: openai('gpt-4o'),  // Fixed model name
+      model: openai('gpt-4o-mini'),  // Fixed model name
       messages: [systemPrompt, ...validatedMessages],  // Use validated messages
       tools,
       experimental_toolCallStreaming: true,

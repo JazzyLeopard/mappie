@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import Stripes from "@/public/images-landing/stripes.svg";
+import Stripes from "@/app/(landing)/images-landing/stripes.svg";
 
 export default function PageIllustration() {
   return (

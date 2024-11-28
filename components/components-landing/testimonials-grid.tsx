@@ -1,13 +1,13 @@
 import Testimonial from "./testimonial";
-import TestimonialImg01 from "@/public/images-landing/testimonial-01.jpg";
-import TestimonialImg02 from "@/public/images-landing/testimonial-02.jpg";
-import TestimonialImg03 from "@/public/images-landing/testimonial-03.jpg";
-import TestimonialImg04 from "@/public/images-landing/testimonial-04.jpg";
-import TestimonialImg05 from "@/public/images-landing/testimonial-05.jpg";
-import TestimonialImg06 from "@/public/images-landing/testimonial-06.jpg";
-import TestimonialImg07 from "@/public/images-landing/testimonial-07.jpg";
-import TestimonialImg08 from "@/public/images-landing/testimonial-08.jpg";
-import TestimonialImg09 from "@/public/images-landing/testimonial-09.jpg";
+import TestimonialImg01 from "@/app/(landing)/images-landing/testimonial-01.jpg";
+import TestimonialImg02 from "@/app/(landing)/images-landing/testimonial-02.jpg";
+import TestimonialImg03 from "@/app/(landing)/images-landing/testimonial-03.jpg";
+import TestimonialImg04 from "@/app/(landing)/images-landing/testimonial-04.jpg";
+import TestimonialImg05 from "@/app/(landing)/images-landing/testimonial-05.jpg";
+import TestimonialImg06 from "@/app/(landing)/images-landing/testimonial-06.jpg";
+import TestimonialImg07 from "@/app/(landing)/images-landing/testimonial-07.jpg";
+import TestimonialImg08 from "@/app/(landing)/images-landing/testimonial-08.jpg";
+import TestimonialImg09 from "@/app/(landing)/images-landing/testimonial-09.jpg";
 
 export default function TestimonialsGrid() {
   const testimonials = [
