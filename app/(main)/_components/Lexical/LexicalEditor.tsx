@@ -1,25 +1,10 @@
 "use client";
 
-import { $createLinkNode } from '@lexical/link';
-import { $createListItemNode, $createListNode } from '@lexical/list';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
-import { 
-  $createParagraphNode, 
-  $createTextNode, 
-  $getRoot,
-  $parseSerializedNode,
-  LexicalEditor as LexicalEditorType,
-  SerializedEditorState,
-  SerializedLexicalNode
-} from 'lexical';
-import { useEffect, useMemo } from 'react';
+import { LexicalEditor as LexicalEditorType } from 'lexical';
+import { useMemo } from 'react';
 import * as React from 'react';
 import PlaygroundEditorTheme from './themes/PlayGroundEditorTheme';
-
-import dynamic from 'next/dynamic';
 
 import Editor from './Editor';
 import { SharedHistoryContext } from './context/SharedHistoryContext';
@@ -27,7 +12,6 @@ import { TableContext } from './plugins/TablePlugin';
 import { SharedAutocompleteContext } from './context/SharedAutocompleteContext';
 import PlaygroundNodes from './nodes/PlaygroundNodes';
 import { FlashMessageContext } from './context/FlashMessageContext';
-import './index.css';
 import { useSettings } from './context/SettingsContext';
 import { SuggestionCardNode } from './plugins/AiEditPlugin';
 

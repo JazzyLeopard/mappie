@@ -364,7 +364,7 @@ export default function Editor({
         <MarkdownInsertionPlugin onInsertMarkdown={insertMarkdown} />
         <RichTextPlugin
           contentEditable={
-            <div className="h-full w-full overflow-auto">
+            <div className="h-full w-full overflow-auto scrollbar-thin">
               <div className="w-full min-h-[900px] relative" ref={onRef}>
                 <ContentEditable 
                   className="h-full w-full pl-6 outline-none" 

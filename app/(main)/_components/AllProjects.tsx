@@ -131,13 +131,13 @@ export default function Component() {
 
           </div>
           <div className="flex items-center space-x-2 mb-6">
-            <Button variant="outline" id="create-new-button" onClick={onCreate}>
+            <Button variant="outline" onClick={onCreate}>
               <PlusIcon className="mr-2 w-4 h-4" />
               <p className="mr-4">Create new</p>
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-primary-foreground">
+                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-white">
                   <Wand2 className="mr-2 w-4 h-4" />
                   Ideate with AI
                 </Button>
