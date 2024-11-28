@@ -920,9 +920,9 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           </>
         ) : (
           <div className="flex-1 overflow-hidden w-full">
-            <div className="h-full flex flex-col items-center justify-center gap-6">
-              <Image src={empty} alt="No epics" width={100} height={100} />
-              <h2 className="text-xl font-semibold text-center">
+            <div className="h-full flex flex-col items-center justify-center gap-4 md:gap-6 px-4 md:px-6">
+              <Image src={empty} alt="No epics" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
+              <h2 className="text-lg md:text-xl font-semibold text-center">
                 You haven't created any epics<br />for this project yet.
               </h2>
               <p className="text-center text-gray-600 max-w-md">

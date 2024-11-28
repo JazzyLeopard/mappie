@@ -67,10 +67,10 @@ export default function UseCasesLayout({
 
   if (!isOnboardingComplete) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-6">
-        <Image src={empty} alt="No use cases" width={100} height={100} />
-        <h2 className="text-xl font-semibold text-center">
-          Please complete all mandatory fields in the Project Overview <br /> before proceeding to Use Cases.
+      <div className="h-screen flex flex-col items-center justify-center gap-4 md:gap-6 px-4 md:px-6">
+        <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
+        <h2 className="text-lg md:text-xl font-semibold text-center">
+          Please complete all mandatory fields in the Project Overview <br className="hidden md:block" /> before proceeding to Use Cases.
         </h2>
       </div>
     )
