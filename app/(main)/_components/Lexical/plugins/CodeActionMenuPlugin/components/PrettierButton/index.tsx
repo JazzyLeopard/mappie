@@ -19,19 +19,19 @@ interface Props {
   getCodeDOMNode: () => HTMLElement | null;
 }
 
-const PRETTIER_PARSER_MODULES = {
-  css: () => import('prettier/parser-postcss'),
-  html: () => import('prettier/parser-html'),
-  js: () => import('prettier/parser-babel'),
-  markdown: () => import('prettier/parser-markdown'),
-} as const;
+// const PRETTIER_PARSER_MODULES = {
+//   css: () => import('prettier/parser-postcss'),
+//   html: () => import('prettier/parser-html'),
+//   js: () => import('prettier/parser-babel'),
+//   markdown: () => import('prettier/parser-markdown'),
+// } as const;
 
-type LanguagesType = keyof typeof PRETTIER_PARSER_MODULES;
+// type LanguagesType = keyof typeof PRETTIER_PARSER_MODULES;
 
-async function loadPrettierParserByLang(lang: string) {
-  const dynamicImport = PRETTIER_PARSER_MODULES[lang as LanguagesType];
-  return await dynamicImport();
-}
+// async function loadPrettierParserByLang(lang: string) {
+//   const dynamicImport = PRETTIER_PARSER_MODULES[lang as LanguagesType];
+//   return await dynamicImport();
+// }
 
 async function loadPrettierFormat() {
   const {format} = await import('prettier/standalone');
@@ -80,7 +80,7 @@ export function PrettierButton({lang, editor, getCodeDOMNode}: Props) {
     try {
       const format = await loadPrettierFormat();
       const options = getPrettierOptions(lang);
-      options.plugins = [await loadPrettierParserByLang(lang)];
+      // options.plugins = [await loadPrettierParserByLang(lang)];
 
       if (!codeDOMNode) {
         return;

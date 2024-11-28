@@ -129,7 +129,7 @@ export default async function handler(
       return res.status(400).json({ message: "No functional requirements found for the project" });
     }
 
-    const functionalRequirementsText = functionalRequirements.content;
+    const functionalRequirementsText = functionalRequirements.map(fr => fr.description).join('\n');
 
     // Fetch the exsisting use cases
     const useCases = await convex.query(api.useCases.getUseCasesByProjectId, { projectId });
