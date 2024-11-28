@@ -182,7 +182,7 @@ export const Navigation = () => {
 
   return (
     <>
-      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-slate-200 w-80'} overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
+      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-slate-200 w-80'} overflow-y-auto overflow-x-hidden relative z-[50] flex flex-col transition-width duration-300`,
         isResetting && "transition-all ease-in-out duration-300"
       )}>
 
@@ -206,16 +206,20 @@ export const Navigation = () => {
                   <button className="text-sm underline p-1">All</button>
                 </Link>
               </div>
-              <Select onValueChange={handleProjectChange} value={selectedProject || undefined} >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a project">{selectedProjectTitle}</SelectValue>
+              <Select onValueChange={handleProjectChange} value={selectedProject || undefined}>
+                <SelectTrigger className="w-full max-w-[250px]">
+                  <SelectValue placeholder="Select a project">
+                    <span className="truncate block">{selectedProjectTitle}</span>
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all_projects" className="my-1">All Projects</SelectItem>
+                <SelectContent className="w-[250px]">
+                  <SelectItem value="all_projects" className="my-1">
+                    <span className="truncate block">All Projects</span>
+                  </SelectItem>
                   <SelectSeparator className="my-2" />
                   {projects?.map((project) => (
                     <SelectItem key={project._id} value={project._id} className="my-1">
-                      {project.title}
+                      <span className="truncate block">{project.title}</span>
                     </SelectItem>
                   ))}
                   <SelectSeparator className="my-2" />
@@ -295,7 +299,7 @@ export const Navigation = () => {
                           <Button
                             key={project._id}
                             variant="ghost"
-                            className="w-full justify-start text-sm"
+                            className="w-full justify-start text-sm truncate"
                             onClick={() => handleProjectChange(project._id)}
                           >
                             {project.title}
