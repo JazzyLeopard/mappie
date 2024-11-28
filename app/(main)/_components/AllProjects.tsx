@@ -180,7 +180,7 @@ export default function Component() {
               <Card
                 key={proj._id}
                 onClick={() => router.push(`/projects/${proj._id}`)}
-                className="cursor-pointer w-[20rem] max-w-full overflow-hidden"
+                className="cursor-pointer w-[20rem] max-w-full overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
                 <CardContent className="flex items-center justify-start p-4 space-x-2 pr-16">
                   <FontAwesomeIcon icon={faDiagramProject} className="text-sm" />
