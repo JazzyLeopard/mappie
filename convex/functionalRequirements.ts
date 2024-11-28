@@ -30,7 +30,11 @@ export const getFunctionalRequirementsByProjectId = query({
         .withIndex("by_projectId", q => q.eq("projectId", args.projectId))
         .collect();
 
-      return frs || [];
+      if (!frs || frs.length <= 0) {
+        return [];
+      }
+
+      return frs;
     } catch (error) {
       console.error("Error fetching functional requirements:", error);
       return [];
