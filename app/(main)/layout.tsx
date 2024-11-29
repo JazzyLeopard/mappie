@@ -6,6 +6,7 @@ import { useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import { Navigation } from "./_components/navigation";
 import { ErrorBoundary } from 'react-error-boundary';
+import "@/app/globals.css"; 
 
 function ErrorFallback({ error }: { error: Error }) {
   return (

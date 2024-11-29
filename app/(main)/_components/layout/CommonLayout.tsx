@@ -229,8 +229,8 @@ const CommonLayout = ({
     }, [activeSection, data._id, updateProject, cleanDataForUpdate]);
 
     return (
-        <div className="flex h-screen gap-2 p-4">
-            <div className="w-72">
+        <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
+            <div className="w-72 min-w-[200px]">
                 <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
                     <div className="p-2 pt-4">
                         <div className="flex flex-col items-center space-y-2 mb-4">
@@ -272,7 +272,7 @@ const CommonLayout = ({
                             <FileUpload projectId={data._id} />
                         </div>
                     </div>
-                    <ScrollArea className="h-[calc(100vh-220px)]">
+                    <ScrollArea className="h-[calc(100vh-325px)]">
                         <div className="px-2">
                             <span className="text-sm pl-2 font-semibold">Sections</span>
                             <nav className="space-y-1 items-center pt-2">
@@ -313,7 +313,7 @@ const CommonLayout = ({
                             Presentation Mode
                         </Button>
                     </div>
-                    <div className="flex-1 min-h-0 overflow-auto px-4">
+                    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4">
                         {activeComponent && <LexicalEditor {...{ ...editorProps, context: "project" as const }} />}
                     </div>
                 </div>

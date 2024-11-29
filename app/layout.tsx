@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 
 import ConvexClientProvider from "./ConvexClientProvider";
 
-import "./globals.css";
+import "@/app/globals.css";
 
 import { Toaster } from "sonner";
 

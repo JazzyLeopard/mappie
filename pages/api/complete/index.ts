@@ -1,10 +1,10 @@
 // pages/api/complete/index.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from "openai";
+import { openai } from "@ai-sdk/openai"
+import { generateText } from "ai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
+// const openaiModel = openai("gpt-4o-mini")
 
 export default async function handler(
   req: NextApiRequest,
@@ -42,12 +42,17 @@ export default async function handler(
   `;
 
   try {
-    const completions = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-    });
+    // const completions = await openai.chat.completions.create({
+    //   model: "gpt-4o-mini",
+    //   messages: [{ role: "user", content: prompt }],
+    // });
 
-    const aiResponse = completions.choices[0].message.content;
+    const completions = await generateText({
+      model: openai("gpt-4o-mini"),
+      messages: [{ role: "user", content: prompt }],
+    })
+
+    const aiResponse = completions.text;
 
     // Parse the AI response to ensure it is in the expected format
     // const parsedResponse = JSON.parse(aiResponse);
