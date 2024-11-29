@@ -2,12 +2,10 @@
 import { useContextChecker } from '@/utils/useContextChecker';
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from "openai";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export default async function handler(
   req: NextApiRequest,
@@ -76,15 +74,15 @@ export default async function handler(
     }
 
 
-    const completions = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completions = await generateText({
+      model: openai("gpt-4o-mini"),
       messages: [
         { role: "system", content: "You're an experienced product manager and business analyst." },
         { role: "user", content: prompt }
       ],
     });
 
-    const aiResponse = completions.choices[0].message.content;
+    const aiResponse = completions.text;
     return res.status(200).json({ response: aiResponse });
   } catch (error) {
     console.error('Error processing AI request:', error);

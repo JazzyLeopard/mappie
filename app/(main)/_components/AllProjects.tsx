@@ -79,37 +79,49 @@ export default function Component() {
     }
 
     setIsGenerating(true);
+
     try {
-      // Phase 1: Create the project with only a title
+      // Phase 1: Create the project
       const projectId = await createProject({
         title: "New AI Generated Project",
       });
 
+      if (!projectId) {
+        throw new Error("Failed to create project");
+      }
+
       toast.success("Project created. Generating details...");
 
-      // Phase 2: Generate and populate project details
+      // Phase 2: Generate project details
       const response = await fetch('/api/ideate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: aiPrompt, projectId }),
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          projectId
+        }),
       });
 
-      if (response.ok) {
-        console.log("Ideate response:", response);
-      }
-      else {
-        throw new Error('Failed to generate project details');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate project details');
       }
 
+      const data = await response.json();
+
+      // Success handling
       toast.success("Project details generated successfully!");
+      setOpenPopover(null); // Close the popover
+      setAiPrompt(""); // Reset the prompt
 
       // Navigate to the new project
       router.push(`/projects/${projectId}`);
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error generating project:', error);
-      toast.error("Failed to generate project. Please try again.");
+      toast.error(error.message || "Failed to generate project. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -136,7 +148,10 @@ export default function Component() {
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-white whitespace-nowrap">
+                <Button
+                  variant="default"
+                  className="bg-gradient-to-r from-pink-400 to-blue-300 text-white whitespace-nowrap"
+                >
                   <Wand2 className="mr-2 w-4 h-4" />
                   Ideate with AI
                 </Button>
@@ -148,9 +163,24 @@ export default function Component() {
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     rows={4}
+                    disabled={isGenerating}
+                    className="resize-none"
                   />
-                  <Button onClick={handleGenerateProject} className="w-full" disabled={isGenerating}>
-                    {isGenerating ? "Generating..." : "Generate"}
+                  <Button
+                    onClick={handleGenerateProject}
+                    className="w-full relative"
+                    disabled={isGenerating || !aiPrompt.trim()}
+                  >
+                    {isGenerating ? (
+                      <>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        Generate
+                      </>
+                    )}
                   </Button>
                 </div>
               </PopoverContent>
@@ -213,7 +243,7 @@ export default function Component() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            setOpenPopover(openPopover === proj._id ? null : proj._id);
+                            setOpenPopover(proj._id);
                           }}
                           className="hover:bg-gray-300 rounded-md w-6 h-6 flex items-center justify-center cursor-pointer"
                         >
@@ -327,3 +357,4 @@ function PlusIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+

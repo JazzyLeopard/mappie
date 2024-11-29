@@ -1,54 +1,52 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
 import { getAuth } from "@clerk/nextjs/server";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
 
 export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
+  req: NextApiRequest,
+  res: NextApiResponse
 ) {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-    const sendEvent = (data: any) => {
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
-    };
+  const sendEvent = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
 
-    try {
-        if (req.method !== 'POST') {
-            throw new Error('Method not allowed');
-        }
+  try {
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
 
-        sendEvent({ progress: 5, status: 'Authenticating...' });
-        const { userId, getToken } = getAuth(req);
-        const token = await getToken({ template: "convex" });
-        
-        if (!userId || !token) {
-            throw new Error('Unauthorized');
-        }
+    sendEvent({ progress: 5, status: 'Authenticating...' });
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
 
-        convex.setAuth(token);
+    if (!userId || !token) {
+      throw new Error('Unauthorized');
+    }
 
-        const { projectId } = req.body;
-        const convexProjectId = projectId as Id<"projects">;
+    convex.setAuth(token);
 
-        sendEvent({ progress: 15, status: 'Fetching project data...' });
-        
-        const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
-            projectId: convexProjectId 
-        });
+    const { projectId } = req.body;
+    const convexProjectId = projectId as Id<"projects">;
 
-        const existingFRNames = existingFRs?.map(fr => fr?.title) || [];
+    sendEvent({ progress: 15, status: 'Fetching project data...' });
 
-        let basePrompt = `Generate a functional requirement that adds onto the existing requirements. Here are the existing requirements:
+    const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
+      projectId: convexProjectId
+    });
+
+    const existingFRNames = existingFRs?.map(fr => fr?.title) || [];
+
+    let basePrompt = `Generate a functional requirement that adds onto the existing requirements. Here are the existing requirements:
         
         ${existingFRs.map(fr => `${fr.title}: ${fr.description}`).join('\n')}
         
@@ -75,67 +73,67 @@ export default async function handler(
   ]
 }`;
 
-        sendEvent({ progress: 35, status: 'Analyzing requirements...' });
-        
-        console.log("Calling OpenAI Api...");
-        sendEvent({ progress: 55, status: 'Generating requirement...' });
-        
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: basePrompt }],
-            temperature: 0.7,
-        });
+    sendEvent({ progress: 35, status: 'Analyzing requirements...' });
 
-        const content = completion.choices[0].message.content;
-        if (!content) {
-            throw new Error('No content generated from OpenAI');
-        }
+    console.log("Calling OpenAI Api...");
+    sendEvent({ progress: 55, status: 'Generating requirement...' });
 
-        console.log('Parsing OpenAI response...');
+    const completion = await generateText({
+      model: openai("gpt-4o"),
+      messages: [{ role: "user", content: basePrompt }],
+      temperature: 0.7,
+    });
 
-        let requirement;
-        const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-
-        if (jsonMatch) {
-            const jsonContent = jsonMatch[1];
-            requirement = JSON.parse(jsonContent);
-            console.log('Parsed requirement:', JSON.stringify(requirement, null, 2));
-
-            if (requirement) {
-                sendEvent({ progress: 75, status: 'Processing AI response...' });
-                const lexicalState = createLexicalState(requirement);
-
-                const createdFR = await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
-                    projectId: convexProjectId,
-                    title: requirement.title,
-                    description: lexicalState,
-                });
-
-                sendEvent({ progress: 95, status: 'Finalizing...' });
-                sendEvent({ progress: 100, status: 'Complete!' });
-                sendEvent({ done: true, content: createdFR });
-            }
-        } else {
-            // Try parsing the content directly in case it's already JSON
-            try {
-                requirement = JSON.parse(content);
-            } catch (e) {
-                console.warn('Invalid response format from AI');
-                throw new Error('Failed to parse AI response into valid JSON');
-            }
-        }
-
-    } catch (error) {
-        console.error('Error generating requirement:', error);
-        sendEvent({ 
-            error: error instanceof Error ? error.message : 'An unexpected error occurred',
-            progress: 100,
-            status: 'Error'
-        });
-    } finally {
-        res.end();
+    const content = completion.text;
+    if (!content) {
+      throw new Error('No content generated from OpenAI');
     }
-} 
+
+    console.log('Parsing OpenAI response...');
+
+    let requirement;
+    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+
+    if (jsonMatch) {
+      const jsonContent = jsonMatch[1];
+      requirement = JSON.parse(jsonContent);
+      console.log('Parsed requirement:', JSON.stringify(requirement, null, 2));
+
+      if (requirement) {
+        sendEvent({ progress: 75, status: 'Processing AI response...' });
+        const lexicalState = createLexicalState(requirement);
+
+        const createdFR = await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
+          projectId: convexProjectId,
+          title: requirement.title,
+          description: lexicalState,
+        });
+
+        sendEvent({ progress: 95, status: 'Finalizing...' });
+        sendEvent({ progress: 100, status: 'Complete!' });
+        sendEvent({ done: true, content: createdFR });
+      }
+    } else {
+      // Try parsing the content directly in case it's already JSON
+      try {
+        requirement = JSON.parse(content);
+      } catch (e) {
+        console.warn('Invalid response format from AI');
+        throw new Error('Failed to parse AI response into valid JSON');
+      }
+    }
+
+  } catch (error) {
+    console.error('Error generating requirement:', error);
+    sendEvent({
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      progress: 100,
+      status: 'Error'
+    });
+  } finally {
+    res.end();
+  }
+}
 
 function createLexicalState(requirement: any) {
   const editorState = {

@@ -1,14 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
 import { getAuth } from "@clerk/nextjs/server";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
 
 function convertDescriptionToMarkdown(description: any): string {
     let markdown = '';
@@ -65,7 +63,7 @@ export default async function handler(
         sendEvent({ progress: 5, status: 'Authenticating...' });
         const { userId, getToken } = getAuth(req);
         const token = await getToken({ template: "convex" });
-        
+
         if (!userId || !token) {
             throw new Error('Unauthorized');
         }
@@ -78,10 +76,10 @@ export default async function handler(
 
         // Fetch project data
         sendEvent({ progress: 15, status: 'Fetching project data...' });
-        
+
         // Fetch functional requirements for the project
-        const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
-            projectId: convexProjectId 
+        const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
+            projectId: convexProjectId
         });
 
         if (!functionalRequirements) {
@@ -137,17 +135,17 @@ export default async function handler(
     `;
 
         sendEvent({ progress: 35, status: 'Analyzing requirements...' });
-        
+
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
+        const response = await generateText({
+            model: openai("gpt-4o"),
             messages: [{ role: "user", content: singleEpicPrompt }],
             temperature: 0.7,
         });
         console.log('OpenAI API response received');
 
-        const epicContent = response.choices[0].message.content;
+        const epicContent = response.text;
         if (!epicContent) {
             throw new Error('No content generated from OpenAI');
         }
@@ -207,7 +205,7 @@ export default async function handler(
             console.error('Error message:', error.message);
             console.error('Error stack:', error.stack);
         }
-        sendEvent({ 
+        sendEvent({
             error: error instanceof Error ? error.message : 'An unexpected error occurred',
             progress: 100,
             status: 'Error'

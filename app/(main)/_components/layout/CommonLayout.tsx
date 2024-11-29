@@ -185,8 +185,13 @@ const CommonLayout = ({
         [menu, activeSection]
     );
 
+    // Separate editorKey from other props
+    const editorKey = useMemo(() =>
+        `${activeComponent?.key}-${data[activeComponent?.key as keyof typeof data]}`,
+        [activeComponent?.key, data]
+    );
+
     const editorProps = useMemo(() => ({
-        key: `${activeComponent?.key}-${data[activeComponent?.key as keyof typeof data]}`,
         onBlur: onEditorBlur,
         attribute: activeComponent?.key || '',
         projectDetails: data,
@@ -198,7 +203,7 @@ const CommonLayout = ({
             handleSectionChange(activeComponent?.key || '', value);
         },
         isRichText: true,
-        context: "project",
+        context: "project" as const,
         itemId: data._id,
         updateProject
     }), [activeComponent?.key, data, onEditorBlur, handleSectionChange, updateProject]);
@@ -314,7 +319,12 @@ const CommonLayout = ({
                         </Button>
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4">
-                        {activeComponent && <LexicalEditor {...{ ...editorProps, context: "project" as const }} />}
+                        {activeComponent && (
+                            <LexicalEditor
+                                key={editorKey}
+                                {...editorProps}
+                            />
+                        )}
                     </div>
                 </div>
 

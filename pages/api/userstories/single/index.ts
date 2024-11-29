@@ -1,13 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
-import OpenAI from 'openai';
 import { Id } from "@/convex/_generated/dataModel";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
 
 function convertUsDescriptionToMarkdown(description: any): string {
     let markdown = '';
@@ -124,14 +122,14 @@ export default async function handler(
     `;
 
         console.log("Calling OpenAI Api...");
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+        const response = await generateText({
+            model: openai("gpt-4o-mini"),
             messages: [{ role: "user", content: singleUserStoryPrompt }],
             temperature: 0.7,
         });
         console.log('OpenAI API response received');
 
-        const userStoryContent = response.choices[0].message.content;
+        const userStoryContent = response.text;
         if (!userStoryContent) {
             throw new Error('No content generated from OpenAI');
         }
