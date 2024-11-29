@@ -123,21 +123,21 @@ export default function Component() {
 
   return (
     <>
-      <div className="bg-white rounded-lg w-full h-screen">
-        <div className="p-6 pt-16 min-w-100% ">
+      <div className="bg-white rounded-lg w-full h-screen overflow-y-auto">
+        <div className="p-6 pt-16">
           <div className="flex items-center mb-6">
             <h1 className="text-2xl font-semibold">Projects</h1>
 
           </div>
-          <div className="flex items-center space-x-2 mb-6">
-            <Button variant="outline" id="create-new-button" onClick={onCreate}>
+          <div className="flex items-center space-x-2 mb-6 overflow-x-auto">
+            <Button variant="outline" onClick={onCreate}>
               <PlusIcon className="mr-2 w-4 h-4" />
               <p className="mr-4">Create new</p>
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-white text-primary-foreground">
-                  <Wand2 className="mr-2 w-4 h-4 " />
+                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-white whitespace-nowrap">
+                  <Wand2 className="mr-2 w-4 h-4" />
                   Ideate with AI
                 </Button>
               </PopoverTrigger>
@@ -156,7 +156,7 @@ export default function Component() {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex items-center mb-6">
+          <div className="flex items-center mb-6 overflow-x-auto">
             <Button
               variant="ghost"
               className={`mr-4 ${activeButton === "all" ? "bg-gray-200" : ""}`}
@@ -179,7 +179,7 @@ export default function Component() {
               <Card
                 key={proj._id}
                 onClick={() => router.push(`/projects/${proj._id}`)}
-                className="cursor-pointer w-[20rem]"
+                className="cursor-pointer w-[20rem] max-w-full overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
                 <CardContent className="flex items-center justify-start p-4 space-x-2 pr-16">
                   <FontAwesomeIcon icon={faDiagramProject} className="text-sm" />

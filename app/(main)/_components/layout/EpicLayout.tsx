@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Plus, MoreVertical, Trash, Edit, Save, BookOpen, X, ArrowRight, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, MoreVertical, Trash, Edit, Save, BookOpen, X, ArrowRight, PanelLeftOpen, PanelLeftClose, Wand2 } from 'lucide-react'
 import LabelToInput from "@/app/(main)/_components/LabelToInput"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation'
 import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
 import { cn } from '@/lib/utils'
 import { Progress } from "@/components/ui/progress"
+import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 type SelectedItems = {
   epic: string | null;
@@ -273,7 +274,25 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
             </Button>
           </div>
         </div>
-        {isExpanded && epicUserStories.length > 0 && renderUserStories(epicUserStories)}
+        {isExpanded && (
+          <div>
+            {epicUserStories.length === 0 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-8 mt-2 text-xs flex items-center gap-2"
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+              >
+                <AiGenerationIcon />
+                Generate User Stories
+              </Button>
+            ) : (
+              renderUserStories(epicUserStories)
+            )}
+          </div>
+        )}
       </div>
     )}, 
     [expandedEpics, selectedItems.epic, selectedItems.story]
@@ -452,15 +471,46 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
   const EpicEditor = useMemo(() => {
     if (!selectedEpic) return null;
     
+    const epicUserStories = allUserStories?.filter((story: any) => story.epicId === selectedEpic._id) || []
+    
     return (
       <div className="flex flex-col h-full">
-                <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
+        <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
           <LabelToInput
             key={`${selectedEpic._id}-${selectedEpic.name}`}
             value={selectedEpic.name}
             setValue={(newName) => handleEpicChange(selectedEpic._id, 'name', newName)}
             onBlur={() => {}}
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default" 
+                className="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-blue-300 text-white font-semibold"
+              >
+                <AiGenerationIconWhite />
+                Generate
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-white">
+              <DropdownMenuItem
+                disabled={epicUserStories.length > 0}
+                onClick={() => handleGenerateUserStories(selectedEpic._id)}
+                className="flex items-center gap-2 p-2"
+              >
+                <Wand2 className="h-4 w-4" />
+                Generate Initial User Stories
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleGenerateUserStories(selectedEpic._id)}
+                className="flex items-center gap-2 p-2"
+              >
+                <Wand2 className="h-4 w-4" />
+                Generate User Story
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
         <div className="flex-1 overflow-y-auto h-[calc(100%-100px)] flex">
           <LexicalEditor
@@ -487,7 +537,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
         </div>
       </div>
     );
-  }, [selectedEpic, handleEpicChange, handleEditorChange]);
+  }, [selectedEpic, allUserStories, handleEpicChange, handleEditorChange]);
 
   // Create a memoized UserStory editor component
   const UserStoryEditor = useMemo(() => {
@@ -759,6 +809,36 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     // ... existing handleGenerateEpics code ...
   };
 
+  // Add this new function to handle user story generation:
+  const handleGenerateUserStories = async (epicId: Id<"epics">) => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Generating user stories...');
+    
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/userstories/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          epicId,
+          projectId: params.projectId,
+        }),
+      });
+
+      // ... rest of the streaming logic similar to handleGenerateEpics ...
+      
+    } catch (error) {
+      console.error("Error generating user stories:", error);
+      toast.error("Failed to generate user stories. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Render the main layout
   return (
     <div className="flex h-screen gap-2 p-4">
@@ -840,9 +920,9 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           </>
         ) : (
           <div className="flex-1 overflow-hidden w-full">
-            <div className="h-full flex flex-col items-center justify-center gap-6">
-              <Image src={empty} alt="No epics" width={100} height={100} />
-              <h2 className="text-xl font-semibold text-center">
+            <div className="h-full flex flex-col items-center justify-center gap-4 md:gap-6 px-4 md:px-6">
+              <Image src={empty} alt="No epics" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
+              <h2 className="text-lg md:text-xl font-semibold text-center">
                 You haven't created any epics<br />for this project yet.
               </h2>
               <p className="text-center text-gray-600 max-w-md">

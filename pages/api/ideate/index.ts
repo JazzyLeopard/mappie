@@ -2,11 +2,8 @@ import { ideatePrompts } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { openai } from "@ai-sdk/openai"
+import { generateText } from "ai"
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -70,25 +67,32 @@ export default async function handler(
       Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       console.log("Calling OpenAi Api...");
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+      // const completion = await openai.chat.completions.create({
+      //   model: "gpt-4o-mini",
+      //   messages: [
+      //     { role: "system", content: "You are an experienced agile business analyst that generates project details based on user prompts." },
+      //     { role: "user", content: promptWithPropertyInstructions }
+      //   ],
+      // });
+      const completions = await generateText({
+        model: openai("gpt-4o-mini"),
         messages: [
           { role: "system", content: "You are an experienced agile business analyst that generates project details based on user prompts." },
           { role: "user", content: promptWithPropertyInstructions }
         ],
-      });
+      })
       console.log("OpenAi response received");
 
 
       let generatedContent;
       try {
-        const jsonString = extractJSONFromResponse(completion.choices[0].message.content || '{}');
+        const jsonString = extractJSONFromResponse(completions.text || '{}');
         generatedContent = JSON.parse(jsonString);
 
         console.log('Parsed data:', JSON.stringify(generatedContent, null, 2))
       } catch (parseError) {
         console.error('Error parsing AI response:', parseError);
-        console.log('Raw AI response:', completion.choices[0].message.content);
+        console.log('Raw AI response:', completions.text);
         return res.status(500).json({ error: 'Failed to parse AI response' });
       }
 

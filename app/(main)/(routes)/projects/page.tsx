@@ -92,21 +92,24 @@ const ProjectsPage = () => {
           <AllProjects />
         ) : (
           <>
-            {/* <h1 className="text-3xl font-semibold mb-8">
-              {user?.firstName || user?.primaryEmailAddress?.emailAddress.split("@")[0]}
-              &apos;s space
-            </h1> */}
 
-            <h2 className="text-2xl font-semibold mb-4">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2 md:mb-4 text-center">
               You haven't created any projects...
             </h2>
 
-            <Image src={Empty} alt="documents" width={100} height={100} />
+            <Image 
+              src={Empty} 
+              alt="documents" 
+              width={100} 
+              height={100}
+              className="w-16 h-16 md:w-24 md:h-24" 
+            />
 
-            <p className="text-gray-700">Click on "Create New" or "Ideate with AI" to get started</p>
+            <p className="text-sm md:text-base text-gray-700 text-center px-4 md:px-0">
+              Click on "Create New" or "Ideate with AI" to get started
+            </p>
 
-
-            <div className="flex justify-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mb-4 md:mb-6 w-full px-4 sm:px-0">
               <Button variant="outline" className="flex items-center" onClick={onCreate}>
                 <PlusIcon className="w-4 h-4 mr-2" />
                 Create New

@@ -424,28 +424,40 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     </>
                 ) : (
                     <div className="flex-1 overflow-hidden w-full">
-                        <div className="h-full flex flex-col items-center justify-center gap-6">
-                            <Image src={Empty} alt="No functional requirements" width={100} height={100} />
-                            <h2 className="text-xl font-semibold text-center">
-                                You haven't created any functional requirements<br />for this project yet.
+                        <div className="h-full flex flex-col items-center justify-center gap-4 sm:gap-6 px-4 sm:px-6">
+                            <Image 
+                                src={Empty} 
+                                alt="No functional requirements" 
+                                width={80}
+                                height={80}
+                                className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px]"
+                            />
+                            <h2 className="text-lg sm:text-xl font-semibold text-center px-2">
+                                <span className="block sm:inline">You haven't created any functional requirements </span>
+                                <span className="block sm:inline">for this project yet.</span>
                             </h2>
-                            <p className="text-center text-gray-600 max-w-md">
+                            <p className="text-center text-gray-600 max-w-md text-sm sm:text-base px-4">
                                 Based on the project details, the AI can generate
                                 streamlined functional requirements that detail the actions of
                                 the user and the system. Try it!
                             </p>
                             <Button
-                                className="gap-2 h-10"
+                                className="gap-2 h-9 sm:h-10 text-sm sm:text-base w-full sm:w-auto px-3 sm:px-4"
                                 variant="default"
                                 onClick={handleGenerateMultipleFRs}
                             >
-                                <AiGenerationIconWhite />
-                                Generate Initial Functional Requirements
+                                <AiGenerationIconWhite/>
+                                <span className="hidden sm:inline">Generate Initial Functional Requirements</span>
+                                <span className="sm:hidden">Generate Requirements</span>
                             </Button>
                             <div className="text-center">
-                                <span className="text-gray-500">or</span>
+                                <span className="text-gray-500 text-sm sm:text-base">or</span>
                             </div>
-                            <Button variant="outline" onClick={onManualAddFR}>
+                            <Button 
+                                variant="outline" 
+                                onClick={onManualAddFR}
+                                className="text-sm sm:text-base h-9 sm:h-10"
+                            >
                                 Add FR manually
                             </Button>
                         </div>

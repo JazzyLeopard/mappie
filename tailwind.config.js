@@ -43,54 +43,35 @@ module.exports = {
           "97.5%": { opacity: 1 },
           "100%": { opacity: 0 },
         },
-        "code-2": {
-          "16.2%": { opacity: 0 },
-          "18.75%": { opacity: 1 },
-          "97.5%": { opacity: 1 },
-          "100%": { opacity: 0 },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        "code-3": {
-          "32.5%": { opacity: 0 },
-          "35%": { opacity: 1 },
-          "97.5%": { opacity: 1 },
-          "100%": { opacity: 0 },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        "code-4": {
-          "48.75%": { opacity: 0 },
-          "51.25%": { opacity: 1 },
-          "97.5%": { opacity: 1 },
-          "100%": { opacity: 0 },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
-        "code-5": {
-          "65%": { opacity: 0 },
-          "72.5%": { opacity: 1 },
-          "97.5%": { opacity: 1 },
-          "100%": { opacity: 0 },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
-        "code-6": {
-          "81.25%": { opacity: 0 },
-          "83.75%": { opacity: 1 },
-          "97.5%": { opacity: 1 },
-          "100%": { opacity: 0 },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
-        breath: {
-          "0%, 100%": { transform: "scale(0.95)" },
-          "50%": { transform: "scale(1.1)" },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-5%)" },
-        },
-        line: {
-          "0%, 100%": { left: 0, opacity: 0 },
-          "50%": { left: "100%", transform: "translateX(-100%)" },
-          "10%, 40%, 60%, 90%": { opacity: 0 },
-          "25%, 75%": { opacity: 1 },
-        },
-        "infinite-scroll": {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-100%)" },
-        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       colors: {
         border: "hsl(var(--border))",

@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import Logo from "@/components/components-landing/ui/logo";
 import Dropdown from "@/components/components-landing/dropdown";
@@ -6,9 +7,9 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
-  useUser,
-} from "@clerk/nextjs";
+} from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@clerk/clerk-react";
 
 export default function Header() {
   const { isSignedIn } = useUser();
