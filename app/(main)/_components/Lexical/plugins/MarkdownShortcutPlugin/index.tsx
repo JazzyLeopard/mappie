@@ -6,11 +6,17 @@
  *
  */
 
-import {MarkdownShortcutPlugin} from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import {MarkdownShortcutPlugin as LexicalMarkdownShortcutPlugin} from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import * as React from 'react';
+import {ENHANCED_TRANSFORMERS} from '../MarkdownTransformers';
+import type {Transformer} from '@lexical/markdown';
 
-import {PLAYGROUND_TRANSFORMERS} from '../MarkdownTransformers';
+interface MarkdownPluginProps {
+  transformers?: Transformer[];
+}
 
-export default function MarkdownPlugin(): JSX.Element {
-  return <MarkdownShortcutPlugin transformers={PLAYGROUND_TRANSFORMERS} />;
+export default function MarkdownPlugin({
+  transformers = ENHANCED_TRANSFORMERS,
+}: MarkdownPluginProps): JSX.Element {
+  return <LexicalMarkdownShortcutPlugin transformers={transformers} />;
 }
