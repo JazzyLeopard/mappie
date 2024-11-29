@@ -184,7 +184,7 @@ function FileItem({ filename, filesize, onDelete }: { filename: string, filesize
                 <FileIcon className="h-3 w-3 text-primary" />
                 <div>
                     <p className="font-medium">{filename}</p>
-                    <p className="text-xxs text-muted-foreground">{filesize}</p>
+                    <p className="text-xs text-muted-foreground">{filesize}</p>
                 </div>
             </div>
             <button

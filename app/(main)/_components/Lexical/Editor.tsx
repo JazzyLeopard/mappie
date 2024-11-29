@@ -6,33 +6,33 @@
  *
  */
 
-import {AutoFocusPlugin} from '@lexical/react/LexicalAutoFocusPlugin';
-import {CharacterLimitPlugin} from '@lexical/react/LexicalCharacterLimitPlugin';
-import {CheckListPlugin} from '@lexical/react/LexicalCheckListPlugin';
-import {ClearEditorPlugin} from '@lexical/react/LexicalClearEditorPlugin';
-import {ClickableLinkPlugin} from '@lexical/react/LexicalClickableLinkPlugin';
-import {CollaborationPlugin} from '@lexical/react/LexicalCollaborationPlugin';
-import {LexicalErrorBoundary} from '@lexical/react/LexicalErrorBoundary';
-import {HashtagPlugin} from '@lexical/react/LexicalHashtagPlugin';
-import {HistoryPlugin} from '@lexical/react/LexicalHistoryPlugin';
-import {HorizontalRulePlugin} from '@lexical/react/LexicalHorizontalRulePlugin';
-import {ListPlugin} from '@lexical/react/LexicalListPlugin';
-import {PlainTextPlugin} from '@lexical/react/LexicalPlainTextPlugin';
-import {RichTextPlugin} from '@lexical/react/LexicalRichTextPlugin';
-import {TabIndentationPlugin} from '@lexical/react/LexicalTabIndentationPlugin';
-import {TablePlugin} from '@lexical/react/LexicalTablePlugin';
-import {useLexicalEditable} from '@lexical/react/useLexicalEditable';
+import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
+import { CharacterLimitPlugin } from '@lexical/react/LexicalCharacterLimitPlugin';
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
+import { ClearEditorPlugin } from '@lexical/react/LexicalClearEditorPlugin';
+import { ClickableLinkPlugin } from '@lexical/react/LexicalClickableLinkPlugin';
+import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
+import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { HashtagPlugin } from '@lexical/react/LexicalHashtagPlugin';
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
+import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
+import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
+import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+import { useLexicalEditable } from '@lexical/react/useLexicalEditable';
 import * as React from 'react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import {CAN_USE_DOM} from './shared/canUseDOM';
+import { CAN_USE_DOM } from './shared/canUseDOM';
 import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { debounce } from 'lodash';
 
-import {createWebsocketProvider} from './collaboration';
-import {useSettings} from './context/SettingsContext';
-import {useSharedHistoryContext} from './context/SharedHistoryContext';
+import { createWebsocketProvider } from './collaboration';
+import { useSettings } from './context/SettingsContext';
+import { useSharedHistoryContext } from './context/SharedHistoryContext';
 import ActionsPlugin from './plugins/ActionsPlugin';
 import AutocompletePlugin from './plugins/AutocompletePlugin';
 import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
@@ -55,11 +55,11 @@ import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbar
 import ImagesPlugin from './plugins/ImagesPlugin';
 import InlineImagePlugin from './plugins/InlineImagePlugin';
 import KeywordsPlugin from './plugins/KeywordsPlugin';
-import {LayoutPlugin} from './plugins/LayoutPlugin/LayoutPlugin';
+import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import MarkdownShortcutPlugin from './plugins/MarkdownShortcutPlugin';
-import {MaxLengthPlugin} from './plugins/MaxLengthPlugin';
+import { MaxLengthPlugin } from './plugins/MaxLengthPlugin';
 import MentionsPlugin from './plugins/MentionsPlugin';
 import PageBreakPlugin from './plugins/PageBreakPlugin';
 import PollPlugin from './plugins/PollPlugin';
@@ -77,8 +77,8 @@ import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, COMMAND
 import { DEFAULT_TRANSFORMERS } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Doc } from 'yjs';
-import {Provider} from '@lexical/yjs';
-import {WebsocketProvider} from 'y-websocket';
+import { Provider } from '@lexical/yjs';
+import { WebsocketProvider } from 'y-websocket';
 import { Id } from '@/convex/_generated/dataModel';
 import { PASTE_COMMAND } from 'lexical';
 import AIEditPlugin, { SuggestionCardNode } from './plugins/AiEditPlugin';
@@ -98,14 +98,14 @@ type EditorProps = {
 
 function EditorOnChangePlugin({ onChange }: { onChange: (editorState: any) => void }) {
   const [editor] = useLexicalComposerContext();
-  
+
   useEffect(() => {
     let isUpdating = false;
-    
+
     return editor.registerUpdateListener(({ editorState }) => {
       // Prevent recursive updates
       if (isUpdating) return;
-      
+
       try {
         isUpdating = true;
         const json = JSON.stringify(editorState.toJSON());
@@ -159,69 +159,69 @@ export default function Editor({
 
   const handleChange = useCallback((editorStateJSON: string) => {
     if (context === 'epics') {
-        try {
-            const parsedState = JSON.parse(editorStateJSON);
-            let formattedText = '';
-            
-            const traverseNodes = (nodes: any[]) => {
-                for (const node of nodes) {
-                    // Handle headings
-                    if (node.type === 'heading') {
-                        const hLevel = node.tag.length; // h1, h2, etc.
-                        formattedText += '#'.repeat(hLevel) + ' ';
-                        if (node.children) traverseNodes(node.children);
-                        formattedText += '\n\n';
-                    }
-                    // Handle text nodes
-                    else if (node.type === 'text') {
-                        // Handle formatting
-                        let text = node.text;
-                        if (node.format & 1) text = `**${text}**`; // Bold
-                        if (node.format & 2) text = `*${text}*`;   // Italic
-                        formattedText += text;
-                    }
-                    // Handle lists
-                    else if (node.type === 'list') {
-                        if (node.children) {
-                            node.children.forEach((item: any) => {
-                                formattedText += '- ';
-                                if (item.children) traverseNodes(item.children);
-                                formattedText += '\n';
-                            });
-                        }
-                        formattedText += '\n';
-                    }
-                    // Handle paragraphs
-                    else if (node.type === 'paragraph') {
-                        if (node.children) traverseNodes(node.children);
-                        formattedText += '\n\n';
-                    }
-                    // Handle other nodes with children
-                    else if (node.children) {
-                        traverseNodes(node.children);
-                    }
-                }
-            };
-            
-            if (parsedState.root && parsedState.root.children) {
-                traverseNodes(parsedState.root.children);
+      try {
+        const parsedState = JSON.parse(editorStateJSON);
+        let formattedText = '';
+
+        const traverseNodes = (nodes: any[]) => {
+          for (const node of nodes) {
+            // Handle headings
+            if (node.type === 'heading') {
+              const hLevel = node.tag.length; // h1, h2, etc.
+              formattedText += '#'.repeat(hLevel) + ' ';
+              if (node.children) traverseNodes(node.children);
+              formattedText += '\n\n';
             }
-            
-            // Clean up extra line breaks while preserving formatting
-            const cleanedText = formattedText
-                .replace(/\n\n\n+/g, '\n\n')  // Replace triple+ line breaks with double
-                .trim();  // Remove leading/trailing whitespace
-            
-            setProjectDetails({
-                description: cleanedText
-            });
-        } catch (error) {
-            console.error('Error parsing editor state:', error);
+            // Handle text nodes
+            else if (node.type === 'text') {
+              // Handle formatting
+              let text = node.text;
+              if (node.format & 1) text = `**${text}**`; // Bold
+              if (node.format & 2) text = `*${text}*`;   // Italic
+              formattedText += text;
+            }
+            // Handle lists
+            else if (node.type === 'list') {
+              if (node.children) {
+                node.children.forEach((item: any) => {
+                  formattedText += '- ';
+                  if (item.children) traverseNodes(item.children);
+                  formattedText += '\n';
+                });
+              }
+              formattedText += '\n';
+            }
+            // Handle paragraphs
+            else if (node.type === 'paragraph') {
+              if (node.children) traverseNodes(node.children);
+              formattedText += '\n\n';
+            }
+            // Handle other nodes with children
+            else if (node.children) {
+              traverseNodes(node.children);
+            }
+          }
+        };
+
+        if (parsedState.root && parsedState.root.children) {
+          traverseNodes(parsedState.root.children);
         }
-    } else {
+
+        // Clean up extra line breaks while preserving formatting
+        const cleanedText = formattedText
+          .replace(/\n\n\n+/g, '\n\n')  // Replace triple+ line breaks with double
+          .trim();  // Remove leading/trailing whitespace
+
         setProjectDetails({
-            content: editorStateJSON
+          description: cleanedText
         });
+      } catch (error) {
+        console.error('Error parsing editor state:', error);
+      }
+    } else {
+      setProjectDetails({
+        content: editorStateJSON
+      });
     }
   }, [setProjectDetails, context]);
 
@@ -234,7 +234,7 @@ export default function Editor({
         try {
           // First try to parse as JSON
           const parsedContent = JSON.parse(initialContent);
-          
+
           // Check if this is a markdown string stored in JSON
           if (typeof parsedContent === 'string' && parsedContent.includes('**')) {
             // Convert markdown to Lexical nodes
@@ -294,10 +294,10 @@ export default function Editor({
       const root = $getRoot();
       root.clear();
       $convertFromMarkdownString(markdown, TRANSFORMERS);
-      
+
       // Use the properly typed command
       editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
-      
+
       // Also update the project details
       setProjectDetails(markdown);
     });
@@ -311,7 +311,7 @@ export default function Editor({
         () => {
           editor.getEditorState().read(() => {
             // Force a re-render of the editor
-            editor.update(() => {}, { discrete: true });
+            editor.update(() => { }, { discrete: true });
           });
           return true;
         },
@@ -328,18 +328,18 @@ export default function Editor({
         const pastedText = event.clipboardData?.getData('text/plain');
         if (pastedText && pastedText.trim()) {
           // Check if the pasted content looks like markdown
-          if (pastedText.includes('#') || 
-            pastedText.includes('-') || 
+          if (pastedText.includes('#') ||
+            pastedText.includes('-') ||
             pastedText.includes('*') ||
             pastedText.includes('```')) {
-            
+
             event.preventDefault();
-            
+
             editor.update(() => {
               // Convert markdown to Lexical nodes
               $convertFromMarkdownString(pastedText, TRANSFORMERS);
             });
-            
+
             return true;
           }
         }
@@ -366,8 +366,8 @@ export default function Editor({
           contentEditable={
             <div className="h-full w-full overflow-auto">
               <div className="w-full min-h-[900px] relative" ref={onRef}>
-                <ContentEditable 
-                  className="h-full w-full pl-6 outline-none" 
+                <ContentEditable
+                  className="h-full w-full pl-6 outline-none flex items-center"
                   placeholder={placeholder}
                 />
               </div>
@@ -401,7 +401,7 @@ export default function Editor({
         <CollapsiblePlugin />
         <PageBreakPlugin />
         <LayoutPlugin />
-        
+
         {floatingAnchorElem && !isSmallWidthViewport && (
           <>
             <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
@@ -423,7 +423,7 @@ export default function Editor({
             />
           </>
         )}
-        
+
         {(isCharLimit || isCharLimitUtf8) && (
           <CharacterLimitPlugin
             charset={isCharLimit ? 'UTF-16' : 'UTF-8'}
@@ -439,26 +439,26 @@ export default function Editor({
 }
 
 // Update the MarkdownInsertionPlugin to handle immediate updates
-function MarkdownInsertionPlugin({ 
-  onInsertMarkdown 
-}: { 
-  onInsertMarkdown: (markdown: string) => void 
+function MarkdownInsertionPlugin({
+  onInsertMarkdown
+}: {
+  onInsertMarkdown: (markdown: string) => void
 }) {
   const [editor] = useLexicalComposerContext();
-  
+
   useEffect(() => {
     if (editor && typeof window !== 'undefined') {
       (window as any).__lexicalEditor = editor;
       (window as any).__insertMarkdown = (markdown: string) => {
         onInsertMarkdown(markdown);
-        
+
         // Use the properly typed command
         editor.update(() => {
           editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
         });
       };
     }
-    
+
     return () => {
       if (typeof window !== 'undefined') {
         delete (window as any).__lexicalEditor;

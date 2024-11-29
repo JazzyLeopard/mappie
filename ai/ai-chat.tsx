@@ -1,24 +1,22 @@
 'use client';
 
-import { Message, ToolInvocation } from 'ai';
 import { MarkdownCard } from '@/app/(main)/_components/layout/markdown-card';
-import { useChat } from 'ai/react';
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Card } from "@/components/ui/card"
-import { Send, Loader2 } from 'lucide-react'
-import { FormEvent, useEffect, useRef, useState, useMemo, memo, useCallback } from 'react';
-import { useMutation, useQuery } from 'convex/react';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
-import { cn } from '@/lib/utils';
 import AiGenerationIcon from '@/icons/AI-Generation';
-import { Separator } from "@/components/ui/separator"
-import { PanelLeftOpen, PanelLeftClose } from 'lucide-react'
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import { cn } from '@/lib/utils';
+import { Message } from 'ai';
+import { useChat } from 'ai/react';
+import { useMutation, useQuery } from 'convex/react';
 import { debounce } from 'lodash-es';
+import { Loader2, PanelLeftClose, PanelLeftOpen, Send } from 'lucide-react';
+import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -65,9 +63,9 @@ const MemoizedMarkdownCard = memo(MarkdownCard, (prev, next) => {
   return prev.content === next.content && prev.isLoading === next.isLoading;
 });
 
-const MemoizedMessage = memo(({ message, onInsertMarkdown }: { 
-  message: Message, 
-  onInsertMarkdown: (markdown: string) => void 
+const MemoizedMessage = memo(({ message, onInsertMarkdown }: {
+  message: Message,
+  onInsertMarkdown: (markdown: string) => void
 }) => {
   return (
     <div className="space-y-4">
@@ -84,19 +82,19 @@ const MemoizedMessage = memo(({ message, onInsertMarkdown }: {
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
                 components={{
-                  p: ({node, ...props}) => (
+                  p: ({ node, ...props }) => (
                     <p className="text-gray-600 leading-relaxed" {...props} />
                   ),
-                  ul: ({node, ...props}) => (
+                  ul: ({ node, ...props }) => (
                     <ul className="list-disc pl-6 mb-2 space-y-2 text-gray-600" {...props} />
                   ),
-                  ol: ({node, ...props}) => (
+                  ol: ({ node, ...props }) => (
                     <ol className="list-decimal pl-6 mb-2 space-y-2 text-gray-600" {...props} />
                   ),
-                  li: ({node, ...props}) => (
+                  li: ({ node, ...props }) => (
                     <li className="leading-relaxed" {...props} />
                   ),
-                  strong: ({node, ...props}) => (
+                  strong: ({ node, ...props }) => (
                     <strong className="font-semibold" {...props} />
                   ),
                 }}
@@ -142,9 +140,9 @@ interface ChatHistoryMessage {
   }[];
 }
 
-const AIStoryCreator = memo(function AIStoryCreator({ 
-  onInsertMarkdown, 
-  selectedItemContent, 
+const AIStoryCreator = memo(function AIStoryCreator({
+  onInsertMarkdown,
+  selectedItemContent,
   selectedItemType,
   selectedEpic,
   selectedUserStory,
@@ -165,7 +163,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
 
   const storeChatHistory = useMutation(api.messages.storeChatHistory);
-  const chatHistory = useQuery(api.messages.getChatHistory, 
+  const chatHistory = useQuery(api.messages.getChatHistory,
     selectedItemId && parsedContent?.projectId ? {
       itemId: selectedItemId,
       itemType: selectedItemType,
@@ -181,7 +179,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
     initialMessages: useMemo(() => {
       // If chatHistory is null or undefined, return empty array
       if (!chatHistory) return [];
-      
+
       // Check if chatHistory has the messages we need
       const messages = chatHistory.messages as ChatHistoryMessage[] | undefined;
       if (!messages?.length) return [];
@@ -193,7 +191,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
           id: msg.id,
           role: msg.role as 'system' | 'user' | 'assistant' | 'data', // function | tool
           content: msg.content,
-          toolInvocations: msg.toolInvocations?.filter(tool => 
+          toolInvocations: msg.toolInvocations?.filter(tool =>
             tool.state === "result" && tool.result?.content
           ).map(tool => ({
             toolCallId: tool.toolCallId,
@@ -214,8 +212,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
     body: {
       selectedItemContent,
       selectedItemType,
-      selectedEpic: selectedItemType === 'userStory' && selectedEpic?.name && selectedEpic?.description 
-        ? { name: selectedEpic.name, description: selectedEpic.description } 
+      selectedEpic: selectedItemType === 'userStory' && selectedEpic?.name && selectedEpic?.description
+        ? { name: selectedEpic.name, description: selectedEpic.description }
         : null
     },
     onError: useCallback((error: any) => {
@@ -225,8 +223,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
         hasToolError: true,
         isGenerating: false,
         isWaitingForTool: false,
-        streamStatus: { 
-          status: 'error', 
+        streamStatus: {
+          status: 'error',
           error: error.message
         }
       }));
@@ -254,10 +252,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
   const lastSavedMessageIdRef = useRef<string | null>(null);
 
   // Debounced chat history update with duplicate prevention
-  const debouncedUpdateHistory = useMemo(() => 
+  const debouncedUpdateHistory = useMemo(() =>
     debounce(async (messages, itemId, itemType, projectId) => {
       if (messages.length === 0) return;
-      
+
       // Get the last message ID from the current messages
       const lastMessageId = messages[messages.length - 1].id;
 
@@ -319,7 +317,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
     if (!projectId) return;
 
     try {
-      const editorState = typeof selectedItemContent === 'string' 
+      const editorState = typeof selectedItemContent === 'string'
         ? JSON.parse(selectedItemContent)
         : selectedItemContent;
 
@@ -339,7 +337,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (streamState.isGenerating || streamState.isWaitingForTool) return;
 
     try {
@@ -349,7 +347,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
         hasToolError: false,
         isWaitingForTool: false
       }));
-      
+
       await chat.handleSubmit(e);
     } catch (error) {
       console.error('Chat submission error:', error);
@@ -381,7 +379,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
           {isCollapsed ? (
             <>
               <PanelLeftClose className="h-6 w-6 mb-4" />
-              <AiGenerationIcon />
+              <AiGenerationIcon className='h-6 w-6' />
             </>
           ) : (
             <PanelLeftOpen className="h-6 w-6" />
@@ -391,23 +389,23 @@ const AIStoryCreator = memo(function AIStoryCreator({
       {!isCollapsed && (
         <>
           <Separator />
-          <div 
+          <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto"
-            style={{ 
+            style={{
               height: '500px',
               scrollBehavior: 'smooth'
             }}
           >
             <div className="space-y-2 p-4">
               {chat.messages.map((message) => (
-                <MemoizedMessage 
+                <MemoizedMessage
                   key={message.id}
                   message={message}
                   onInsertMarkdown={onInsertMarkdown}
                 />
               ))}
-              
+
               {streamState.isGenerating && !streamState.isWaitingForTool && (
                 <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-3 rounded-lg">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -417,8 +415,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
             </div>
           </div>
 
-          <form 
-            onSubmit={handleSubmit} 
+          <form
+            onSubmit={handleSubmit}
             className="space-y-2 p-2"
           >
             <Textarea
@@ -428,9 +426,9 @@ const AIStoryCreator = memo(function AIStoryCreator({
               className="w-full min-h-[120px] resize-none"
               disabled={streamState.isGenerating || streamState.isWaitingForTool}
               contextLabel={{
-                type: selectedItemType === 'userStory' ? 'User Story' : 
-                      selectedItemType === 'epic' ? 'Epic' : 
-                      selectedItemType === 'useCase' ? 'Use Case' :
+                type: selectedItemType === 'userStory' ? 'User Story' :
+                  selectedItemType === 'epic' ? 'Epic' :
+                    selectedItemType === 'useCase' ? 'Use Case' :
                       selectedItemType,
                 name: (() => {
                   if (selectedItemType === 'epic') {
@@ -448,7 +446,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                 }
               }}
               sendButton={
-                <Button 
+                <Button
                   type="submit"
                   size="sm"
                   className="bg-slate-300 hover:bg-slate-300 text-white rounded-md transition-colors h-8"
@@ -465,10 +463,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
   );
 }, (prevProps, nextProps) => {
   return prevProps.selectedItemId === nextProps.selectedItemId &&
-         prevProps.selectedItemType === nextProps.selectedItemType &&
-         prevProps.selectedItemContent === nextProps.selectedItemContent &&
-         prevProps.selectedEpic?.id === nextProps.selectedEpic?.id &&
-         prevProps.isCollapsed === nextProps.isCollapsed;
+    prevProps.selectedItemType === nextProps.selectedItemType &&
+    prevProps.selectedItemContent === nextProps.selectedItemContent &&
+    prevProps.selectedEpic?.id === nextProps.selectedEpic?.id &&
+    prevProps.isCollapsed === nextProps.isCollapsed;
 });
 
 export default AIStoryCreator;

@@ -182,11 +182,11 @@ export const Navigation = () => {
 
   return (
     <>
-      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-slate-200 w-80'} overflow-y-auto relative z-[50] flex flex-col transition-width duration-300`,
+      <aside ref={sidebarRef} className={cn(`group/sidebar h-full ${isCollapsed ? 'w-16' : 'bg-slate-200 w-80'} relative z-[50] flex flex-col transition-width duration-300`,
         isResetting && "transition-all ease-in-out duration-300"
       )}>
 
-        <div ref={navbarRef} className={cn("px-5 flex justify-between items-center", isCollapsed ? "pt-6 pb-2" : "py-1", isResetting && "transition-all ease-in-out duration-300")}>
+        <div ref={navbarRef} className={cn("px-[1.30rem] flex justify-between items-center", isCollapsed ? "pt-6 pb-2" : "py-1", isResetting && "transition-all ease-in-out duration-300")}>
           {!isCollapsed && <UserItems />}
           <div onClick={toggleCollapse} className="cursor-pointer text-muted-foreground hover:text-foreground transition">
             {isCollapsed ? (

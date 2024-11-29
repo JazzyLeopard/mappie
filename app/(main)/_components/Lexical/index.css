@@ -1404,7 +1404,7 @@
    background: #fff;
    padding: 6px;
    vertical-align: middle;
-   overflow: auto;
+   overflow: hidden;
    height: 36px;
    position: sticky;
    top: 0;
