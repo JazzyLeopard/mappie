@@ -1,34 +1,22 @@
-import OpenAI from "openai";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown';
 import { $getRoot, createEditor } from 'lexical';
 import { diffLines } from 'diff';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 export async function POST(req: Request) {
   try {
     const { prompt, selectedText, fullText } = await req.json();
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are an AI writing assistant. You will receive the full text and a selected portion to improve. Generate an improved version that maintains the context and formatting. Return only the complete text with the improvement integrated."
-        },
-        {
-          role: "user",
-          content: `Full text: "${fullText}"
+    const { text: newFullText } = await generateText({
+      model: openai('gpt-4-turbo'),
+      prompt: `You are an AI writing assistant. You will receive the full text and a selected portion to improve. Generate an improved version that maintains the context and formatting. Return only the complete text with the improvement integrated.
+
+Full text: "${fullText}"
 Selected text to improve: "${selectedText}"
 Prompt: ${prompt}
 Keep the markdown formatting intact and return the complete text with the improvement integrated.`
-        }
-      ],
     });
-
-    const newFullText = completion.choices[0].message.content ?? '';
     
     // Find the changed portion by comparing the old and new text
     const diff = diffLines(fullText, newFullText);
