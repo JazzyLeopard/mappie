@@ -12,9 +12,9 @@ import { useUser } from "@clerk/clerk-react";
 import { faDiagramProject, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useMutation, useQuery } from "convex/react";
-import { Rocket, Wand2 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { Wand2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from 'sonner';
 
 export default function Component() {
@@ -22,10 +22,9 @@ export default function Component() {
   const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const [activeButton, setActiveButton] = useState("all");
+  const [activeButton, setActiveButton] = useState<string>("all");
   const [openPopover, setOpenPopover] = useState<string | null>(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [openArchiveDialog, setOpenArchiveDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
   const archiveProject = useMutation(api.projects.archiveProject);
 
   const [aiPrompt, setAiPrompt] = useState("");
@@ -137,8 +136,8 @@ export default function Component() {
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-primary-foreground">
-                  <Wand2 className="mr-2 w-4 h-4" />
+                <Button variant="default" className="bg-gradient-to-r from-pink-400 to-blue-300 text-white text-primary-foreground">
+                  <Wand2 className="mr-2 w-4 h-4 " />
                   Ideate with AI
                 </Button>
               </PopoverTrigger>
@@ -214,14 +213,14 @@ export default function Component() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            setOpenPopover(proj._id);
+                            setOpenPopover(openPopover === proj._id ? null : proj._id);
                           }}
                           className="hover:bg-gray-300 rounded-md w-6 h-6 flex items-center justify-center cursor-pointer"
                         >
                           <FontAwesomeIcon icon={faEllipsisH} className="text-sm text-gray-500" />
                         </div>
                       </PopoverTrigger>
-                      <PopoverContent className="p-1 w-[125px]">
+                      <PopoverContent className="p-1 w-[125px] border-gray-300">
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
@@ -249,6 +248,7 @@ export default function Component() {
                       </DialogHeader>
                       <DialogFooter>
                         <Button
+                          variant={"default"}
                           onClick={() =>
                             onArchiveClick(proj._id, proj.isArchived)
                           }

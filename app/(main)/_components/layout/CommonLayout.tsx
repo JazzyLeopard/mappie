@@ -1,35 +1,32 @@
 "use client"
 
+import AIStoryCreator from '@/ai/ai-chat';
 import '@/app/custom.css';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from "@/icons/AI-Generation";
 import type { MenuItemType, Project } from "@/lib/types";
-import { useQuery, useMutation, ReactMutation } from 'convex/react';
-import { BookOpen, ChevronDown, ChevronRight, Plus, Presentation, Rocket, Trash, X, FileText, Users, Target, List, BarChart2, Layers, AlertTriangle, InfoIcon, Loader2 } from "lucide-react";
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import LabelToInput from "../LabelToInput";
-import PresentationMode from '../PresentationMode';
-import LexicalEditor from "../Lexical/LexicalEditor";
-import FileUpload from "./Context";
+import { cn } from '@/lib/utils';
 import { toTitleCase } from "@/utils/helper";
+import { ReactMutation, useQuery } from 'convex/react';
+import { AlertTriangle, BarChart2, FileQuestion, FileText, InfoIcon, Layers, List, Loader2, Presentation, Target, Users } from "lucide-react";
 import Link from "next/link";
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import AIStoryCreator from '@/ai/ai-chat'
-import { cn } from '@/lib/utils'
-import { Id } from '@/convex/_generated/dataModel';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import LexicalEditor from "../Lexical/LexicalEditor";
+import PresentationMode from '../PresentationMode';
+import FileUpload from "./Context";
 
 interface CommonLayoutProps {
     data: Project;
     menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void,
-    showTitle?: boolean;
     mandatoryFields?: string[];
     updateProject: ReactMutation<any>;
     projectId: Id<"projects">;
@@ -37,7 +34,7 @@ interface CommonLayoutProps {
 
 const sectionIcons = {
     overview: <FileText className="w-4 h-4 inline-block mr-2" />,
-    problemStatement: <AlertTriangle className="w-4 h-4 inline-block mr-2" />,
+    problemStatement: <FileQuestion className="w-4 h-4 inline-block mr-2" />,
     userPersonas: <Users className="w-4 h-4 inline-block mr-2" />,
     featuresInOut: <List className="w-4 h-4 inline-block mr-2" />,
     successMetrics: <BarChart2 className="w-4 h-4 inline-block mr-2" />,
@@ -51,7 +48,6 @@ const CommonLayout = ({
     menu,
     onEditorBlur,
     handleEditorChange,
-    showTitle = true,
     mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"],
     updateProject,
     projectId
@@ -59,7 +55,6 @@ const CommonLayout = ({
 
     const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    const [showAlert, setShowAlert] = useState(false);
     const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isFrGenerated, setIsFrGenerated] = useState(false);
@@ -83,17 +78,17 @@ const CommonLayout = ({
         setIsGenerateButtonActive(allFieldsHaveContent);
     }, [data]);
 
-    const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
-        projectId: data._id 
+    const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
+        projectId: data._id
     });
 
     useEffect(() => {
         if (functionalRequirements) {
-            const hasValidContent = 
+            const hasValidContent =
                 functionalRequirements.length > 0 &&
-                typeof functionalRequirements[0].description === 'string' && 
+                typeof functionalRequirements[0].description === 'string' &&
                 functionalRequirements[0].description.trim().length > 0;
-            
+
             setIsFrGenerated(hasValidContent as boolean);
         } else {
             setIsFrGenerated(false);
@@ -185,7 +180,7 @@ const CommonLayout = ({
         }
     }, [data, handleEditorChange, updateProject, cleanDataForUpdate]);
 
-    const activeComponent = useMemo(() => 
+    const activeComponent = useMemo(() =>
         menu.find(c => c.key === activeSection),
         [menu, activeSection]
     );
@@ -239,9 +234,9 @@ const CommonLayout = ({
                 <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
                     <div className="p-2 pt-4">
                         <div className="flex flex-col items-center space-y-2 mb-4">
-                            <Button 
-                                onClick={handleGenerateFR} 
-                                variant='ghost' 
+                            <Button
+                                onClick={handleGenerateFR}
+                                variant='ghost'
                                 className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
                                 disabled={!isGenerateButtonActive || isGenerating}
                             >
@@ -290,7 +285,7 @@ const CommonLayout = ({
                                         prefetch={false}
                                     >
                                         {sectionIcons[component.key as keyof typeof sectionIcons]}
-                                        {toTitleCase(component.key)}
+                                        {component.key === "risksDependencies" ? "Risks & Depenedencies" : toTitleCase(component.key)}
                                         {mandatoryFields.includes(component.key) && (
                                             <span className="text-red-600 ml-1">*</span>
                                         )}
@@ -319,7 +314,7 @@ const CommonLayout = ({
                         </Button>
                     </div>
                     <div className="flex-1 min-h-0 overflow-auto px-4">
-                        {activeComponent && <LexicalEditor {...{...editorProps, context: "project" as const}} />}
+                        {activeComponent && <LexicalEditor {...{ ...editorProps, context: "project" as const }} />}
                     </div>
                 </div>
 

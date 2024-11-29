@@ -89,7 +89,7 @@ export const menuItems: MenuItemType[] = [
         active: false,
     },
     {
-        key: "Risks & Dependencies",
+        key: "risksDependencies",
         icon: <DependenciesIcon />,
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
         active: false,
