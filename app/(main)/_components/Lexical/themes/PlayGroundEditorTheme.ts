@@ -61,12 +61,13 @@ const theme: EditorThemeClasses = {
   link: 'text-blue-600 underline cursor-pointer',
   list: {
     checklist: 'PlaygroundEditorTheme__checklist',
-    listitem: 'my-1',
+    listitem: 'PlaygroundEditorTheme__listItem',
     listitemChecked: 'PlaygroundEditorTheme__listItemChecked',
     listitemUnchecked: 'PlaygroundEditorTheme__listItemUnchecked',
     nested: {
-      listitem: 'PlaygroundEditorTheme__nestedListItem',
+      listitem: 'pl-8',
     },
+    ol: 'list-decimal pl-8 space-y-1',
     olDepth: [
       'PlaygroundEditorTheme__ol1',
       'PlaygroundEditorTheme__ol2',
@@ -74,7 +75,7 @@ const theme: EditorThemeClasses = {
       'PlaygroundEditorTheme__ol4',
       'PlaygroundEditorTheme__ol5',
     ],
-    ul: 'list-disc ml-6 my-2',
+    ul: 'list-disc pl-8 space-y-1',
   },
   ltr: 'PlaygroundEditorTheme__ltr',
   mark: 'PlaygroundEditorTheme__mark',
