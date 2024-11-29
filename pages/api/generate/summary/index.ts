@@ -5,14 +5,10 @@ import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
 import { ConvexHttpClient } from "convex/browser";
 import { NextApiRequest, NextApiResponse } from "next";
-
-import OpenAI from "openai";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-})
 
 export default async function handler(
     req: NextApiRequest,
@@ -67,13 +63,13 @@ export default async function handler(
             console.log("Extracted Text:", extractedText);
 
             console.log("Calling OpenAI Api...")
-            const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
+            const response = await generateText({
+                model: openai("gpt-4o-mini"),
                 messages: [{ role: "user", content: `Please summarize the following content: ${extractedText}` }],
                 temperature: 0.7,
             })
 
-            const summarizedContent = response.choices[0].message.content;
+            const summarizedContent = response.text;
             console.log("Summarized content:-", summarizedContent);
 
             if (!summarizedContent) {

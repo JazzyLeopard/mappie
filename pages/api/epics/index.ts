@@ -3,11 +3,11 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import OpenAI from 'openai';
 import { getAuth } from "@clerk/nextjs/server";
+import { openai } from '@ai-sdk/openai';
+import { generateText } from "ai";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const convertBigIntToNumber = (obj: any): any => {
   if (obj === null || obj === undefined) return obj;
@@ -44,7 +44,7 @@ export default async function handler(
     sendEvent({ progress: 5, status: 'Authenticating...' });
     const { userId, getToken } = getAuth(req);
     const token = await getToken({ template: "convex" });
-    
+
     if (!token || !userId) {
       throw new Error('Authentication failed');
     }
@@ -58,14 +58,14 @@ export default async function handler(
     // Fetch project and context
     sendEvent({ progress: 25, status: 'Loading project...' });
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
-    
+
     if (!project) throw new Error('Project not found');
     if (project.userId !== userId) throw new Error('Unauthorized access to project');
 
     // Get functional requirements
     sendEvent({ progress: 35, status: 'Loading requirements...' });
-    const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, { 
-      projectId: convexProjectId 
+    const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
+      projectId: convexProjectId
     });
 
     // Prepare context
@@ -104,14 +104,13 @@ Based on the above project context and functional requirements, please generate 
 
 Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await generateText({
+      model: openai("gpt-4o-mini"),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
-      max_tokens: 7000,
     });
 
-    const content = completion.choices[0].message.content;
+    const content = completion.text;
     if (!content) throw new Error('No content generated from OpenAI');
 
     // Process AI response
@@ -183,7 +182,7 @@ ${epic.description.Risks.map(risk => `- ${risk}`).join('\n')}`;
 
   } catch (error) {
     console.error('API Error:', error);
-    sendEvent({ 
+    sendEvent({
       error: error instanceof Error ? error.message : 'An unexpected error occurred',
       progress: 100,
       status: 'Error'
