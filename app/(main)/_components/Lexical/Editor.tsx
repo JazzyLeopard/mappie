@@ -367,7 +367,7 @@ export default function Editor({
             <div className="h-full w-full overflow-auto scrollbar-thin">
               <div className="w-full min-h-[900px] relative" ref={onRef}>
                 <ContentEditable
-                  className="h-full w-full pl-6 outline-none flex items-center"
+                  className="h-full w-full pl-6 outline-none"
                   placeholder={placeholder}
                 />
               </div>
