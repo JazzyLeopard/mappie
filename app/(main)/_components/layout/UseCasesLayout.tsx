@@ -67,11 +67,13 @@ export default function UseCasesLayout({
 
   if (!isOnboardingComplete) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center gap-4 md:gap-6 px-4 md:px-6">
-        <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
-        <h2 className="text-lg md:text-xl font-semibold text-center">
+      <div className="p-4 w-full h-screen">
+        <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
+          <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
+          <h2 className="text-lg md:text-xl font-semibold text-center">
           Please complete all mandatory fields in the Project Overview <br className="hidden md:block" /> before proceeding to Use Cases.
-        </h2>
+          </h2>
+        </div>
       </div>
     )
   }
@@ -145,7 +147,7 @@ export default function UseCasesLayout({
                       onBlur={() => { }}
                     />
                   </header>
-                  <div className="flex-1 overflow-y-auto flex px-4">
+                  <div className="flex-1 overflow-y-auto flex">
                     <LexicalEditor
                       key={selectedItems.useCase}
                       itemId={selectedItems.useCase as Id<'useCases'>}
