@@ -1,7 +1,6 @@
 'use client';
 
 import { MarkdownCard } from '@/app/(main)/_components/layout/markdown-card';
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +11,7 @@ import { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useMutation, useQuery } from 'convex/react';
 import { debounce } from 'lodash-es';
-import { Loader2, PanelLeftClose, PanelLeftOpen, Send } from 'lucide-react';
+import { Loader2, PanelLeftOpen, AlertTriangle } from 'lucide-react';
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -63,59 +62,83 @@ const MemoizedMarkdownCard = memo(MarkdownCard, (prev, next) => {
   return prev.content === next.content && prev.isLoading === next.isLoading;
 });
 
-const MemoizedMessage = memo(({ message, onInsertMarkdown }: {
+const ChatMessage = memo(({ message, onInsertMarkdown }: {
   message: Message,
   onInsertMarkdown: (markdown: string) => void
 }) => {
   return (
-    <div className="space-y-4">
-      {message.content && (
-        <div className={cn(
-          "rounded-xl py-4 px-2",
-          message.role === 'user' ? 'bg-slate-100 border border-slate-200' : 'bg-white'
-        )}>
-          <div className="flex items-start gap-2">
-            {message.role === 'assistant' && <AiGenerationIcon />}
-            <div className="flex-1">
-              <ReactMarkdown
-                className="text-sm px-2 leading-relaxed"
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]}
-                components={{
-                  p: ({ node, ...props }) => (
-                    <p className="text-gray-600 leading-relaxed" {...props} />
-                  ),
-                  ul: ({ node, ...props }) => (
-                    <ul className="list-disc pl-6 mb-2 space-y-2 text-gray-600" {...props} />
-                  ),
-                  ol: ({ node, ...props }) => (
-                    <ol className="list-decimal pl-6 mb-2 space-y-2 text-gray-600" {...props} />
-                  ),
-                  li: ({ node, ...props }) => (
-                    <li className="leading-relaxed" {...props} />
-                  ),
-                  strong: ({ node, ...props }) => (
-                    <strong className="font-semibold" {...props} />
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </div>
+    <div className={cn(
+      "flex gap-3 mb-4",
+      message.role === "user" ? "flex-row-reverse" : "flex-row"
+    )}>
+      {/* Icon Column */}
+      <div className="flex-shrink-0 mt-1">
+        {message.role === "assistant" ? (
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <AiGenerationIcon className="h-5 w-5 text-primary" />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+            <div className="text-sm font-medium text-secondary-foreground">U</div>
+          </div>
+        )}
+      </div>
 
-      {message.toolInvocations?.map((tool, index) => (
-        <div key={`${message.id}-tool-${index}`} className="w-full">
-          <MemoizedMarkdownCard
-            content={tool.state === 'result' ? tool.result?.content : undefined}
-            metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
-            onInsert={onInsertMarkdown}
-            isLoading={tool.state === 'call'}
-          />
+      {/* Message Content Column */}
+      <div className={cn(
+        "flex flex-col flex-1 space-y-2 max-w-[calc(100%-4rem)]",
+        message.role === "user" ? "items-end" : "items-start"
+      )}>
+        {/* Role Label */}
+        <div className="text-sm font-medium text-muted-foreground">
+          {message.role === "assistant" ? "Mappie AI" : "You"}
         </div>
-      ))}
+
+        {/* Message Bubble */}
+        <div className={cn(
+          "rounded-lg px-4 py-3 text-sm max-w-[85%]",
+          message.role === "user" 
+            ? "bg-primary text-primary-foreground ml-auto" 
+            : "bg-muted/50 text-foreground mr-auto"
+        )}>
+          <ReactMarkdown
+            className="text-sm px-2 leading-relaxed"
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="leading-relaxed" {...props} />
+              ),
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc pl-6 mb-2 space-y-2 text-gray-600" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal pl-6 mb-2 space-y-2 text-gray-600" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="leading-relaxed" {...props} />
+              ),
+              strong: ({ node, ...props }) => (
+                <strong className="font-semibold" {...props} />
+              ),
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+
+          {/* Tool Invocations */}
+          {message.toolInvocations?.map((tool, index) => (
+            <div key={`${message.id}-tool-${index}`} className="w-full mt-3 first:mt-0">
+              <MemoizedMarkdownCard
+                content={tool.state === 'result' ? tool.result?.content : undefined}
+                metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
+                onInsert={onInsertMarkdown}
+                isLoading={tool.state === 'call'}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 });
@@ -366,19 +389,18 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   return (
     <Card className="p-0 bg-white rounded-xl h-full flex flex-col">
-      <div className="p-4 flex items-center justify-between">
+      <div className={cn("p-4 flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
         <div className="flex items-center gap-2">
           {!isCollapsed && (
             <>
               <AiGenerationIcon />
-              <h2 className="font-semibold text-lg">AI Assistant</h2>
+              <h2 className="font-semibold text-lg">Mappie AI</h2>
             </>
           )}
         </div>
         <div onClick={toggleCollapse} className="cursor-pointer items-center text-muted-foreground hover:text-foreground transition">
           {isCollapsed ? (
             <>
-              <PanelLeftClose className="h-6 w-6 mb-4" />
               <AiGenerationIcon className='h-6 w-6' />
             </>
           ) : (
@@ -391,15 +413,15 @@ const AIStoryCreator = memo(function AIStoryCreator({
           <Separator />
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto"
+            className="flex-1 overflow-y-auto px-4 py-4"
             style={{
               height: '500px',
               scrollBehavior: 'smooth'
             }}
           >
-            <div className="space-y-2 p-4">
+            <div className="space-y-6">
               {chat.messages.map((message) => (
-                <MemoizedMessage
+                <ChatMessage
                   key={message.id}
                   message={message}
                   onInsertMarkdown={onInsertMarkdown}
@@ -407,9 +429,16 @@ const AIStoryCreator = memo(function AIStoryCreator({
               ))}
 
               {streamState.isGenerating && !streamState.isWaitingForTool && (
-                <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-3 rounded-lg">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="animate-pulse">AI is thinking...</span>
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                      <AiGenerationIcon className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-4 py-2.5 rounded-2xl rounded-tl-none max-w-[80%]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="animate-pulse">AI is thinking...</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -419,43 +448,51 @@ const AIStoryCreator = memo(function AIStoryCreator({
             onSubmit={handleSubmit}
             className="space-y-2 p-2"
           >
-            <Textarea
-              value={chat.input}
-              onChange={chat.handleInputChange}
-              placeholder="Ask me to improve or generate content..."
-              className="w-full min-h-[120px] resize-none"
-              disabled={streamState.isGenerating || streamState.isWaitingForTool}
-              contextLabel={{
-                type: selectedItemType === 'userStory' ? 'User Story' :
-                  selectedItemType === 'epic' ? 'Epic' :
-                    selectedItemType === 'useCase' ? 'Use Case' :
-                      selectedItemType,
-                name: (() => {
-                  if (selectedItemType === 'epic') {
-                    return selectedEpic?.name || 'Untitled Epic';
-                  } else if (selectedItemType === 'userStory' || selectedItemType === 'useCase') {
-                    return selectedUserStory?.title || 'Untitled';
-                  }
-                  return 'Untitled';
-                })()
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !streamState.isGenerating && !streamState.isWaitingForTool) {
-                  e.preventDefault();
-                  handleSubmit(e as any);
-                }
-              }}
-              sendButton={
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="bg-slate-300 hover:bg-slate-300 text-white rounded-md transition-colors h-8"
-                  disabled={streamState.isGenerating || streamState.isWaitingForTool}
-                >
-                  <Send className="h-3 w-3" />
-                </Button>
-              }
-            />
+            <div className="border-t p-4 sticky bottom-0 bg-background">
+              <form onSubmit={handleSubmit} className="relative">
+                <div className="relative">
+                  <Textarea
+                    value={chat.input}
+                    onChange={(e) => {
+                      chat.handleInputChange(e)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault()
+                        handleSubmit(e as any)
+                      }
+                    }}              
+                    placeholder="Ask me to improve or generate content..."
+                    rows={3}
+                    className={cn(
+                      "resize-none pr-24 pb-12",
+                    )}
+                    disabled={streamState.isGenerating || streamState.isWaitingForTool}
+                    contextLabels={[
+                      {
+                        type: selectedItemType === 'userStory' ? 'User Story' :
+                          selectedItemType === 'epic' ? 'Epic' :
+                          selectedItemType === 'useCase' ? 'Use Case' :
+                          selectedItemType,
+                        name: (() => {
+                          if (selectedItemType === 'epic') {
+                            return selectedEpic?.name || 'Untitled Epic';
+                          } else if (selectedItemType === 'userStory' || selectedItemType === 'useCase') {
+                            return selectedUserStory?.title || 'Untitled';
+                          }
+                          return 'Untitled';
+                        })()
+                      }
+                      // Add more context labels here as needed
+                    ]}
+                  />
+                </div>
+              </form>
+              <div className="flex items-center justify-start gap-2 text-xs text-muted-foreground mt-2">
+                <AlertTriangle className="h-3 w-3" />
+                AI responses may be inaccurate
+              </div>
+            </div>
           </form>
         </>
       )}

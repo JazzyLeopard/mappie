@@ -303,8 +303,8 @@ const CommonLayout = ({
             </div>
 
             <div className="flex flex-1 gap-2">
-                <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col">
-                    <div className="flex items-center justify-between px-2 pb-3 w-full">
+                <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%]">
+                    <div className="flex items-center justify-between px-2 pb-3 w-full overflow-x-auto sm:mr-2">
                         {activeComponent && (
                             <h1 className="text-2xl pl-4 font-semibold">
                                 {toTitleCase(activeComponent.key)}
