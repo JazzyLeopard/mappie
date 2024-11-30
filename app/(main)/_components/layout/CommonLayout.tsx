@@ -318,14 +318,14 @@ const CommonLayout = ({
                             Presentation Mode
                         </Button>
                     </div>
-                    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4">
+                    <ScrollArea className="flex-1 min-h-0 px-4">
                         {activeComponent && (
                             <LexicalEditor
                                 key={editorKey}
                                 {...editorProps}
                             />
                         )}
-                    </div>
+                    </ScrollArea>
                 </div>
 
                 <div className={cn(
