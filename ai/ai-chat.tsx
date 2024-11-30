@@ -16,6 +16,7 @@ import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } fr
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -411,13 +412,9 @@ const AIStoryCreator = memo(function AIStoryCreator({
       {!isCollapsed && (
         <>
           <Separator />
-          <div
+          <ScrollArea 
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-4 py-4"
-            style={{
-              height: '500px',
-              scrollBehavior: 'smooth'
-            }}
+            className="flex-1 px-4 py-4"
           >
             <div className="space-y-6">
               {chat.messages.map((message) => (
@@ -442,7 +439,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                 </div>
               )}
             </div>
-          </div>
+          </ScrollArea>
 
           <form
             onSubmit={handleSubmit}
