@@ -105,3 +105,8 @@
     border-radius: 20px;
   }
 }
+
+.flex-row-reverse {
+  flex-direction: row-reverse !important;
+}
+
