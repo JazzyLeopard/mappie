@@ -68,39 +68,24 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
   onInsertMarkdown: (markdown: string) => void
 }) => {
   return (
-    <div className={cn(
-      "flex gap-3 mb-4",
-      message.role === "user" ? "flex-row-reverse" : "flex-row"
-    )}>
+    <div className="flex w-full">
       {/* Icon Column */}
-      <div className="flex-shrink-0 mt-1">
+      <div className="">
         {message.role === "assistant" ? (
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="w-8 h-8 items-start">
             <AiGenerationIcon className="h-5 w-5 text-primary" />
           </div>
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-            <div className="text-sm font-medium text-secondary-foreground">U</div>
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* Message Content Column */}
-      <div className={cn(
-        "flex flex-col flex-1 space-y-2 max-w-[calc(100%-4rem)]",
-        message.role === "user" ? "items-end" : "items-start"
-      )}>
-        {/* Role Label */}
-        <div className="text-sm font-medium text-muted-foreground">
-          {message.role === "assistant" ? "Mappie AI" : "You"}
-        </div>
-
+      <div className="flex flex-col w-full">
         {/* Message Bubble */}
         <div className={cn(
-          "rounded-lg px-4 py-3 text-sm max-w-[85%]",
+          "text-sm w-full",
           message.role === "user" 
-            ? "bg-primary text-primary-foreground ml-auto" 
-            : "bg-muted/50 text-foreground mr-auto"
+            ? "bg-slate-100 text-gray-900 px-2 py-4 rounded-lg mb-2 mt-2" 
+            : "text-foreground"
         )}>
           <ReactMarkdown
             className="text-sm px-2 leading-relaxed"
@@ -129,7 +114,7 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
 
           {/* Tool Invocations */}
           {message.toolInvocations?.map((tool, index) => (
-            <div key={`${message.id}-tool-${index}`} className="w-full mt-3 first:mt-0">
+            <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0">
               <MemoizedMarkdownCard
                 content={tool.state === 'result' ? tool.result?.content : undefined}
                 metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
@@ -414,9 +399,9 @@ const AIStoryCreator = memo(function AIStoryCreator({
           <Separator />
           <ScrollArea 
             ref={scrollRef}
-            className="flex-1 px-4 py-4"
+            className="flex-1 relative before:content-[''] before:pointer-events-none before:absolute before:h-20 before:left-0 before:right-0 before:bottom-0 before:bg-gradient-to-t before:from-white before:to-transparent before:z-10"
           >
-            <div className="space-y-6">
+            <div className="space-y-6 p-4 pb-8">
               {chat.messages.map((message) => (
                 <ChatMessage
                   key={message.id}
@@ -445,7 +430,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
             onSubmit={handleSubmit}
             className="space-y-2 p-2"
           >
-            <div className="border-t p-4 sticky bottom-0 bg-background">
+            <div className="sticky bottom-0 p-2 bg-background">
               <form onSubmit={handleSubmit} className="relative">
                 <div className="relative">
                   <Textarea
