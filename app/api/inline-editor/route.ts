@@ -1,18 +1,14 @@
-import OpenAI from "openai";
-import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown';
-import { $getRoot, createEditor } from 'lexical';
 import { diffLines } from 'diff';
+import { openai } from '@ai-sdk/openai';
+import { generateText } from 'ai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 export async function POST(req: Request) {
   try {
     const { prompt, selectedText, fullText } = await req.json();
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await generateText({
+      model: openai("gpt-4o-mini"),
       messages: [
         {
           role: "system",
@@ -28,8 +24,8 @@ Keep the markdown formatting intact and return the complete text with the improv
       ],
     });
 
-    const newFullText = completion.choices[0].message.content ?? '';
-    
+    const newFullText = completion.text ?? '';
+
     // Find the changed portion by comparing the old and new text
     const diff = diffLines(fullText, newFullText);
     const changedPortion = diff
@@ -37,7 +33,7 @@ Keep the markdown formatting intact and return the complete text with the improv
       .map(part => part.value)
       .join('\n');
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       text: newFullText, // Full text for when user accepts
       diff: changedPortion // Only the changed portion for the suggestion card
     }), {
@@ -47,7 +43,7 @@ Keep the markdown formatting intact and return the complete text with the improv
   } catch (error) {
     console.error('Error in generate route:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate text' }), 
+      JSON.stringify({ error: 'Failed to generate text' }),
       { status: 500 }
     );
   }
