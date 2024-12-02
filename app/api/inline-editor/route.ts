@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const { prompt, selectedText, fullText } = await req.json();
 
     const { text: newFullText } = await generateText({
-      model: openai('gpt-4-turbo'),
+      model: openai('gpt-4o-mini'),
       prompt: `You are an AI writing assistant. You will receive the full text and a selected portion to improve. Generate an improved version that maintains the context and formatting. Return only the complete text with the improvement integrated.
 
       Full text: "${fullText}"
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       Prompt: ${prompt}
       Keep the markdown formatting intact and return the complete text with the improvement integrated.`
     });
-    
+
     // Find the changed portion by comparing the old and new text
     const diff = diffLines(fullText, newFullText);
     const changedPortion = diff
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       .map(part => part.value)
       .join('\n');
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       text: newFullText, // Full text for when user accepts
       diff: changedPortion // Only the changed portion for the suggestion card
     }), {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Error in generate route:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate text' }), 
+      JSON.stringify({ error: 'Failed to generate text' }),
       { status: 500 }
     );
   }
