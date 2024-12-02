@@ -22,7 +22,9 @@
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
         "action": "debugWithChrome"
-      }
+      },
+       "envFile": "${workspaceFolder}/.env.local"
     }
+    
   ]
 }
