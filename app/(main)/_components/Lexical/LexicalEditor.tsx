@@ -45,7 +45,13 @@ function LexicalEditor({
     },
     editorState: projectDetails?.[attribute] ? () => {
       try {
-        const parsedContent = JSON.parse(projectDetails[attribute]);
+        let parsedContent;
+        try {
+          parsedContent = JSON.parse(projectDetails[attribute]);
+        } catch (error) {
+          console.error('Failed to parse initial content:', error);
+          parsedContent = projectDetails[attribute];
+        }
         return (editor: LexicalEditorType) => {
           const currentState = editor.getEditorState();
           const currentSelection = currentState._selection;

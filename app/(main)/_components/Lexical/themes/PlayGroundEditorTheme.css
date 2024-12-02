@@ -266,33 +266,29 @@
     background-color: #ffbbbb !important;
   }
   .PlaygroundEditorTheme__ol1 {
-    padding: 0;
+    list-style-type: decimal;
     margin: 0;
-    list-style-position: outside;
+    padding: 0;
   }
   .PlaygroundEditorTheme__ol2 {
-    padding: 0;
+    list-style-type: lower-alpha;
     margin: 0;
-    list-style-type: upper-alpha;
-    list-style-position: outside;
+    padding: 0;
   }
   .PlaygroundEditorTheme__ol3 {
-    padding: 0;
+    list-style-type: lower-roman;
     margin: 0;
-    list-style-type: lower-alpha;
-    list-style-position: outside;
+    padding: 0;
   }
   .PlaygroundEditorTheme__ol4 {
-    padding: 0;
+    list-style-type: decimal;
     margin: 0;
-    list-style-type: upper-roman;
-    list-style-position: outside;
+    padding: 0;
   }
   .PlaygroundEditorTheme__ol5 {
-    padding: 0;
+    list-style-type: lower-alpha;
     margin: 0;
-    list-style-type: lower-roman;
-    list-style-position: outside;
+    padding: 0;
   }
   .PlaygroundEditorTheme__ul {
     padding: 0;
@@ -301,6 +297,7 @@
   }
   .PlaygroundEditorTheme__listItem {
     margin: 0 32px;
+    padding: 0;
   }
   .PlaygroundEditorTheme__listItemChecked,
   .PlaygroundEditorTheme__listItemUnchecked {
