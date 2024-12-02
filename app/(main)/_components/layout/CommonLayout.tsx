@@ -329,7 +329,7 @@ const CommonLayout = ({
                 </div>
 
                 <div className={cn(
-                    `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-2/5'} transition-width duration-300`,
+                    `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-[40%]'} max-w-[600px] transition-width duration-300`,
                     isResetting && "transition-all ease-in-out duration-300"
                 )}>
                     <div className="shadow-sm bg-white rounded-xl h-full">

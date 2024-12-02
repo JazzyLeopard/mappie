@@ -404,7 +404,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             )}
                         </div>
 
-                        <div className="w-2/5">
+                        <div className="w-[40%] max-w-[600px]">
                             <div className="shadow-sm bg-white rounded-xl h-full">
                                 {selectedItems.fr && (
                                     <AIStoryCreator

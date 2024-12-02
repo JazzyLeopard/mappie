@@ -118,22 +118,22 @@ function SuggestionCard({
               <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
             ),
             h2: ({ node, ...props }) => (
-              <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
+              <h2 className="text-2xl font-bold mb-4 mt-4" {...props} />
             ),
             h3: ({ node, ...props }) => (
-              <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
+              <h3 className="text-xl font-semibold mb-3 mt-3" {...props} />
             ),
             h4: ({ node, ...props }) => (
-              <h4 className="text-lg font-medium mb-2 mt-4" {...props} />
+              <h4 className="text-lg font-medium mb-2 mt-2" {...props} />
             ),
             p: ({ node, ...props }) => (
-              <p className="text-gray-600 leading-relaxed mb-4" {...props} />
+              <p className="text-gray-600 leading-relaxed" {...props} />
             ),
             ul: ({ node, ...props }) => (
-              <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+              <ul className="list-disc pl-6 space-y-2 text-gray-600" {...props} />
             ),
             ol: ({ node, ...props }) => (
-              <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+              <ol className="list-decimal pl-6 space-y-2 text-gray-600" {...props} />
             ),
             li: ({ node, ...props }) => (
               <li className="leading-relaxed" {...props} />
