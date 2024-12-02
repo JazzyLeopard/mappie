@@ -9,6 +9,8 @@ import { toast } from 'sonner'
 import { Skeleton } from "@/components/ui/skeleton"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import { ToolState } from '@/lib/types';
+import { useState, useEffect } from 'react';
 
 interface MarkdownCardProps {
   content?: string;
@@ -33,11 +35,23 @@ const loadingAnimation = {
 };
 
 export function MarkdownCard({ content, metadata, onInsert, isLoading }: MarkdownCardProps) {
+  // Add state to track if content is still streaming
+  const [isStreaming, setIsStreaming] = useState(true);
+  const [streamedContent, setStreamedContent] = useState('');
   
-  if (isLoading) {
+  // Update streamed content when content prop changes
+  useEffect(() => {
+    if (content) {
+      setStreamedContent(content);
+      setIsStreaming(false);
+    }
+  }, [content]);
+
+  // Show skeleton while streaming or loading
+  if (isLoading || isStreaming) {
     return (
       <div className="rounded-lg border border-neutral-200 overflow-hidden bg-white">
-        <div className="h-10 border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
+        <div className="h-10 overflow-hidden border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-7 w-7 rounded-md" />
           ))}
@@ -55,74 +69,38 @@ export function MarkdownCard({ content, metadata, onInsert, isLoading }: Markdow
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 overflow-hidden bg-white">
-      <div className="h-10 border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
+    <div className="w-full rounded-lg border border-neutral-200 overflow-hidden bg-white">
+      <div className="h-10 overflow-hidden border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
         <div className="relative group">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData('text/plain', content || '');
-                }}
-              >
-                <Grid className="h-4 w-4" />
-                <span className="sr-only">Drag to editor</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Drag to editor
-            </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => onInsert(content || '')}
-              >
-                <FileDown className="h-4 w-4" />
-                <span className="sr-only">Insert at cursor</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Insert at cursor
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7"
+            onClick={() => {
+              onInsert(content || '');
+              toast.success('Content inserted');
+            }}
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Insert
+          </Button>
 
-          <TooltipProvider>
-            <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => {
-                  navigator.clipboard.writeText(content || '');
-                  toast.success('Copied to clipboard');
-                }}
-              >
-                <Copy className="h-4 w-4" />
-                <span className="sr-only">Copy to clipboard</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Copy to clipboard
-            </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7"
+            onClick={() => {
+              navigator.clipboard.writeText(content || '');
+              toast.success('Copied to clipboard');
+            }}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Copy
+          </Button>
         </div>  
       </div>
 
-      <div className="p-4 px-6 min-w-[300px]">
+      <div className="overflow-x-auto max-w-full p-4 px-6 min-w-[300px]">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
@@ -159,7 +137,7 @@ export function MarkdownCard({ content, metadata, onInsert, isLoading }: Markdow
             ),
           }}
         >
-          {content}
+          {streamedContent}
         </ReactMarkdown>
       </div>
     </div>

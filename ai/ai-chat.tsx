@@ -17,6 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToolState } from '@/lib/types';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -69,8 +70,8 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
 }) => {
   return (
     <div className="flex w-full">
-      {/* Icon Column */}
-      <div className="">
+      {/* Icon Column - make it flex-shrink-0 to prevent shrinking */}
+      <div className="flex-shrink-0">
         {message.role === "assistant" ? (
           <div className="w-8 h-8 items-start">
             <AiGenerationIcon className="h-5 w-5 text-primary" />
@@ -78,43 +79,66 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
         ) : null}
       </div>
 
-      {/* Message Content Column */}
-      <div className="flex flex-col w-full">
+      {/* Message Content Column - add max-width and overflow handling */}
+      <div className="flex flex-col min-w-0 flex-1 overflow-hidden"> {/* added overflow-hidden */}
         {/* Message Bubble */}
         <div className={cn(
-          "text-sm w-full",
+          "text-sm w-full break-words overflow-hidden", // added overflow-hidden
           message.role === "user" 
             ? "bg-slate-100 text-gray-900 px-2 py-4 rounded-lg mb-2 mt-2" 
             : "text-foreground"
         )}>
           <ReactMarkdown
-            className="text-sm px-2 leading-relaxed"
+            className="text-sm px-2 leading-relaxed overflow-hidden" // ensure overflow is hidden
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
             components={{
+              h1: ({ node, ...props }) => (
+              <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
+              ),
+              h4: ({ node, ...props }) => (
+                <h4 className="text-lg font-medium mb-2 mt-4" {...props} />
+              ),
               p: ({ node, ...props }) => (
-                <p className="leading-relaxed" {...props} />
+                <p className="text-gray-600 leading-relaxed" {...props} />
               ),
               ul: ({ node, ...props }) => (
-                <ul className="list-disc pl-6 mb-2 space-y-2 text-gray-600" {...props} />
+                <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />
               ),
               ol: ({ node, ...props }) => (
-                <ol className="list-decimal pl-6 mb-2 space-y-2 text-gray-600" {...props} />
+                <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-600" {...props} />
               ),
               li: ({ node, ...props }) => (
                 <li className="leading-relaxed" {...props} />
               ),
-              strong: ({ node, ...props }) => (
-                <strong className="font-semibold" {...props} />
+              code: ({ node, ...props }) => (
+                  <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
+              ),
+              blockquote: ({ node, ...props }) => (
+                <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
+              ),
+              pre: ({ node, ...props }) => (
+                <pre className="overflow-x-auto max-w-full p-4 bg-gray-100 rounded-lg mb-4" {...props} />
+              ),
+              table: ({ node, ...props }) => (
+                <div className="overflow-x-auto max-w-full">
+                  <table className="min-w-full" {...props} />
+                </div>
               ),
             }}
           >
             {message.content}
           </ReactMarkdown>
 
-          {/* Tool Invocations */}
+          {/* Tool Invocations - ensure they stay within bounds */}
           {message.toolInvocations?.map((tool, index) => (
-            <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0">
+            <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0 min-w-0"> {/* added min-w-0 */}
               <MemoizedMarkdownCard
                 content={tool.state === 'result' ? tool.result?.content : undefined}
                 metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
@@ -399,9 +423,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
           <Separator />
           <ScrollArea 
             ref={scrollRef}
-            className="flex-1 relative before:content-[''] before:pointer-events-none before:absolute before:h-20 before:left-0 before:right-0 before:bottom-0 before:bg-gradient-to-t before:from-white before:to-transparent before:z-10"
+            className="flex-1"
+            withShadow={true}
           >
-            <div className="space-y-6 p-4 pb-8">
+            <div className="space-y-6 p-4 pb-8 max-w-full"> {/* added max-w-full */}
               {chat.messages.map((message) => (
                 <ChatMessage
                   key={message.id}
@@ -439,7 +464,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                       chat.handleInputChange(e)
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.ctrlKey) {
+                      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                         e.preventDefault()
                         handleSubmit(e as any)
                       }
