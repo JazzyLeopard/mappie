@@ -25,7 +25,7 @@ import { useLexicalEditable } from '@lexical/react/useLexicalEditable';
 import * as React from 'react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { CAN_USE_DOM } from './shared/canUseDOM';
-import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown';
+import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS, ELEMENT_TRANSFORMERS, TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS, ORDERED_LIST } from '@lexical/markdown';
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { debounce } from 'lodash';
@@ -83,6 +83,8 @@ import { Id } from '@/convex/_generated/dataModel';
 import { PASTE_COMMAND } from 'lexical';
 import AIEditPlugin, { SuggestionCardNode } from './plugins/AiEditPlugin';
 import { TableNode, TableRowNode, TableCellNode } from '@lexical/table';
+import { ENHANCED_TRANSFORMERS, PLAYGROUND_TRANSFORMERS } from './plugins/MarkdownTransformers';
+import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
 
 const skipCollaborationInit =
   // @ts-expect-error
@@ -160,70 +162,20 @@ export default function Editor({
   const handleChange = useCallback((editorStateJSON: string) => {
     if (context === 'epics') {
       try {
-        const parsedState = JSON.parse(editorStateJSON);
-        let formattedText = '';
-
-        const traverseNodes = (nodes: any[]) => {
-          for (const node of nodes) {
-            // Handle headings
-            if (node.type === 'heading') {
-              const hLevel = node.tag.length; // h1, h2, etc.
-              formattedText += '#'.repeat(hLevel) + ' ';
-              if (node.children) traverseNodes(node.children);
-              formattedText += '\n\n';
-            }
-            // Handle text nodes
-            else if (node.type === 'text') {
-              // Handle formatting
-              let text = node.text;
-              if (node.format & 1) text = `**${text}**`; // Bold
-              if (node.format & 2) text = `*${text}*`;   // Italic
-              formattedText += text;
-            }
-            // Handle lists
-            else if (node.type === 'list') {
-              if (node.children) {
-                node.children.forEach((item: any) => {
-                  formattedText += '- ';
-                  if (item.children) traverseNodes(item.children);
-                  formattedText += '\n';
-                });
-              }
-              formattedText += '\n';
-            }
-            // Handle paragraphs
-            else if (node.type === 'paragraph') {
-              if (node.children) traverseNodes(node.children);
-              formattedText += '\n\n';
-            }
-            // Handle other nodes with children
-            else if (node.children) {
-              traverseNodes(node.children);
-            }
-          }
-        };
-
-        if (parsedState.root && parsedState.root.children) {
-          traverseNodes(parsedState.root.children);
-        }
-
-        // Clean up extra line breaks while preserving formatting
-        const cleanedText = formattedText
-          .replace(/\n\n\n+/g, '\n\n')  // Replace triple+ line breaks with double
-          .trim();  // Remove leading/trailing whitespace
-
-        setProjectDetails({
-          description: cleanedText
+        editor.update(() => {
+          const markdown = $convertToMarkdownString(PLAYGROUND_TRANSFORMERS);
+          
+          // Update the project details with the markdown
+          setProjectDetails(markdown);
+          
+          // Force editor update to ensure proper rendering
+          editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
         });
       } catch (error) {
-        console.error('Error parsing editor state:', error);
+        console.error('Error converting to markdown:', error);
       }
-    } else {
-      setProjectDetails({
-        content: editorStateJSON
-      });
     }
-  }, [setProjectDetails, context]);
+  }, [context, editor, setProjectDetails]);
 
   // Initialize editor content
   useEffect(() => {
@@ -326,20 +278,15 @@ export default function Editor({
       PASTE_COMMAND,
       (event: ClipboardEvent) => {
         const pastedText = event.clipboardData?.getData('text/plain');
-        if (pastedText && pastedText.trim()) {
-          // Check if the pasted content looks like markdown
-          if (pastedText.includes('#') ||
-            pastedText.includes('-') ||
-            pastedText.includes('*') ||
-            pastedText.includes('```')) {
-
+        if (pastedText?.trim()) {
+          // Check for markdown content
+          if (pastedText.match(/[#\-*`>]|\d+\./)) {
             event.preventDefault();
-
+            
             editor.update(() => {
-              // Convert markdown to Lexical nodes
-              $convertFromMarkdownString(pastedText, TRANSFORMERS);
+              $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
             });
-
+            
             return true;
           }
         }
@@ -365,9 +312,9 @@ export default function Editor({
         <RichTextPlugin
           contentEditable={
             <div className="h-full w-full overflow-auto scrollbar-thin">
-              <div className="w-full min-h-[900px] relative" ref={onRef}>
+              <div className="w-full min-h-[800px] relative" ref={onRef}>
                 <ContentEditable
-                  className="h-full w-full pl-6 outline-none flex items-center"
+                  className="h-full w-full pl-6 outline-none"
                   placeholder={placeholder}
                 />
               </div>
@@ -375,7 +322,7 @@ export default function Editor({
           }
           ErrorBoundary={LexicalErrorBoundary}
         />
-        <MarkdownShortcutPlugin />
+        <MarkdownPlugin />
         <CodeHighlightPlugin />
         <ListPlugin />
         <CheckListPlugin />

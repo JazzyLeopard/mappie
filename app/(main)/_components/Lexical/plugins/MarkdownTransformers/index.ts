@@ -17,6 +17,7 @@ import {
     TEXT_MATCH_TRANSFORMERS,
     TextMatchTransformer,
     Transformer,
+    ORDERED_LIST,
   } from '@lexical/markdown';
   import {
     $createHorizontalRuleNode,
@@ -324,4 +325,19 @@ import {
     ...MULTILINE_ELEMENT_TRANSFORMERS,
     ...TEXT_FORMAT_TRANSFORMERS,
     ...TEXT_MATCH_TRANSFORMERS,
+  ];
+  
+  export const ENHANCED_TRANSFORMERS: Array<Transformer> = [
+    ORDERED_LIST as ElementTransformer,
+    CHECK_LIST as ElementTransformer,
+    ...PLAYGROUND_TRANSFORMERS,
+    ...ELEMENT_TRANSFORMERS,
+    ...TEXT_FORMAT_TRANSFORMERS,
+    ...TEXT_MATCH_TRANSFORMERS,
+    TABLE as ElementTransformer,
+    HR as ElementTransformer,
+    IMAGE as TextMatchTransformer,
+    EMOJI as TextMatchTransformer,
+    EQUATION as TextMatchTransformer,
+    TWEET as ElementTransformer
   ];

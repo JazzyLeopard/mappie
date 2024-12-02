@@ -3,7 +3,7 @@ const editorTheme = {
     rtl: "rtl",
     placeholder: "editor-placeholder",
     paragraph: "mb-2 relative",
-    quote: "editor-quote",
+    quote: "pl-4 border-l-4 border-gray-300 dark:border-gray-700 my-4 text-gray-700 dark:text-gray-300",
     heading: {
       h1: "text-3xl font-extrabold dark:text-white",
       h2: "text-xl font-bold dark:text-white",
@@ -14,11 +14,18 @@ const editorTheme = {
     },
     list: {
       nested: {
-        listitem: "pl-5 mt-2 space-y-1 list-decimal list-inside dark:text-white",
+        listitem: "pl-8 mt-1",
       },
-      ol: "max-w-md space-y-1 text-gray-500 list-decimal list-inside dark:text-white",
-      ul: "max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-white",
-      listitem: "dark:text-white",
+      ol: "list-decimal pl-8 my-2 space-y-1",
+      ul: "list-disc pl-8 my-2 space-y-1",
+      listitem: "my-0.5 text-gray-800 dark:text-gray-200",
+      olDepth: [
+        "list-decimal",
+        "list-[lower-alpha]",
+        "list-[lower-roman]",
+        "list-[decimal]",
+        "list-[upper-alpha]",
+      ],
     },
     image: "editor-image",
     link: "font-medium text-blue-600 dark:text-blue-500 hover:underline",
@@ -32,7 +39,8 @@ const editorTheme = {
       underlineStrikethrough: "underline line-through",
       code: "font-mono text-[94%] bg-gray-100 dark:bg-gray-600 dark:text-white p-1 rounded",
     },
-    code: "bg-white dark:bg-gray-600 font-mono block py-2 px-8 leading-1 m-0 mt-2 mb-2 tab-2 overflow-x-auto relative before:absolute before:content-[attr(data-gutter)] before:bg-gray-200 dark:before:bg-gray-700 before:left-0 before:top-0 before:p-2 before:min-w-[25px] before:whitespace-pre-wrap before:text-right after:content-[attr(data-highlight-langrage)] after:right-3 after:absolute",
+    code: "bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 font-mono text-sm",
+    codeBlock: "bg-gray-100 dark:bg-gray-800 rounded-lg p-4 font-mono text-sm my-4",
     codeHighlight: {
       atrule: "text-[#07a] dark:text-cyan-400",
       attr: "text-[#07a] dark:text-cyan-400",
