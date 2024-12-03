@@ -514,7 +514,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <ScrollArea className="flex-1 pb-4" withShadow={true}>
+        <ScrollArea className="flex-1 min-h-0 pr-2" withShadow={true}>
           <LexicalEditor
             key={selectedItems.epic as string}
             itemId={selectedItems.epic as Id<"epics">}
@@ -555,10 +555,9 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             onBlur={() => {}}
           />
         </header>
-        <div className='flex-1 overflow-y-auto flex h-full'>
-          <div className='flex-1 px-0 h-[500px]'>
-            <LexicalEditor
-              key={selectedItems.story as string}
+        <ScrollArea className="flex-1 min-h-0 pr-2" withShadow={true}>
+          <LexicalEditor
+            key={selectedItems.story as string}
               itemId={selectedItems.story as Id<"userStories">}
               onBlur={async () => {}}
               attribute="description"
@@ -578,9 +577,8 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
               }}
               context="userStories"
               isRichText={true}
-            />
-          </div>
-        </div>
+          />
+        </ScrollArea>
       </div>
     );
   }, [selectedUserStory, handleUserStoryChange]);
