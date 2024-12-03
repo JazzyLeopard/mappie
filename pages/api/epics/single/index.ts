@@ -139,7 +139,7 @@ export default async function handler(
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
         const response = await generateText({
-            model: openai("gpt-4o"),
+            model: openai("gpt-4o-mini"),
             messages: [{ role: "user", content: singleEpicPrompt }],
             temperature: 0.7,
         });
