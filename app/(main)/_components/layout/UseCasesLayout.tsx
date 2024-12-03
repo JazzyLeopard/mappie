@@ -257,7 +257,7 @@ export default function UseCasesLayout({
                       onBlur={() => { }}
                     />
                   </header>
-                  <ScrollArea className="flex-1 pb-4">
+                  <ScrollArea className="flex-1 pb-4" withShadow={true}>
                     <LexicalEditor
                       key={selectedItems.useCase}
                       itemId={selectedItems.useCase as Id<'useCases'>}

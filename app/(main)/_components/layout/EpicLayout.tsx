@@ -514,7 +514,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <div className="flex-1 overflow-y-auto h-[calc(100%-100px)] flex">
+        <ScrollArea className="flex-1 pb-4" withShadow={true}>
           <LexicalEditor
             key={selectedItems.epic as string}
             itemId={selectedItems.epic as Id<"epics">}
@@ -536,7 +536,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             context="epics"
             isRichText={true}
           />
-        </div>
+        </ScrollArea>
       </div>
     );
   }, [selectedEpic, allUserStories, handleEpicChange, handleEditorChange]);
