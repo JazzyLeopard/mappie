@@ -86,7 +86,7 @@ export default async function handler(
             return res.status(400).json({ message: "No functional requirements found for the project" });
         }
 
-        const functionalRequirementsText = functionalRequirements.map(fr => fr.description).join('\n');
+        const functionalRequirementsText = functionalRequirements.map((fr: any) => fr.description).join('\n');
 
         //Fetch the useCases
         const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
@@ -102,8 +102,8 @@ export default async function handler(
             return res.status(400).json({ message: "No Use cases found for the project" });
         }
 
-        const existingEpicNames = epics.map(epic => epic?.name);
-        const epicsText = epics.map(epic => epic?.description).join('\n');
+        const existingEpicNames = epics.map((epic: any) => epic?.name);
+        const epicsText = epics.map((epic: any) => epic?.description).join('\n');
 
         let basePrompt = `As an expert Epic analyst, generate one unique additional epic for the following project. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail. Ensure the epic name is different and unique from these: [${existingEpicNames.join(', ')}].
 
@@ -127,7 +127,7 @@ export default async function handler(
 
 
         if (useCases?.length > 0) {
-            const useCasesText = useCases.map(useCase => useCase.description).join('\n');
+            const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
             basePrompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
         }
 

@@ -64,7 +64,7 @@ export default async function handler(
       Ensure the response is in valid JSON format with double-quoted property keys being bold and values also ensure that the generated response follows the exact example template with each attribute as given in the ${ideatePrompts} for each field. 
       For each field, use the following instructions:
       ${relevantPrompts.map(key => `For ${key}: ${ideatePrompts[key]}`).join('\n')}
-      Provide a title, overview, problemStatement, userPersonas, featuresInOut as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
+      Provide a Title, Overview, Problem statement, User Personas, Features In/Out as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       console.log("Calling OpenAi Api...");
       // const completion = await openai.chat.completions.create({

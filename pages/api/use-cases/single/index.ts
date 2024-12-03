@@ -128,7 +128,7 @@ export default async function handler(
       return res.status(400).json({ message: "No functional requirements found for the project" });
     }
 
-    const functionalRequirementsText = functionalRequirements.map(fr => fr.description).join('\n');
+    const functionalRequirementsText = functionalRequirements.map((fr: any) => fr.description).join('\n');
 
     // Fetch the exsisting use cases
     const useCases = await convex.query(api.useCases.getUseCasesByProjectId, { projectId });
@@ -137,7 +137,7 @@ export default async function handler(
       return res.status(400).json({ message: "No Use cases found for the project" });
     }
 
-    const useCasesText = useCases.map(useCase => useCase.description).join('\n');
+    const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
 
     let basePrompt = `As an expert use case analyst, generate one unique additional use case for the following project. The use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
 

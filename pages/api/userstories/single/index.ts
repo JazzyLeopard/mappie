@@ -69,7 +69,7 @@ export default async function handler(
             return res.status(400).json({ message: "No epics found for the project" });
         }
 
-        const epicsText = epics.map(epic => epic?.description).join('\n');
+        const epicsText = epics.map((epic: any) => epic?.description).join('\n');
 
         //Fetch the existing user stories
         const userStories = await convex.query(api.userstories.getUserStories, { projectId })
@@ -78,7 +78,7 @@ export default async function handler(
             return res.status(400).json({ message: "No userStories found for the project" });
         }
 
-        const userStoriesText = userStories.map(uc => uc?.description).join('\n');
+        const userStoriesText = userStories.map((uc: any) => uc?.description).join('\n');
 
         let userStoryBasePrompt = `As an expert user stories analyst, generate a comprehensive list of user stories for the following project. Each user stories should be detailed and specific to the project's need following this exact structure and level of detail, and should not use Heading 1 and 2.
         {
