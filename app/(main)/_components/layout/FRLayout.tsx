@@ -1,20 +1,21 @@
+import AIStoryCreator from '@/ai/ai-chat';
+import LabelToInput from "@/app/(main)/_components/LabelToInput";
+import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor';
 import { Button } from '@/components/ui/button';
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Id } from '@/convex/_generated/dataModel';
+import AiGenerationIcon from '@/icons/AI-Generation';
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
+import { FunctionalRequirement } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import Empty from "@/public/empty.png";
 import { useAuth } from "@clerk/clerk-react";
+import { BookOpen, Plus, Trash } from 'lucide-react';
 import Image from "next/image";
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useCallback, useEffect, useState, useRef } from 'react';
-import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor';
-import AIStoryCreator from '@/ai/ai-chat';
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus, ChevronDown, ChevronRight, BookOpen, Trash } from 'lucide-react'
-import AiGenerationIcon from '@/icons/AI-Generation';
-import { FunctionalRequirement } from '@/lib/types';
-import LabelToInput from "@/app/(main)/_components/LabelToInput";
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Progress } from "@/components/ui/progress";
 
 type SelectedItems = {
     fr: string | null;
@@ -55,12 +56,15 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
+    const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
+
     const selectItem = useCallback((id: string) => {
         setSelectedItems({ fr: id });
     }, []);
 
-    const selectedFR = functionalRequirements && functionalRequirements.length > 0 ? 
-        functionalRequirements.find(fr => fr._id === selectedItems.fr) : 
+    const selectedFR = functionalRequirements && functionalRequirements.length > 0 ?
+        functionalRequirements.find(fr => fr._id === selectedItems.fr) :
         null;
 
     useEffect(() => {
@@ -76,7 +80,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     };
 
     const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
-    
+
     const handleManualAdd = async () => {
         console.log("Manual Add FR button clicked");
         try {
@@ -114,7 +118,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     projectId,
                 }),
             });
@@ -129,19 +133,19 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
+
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
-                
+
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(5).trim());
-                            
+
                             if (data.error) {
                                 throw new Error(data.error);
                             }
-                            
+
                             if (data.done) {
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
@@ -157,7 +161,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 }
                                 return;
                             }
-                            
+
                             if (data.status) {
                                 setGenerationStatus(data.status);
                             }
@@ -198,7 +202,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     projectId,
                     singleFR: false
                 }),
@@ -214,19 +218,19 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
+
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
-                
+
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(5).trim());
-                            
+
                             if (data.error) {
                                 throw new Error(data.error);
                             }
-                            
+
                             if (data.done) {
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
@@ -242,7 +246,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 }
                                 return;
                             }
-                            
+
                             if (data.status) {
                                 setGenerationStatus(data.status);
                             }
@@ -278,9 +282,13 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 const match = title.match(/FR-(\d+)/);
                 return match ? parseInt(match[1], 10) : 0;
             };
-            
+
             return getNumber(a.title) - getNumber(b.title);
         });
+    };
+
+    const toggleAIChat = () => {
+        setIsAIChatCollapsed(!isAIChatCollapsed);
     };
 
     if (!isOnboardingComplete) {
@@ -312,19 +320,19 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
                     <div className="p-2 pt-4">
                         <div className="flex flex-col items-center space-y-2 mb-4">
-                            <Button 
-                                onClick={handleManualAdd} 
-                                variant='ghost' 
+                            <Button
+                                onClick={handleManualAdd}
+                                variant='ghost'
                                 className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
                             >
                                 <Plus className="mr-2 h-4 w-4" /> Add FR
                             </Button>
-                            <Button 
-                                onClick={handleGenerateSingleFR} 
-                                variant='ghost' 
+                            <Button
+                                onClick={handleGenerateSingleFR}
+                                variant='ghost'
                                 className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
                             >
-                                <AiGenerationIcon /> 
+                                <AiGenerationIcon />
                                 <span className="ml-2 font-semibold">Generate FR</span>
                             </Button>
                         </div>
@@ -340,9 +348,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                     return (
                                         <div key={fr._id} className="">
                                             <div
-                                                className={`flex items-center rounded-lg pl-3 pr-1 py-1 hover:bg-slate-200 transition-colors ${
-                                                    selectedItems.fr === fr._id ? 'bg-white font-semibold' : ''
-                                                } cursor-pointer group`}
+                                                className={`flex items-center rounded-lg pl-3 pr-1 py-1 hover:bg-slate-200 transition-colors ${selectedItems.fr === fr._id ? 'bg-white font-semibold' : ''
+                                                    } cursor-pointer group`}
                                                 onClick={() => selectItem(fr._id)}
                                             >
                                                 <BookOpen className="h-3 w-3 mr-3" />
@@ -381,10 +388,10 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                         <LabelToInput
                                             value={selectedFR.title}
                                             setValue={(newTitle) => onFRNameChange(selectedItems.fr as Id<"functionalRequirements">, newTitle)}
-                                            onBlur={() => {}}
+                                            onBlur={() => { }}
                                         />
                                     </header>
-                                    <div className="flex-1 overflow-y-auto flex px-4">
+                                    <div className="flex-1 overflow-x-hidden overflow-y-auto flex px-4">
                                         <LexicalEditor
                                             key={selectedItems.fr}
                                             itemId={selectedItems.fr as Id<'functionalRequirements'>}
@@ -404,7 +411,10 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             )}
                         </div>
 
-                        <div className="w-2/5">
+                        <div className={cn(
+                            `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-2/5'} transition-width duration-300`,
+                            isResetting && "transition-all ease-in-out duration-300"
+                        )}>
                             <div className="shadow-sm bg-white rounded-xl h-full">
                                 {selectedItems.fr && (
                                     <AIStoryCreator
@@ -415,8 +425,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                         selectedEpic={null}
                                         projectId={projectId}
                                         selectedItemId={selectedItems.fr as Id<'functionalRequirements'>}
-                                        isCollapsed={false}
-                                        toggleCollapse={() => {}}
+                                        isCollapsed={isAIChatCollapsed}
+                                        toggleCollapse={toggleAIChat}
                                     />
                                 )}
                             </div>
@@ -425,9 +435,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 ) : (
                     <div className="flex-1 overflow-hidden w-full">
                         <div className="h-full flex flex-col items-center justify-center gap-4 sm:gap-6 px-4 sm:px-6">
-                            <Image 
-                                src={Empty} 
-                                alt="No functional requirements" 
+                            <Image
+                                src={Empty}
+                                alt="No functional requirements"
                                 width={80}
                                 height={80}
                                 className="w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] md:w-[100px] md:h-[100px]"
@@ -446,15 +456,15 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 variant="default"
                                 onClick={handleGenerateMultipleFRs}
                             >
-                                <AiGenerationIconWhite/>
+                                <AiGenerationIconWhite />
                                 <span className="hidden sm:inline">Generate Initial Functional Requirements</span>
                                 <span className="sm:hidden">Generate Requirements</span>
                             </Button>
                             <div className="text-center">
                                 <span className="text-gray-500 text-sm sm:text-base">or</span>
                             </div>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={onManualAddFR}
                                 className="text-sm sm:text-base h-9 sm:h-10"
                             >
