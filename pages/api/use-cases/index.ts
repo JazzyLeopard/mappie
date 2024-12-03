@@ -3,11 +3,12 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getAuth } from "@clerk/nextjs/server";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 
+// Initialize clients
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 
 function convertDescriptionToMarkdown(description: any): string {
   let markdown = '';
@@ -91,169 +92,215 @@ function convertDescriptionToMarkdown(description: any): string {
   return markdown;
 }
 
+// Add this helper function to format functional requirements
+const formatFunctionalRequirements = (requirements: any[]) => {
+  return requirements.map(req => {
+    try {
+      let description;
+      try {
+        description = JSON.parse(req.description);
+      } catch (parseError) {
+        console.error('Error parsing requirement description:', parseError);
+        return ''; // Skip this requirement if parsing fails
+      }
+
+      // Check if description and root exist
+      if (!description?.root?.children) {
+        console.warn('Invalid description structure:', description);
+        return '';
+      }
+
+      const table = description.root.children.find((child: any) => child.type === 'table');
+      if (!table?.children) {
+        console.warn('No table found in requirement:', req.title);
+        return req.title || '';
+      }
+
+      return table.children
+        .slice(1) // Skip header row
+        .map((row: any) => {
+          try {
+            const cells = row.children;
+            if (!cells?.[0]?.children?.[0]?.text || !cells?.[2]?.children?.[0]?.text) {
+              return '';
+            }
+            return `${cells[0].children[0].text}: ${cells[2].children[0].text}`;
+          } catch (rowError) {
+            console.error('Error processing table row:', rowError);
+            return '';
+          }
+        })
+        .filter(Boolean) // Remove empty strings
+        .join('\n');
+    } catch (error) {
+      console.error('Error processing requirement:', error);
+      return '';
+    }
+  })
+  .filter(Boolean) // Remove empty strings
+  .join('\n\n');
+};
+
+const extractJsonFromResponse = (content: string): any => {
+  try {
+    // First, try to parse the content directly as JSON
+    return JSON.parse(content);
+  } catch (e) {
+    // If direct parsing fails, try to extract JSON from markdown code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1].trim());
+      } catch (e) {
+        console.error('Failed to parse extracted JSON:', e);
+        throw new Error('Invalid JSON format in the response');
+      }
+    }
+    
+    // If no JSON block is found, try to find an array in the content
+    const arrayMatch = content.match(/\[\s*{[\s\S]*}\s*\]/);
+    if (arrayMatch) {
+      try {
+        return JSON.parse(arrayMatch[0]);
+      } catch (e) {
+        console.error('Failed to parse array from content:', e);
+        throw new Error('Invalid JSON array format in the response');
+      }
+    }
+    
+    throw new Error('No valid JSON found in the response');
+  }
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+  // Setup SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-  const { projectId } = req.body;
-  const authHeader = req.headers.authorization;
-  const authToken = authHeader && authHeader.split(' ')[1];
-
-  if (!authToken) {
-    return res.status(401).json({ message: 'No authentication token provided' });
-  }
-
-  if (!projectId || typeof projectId !== 'string') {
-    return res.status(400).json({ message: 'Valid project ID is required' });
-  }
+  const sendEvent = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
 
   try {
-    // Set the auth token for this request
-    convex.setAuth(authToken);
-
-    const convexProjectId = projectId as Id<"projects">;
-    const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
-
-    const context = await useContextChecker({ projectId: convexProjectId })
-    console.log("context", context);
-
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
+    // Check if it's an SSE request
+    const isSSE = req.headers.accept === 'text/event-stream';
+    if (!isSSE) {
+      throw new Error('Invalid request type');
     }
 
-    const projectDetails = Object.entries(project)
+    if (req.method !== 'POST') {
+      throw new Error('Method not allowed');
+    }
+
+    // Authentication
+    sendEvent({ progress: 5, status: 'Generating...' });
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+
+    if (!token || !userId) {
+      throw new Error('Authentication failed');
+    }
+
+    // Setup Convex client
+    sendEvent({ progress: 15, status: 'Setting up connection...' });
+    convex.setAuth(token);
+    const { projectId } = req.body;
+
+    // Fetch project
+    sendEvent({ progress: 25, status: 'Loading project...' });
+    const project = await convex.query(api.projects.getProjectById, {
+      projectId: projectId as Id<"projects">
+    });
+
+    if (!project) {
+      throw new Error('Project not found');
+    }
+    if (project.userId !== userId) {
+      throw new Error('Unauthorized access to project');
+    }
+
+    // Fetch functional requirements
+    const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
+      projectId: projectId as Id<"projects">
+    });
+
+    // Prepare project context
+    const projectFields = {
+      overview: project.overview || '',
+      problemStatement: project.problemStatement || '',
+      userPersonas: project.userPersonas || '',
+      featuresInOut: project.featuresInOut || '',
+      successMetrics: project.successMetrics || '',
+    };
+
+    const projectDetails = Object.entries(projectFields)
+      .filter(([_, value]) => value)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    let prompt = context;
-    prompt += `As an expert use case analyst, generate a comprehensive list of use cases for the following project. Each use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
+    const formattedRequirements = formatFunctionalRequirements(functionalRequirements);
 
+    let prompt = `Based on the following project details and functional requirements, generate comprehensive use cases that align with the system's requirements and functionality. Each use case should detail the interaction between users and the system.
+
+Project Details:
+${projectDetails}
+
+Functional Requirements:
+${formattedRequirements}
+
+Generate detailed use cases following this exact structure:
 {
-  "title": "Withdraw Cash from ATM",
+  "title": "Use Case Title",
   "description": {
     "actors": {
-      "primary": "Visa CardHolder",
-      "secondary": "Visa AS"
+      "primary": "Main actor",
+      "secondary": ["Supporting actor 1", "Supporting actor 2"]
     },
-    
     "preconditions": [
-      "The ATM cash box is well stocked.",
-      "There is no card in the reader."
+      "Required condition 1",
+      "Required condition 2"
     ],
     "main_success_scenario": [
-      "The Visa CardHolder inserts his or her smartcard in the ATM's card reader.",
-      "The ATM verifies that the card that has been inserted is indeed a smartcard.",
-      "The ATM asks the Visa CardHolder to enter his or her pin number.",
-      "The Visa CardHolder enters his or her pin number.",
-      "The ATM compares the pin number with the one that is encoded on the chip of the smartcard.",
-      "The ATM requests an authorisation from the VISA authorisation system.",
-      "The VISA authorisation system confirms its agreement and indicates the daily withdrawal limit.",
-      "The ATM asks the Visa CardHolder to enter the desired withdrawal amount.",
-      "The Visa CardHolder enters the desired withdrawal amount.",
-      "The ATM checks the desired amount against the daily withdrawal limit.",
-      "The ATM asks the Visa CardHolder if he or she would like a receipt.",
-      "The Visa CardHolder requests a receipt.",
-      "The ATM returns the card to the Visa CardHolder.",
-      "The Visa CardHolder takes his or her card.",
-      "The ATM issues the banknotes and a receipt.",
-      "The Visa CardHolder takes the banknotes and the receipt."
+      "Step 1",
+      "Step 2"
     ],
     "alternative_scenarios": [
       {
-        "name": "A1: temporarily incorrect pin number",
-        "start_point": 5,
+        "name": "Alternative Path Name",
+        "start_point": 2,
         "steps": [
-          "The ATM informs the CardHolder that the pin is incorrect for the first or second time.",
-          "The ATM records the failure on the smartcard."
+          "Alternative step 1",
+          "Alternative step 2"
         ],
         "return_point": 3
-      },
-      {
-        "name": "A2: the amount requested is greater than the daily withdrawal limit",
-        "start_point": 10,
-        "steps": [
-          "The ATM informs the CardHolder that the amount requested is greater than the daily withdrawal limit."
-        ],
-        "return_point": 8
-      },
-      {
-        "name": "A3: the Visa CardHolder does not want a receipt",
-        "start_point": 11,
-        "steps": [
-          "The Visa CardHolder declines the offer of a receipt.",
-          "The ATM returns the smartcard to the Visa CardHolder.",
-          "The Visa CardHolder takes his or her smartcard.",
-          "The ATM issues the banknotes.",
-          "The Visa CardHolder takes the banknotes."
-        ],
-        "return_point": "end"
       }
     ],
     "error_scenarios": [
       {
-        "name": "E1: invalid card",
+        "name": "Error Scenario Name",
         "start_point": 2,
         "steps": [
-          "The ATM informs the Visa CardHolder that the smartcard is not valid (unreadable, expired, etc.) and confiscates it; the use case fails."
-        ]
-      },
-      {
-        "name": "E2: conclusively incorrect pin number",
-        "start_point": 5,
-        "steps": [
-          "The ATM informs the Visa CardHolder that the pin is incorrect for the third time.",
-          "The ATM confiscates the smartcard.",
-          "The VISA authorisation system is notified; the use case fails."
-        ]
-      },
-      {
-        "name": "E3: unauthorised withdrawal",
-        "start_point": 6,
-        "steps": [
-          "The VISA authorisation system forbids any withdrawal.",
-          "The ATM ejects the smartcard; the use case fails."
-        ]
-      },
-      {
-        "name": "E4: the card is not taken back by the holder",
-        "start_point": 13,
-        "steps": [
-          "After 15 seconds, the ATM confiscates the smartcard.",
-          "The VISA authorisation system is notified; the use case fails."
-        ]
-      },
-      {
-        "name": "E5: the banknotes are not taken by the holder",
-        "start_point": 15,
-        "steps": [
-          "After 30 seconds, the ATM takes back the banknotes.",
-          "The VISA authorisation system is informed; the use case fails."
+          "Error handling step 1",
+          "Error handling step 2"
         ]
       }
     ],
     "postconditions": [
-      "The cashbox of the ATM contains fewer notes than it did at the start of the use case (the number of notes missing depends on the withdrawal amount)."
+      "Result 1",
+      "Result 2"
     ],
     "ui_requirements": [
-      "A smartcard reader.",
-      "A numerical keyboard (to enter his or her pin number), with "enter", "correct" and "cancel" keys.",
-      "A screen to display any messages from the ATM.",
-      "Keys around the screen so that the card holder can select a withdrawal amount from the amounts that are offered.",
-      "A note dispenser.",
-      "A receipt dispenser."
+      "UI element 1",
+      "UI element 2"
     ]
   }
 }
 
-Generate enough use cases to cover all the functional requirements of the project, following this exact structure and level of detail. Be creative and consider edge cases that might not be immediately obvious. Format the output as a JSON array of objects, each containing 'title' and 'description' fields as shown in the structure above. Wrap the entire JSON output in a Markdown code block.
-Use the language of the project, don't use Heading 1 and Heading 2 in Markdown.
-
-Project Details:
-${projectDetails}`;
+Generate use cases that specifically address the functional requirements listed above. Ensure each use case describes a complete interaction flow that fulfills one or more of the specified requirements. Format the output as a JSON array of use case objects.`;
 
     console.log('Calling OpenAI API...');
     const response = await generateText({
@@ -279,48 +326,43 @@ ${projectDetails}`;
 
     let generatedUseCases;
     try {
-      // Extract JSON from Markdown code block
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in the response');
-      }
-      const jsonContent = jsonMatch[1];
-      generatedUseCases = JSON.parse(jsonContent);
+      generatedUseCases = extractJsonFromResponse(content);
+      console.log('Parsed use cases:', JSON.stringify(generatedUseCases, null, 2));
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       console.error('Raw OpenAI response:', content);
       throw new Error('Invalid JSON response from OpenAI');
     }
 
-    console.log('Parsed use cases:', JSON.stringify(generatedUseCases, null, 2));
-
     console.log('Creating use cases...');
     for (const useCase of generatedUseCases) {
       if (useCase && useCase.description) {
         const formattedDescription = convertDescriptionToMarkdown(useCase.description);
         let useCaseId = await convex.mutation(api.useCases.createUseCase, {
-          projectId: convexProjectId,
+          projectId: projectId,
           title: useCase.title || 'Untitled Use Case',
           description: formattedDescription,
         });
-        useCase['id'] = useCaseId
-
-        const serializedUseCase = serializeBigInt(useCaseId);
-        console.log("use case id", serializedUseCase);
-
+        useCase['id'] = useCaseId;
       } else {
         console.warn('Skipping invalid use case:', useCase);
       }
     }
     console.log('Use cases created successfully');
 
-    res.status(200).json({ useCases: serializeBigInt(generatedUseCases), markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {}) });
+    sendEvent({ progress: 100, status: 'Complete!' });
+    res.status(200).json({ 
+      useCases: serializeBigInt(generatedUseCases), 
+      markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {}) 
+    });
   } catch (error) {
-    console.error('Detailed error:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({ message: 'Error generating use cases', error: error instanceof Error ? error.message : String(error) });
+    console.error('API Error:', error);
+    sendEvent({
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      progress: 100,
+      status: 'Error'
+    });
+  } finally {
+    res.end();
   }
 }

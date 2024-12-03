@@ -11,7 +11,11 @@ import AiGenerationIconWhite from "@/icons/AI-Generation-White"
 import empty from "@/public/empty.png"
 import { GitPullRequest, Plus, Trash } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState, useRef } from 'react'
+import { toast } from 'react-hot-toast'
+import { Progress } from "@/components/ui/progress"
+import { useAuth } from '@clerk/nextjs'
 
 type SelectedItems = {
   useCase: string | null;
@@ -38,6 +42,12 @@ export default function UseCasesLayout({
   useCases,
   isOnboardingComplete,
 }: UseCasesLayoutProps) {
+  const router = useRouter();
+  const { getToken } = useAuth();
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize selected items with the first use case if available, otherwise null
   const [selectedItems, setSelectedItems] = useState<SelectedItems>({
@@ -64,6 +74,100 @@ export default function UseCasesLayout({
     }
   }, [useCases, selectedItems.useCase, selectItem])
 
+  // Add progress simulation function
+  const simulateProgress = () => {
+    setGenerationProgress(prev => {
+      if (prev >= 99) return prev;
+      const remaining = 99 - prev;
+      const increment = Math.max(0.5, remaining * 0.1);
+      return Math.min(99, prev + increment);
+    });
+  };
+
+  // Add generation handler
+  const handleGenerateUseCases = async () => {
+    if (!projectId) {
+      toast.error("Please select a project first");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Initializing use case generation...');
+    progressInterval.current = setInterval(simulateProgress, 300);
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/use-cases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+        body: JSON.stringify({ projectId }),
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+
+              if (data.done) {
+                if (progressInterval.current) {
+                  clearInterval(progressInterval.current);
+                }
+                setGenerationProgress(100);
+                setGenerationStatus('Complete!');
+                toast.success("Use cases generated successfully");
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 1000);
+                if (onAddUseCase) {
+                  await onAddUseCase();
+                }
+                return;
+              }
+
+              if (data.status) {
+                setGenerationStatus(data.status);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating use cases:", error);
+      toast.error("Failed to generate use cases. Please try again.");
+    } finally {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setIsGenerating(false);
+    }
+  };
 
   if (!isOnboardingComplete) {
     return (
@@ -73,6 +177,12 @@ export default function UseCasesLayout({
           <h2 className="text-lg md:text-xl font-semibold text-center">
           Please complete all mandatory fields in the Project Overview <br className="hidden md:block" /> before proceeding to Use Cases.
           </h2>
+          <Button 
+            variant="default" 
+            onClick={() => router.push(`/projects/${projectId}`)}
+          >
+            Go to Project Overview
+          </Button>
         </div>
       </div>
     )
@@ -147,7 +257,7 @@ export default function UseCasesLayout({
                       onBlur={() => { }}
                     />
                   </header>
-                  <div className="flex-1 overflow-y-auto flex">
+                  <ScrollArea className="flex-1 pb-4">
                     <LexicalEditor
                       key={selectedItems.useCase}
                       itemId={selectedItems.useCase as Id<'useCases'>}
@@ -158,7 +268,7 @@ export default function UseCasesLayout({
                       context="useCase"
                       isRichText={true}
                     />
-                  </div>
+                  </ScrollArea>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -200,7 +310,7 @@ export default function UseCasesLayout({
               <Button
                 className="gap-2 h-10"
                 variant="default"
-                onClick={onAddUseCase}
+                onClick={handleGenerateUseCases}
               >
                 <AiGenerationIconWhite />
                 Generate Use Cases
@@ -215,6 +325,18 @@ export default function UseCasesLayout({
           </div>
         )}
       </div>
+
+      {isGenerating && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
+            <div className="flex flex-col space-y-4">
+              <h3 className="text-lg font-semibold">Generating Use Cases</h3>
+              <Progress value={generationProgress} className="w-full" />
+              <p className="text-sm text-muted-foreground">{generationStatus}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

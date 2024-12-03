@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     icon: [
       {
         media: "(prefers-color-scheme: light)",
-        url: "/Mappie.svg",
-        href: "/Mappie.svg",
+        url: "/favicon.png",
+        href: "/favicon.png",
       },
       {
         media: "(prefers-color-scheme: dark)",
-        url: "/Mappie.svg",
-        href: "/Mappie.svg",
+        url: "/favicon.png",
+        href: "/favicon.png",
       },
     ],
   },

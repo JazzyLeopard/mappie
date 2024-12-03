@@ -116,7 +116,10 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
                 },
                 body: JSON.stringify({
                     projectId,
@@ -200,7 +203,10 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
                 },
                 body: JSON.stringify({
                     projectId,
@@ -293,23 +299,25 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     if (!isOnboardingComplete) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-6">
-                <Image src={Empty} alt="No functional requirements" width={100} height={100} />
-                <h2 className="text-xl font-semibold text-center">
-                    Please complete all mandatory fields in the Project Overview:
-                </h2>
-                <ul className="list-disc text-gray-600">
-                    <li>Overview</li>
-                    <li>Problem Statement</li>
-                    <li>User Personas</li>
-                    <li>Features In/Out</li>
-                </ul>
-                <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-                    onClick={() => router.push(`/projects/${projectId}`)}
-                    variant="default"
-                >
-                    Go to Project Overview
-                </Button>
+            <div className="p-4 w-full h-screen">
+                <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
+                    <Image src={Empty} alt="No functional requirements" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
+                    <h2 className="text-xl font-semibold text-center">
+                        Please complete all mandatory fields in the Project Overview:
+                    </h2>
+                    <ul className="list-disc text-gray-600">
+                        <li>Overview</li>
+                        <li>Problem Statement</li>
+                        <li>User Personas</li>
+                        <li>Features In/Out</li>
+                    </ul>
+                    <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
+                        onClick={() => router.push(`/projects/${projectId}`)}
+                        variant="default"
+                    >
+                        Go to Project Overview
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -391,7 +399,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                             onBlur={() => { }}
                                         />
                                     </header>
-                                    <div className="flex-1 overflow-x-hidden overflow-y-auto flex px-4">
+                                    <ScrollArea className="flex-1 min-h-0 px-4">
                                         <LexicalEditor
                                             key={selectedItems.fr}
                                             itemId={selectedItems.fr as Id<'functionalRequirements'>}
@@ -402,7 +410,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                             context="functionalRequirement"
                                             isRichText={true}
                                         />
-                                    </div>
+                                    </ScrollArea>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center h-full">
@@ -433,8 +441,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 overflow-hidden w-full">
-                        <div className="h-full flex flex-col items-center justify-center gap-4 sm:gap-6 px-4 sm:px-6">
+                    <div className="flex-1 overflow-hidden rounded-xl w-full">
+                        <div className="bg-white h-full flex flex-col items-center justify-center gap-4 sm:gap-6 px-4 sm:px-6">
                             <Image
                                 src={Empty}
                                 alt="No functional requirements"
