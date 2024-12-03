@@ -399,7 +399,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                             onBlur={() => { }}
                                         />
                                     </header>
-                                    <ScrollArea className="flex-1 min-h-0 px-4 pb-4" withShadow={true}>
+                                    <ScrollArea className="flex-1 min-h-0 pr-2" withShadow={true}>
                                         <LexicalEditor
                                             key={selectedItems.fr}
                                             itemId={selectedItems.fr as Id<'functionalRequirements'>}
