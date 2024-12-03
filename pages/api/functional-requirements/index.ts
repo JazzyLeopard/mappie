@@ -221,7 +221,7 @@ ${projectDetails}`;
     // Generate requirements with OpenAI
     sendEvent({ progress: 55, status: 'Generating requirements...' });
     const completion = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
