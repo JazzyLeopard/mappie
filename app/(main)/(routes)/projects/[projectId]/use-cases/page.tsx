@@ -6,7 +6,7 @@ import Spinner from "@/components/ui/spinner"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { useAuth } from "@clerk/nextjs";
 
@@ -72,6 +72,15 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
     }
   }, [deleteUseCase]);
 
+  const isOnboardingComplete = useMemo(() => {
+    if (!project) return false;
+    
+    const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
+    return mandatoryFields.every(field => {
+        const value = project[field as keyof typeof project];
+        return value && typeof value === 'string' && value.trim() !== '';
+    });
+  }, [project]);
 
   if (error) {
     return <div>Error loading use cases: {error.message}</div>;
@@ -87,7 +96,7 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
       onAddUseCase={handleCreateUseCase}
       onDeleteUseCase={handleDelete}
       useCases={content || []}
-      isOnboardingComplete={project?.onboarding === 0}
+      isOnboardingComplete={isOnboardingComplete}
       projectId={projectId}
       onEditorBlur={async () => { }}
       onUseCaseNameChange={async (useCaseId, name) => {

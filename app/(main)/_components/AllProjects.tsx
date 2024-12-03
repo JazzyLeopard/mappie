@@ -39,7 +39,7 @@ export default function Component() {
       const projectIdFromUrl = pathParts[pathParts.indexOf('projects') + 1];
 
       if (projectIdFromUrl && projects) {
-        const matchingProject = projects.find(project => project._id === projectIdFromUrl);
+        const matchingProject = projects.find((project: any) => project._id === projectIdFromUrl);
         if (matchingProject) {
           setSelectedProject(matchingProject._id);
         }
@@ -135,7 +135,7 @@ export default function Component() {
 
   return (
     <>
-      <div className="bg-white rounded-lg w-full h-screen overflow-y-auto">
+      <div className="bg-white rounded-lg w-full h-full overflow-y-auto">
         <div className="p-6 pt-16">
           <div className="flex items-center mb-6">
             <h1 className="text-2xl font-semibold">Projects</h1>
@@ -205,7 +205,7 @@ export default function Component() {
             </Button>
           </div>
           <div className="pt-2 flex flex-wrap gap-5">
-            {projects?.map((proj) => (
+            {projects?.map((proj: any) => (
               <Card
                 key={proj._id}
                 onClick={() => router.push(`/projects/${proj._id}`)}

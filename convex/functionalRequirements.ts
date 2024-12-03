@@ -1,3 +1,4 @@
+import { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -7,7 +8,7 @@ export const createFunctionalRequirement = mutation({
     title: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const timestamp = Date.now();
     const frId = await ctx.db.insert("functionalRequirements", {
       projectId: args.projectId,
@@ -23,11 +24,11 @@ export const createFunctionalRequirement = mutation({
 
 export const getFunctionalRequirementsByProjectId = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     try {
       const frs = await ctx.db
         .query("functionalRequirements")
-        .withIndex("by_projectId", q => q.eq("projectId", args.projectId))
+        .withIndex("by_projectId", (q: any) => q.eq("projectId", args.projectId))
         .collect();
 
       if (!frs || frs.length <= 0) {
@@ -48,7 +49,7 @@ export const updateFunctionalRequirement = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string())
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id, ...updates } = args;
     const timestamp = Date.now();
     
@@ -65,7 +66,7 @@ export const updateFunctionalRequirement = mutation({
 
 export const deleteFunctionalRequirement = mutation({
   args: { id: v.id("functionalRequirements") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id } = args;
     await ctx.db.delete(id);
   },
