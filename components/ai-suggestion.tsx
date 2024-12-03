@@ -31,7 +31,7 @@ export function AISuggestion({ text, projectName }: AISuggestionProps) {
               # User Authentication
               <span className="bg-red-100">- Implement basic login system</span>
               <span className="bg-green-100">- Implement secure login system
-- Add two-factor authentication</span>
+              - Add two-factor authentication</span>
               - Create user roles and permissions
             </code>
           </pre>

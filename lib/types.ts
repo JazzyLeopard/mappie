@@ -63,3 +63,18 @@ export interface FunctionalRequirement {
   createdAt: number;
   updatedAt: number;
 }
+
+export type ToolState = 'call' | 'result';
+export interface ToolInvocation {
+  toolName: string;
+  toolCallId: string;
+  state: ToolState;
+  args?: any;
+  result?: {
+    content: string;
+    metadata?: {
+      title?: string;
+      type?: string;
+    };
+  };
+}
