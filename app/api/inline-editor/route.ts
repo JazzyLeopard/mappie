@@ -12,10 +12,10 @@ export async function POST(req: Request) {
       model: openai('gpt-4o-mini'),
       prompt: `You are an AI writing assistant. You will receive the full text and a selected portion to improve. Generate an improved version that maintains the context and formatting. Return only the complete text with the improvement integrated.
 
-Full text: "${fullText}"
-Selected text to improve: "${selectedText}"
-Prompt: ${prompt}
-Keep the markdown formatting intact and return the complete text with the improvement integrated.`
+      Full text: "${fullText}"
+      Selected text to improve: "${selectedText}"
+      Prompt: ${prompt}
+      Keep the markdown formatting intact and return the complete text with the improvement integrated.`
     });
 
     // Find the changed portion by comparing the old and new text
