@@ -388,14 +388,14 @@ export const ideatePrompts: { [key: string]: string } = {
     featuresInOut: `For the project, create a comprehensive feature list. Divide this into "Features In" (included in this version) and "Features Out" (explicitly not included). For Features In, describe each feature concisely but clearly, focusing on user benefits. Aim for 3-5 key features that directly address the pain points identified in the Problem Statement and align with the project goals. For Features Out, briefly explain the rationale for exclusion. This could include features that are out of scope, technically challenging, or planned for future versions. Ensure the feature set aligns with project goals, user needs, and the defined success metrics. 
 
     Here is the example template:
-    ### Features In-\n
+    ### Features In \n
     **1. Mood Tracker**: A simple tool allowing users to log their daily emotions and mental state, helping them identify patterns and triggers.\n
     **User benefit**: Helps users become more self-aware and track their mental health over time.\n
 
     **2. Guided Meditations**: A library of audio-guided mindfulness exercises, categorized by goals like stress relief, sleep, and focus.\n
     **User benefit**: Provides easy access to mindfulness exercises for specific needs and helps users integrate meditation into their routine.\n
 
-    **3. Personalized Wellness Plans**: Tailored plans based on the user’s mood tracker and mental wellness goals.\n
+    **3. Personalized Wellness Plans**: Tailored plans based on the user's mood tracker and mental wellness goals.\n
     **User benefit**: Offers a customized roadmap for mental health improvement, making it easier for users to start and stick with a wellness routine.\n
 
     **4. Community Support Groups**: Virtual spaces where users can connect with like-minded individuals, share their experiences, and support each other.\n
@@ -404,7 +404,7 @@ export const ideatePrompts: { [key: string]: string } = {
     **5. Daily Mindfulness Reminders**: Push notifications encouraging users to take mindful breaks or engage in wellness activities throughout the day.\n
     **User benefit**: Keeps mindfulness practices top of mind and integrates them into daily life.\n
 
-    ### Features Out-\n
+    ### Features Out \n
     **1. In-Person Therapy Booking**: Not included in the initial version to focus on self-guided resources.\n
     **Rationale for exclusion**: Adding therapy services would require significant additional resources and partnerships, which can be considered for future versions.\n
 

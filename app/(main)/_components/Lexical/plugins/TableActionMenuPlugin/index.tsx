@@ -239,7 +239,8 @@ function TableActionMenu({
 
         const tableObserver = getTableObserverFromTableElement(tableElement);
         if (tableObserver !== null) {
-          tableObserver.clearHighlight();
+          // @ts-ignore Property '$clearHighlight' does not exist on type 'TableObserver'
+          tableObserver.$clearHighlight();
         }
 
         tableNode.markDirty();

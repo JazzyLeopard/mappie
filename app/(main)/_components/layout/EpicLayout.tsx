@@ -182,7 +182,7 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
     updateEpic({
       _id: epicId,
       [field]: value
-    }).catch(error => {
+    }).catch((error: any) => {
       console.error("Error updating epic:", error);
     });
   }, [updateEpic]);
@@ -198,7 +198,7 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
     updateUserStory({
       id: storyId,
       [field]: value
-    }).catch(error => {
+    }).catch((error: any) => {
       console.error("Error updating user story:", error);
     });
   }, [updateUserStory]);

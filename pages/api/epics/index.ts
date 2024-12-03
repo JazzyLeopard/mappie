@@ -72,7 +72,7 @@ export default async function handler(
     sendEvent({ progress: 45, status: 'Preparing context...' });
     const context = await useContextChecker({ projectId: convexProjectId });
     const functionalRequirementsText = functionalRequirements
-      .map(fr => `${fr.title}\n${fr.description}`)
+      .map((fr: any) => `${fr.title}\n${fr.description}`)
       .join('\n\n');
 
     // Generate epics with OpenAI

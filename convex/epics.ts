@@ -7,7 +7,7 @@ export const createUserStory = mutation({
     title: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const userStoryId = await ctx.db.insert("userStories", {
       epicId: args.epicId,
       title: args.title,
@@ -22,7 +22,7 @@ export const createUserStory = mutation({
 
 export const getEpicById = query({
   args: { epicId: v.id("epics") },
-  handler: async (ctx, { epicId }) => {
+  handler: async (ctx: any, { epicId }: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -35,7 +35,7 @@ export const getEpicById = query({
 
     const epic = await ctx.db
       .query("epics")
-      .filter((q) => q.eq(q.field("_id"), epicId))
+      .filter((q: any) => q.eq(q.field("_id"), epicId))
       .first();
 
     if (!epic) {
@@ -51,10 +51,10 @@ export const getEpicById = query({
 
 export const getEpics = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     return await ctx.db
       .query("epics")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .filter((q: any) => q.eq(q.field("projectId"), args.projectId))
       .collect();
   },
 });
@@ -65,7 +65,7 @@ export const updateEpic = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { _id, ...updates } = args;
     const updatedFields = {
       ...updates,
@@ -77,7 +77,7 @@ export const updateEpic = mutation({
 
 export const deleteEpic = mutation({
   args: { _id: v.id("epics") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { _id } = args;
     await ctx.db.delete(_id);
   },
@@ -89,7 +89,7 @@ export const createEpics = mutation({
     name: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not Authenticated");
 

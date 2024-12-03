@@ -44,11 +44,11 @@ export default async function handler(
       projectId: convexProjectId
     });
 
-    const existingFRNames = existingFRs?.map(fr => fr?.title) || [];
+    const existingFRNames = existingFRs?.map((fr: any) => fr?.title) || [];
 
     let basePrompt = `Generate a functional requirement that adds onto the existing requirements. Here are the existing requirements:
         
-        ${existingFRs.map(fr => `${fr.title}: ${fr.description}`).join('\n')}
+        ${existingFRs.map((fr: any) => `${fr.title}: ${fr.description}`).join('\n')}
         
         Current requirement IDs: ${existingFRNames.join(', ')}
         

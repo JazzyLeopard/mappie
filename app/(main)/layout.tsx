@@ -2,7 +2,7 @@
 
 import Spinner from "@/components/ui/spinner";
 import { useUser } from "@clerk/clerk-react";
-import { useConvexAuth } from "convex/react";
+import { useConvex } from "convex/react";
 import { redirect } from "next/navigation";
 import { Navigation } from "./_components/navigation";
 import { ErrorBoundary } from 'react-error-boundary';
@@ -26,7 +26,8 @@ function ErrorFallback({ error }: { error: Error }) {
 }
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  const { isLoading } = useConvexAuth();
+  //@ts-ignore
+  const { isLoading } = useConvex();
   const { isSignedIn } = useUser();
 
   if (isLoading) {
