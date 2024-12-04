@@ -8,7 +8,7 @@ export const createUserStory = mutation({
     description: v.optional(v.string()),
   },
 
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -19,7 +19,7 @@ export const createUserStory = mutation({
 
     const userStory = await ctx.db.insert("userStories", {
       title: args.title,
-      description: "",
+      description: args.description || "",
       epicId: args.epicId,
       createdAt: BigInt(Date.now()),
       updatedAt: BigInt(Date.now()),
@@ -34,7 +34,7 @@ export const updateUserStory = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id, ...updates } = args;
     const updatedFields = {
       ...updates,
@@ -46,7 +46,7 @@ export const updateUserStory = mutation({
 
 export const deleteUserStory = mutation({
   args: { id: v.id("userStories") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     await ctx.db.delete(args.id);
   },
 });
@@ -56,26 +56,26 @@ export const getUserStories = query({
     projectId: v.id("projects"),
     epicId: v.optional(v.id("epics")),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { projectId, epicId } = args;
 
     const epics = await ctx.db
       .query("epics")
-      .filter((q) => q.eq(q.field("projectId"), projectId))
+      .filter((q: any) => q.eq(q.field("projectId"), projectId))
       .collect();
 
-    const epicIds = epics.map(epic => epic._id);
+    const epicIds = epics.map((epic: any) => epic._id);
 
     let userStoriesQuery = ctx.db
       .query("userStories")
-      .filter((q) => 
+      .filter((q: any) => 
         q.or(
-          ...epicIds.map(epicId => q.eq(q.field("epicId"), epicId))
+          ...epicIds.map((epicId: any) => q.eq(q.field("epicId"), epicId))
         )
       );
 
     if (epicId) {
-      userStoriesQuery = userStoriesQuery.filter(q => q.eq(q.field("epicId"), epicId));
+      userStoriesQuery = userStoriesQuery.filter((q: any) => q.eq(q.field("epicId"), epicId));
     }
 
     return await userStoriesQuery.collect();
@@ -84,7 +84,8 @@ export const getUserStories = query({
 
 export const getUserStoryById = query({
   args: { userStoryId: v.id("userStories") },
-  handler: async (ctx, { userStoryId }) => {
+  handler: async (ctx: any, args: any) => {
+    const { userStoryId } = args;
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -97,7 +98,7 @@ export const getUserStoryById = query({
 
     const userStories = await ctx.db
       .query("userStories")
-      .filter((q) =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("_id"), userStoryId)
         ),

@@ -811,13 +811,21 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
 
   // Add this new function to handle user story generation:
   const handleGenerateUserStories = async (epicId: Id<"epics">) => {
+    if (!params.projectId) {
+      toast.error("Please select a project first");
+      return;
+    }
+
     setIsGenerating(true);
     setGenerationProgress(0);
-    setGenerationStatus('Generating user stories...');
-    
+    setGenerationStatus('Initializing...');
+
+    // Start progress simulation
+    progressInterval.current = setInterval(simulateProgress, 300);
+
     try {
       const token = await getToken();
-      const response = await fetch('/api/userstories/generate', {
+      const response = await fetch('/api/userstories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -829,12 +837,44 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
         }),
       });
 
-      // ... rest of the streaming logic similar to handleGenerateEpics ...
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate user stories');
+      }
+
+      const data = await response.json();
       
+      // Clear the simulation interval
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+
+      setGenerationProgress(100);
+      setGenerationStatus('Complete!');
+      toast.success("User stories generated successfully");
+
+      // Refresh the user stories list
+      if (allUserStories) {
+        await allUserStories();
+      }
+
+      // Update the editor content if a story is selected
+      if (selectedItems.story && data.markdown) {
+        handleEditorChange(
+          selectedItems.story as Id<"userStories">,
+          'description',
+          data.markdown
+        );
+      }
+
     } catch (error) {
       console.error("Error generating user stories:", error);
-      toast.error("Failed to generate user stories. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to generate user stories");
     } finally {
+      // Clean up the interval if it's still running
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
       setIsGenerating(false);
     }
   };
@@ -977,7 +1017,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
               <Button
                 className="gap-2 h-10"
                 variant="default"
-                onClick={handleGenerateMultipleEpics}
+                onClick={handleGenerateEpics}
                 disabled={!projectId}
               >
                 <AiGenerationIconWhite />
