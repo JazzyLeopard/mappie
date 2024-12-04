@@ -263,7 +263,7 @@ export const Navigation = () => {
                       </TooltipProvider>
                     </div>
                     <div className="mt-2">
-                      <FileUpload projectId={selectedProject} />
+                      <FileUpload projectId={selectedProject as Id<"projects">} />
                     </div>
                   </div>
                 </>

@@ -5,27 +5,22 @@ import '@/app/custom.css';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from "@/icons/AI-Generation";
-import type { MenuItemType, Project } from "@/lib/types";
+import type { Project } from "@/lib/types";
 import { cn } from '@/lib/utils';
-import { toTitleCase } from "@/utils/helper";
 import { ReactMutation, useQuery } from 'convex/react';
-import { AlertTriangle, BarChart2, FileQuestion, FileText, InfoIcon, Layers, List, Loader2, Presentation, Target, Users } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
-import FileUpload from "./Context";
 import LabelToInput from "../LabelToInput";
 
 interface CommonLayoutProps {
     data: Project;
-    menu: MenuItemType[];
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void,
     mandatoryFields?: string[];
@@ -33,28 +28,15 @@ interface CommonLayoutProps {
     projectId: Id<"projects">;
 }
 
-const sectionIcons = {
-    overview: <FileText className="w-4 h-4 inline-block mr-2" />,
-    problemStatement: <FileQuestion className="w-4 h-4 inline-block mr-2" />,
-    userPersonas: <Users className="w-4 h-4 inline-block mr-2" />,
-    featuresInOut: <List className="w-4 h-4 inline-block mr-2" />,
-    successMetrics: <BarChart2 className="w-4 h-4 inline-block mr-2" />,
-    userScenarios: <Target className="w-4 h-4 inline-block mr-2" />,
-    featurePrioritization: <Layers className="w-4 h-4 inline-block mr-2" />,
-    risksDependencies: <AlertTriangle className="w-4 h-4 inline-block mr-2" />
-};
 
 const CommonLayout = ({
     data,
-    menu,
     onEditorBlur,
     handleEditorChange,
-    mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"],
     updateProject,
     projectId
 }: CommonLayoutProps) => {
 
-    const [activeSection, setActiveSection] = useState<string>('');
     const [isPresentationMode, setIsPresentationMode] = useState(false);
     const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -65,19 +47,8 @@ const CommonLayout = ({
     const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
-        if (!activeSection && menu.length > 0) {
-            setActiveSection(menu[0].key);
-        }
-    }, [menu, activeSection]);
-
-    useEffect(() => {
-        const requiredFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
-        const allFieldsHaveContent = requiredFields.every(field => {
-            const value = data[field];
-            return value && typeof value === 'string' && value.trim() !== '';
-        });
-        setIsGenerateButtonActive(allFieldsHaveContent);
-    }, [data]);
+        setIsGenerateButtonActive(data.overview.trim() !== '');
+    }, [data.overview]);
 
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
         projectId: data._id
@@ -96,9 +67,6 @@ const CommonLayout = ({
         }
     }, [functionalRequirements]);
 
-    const togglePresentationMode = () => {
-        setIsPresentationMode(!isPresentationMode);
-    };
 
     if (isPresentationMode) {
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
@@ -123,34 +91,16 @@ const CommonLayout = ({
         }
     };
 
-    const handleSectionClick = (sectionId: string) => {
-        setActiveSection(sectionId);
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-        }
-    };
 
     // Helper function to clean the data object
     const cleanDataForUpdate = useCallback((data: any) => {
         // Fields that are allowed in the update
         const allowedFields = [
             '_id',
-            'featurePrioritization',
-            'featuresInOut',
             'isArchived',
             'isPublished',
-            'onboarding',
             'overview',
-            'problemStatement',
-            'risksDependencies',
-            'successMetrics',
-            'title',
-            'userPersonas',
-            'userScenarios'
+            'title'
         ];
 
         // Create a new object with only allowed fields
@@ -181,33 +131,24 @@ const CommonLayout = ({
         }
     }, [data, handleEditorChange, updateProject, cleanDataForUpdate]);
 
-    const activeComponent = useMemo(() =>
-        menu.find(c => c.key === activeSection),
-        [menu, activeSection]
-    );
-
     // Separate editorKey from other props
-    const editorKey = useMemo(() =>
-        `${activeComponent?.key}-${data[activeComponent?.key as keyof typeof data]}`,
-        [activeComponent?.key, data]
-    );
 
     const editorProps = useMemo(() => ({
         onBlur: onEditorBlur,
-        attribute: activeComponent?.key || '',
+        attribute: 'overview',
         projectDetails: data,
         setProjectDetails: (value: any) => {
             console.log('Editor change:', {
-                section: activeComponent?.key,
+                section: 'overview',
                 value
             });
-            handleSectionChange(activeComponent?.key || '', value);
+            handleSectionChange('overview', value);
         },
         isRichText: true,
         context: "project" as const,
         itemId: data._id,
         updateProject
-    }), [activeComponent?.key, data, onEditorBlur, handleSectionChange, updateProject]);
+    }), [data, onEditorBlur, handleSectionChange, updateProject]);
 
     const toggleAIChat = () => {
         setIsAIChatCollapsed(!isAIChatCollapsed);
@@ -215,7 +156,7 @@ const CommonLayout = ({
 
     // Update the handleInsertMarkdown function
     const handleInsertMarkdown = useCallback((content: string) => {
-        if (typeof window === 'undefined' || !activeSection) return;
+        if (typeof window === 'undefined') return;
 
         try {
             if ((window as any).__insertMarkdown) {
@@ -224,7 +165,7 @@ const CommonLayout = ({
 
             const cleanData = cleanDataForUpdate({
                 _id: data._id,
-                [activeSection]: content
+                overview: content
             });
 
             updateProject(cleanData);
@@ -232,14 +173,14 @@ const CommonLayout = ({
             console.error("Error updating content:", error);
             toast.error("Failed to update content");
         }
-    }, [activeSection, data._id, updateProject, cleanDataForUpdate]);
+    }, [data._id, updateProject, cleanDataForUpdate]);
 
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
                 <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%]">
                     <div className="flex items-center justify-between px-2 pb-3 w-full overflow-x-auto sm:mr-2">
-                        <div className="pl-10 mt-2">
+                        <div className="pl-10 mt-2 mr-2">
                             <LabelToInput
                                 value={data.title}
                                 setValue={(newTitle) => {

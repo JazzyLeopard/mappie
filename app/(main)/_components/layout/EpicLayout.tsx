@@ -860,7 +860,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
 
       // Update the editor content if a story is selected
       if (selectedItems.story && data.markdown) {
-        handleEditorChange(
+        handleUserStoryChange(
           selectedItems.story as Id<"userStories">,
           'description',
           data.markdown

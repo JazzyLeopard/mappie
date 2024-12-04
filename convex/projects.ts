@@ -1,6 +1,5 @@
 import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
-import { placeholders } from "../app/(main)/_components/constants";
 
 export const getSidebar = query(async (ctx) => {
 
@@ -46,7 +45,6 @@ export const getSidebar = query(async (ctx) => {
         _id: project._id,
         title: project.title,
         type: 'project',
-        onboarding: project.onboarding,
         epics: epicsWithUserStories,
       };
     })
@@ -143,11 +141,6 @@ export const getProjectNameById = query({
     }
 
     const project = await ctx.db.get(projectId);
-    // .query("projects")
-    // .filter((q) =>
-    // 	q.and(q.eq(q.field("userId"), identity?.subject), q.eq(q.field("_id"), projectId))
-    // )
-    // .();
 
     if (!project) {
       throw new Error("Project not found");
@@ -173,14 +166,10 @@ export const createProject = mutation({
 
     const project = await ctx.db.insert("projects", {
       title: args.title,
-      userId: identity.subject,
+      userId,
       overview: args.overview || "",
-      problemStatement: "",
-      featurePrioritization: "",
-      featuresInOut: "",
       isArchived: false,
       isPublished: false,
-      onboarding: 1,
       createdAt: BigInt(Date.now()),
       updatedAt: BigInt(Date.now()),
     });
@@ -192,34 +181,18 @@ export const createProject = mutation({
 export const updateProject = mutation({
   args: {
     _id: v.id("projects"),
-    featurePrioritization: v.optional(v.string()),
-    featuresInOut: v.optional(v.string()),
     isArchived: v.optional(v.boolean()),
     isPublished: v.optional(v.boolean()),
-    onboarding: v.optional(v.float64()),
     overview: v.optional(v.string()),
-    problemStatement: v.optional(v.string()),
-    risksDependencies: v.optional(v.string()),
-    successMetrics: v.optional(v.string()),
     title: v.optional(v.string()),
-    userPersonas: v.optional(v.string()),
-    userScenarios: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     const { _id, ...updates } = args;
 
-    // Remove internal Convex fields if they exist
-    const cleanUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([key]) => !key.startsWith('_'))
-    );
-
-    // Add updatedAt timestamp
-    const updateData = {
-      ...cleanUpdates,
+    return await ctx.db.patch(_id, {
+      ...updates,
       updatedAt: BigInt(Date.now())
-    };
-
-    return await ctx.db.patch(_id, updateData);
+    });
   }
 });
 
