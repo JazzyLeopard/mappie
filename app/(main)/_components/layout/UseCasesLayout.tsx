@@ -175,7 +175,7 @@ export default function UseCasesLayout({
         <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
           <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
           <h2 className="text-lg md:text-xl font-semibold text-center">
-          Please complete all mandatory fields in the Project Overview <br className="hidden md:block" /> before proceeding to Use Cases.
+             Project Overview is empty or missing.
           </h2>
           <Button 
             variant="default" 
