@@ -33,10 +33,8 @@ export const Navigation = () => {
   const projects = useQuery(api.projects.getProjects);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const createProject = useMutation(api.projects.createProject);
-  const [mandatoryFieldsFilled, setMandatoryFieldsFilled] = useState(false);
 
 
-  const isResizingRef = useRef(false);
   const sidebarRef = useRef<ElementRef<"aside">>(null)
   const navbarRef = useRef<ElementRef<"div">>(null);
   const [isResetting, setIsResetting] = useState(false)
@@ -45,16 +43,6 @@ export const Navigation = () => {
   const currentProject = useQuery(api.projects.getProjectById,
     selectedProject ? { projectId: selectedProject as Id<"projects"> } : "skip"
   );
-
-  useEffect(() => {
-    if (currentProject) {
-      const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"] as const;
-      const allFieldsFilled = mandatoryFields.every(field =>
-        currentProject[field] && typeof currentProject[field] === 'string' && currentProject[field].trim() !== ''
-      );
-      setMandatoryFieldsFilled(allFieldsFilled);
-    }
-  }, [currentProject]);
 
   useEffect(() => {
     const updateSelectedProject = () => {
