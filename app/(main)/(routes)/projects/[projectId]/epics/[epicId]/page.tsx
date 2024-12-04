@@ -57,6 +57,7 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             handleEditorChange={handleEditorChange}
             updateProject={updateEpicMutation}
             projectId={params.projectId}
+            parent="epic"
         />
     }
 }
