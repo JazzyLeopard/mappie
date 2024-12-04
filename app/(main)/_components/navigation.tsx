@@ -17,13 +17,14 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle } from "lucide-react";
+import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle, InfoIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
+import FileUpload from "./layout/Context";
 
 
 export const Navigation = () => {
@@ -61,7 +62,7 @@ export const Navigation = () => {
       const projectIdFromUrl = pathParts[pathParts.indexOf('projects') + 1];
 
       if (projectIdFromUrl && projects) {
-        const matchingProject = projects.find(project => project._id === projectIdFromUrl);
+        const matchingProject = projects.find((project: any) => project._id === projectIdFromUrl);
         if (matchingProject) {
           setSelectedProject(matchingProject._id);
         }
@@ -141,7 +142,7 @@ export const Navigation = () => {
   };
 
   const selectedProjectTitle = selectedProject && projects
-    ? projects.find(project => project._id === selectedProject)?.title
+    ? projects.find((project: any) => project._id === selectedProject)?.title
     : "Select a project";
 
   const toggleCollapse = () => {
@@ -217,7 +218,7 @@ export const Navigation = () => {
                     <span className="truncate block">All Projects</span>
                   </SelectItem>
                   <SelectSeparator className="my-2" />
-                  {projects?.map((project) => (
+                  {projects?.map((project: any) => (
                     <SelectItem key={project._id} value={project._id} className="my-1">
                       <span className="truncate block">{project.title}</span>
                     </SelectItem>
@@ -246,6 +247,25 @@ export const Navigation = () => {
                       active={isActive(item.path)}
                     />
                   ))}
+
+                  <div className="flex-col items-center px-4 py-4">
+                    <div className="flex items-center">
+                      <span className="text-sm font-semibold">Context</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <InfoIcon className="h-3 w-3 ml-2 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Add documents to provide more context for the AI when generating content for any section.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="mt-2">
+                      <FileUpload projectId={selectedProject} />
+                    </div>
+                  </div>
                 </>
               )}
             </ScrollArea>
@@ -295,7 +315,7 @@ export const Navigation = () => {
                           All Projects
                         </Button>
                         <Separator className="my-1" />
-                        {projects?.map((project) => (
+                        {projects?.map((project: any) => (
                           <Button
                             key={project._id}
                             variant="ghost"
