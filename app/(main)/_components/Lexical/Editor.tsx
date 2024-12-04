@@ -11,42 +11,31 @@ import { CharacterLimitPlugin } from '@lexical/react/LexicalCharacterLimitPlugin
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { ClearEditorPlugin } from '@lexical/react/LexicalClearEditorPlugin';
 import { ClickableLinkPlugin } from '@lexical/react/LexicalClickableLinkPlugin';
-import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
-import { HashtagPlugin } from '@lexical/react/LexicalHashtagPlugin';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 import { ListPlugin } from '@lexical/react/LexicalListPlugin';
-import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
-import { useLexicalEditable } from '@lexical/react/useLexicalEditable';
 import * as React from 'react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { CAN_USE_DOM } from './shared/canUseDOM';
-import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS, ELEMENT_TRANSFORMERS, TEXT_FORMAT_TRANSFORMERS, TEXT_MATCH_TRANSFORMERS, ORDERED_LIST } from '@lexical/markdown';
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { $convertFromMarkdownString, $convertToMarkdownString } from '@lexical/markdown';
 import { debounce } from 'lodash';
 
-import { createWebsocketProvider } from './collaboration';
 import { useSettings } from './context/SettingsContext';
 import { useSharedHistoryContext } from './context/SharedHistoryContext';
-import ActionsPlugin from './plugins/ActionsPlugin';
 import AutocompletePlugin from './plugins/AutocompletePlugin';
 import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
-import AutoLinkPlugin from './plugins/AutoLinkPlugin';
 import CodeActionMenuPlugin from './plugins/CodeActionMenuPlugin';
 import CodeHighlightPlugin from './plugins/CodeHighlightPlugin';
 import CollapsiblePlugin from './plugins/CollapsiblePlugin';
-import CommentPlugin from './plugins/CommentPlugin';
 import ComponentPickerPlugin from './plugins/ComponentPickerPlugin';
 import ContextMenuPlugin from './plugins/ContextMenuPlugin';
 import DragDropPaste from './plugins/DragDropPastePlugin';
 import DraggableBlockPlugin from './plugins/DraggableBlockPlugin';
 import EmojiPickerPlugin from './plugins/EmojiPickerPlugin';
-import EmojisPlugin from './plugins/EmojisPlugin';
 import EquationsPlugin from './plugins/EquationsPlugin';
 import ExcalidrawPlugin from './plugins/ExcalidrawPlugin';
 import FigmaPlugin from './plugins/FigmaPlugin';
@@ -54,16 +43,11 @@ import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
 import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
 import ImagesPlugin from './plugins/ImagesPlugin';
 import InlineImagePlugin from './plugins/InlineImagePlugin';
-import KeywordsPlugin from './plugins/KeywordsPlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
-import MarkdownShortcutPlugin from './plugins/MarkdownShortcutPlugin';
-import { MaxLengthPlugin } from './plugins/MaxLengthPlugin';
-import MentionsPlugin from './plugins/MentionsPlugin';
 import PageBreakPlugin from './plugins/PageBreakPlugin';
 import PollPlugin from './plugins/PollPlugin';
-import SpeechToTextPlugin from './plugins/SpeechToTextPlugin';
 import TabFocusPlugin from './plugins/TabFocusPlugin';
 import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
 import TableCellResizer from './plugins/TableCellResizer';
@@ -73,18 +57,12 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
-import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
-import { DEFAULT_TRANSFORMERS } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { Doc } from 'yjs';
-import { Provider } from '@lexical/yjs';
-import { WebsocketProvider } from 'y-websocket';
-import { Id } from '@/convex/_generated/dataModel';
 import { PASTE_COMMAND } from 'lexical';
-import AIEditPlugin, { SuggestionCardNode } from './plugins/AiEditPlugin';
-import { TableNode, TableRowNode, TableCellNode } from '@lexical/table';
-import { ENHANCED_TRANSFORMERS, PLAYGROUND_TRANSFORMERS } from './plugins/MarkdownTransformers';
+import AIEditPlugin from './plugins/AiEditPlugin';
 import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
+import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
 
 
 type EditorProps = {
@@ -95,35 +73,48 @@ type EditorProps = {
   itemId: string;
 };
 
-function EditorOnChangePlugin({ onChange }: { onChange: (editorState: any) => void }) {
+function EditorOnChangePlugin({ onChange }: { onChange: (markdown: string) => void }) {
   const [editor] = useLexicalComposerContext();
+  const lastMarkdownRef = useRef<string>("");
   
   const debouncedOnChange = useMemo(
-    () => debounce((jsonData: string) => {
-      onChange(jsonData);
+    () => debounce((markdown: string) => {
+      onChange(markdown);
     }, 1000),
     [onChange]
   );
 
+  const normalizeMarkdown = (markdown: string): string => {
+    return markdown.replace(/\n+$/, '').trim();
+  };
 
   useEffect(() => {
     let isUpdating = false;
 
     return editor.registerUpdateListener(({ editorState }) => {
-      // Prevent recursive updates
       if (isUpdating) return;
 
       try {
         isUpdating = true;
-        const json = JSON.stringify(editorState.toJSON());
-        debouncedOnChange(json);
+        
+        // Convert directly to markdown
+        const currentMarkdown = editorState.read(() => {
+          return $convertToMarkdownString(ENHANCED_TRANSFORMERS);
+        });
+
+        const normalizedCurrent = normalizeMarkdown(currentMarkdown);
+        const normalizedLast = normalizeMarkdown(lastMarkdownRef.current);
+
+        if (normalizedCurrent !== normalizedLast) {
+          lastMarkdownRef.current = normalizedCurrent;
+          debouncedOnChange(normalizedCurrent);
+        }
       } finally {
         isUpdating = false;
       }
     });
   }, [editor, debouncedOnChange]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       debouncedOnChange.cancel();
@@ -164,41 +155,27 @@ export default function Editor({
 
   // Get mutations
 
-  const handleChange = useCallback((jsonData: string) => {
-    try {
-      setProjectDetails(jsonData);
-      editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
-    } catch (error) {
-      console.error('Error converting to markdown:', error);
-    }
-  }, [editor, setProjectDetails]);
+  const handleChange = useCallback((markdown: string) => {
+    setProjectDetails(markdown);
+  }, [setProjectDetails]);
 
-  // Initialize editor content
+  // Initialize editor with markdown content
   useEffect(() => {
     if (editor && initialContent && !isInitialized.current) {
       isInitialized.current = true;
 
       editor.update(() => {
-        try {
-          // First try to parse as JSON
-          const parsedContent = JSON.parse(initialContent);
-     
-            // If it's a Lexical state JSON, use it directly
-            const state = editor.parseEditorState(parsedContent);
-            editor.setEditorState(state);
-        } catch (error) {
-          // If JSON parsing fails, treat the content as direct markdown
-          if (typeof initialContent === 'string' && initialContent.includes('**')) {
-            $convertFromMarkdownString(initialContent, TRANSFORMERS);
-          } else {
-            // Fallback to creating a new paragraph with plain text
-            const root = $getRoot();
-            root.clear();
-            const paragraph = $createParagraphNode();
-            const text = $createTextNode(String(initialContent));
-            paragraph.append(text);
-            root.append(paragraph);
-          }
+        // Convert markdown to editor content
+        if (typeof initialContent === 'string') {
+          $convertFromMarkdownString(initialContent, ENHANCED_TRANSFORMERS);
+        } else {
+          // Fallback to creating a new paragraph with plain text
+          const root = $getRoot();
+          root.clear();
+          const paragraph = $createParagraphNode();
+          const text = $createTextNode(String(initialContent));
+          paragraph.append(text);
+          root.append(paragraph);
         }
       });
     }
@@ -235,8 +212,6 @@ export default function Editor({
     editor.update(() => {
       const root = $getRoot();
       root.clear();
-      $convertFromMarkdownString(markdown, TRANSFORMERS);
-
       // Use the properly typed command
       editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
 
