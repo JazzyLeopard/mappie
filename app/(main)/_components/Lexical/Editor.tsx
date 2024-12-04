@@ -86,9 +86,6 @@ import { TableNode, TableRowNode, TableCellNode } from '@lexical/table';
 import { ENHANCED_TRANSFORMERS, PLAYGROUND_TRANSFORMERS } from './plugins/MarkdownTransformers';
 import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
 
-const skipCollaborationInit =
-  // @ts-expect-error
-  window.parent != null && window.parent.frames.right === window;
 
 type EditorProps = {
   attribute: string;
@@ -100,6 +97,14 @@ type EditorProps = {
 
 function EditorOnChangePlugin({ onChange }: { onChange: (editorState: any) => void }) {
   const [editor] = useLexicalComposerContext();
+  
+  const debouncedOnChange = useMemo(
+    () => debounce((jsonData: string) => {
+      onChange(jsonData);
+    }, 1000),
+    [onChange]
+  );
+
 
   useEffect(() => {
     let isUpdating = false;
@@ -111,12 +116,19 @@ function EditorOnChangePlugin({ onChange }: { onChange: (editorState: any) => vo
       try {
         isUpdating = true;
         const json = JSON.stringify(editorState.toJSON());
-        onChange(json);
+        debouncedOnChange(json);
       } finally {
         isUpdating = false;
       }
     });
-  }, [editor, onChange]);
+  }, [editor, debouncedOnChange]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      debouncedOnChange.cancel();
+    };
+  }, [debouncedOnChange]);
 
   return null;
 }
@@ -125,18 +137,14 @@ function EditorOnChangePlugin({ onChange }: { onChange: (editorState: any) => vo
 const UPDATE_EDITOR_COMMAND: LexicalCommand<void> = createCommand('UPDATE_EDITOR');
 
 export default function Editor({
-  attribute,
   setProjectDetails,
   initialContent,
-  context,
-  itemId,
 }: EditorProps): JSX.Element {
   const { historyState } = useSharedHistoryContext();
   const {
     settings: {
       isCollab,
       isAutocomplete,
-      isMaxLength,
       isCharLimit,
       hasLinkAttributes,
       isCharLimitUtf8,
@@ -155,27 +163,15 @@ export default function Editor({
   const isInitialized = useRef(false);
 
   // Get mutations
-  const updateProject = useMutation(api.projects.updateProject);
-  const updateEpic = useMutation(api.epics.updateEpic);
-  const updateUserStory = useMutation(api.userstories.updateUserStory);
 
-  const handleChange = useCallback((editorStateJSON: string) => {
-    if (context === 'epics') {
-      try {
-        editor.update(() => {
-          const markdown = $convertToMarkdownString(PLAYGROUND_TRANSFORMERS);
-          
-          // Update the project details with the markdown
-          setProjectDetails(markdown);
-          
-          // Force editor update to ensure proper rendering
-          editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
-        });
-      } catch (error) {
-        console.error('Error converting to markdown:', error);
-      }
+  const handleChange = useCallback((jsonData: string) => {
+    try {
+      setProjectDetails(jsonData);
+      editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
+    } catch (error) {
+      console.error('Error converting to markdown:', error);
     }
-  }, [context, editor, setProjectDetails]);
+  }, [editor, setProjectDetails]);
 
   // Initialize editor content
   useEffect(() => {
@@ -186,16 +182,10 @@ export default function Editor({
         try {
           // First try to parse as JSON
           const parsedContent = JSON.parse(initialContent);
-
-          // Check if this is a markdown string stored in JSON
-          if (typeof parsedContent === 'string' && parsedContent.includes('**')) {
-            // Convert markdown to Lexical nodes
-            $convertFromMarkdownString(parsedContent, TRANSFORMERS);
-          } else {
+     
             // If it's a Lexical state JSON, use it directly
             const state = editor.parseEditorState(parsedContent);
             editor.setEditorState(state);
-          }
         } catch (error) {
           // If JSON parsing fails, treat the content as direct markdown
           if (typeof initialContent === 'string' && initialContent.includes('**')) {
