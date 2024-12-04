@@ -940,7 +940,7 @@ import {
                     <i className="icon horizontal-rule" />
                     <span className="text">Horizontal Rule</span>
                   </DropDownItem>
-                  <DropDownItem
+                  {/* <DropDownItem
                     onClick={() => {
                       activeEditor.dispatchCommand(INSERT_PAGE_BREAK, undefined);
                     }}
@@ -995,7 +995,7 @@ import {
                     className="item">
                     <i className="icon diagram-2" />
                     <span className="text">Excalidraw</span>
-                  </DropDownItem>
+                  </DropDownItem> */}
                   <DropDownItem
                     onClick={() => {
                       showModal('Insert Table', (onClose) => (
@@ -1009,7 +1009,7 @@ import {
                     <i className="icon table" />
                     <span className="text">Table</span>
                   </DropDownItem>
-                  <DropDownItem
+                  {/* <DropDownItem
                     onClick={() => {
                       showModal('Insert Poll', (onClose) => (
                         <InsertPollDialog
@@ -1021,8 +1021,8 @@ import {
                     className="item">
                     <i className="icon poll" />
                     <span className="text">Poll</span>
-                  </DropDownItem>
-                  <DropDownItem
+                  </DropDownItem> */}
+                  {/* <DropDownItem
                     onClick={() => {
                       showModal('Insert Columns Layout', (onClose) => (
                         <InsertLayoutDialog
@@ -1034,7 +1034,7 @@ import {
                     className="item">
                     <i className="icon columns" />
                     <span className="text">Columns Layout</span>
-                  </DropDownItem>
+                  </DropDownItem> */}
   
                   <DropDownItem
                     onClick={() => {
@@ -1049,7 +1049,7 @@ import {
                     <i className="icon equation" />
                     <span className="text">Equation</span>
                   </DropDownItem>
-                  <DropDownItem
+                  {/* <DropDownItem
                     onClick={() => {
                       editor.update(() => {
                         const root = $getRoot();
@@ -1071,7 +1071,7 @@ import {
                     className="item">
                     <i className="icon caret-right" />
                     <span className="text">Collapsible container</span>
-                  </DropDownItem>
+                  </DropDownItem> */}
                   {EmbedConfigs.map((embedConfig) => (
                     <DropDownItem
                       key={embedConfig.type}

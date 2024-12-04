@@ -212,8 +212,11 @@ export default function InlineImagePlugin(): JSX.Element | null {
 
 const TRANSPARENT_IMAGE =
   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const img = document.createElement('img');
-img.src = TRANSPARENT_IMAGE;
+let img: HTMLImageElement;
+if (typeof window !== 'undefined') {
+  img = document.createElement('img');
+  img.src = TRANSPARENT_IMAGE;
+}
 
 function $onDragStart(event: DragEvent): boolean {
   const node = $getImageNodeInSelection();

@@ -51,6 +51,7 @@ import {
   import {$createImageNode, $isImageNode, ImageNode} from '../../nodes/ImageNode';
   import {$createTweetNode, $isTweetNode, TweetNode} from '../../nodes/TweetNode';
   import emojiList from '../../utils/emoji-list';
+  import { $createYouTubeNode, $isYouTubeNode, YouTubeNode } from '../../nodes/YouTubeNode';
   
   export const HR: ElementTransformer = {
     dependencies: [HorizontalRuleNode],
@@ -308,6 +309,26 @@ import {
     }
     return match[1].split('|').map((text) => $createTableCell(text));
   };
+
+    
+  const YOUTUBE_TRANSFORMER: TextMatchTransformer = {
+    dependencies: [YouTubeNode],
+    export: (node) => {
+      if (!$isYouTubeNode(node)) {
+        return null;
+      }
+      return node.getTextContent();
+    },
+    importRegExp: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+    regExp: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)$/,
+    replace: (textNode, match) => {
+      const [, id] = match;
+      const youtubeNode = $createYouTubeNode(id);
+      textNode.replace(youtubeNode);
+    },
+    trigger: 'v=',
+    type: 'text-match',
+  };
   
   export const PLAYGROUND_TRANSFORMERS: Array<Transformer> = [
     TABLE,
@@ -339,5 +360,6 @@ import {
     IMAGE as TextMatchTransformer,
     EMOJI as TextMatchTransformer,
     EQUATION as TextMatchTransformer,
-    TWEET as ElementTransformer
+    TWEET as ElementTransformer,
+    YOUTUBE_TRANSFORMER as TextMatchTransformer
   ];

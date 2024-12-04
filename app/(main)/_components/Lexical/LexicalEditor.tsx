@@ -1,7 +1,6 @@
 "use client";
 
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { LexicalEditor as LexicalEditorType } from 'lexical';
 import { useMemo } from 'react';
 import * as React from 'react';
 import PlaygroundEditorTheme from './themes/PlayGroundEditorTheme';
@@ -43,47 +42,21 @@ function LexicalEditor({
     onError: (error: Error) => {
       console.error(error);
     },
-    editorState: projectDetails?.[attribute] ? () => {
-      try {
-        let parsedContent;
-        try {
-          parsedContent = JSON.parse(projectDetails[attribute]);
-        } catch (error) {
-          console.error('Failed to parse initial content:', error);
-          parsedContent = projectDetails[attribute];
-        }
-        return (editor: LexicalEditorType) => {
-          const currentState = editor.getEditorState();
-          const currentSelection = currentState._selection;
-          
-          const newState = editor.parseEditorState(parsedContent);
-          if (currentSelection) {
-            newState._selection = currentSelection;
-          }
-          return newState;
-        };
-      } catch (error) {
-        console.error('Failed to parse initial content:', error);
-        return null;
-      }
-    } : undefined,
-  }), [attribute, projectDetails]);
+  }), []);
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <SharedHistoryContext>
         <TableContext>
           <SharedAutocompleteContext>
-            <div className="min-h-full flex flex-col">
-              <div className="editor-shell">
-                <Editor
-                  attribute={attribute}
-                  setProjectDetails={setProjectDetails}
-                  initialContent={projectDetails?.[attribute]}
-                  context={context}
-                  itemId={itemId}
-                />
-              </div>
+            <div className="editor-shell">
+              <Editor
+                attribute={attribute}
+                setProjectDetails={setProjectDetails}
+                initialContent={projectDetails?.[attribute]}
+                context={context}
+                itemId={itemId}
+              />
             </div>
           </SharedAutocompleteContext>
         </TableContext>
