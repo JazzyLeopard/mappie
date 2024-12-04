@@ -6,7 +6,6 @@ import { OpenPanelComponent } from '@openpanel/nextjs';
 
 import "@/app/globals.css";
 
-import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,20 +34,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ConvexClientProvider>
-      <html lang="en">
-        <body className={inter.className}>
+    <html lang="en">
+      <body className={inter.className}>
+        <ConvexClientProvider>
           <OpenPanelComponent
             clientId="388813f4-70f3-47cf-901d-1db7c4825cf3"
             trackScreenViews={true}
-            // Uncomment and set these options as needed
-            // trackAttributes={true}
-            // trackOutgoingLinks={true}
-            // profileId={'123'} // If you have a user id
+          // Uncomment and set these options as needed
+          // trackAttributes={true}
+          // trackOutgoingLinks={true}
+          // profileId={'123'} // If you have a user id
           />
           {children}
-        </body>
-      </html>
-    </ConvexClientProvider>
+        </ConvexClientProvider>
+      </body>
+    </html>
   );
 }
