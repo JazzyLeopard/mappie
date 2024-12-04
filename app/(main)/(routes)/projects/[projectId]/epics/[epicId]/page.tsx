@@ -1,6 +1,6 @@
 'use client'
 import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
-import { epicMenuItems, menuItems } from "@/app/(main)/_components/constants";
+import { epicMenuItems } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -53,7 +53,6 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
     if (epicDetails) {
         return <CommonLayout
             data={epicDetails}
-            menu={epicMenuItems}
             onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
             updateProject={updateEpicMutation}

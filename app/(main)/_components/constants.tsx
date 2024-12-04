@@ -1,7 +1,4 @@
-import AlertIcon from "@/icons/AlertIcon";
-import AudienceIcon from "@/icons/AudienceIcon";
 import DependenciesIcon from "@/icons/DependenciesIcon";
-import DollarIcon from "@/icons/DollarIcon";
 import PeopleIcon from "@/icons/PeopleIcon";
 import RisksIcon from "@/icons/RisksIcon";
 import { MenuItemType } from "@/lib/types";
@@ -50,50 +47,7 @@ export const menuItems: MenuItemType[] = [
         description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
         active: true,
         required: true
-    },
-    {
-        key: "problemStatement",
-        icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: true,
-        required: true
-    },
-    {
-        key: "userPersonas",
-        icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        required: true
-    },
-    {
-        key: "featuresInOut",
-        icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        required: true
-    },
-    {
-        key: "successMetrics",
-        icon: <AudienceIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-    },
-    {
-        key: "userScenarios",
-        icon: <AlertIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-    },
-    {
-        key: "featurePrioritization",
-        icon: <DollarIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-    },
-    {
-        key: "risksDependencies",
-        icon: <DependenciesIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
-        active: false,
-    },
+    }
 ]
 
 export const epicMenuItems: MenuItemType[] = [

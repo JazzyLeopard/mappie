@@ -4,16 +4,8 @@ import { v } from "convex/values";
 export default defineSchema({
   projects: defineTable({
     userId: v.string(),
-    onboarding: v.number(),
     title: v.string(),
     overview: v.string(),
-    problemStatement: v.string(),
-    userPersonas: v.optional(v.string()),
-    featuresInOut: v.optional(v.string()),
-    successMetrics: v.optional(v.string()),
-    userScenarios: v.optional(v.string()),
-    featurePrioritization: v.optional(v.string()),
-    risksDependencies: v.optional(v.string()),
     isArchived: v.boolean(),
     isPublished: v.optional(v.boolean()),
     createdAt: v.int64(), // Storing timestamp as bigint (milliseconds since Unix epoch)

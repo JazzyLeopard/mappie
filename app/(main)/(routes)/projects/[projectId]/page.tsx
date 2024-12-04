@@ -5,8 +5,8 @@ import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { menuItems } from "@/app/(main)/_components/constants";
 import { toast } from "react-hot-toast";
+import { menuItems } from "@/app/(main)/_components/constants";
 
 interface ProjectIdPageProps {
   params: {
@@ -61,7 +61,6 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   return (
     <CommonLayout
       data={projectDetails}
-      menu={menuItems}
       onEditorBlur={async () => {}}
       handleEditorChange={handleEditorChange}
       updateProject={updateProjectMutation}
