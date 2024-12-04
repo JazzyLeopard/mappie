@@ -13,15 +13,8 @@ export type Project = {
   _id: Id<"projects">; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
   onboarding: number; // Onboarding step number
-  'title': string; // Title of the project
+  title: string; // Title of the project
   overview: string;
-  problemStatement: string;
-  userPersonas: string;
-  featuresInOut: string;
-  successMetrics?: string;
-  userScenarios?: string;
-  featurePrioritization?: string;
-  risksDependencies?: string;
   isArchived: boolean; // Indicates if the project is archived
   isPublished?: boolean; // Indicates if the project is published
   createdAt: bigint; // Timestamp for when the project was created (as number)
@@ -32,7 +25,7 @@ export type Project = {
 export type Epic = {
   _id: string; // Unique identifier for the epic
   projectId: string; // ID of the project the epic belongs to
-  'name': string; //Title of the project
+  name: string; // Title of the project
   description: string; // Description of the epic
   acceptanceCriteria: string;
   businessValue: string;

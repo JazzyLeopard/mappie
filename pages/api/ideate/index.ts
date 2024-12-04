@@ -42,7 +42,6 @@ function convertToMarkdown(content: Record<string, string>): Record<string, stri
 }
 
 function extractJSONFromResponse(response: string): string {
-  // const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
   const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
   return jsonMatch ? jsonMatch[1] : response;
 }
@@ -67,13 +66,7 @@ export default async function handler(
       Provide a Title, Overview, Problem statement, User Personas, Features In/Out as strings in JSON format. Ensure that all fields are strings, not arrays. If you need to provide multiple items for a field, separate them with newlines within the string.`;
 
       console.log("Calling OpenAi Api...");
-      // const completion = await openai.chat.completions.create({
-      //   model: "gpt-4o-mini",
-      //   messages: [
-      //     { role: "system", content: "You are an experienced agile business analyst that generates project details based on user prompts." },
-      //     { role: "user", content: promptWithPropertyInstructions }
-      //   ],
-      // });
+
       const completions = await generateText({
         model: openai("gpt-4o-mini"),
         messages: [

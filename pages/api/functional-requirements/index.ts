@@ -173,19 +173,7 @@ export default async function handler(
     sendEvent({ progress: 35, status: 'Preparing project context...' });
     const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
 
-    const projectFields = {
-      overview: project.overview || '',
-      problemStatement: project.problemStatement || '',
-      userPersonas: project.userPersonas || '',
-      featuresInOut: project.featuresInOut || '',
-      successMetrics: project.successMetrics || '',
-    };
-
-    const projectDetails = Object.entries(projectFields)
-      .filter(([_, value]) => value)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
-
+    const projectDetails = `Overview: ${project.overview}`; 
     // Prepare prompt
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
     const prompt = singleFR

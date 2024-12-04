@@ -228,19 +228,7 @@ export default async function handler(
       projectId: projectId as Id<"projects">
     });
 
-    // Prepare project context
-    const projectFields = {
-      overview: project.overview || '',
-      problemStatement: project.problemStatement || '',
-      userPersonas: project.userPersonas || '',
-      featuresInOut: project.featuresInOut || '',
-      successMetrics: project.successMetrics || '',
-    };
-
-    const projectDetails = Object.entries(projectFields)
-      .filter(([_, value]) => value)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
+    const projectDetails = `Overview: ${project.overview}`;
 
     const formattedRequirements = formatFunctionalRequirements(functionalRequirements);
 
