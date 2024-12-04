@@ -5,6 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { getAuth } from "@clerk/nextjs/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -52,15 +53,16 @@ export default async function handler(
 
   const { projectId, epicId } = req.body;
 
-  const authHeader = req.headers.authorization;
-  const authToken = authHeader && authHeader.split(' ')[1];
-
-  if (!authToken) {
-    return res.status(401).json({ message: 'No authentication token provided' });
-  }
-
   try {
-    convex.setAuth(authToken);
+    // Authentication
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+
+    if (!token || !userId) {
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
+
+    convex.setAuth(token);
     const convexEpicId = epicId as Id<"epics">;
 
     const context = await useContextChecker({ projectId })
