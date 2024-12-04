@@ -8,7 +8,6 @@ import { Id } from "@/convex/_generated/dataModel"
 import { useMutation, useQuery } from "convex/react"
 import { useCallback, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
-import { useAuth } from "@clerk/nextjs";
 
 interface UseCasesProps {
   params: {
@@ -74,12 +73,7 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
 
   const isOnboardingComplete = useMemo(() => {
     if (!project) return false;
-    
-    const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
-    return mandatoryFields.every(field => {
-        const value = project[field as keyof typeof project];
-        return value && typeof value === 'string' && value.trim() !== '';
-    });
+    return project.overview?.trim() !== '';
   }, [project]);
 
   if (error) {

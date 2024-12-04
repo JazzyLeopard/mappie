@@ -29,12 +29,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
 
     const isOnboardingComplete = useMemo(() => {
         if (!project) return false;
-        
-        const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
-        return mandatoryFields.every(field => {
-            const value = project[field as keyof typeof project];
-            return value && typeof value === 'string' && value.trim() !== '';
-        });
+        return project.overview?.trim() !== '';
     }, [project]);
 
     // Mutations
