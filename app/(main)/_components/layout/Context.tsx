@@ -26,7 +26,6 @@ export default function Component({ projectId }: ContextProps) {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     const document = useQuery(api.documents.getDocumentById, { projectId })
-    console.log("document id", document?._id);
 
     const deleteFile = useMutation(api.documents.deleteDocument)
 
