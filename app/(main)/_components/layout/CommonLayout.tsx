@@ -115,9 +115,9 @@ const CommonLayout = ({
     // Update the handleSectionChange function
     const handleSectionChange = useCallback(async (field: string, value: any) => {
         try {
-            if (!value || data[field as keyof typeof data] === value) {
-                return;
-            }
+            // if (!value || data[field as keyof typeof data] === value) {
+            //     return;
+            // }
 
             const cleanData = cleanDataForUpdate({
                 _id: data._id,
