@@ -65,6 +65,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
       handleEditorChange={handleEditorChange}
       updateProject={updateProjectMutation}
       projectId={params.projectId as Id<"projects">}
+      parent="project"
     />
   );
 };

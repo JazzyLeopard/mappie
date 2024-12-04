@@ -223,9 +223,10 @@ export const Navigation = () => {
               </Select>
             </div>
 
-            <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
-              {selectedProject && projects && (
-                <>
+            {projects && projects?.length > 0 && (
+              <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+                {selectedProject && projects && (
+                  <>
                   {navItems.map((item) => (
                     <NavItem
                       key={item.label}
@@ -252,11 +253,12 @@ export const Navigation = () => {
                     </div>
                     <div className="mt-2">
                       <FileUpload projectId={selectedProject as Id<"projects">} />
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </ScrollArea>
+                  </>
+                )}
+              </ScrollArea>
+            )}
 
             <div className="">
               <p className="text-sm font-semibold mb-2 px-4">Settings</p>

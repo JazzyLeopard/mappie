@@ -23,9 +23,9 @@ interface CommonLayoutProps {
     data: Project;
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void,
-    mandatoryFields?: string[];
     updateProject: ReactMutation<any>;
     projectId: Id<"projects">;
+    parent: 'project' | 'epic';
 }
 
 
@@ -34,7 +34,8 @@ const CommonLayout = ({
     onEditorBlur,
     handleEditorChange,
     updateProject,
-    projectId
+    projectId,
+    parent
 }: CommonLayoutProps) => {
 
     const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -135,14 +136,14 @@ const CommonLayout = ({
 
     const editorProps = useMemo(() => ({
         onBlur: onEditorBlur,
-        attribute: 'overview',
+        attribute: parent === 'project' ? 'overview' : 'description',
         projectDetails: data,
         setProjectDetails: (value: any) => {
             console.log('Editor change:', {
-                section: 'overview',
+                section: parent === 'project' ? 'overview' : 'description',
                 value
             });
-            handleSectionChange('overview', value);
+            handleSectionChange(parent === 'project' ? 'overview' : 'description', value);
         },
         isRichText: true,
         context: "project" as const,
