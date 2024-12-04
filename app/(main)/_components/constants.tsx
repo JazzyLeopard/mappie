@@ -285,96 +285,57 @@ export const placeholders = {
 };
 
 export const ideatePrompts: { [key: string]: string } = {
-    overview: `Based on the project idea, create a comprehensive project overview. Include this important points- a concise yet informative project description, 3-5 specific and measurable project goals and objectives, and key stakeholders. Consider industry trends, potential impact, and unique value propositions in your overview and don't use heading 1 and 2   
-    
-    Follow this exact example template:
-    **Description**: MindMap is a comprehensive mobile application designed to support individuals in managing their mental health and practicing mindfulness. With tailored resources, community support, and interactive tools, users can track their emotions, access guided meditations, and cultivate emotional resilience in a time-efficient manner.\n
+    overview: `Create a comprehensive project overview that includes all essential aspects of the project. Follow this exact template structure, maintaining the formatting with appropriate sections and bullet points:
+
+    **Project Description**
+    [Provide a concise yet comprehensive description of the project, explaining what it is, its main purpose, and its unique value proposition. Include the target market and the core problem it solves.]\n
+
+    **Current Situation & Problem**
+    [Describe the current market situation and key challenges that exist. Include relevant statistics or market data if applicable.]\n
+
+    **Key Pain Points**:
+    1. [First major pain point]
+    2. [Second major pain point]
+    3. [Third major pain point]\n
+
+    **Solution & Opportunity**
+    [Explain how your project addresses these pain points and what opportunity it captures in the market.]\n
+
+    **Core Features**:
+    1. [Primary feature with brief description]
+    2. [Secondary feature with brief description]
+    3. [Third feature with brief description]
+    Future Considerations: [Brief mention of planned future features]\n
 
     **Goals and Objectives**:
-        1.Achieve a user base of 10,000 active users within the first year.
-        2.Facilitate at least 100 community interactions per week through our support groups.
-        3.Collect and analyze user feedback to improve features quarterly, aiming for a 90% user satisfaction rate.\n
-    
-    **Key Stakeholders**: 
-    1.Development Team (responsible for creating the app and its features)
-    2.Mental Health Professionals: Provide insights to ensure the content is effective and reliable.
-    3.User Community (providing feedback and suggestions for improvements).
-    `,
+    1. [Specific, measurable goal with timeline]
+    2. [Specific, measurable goal with timeline]
+    3. [Specific, measurable goal with timeline]\n
 
-    problemStatement: `For the project, articulate a clear problem statement. Describe the current situation in the target market or user base. Identify and explain 3-5 significant pain points that potential users or customers are experiencing. Then, highlight the opportunity this problem presents for your project. Use data or statistics where possible to support your statements and don't use heading 1 and 2.
+    **Key Stakeholders**:
+    1. [Primary stakeholder group and their role]
+    2. [Secondary stakeholder group and their role]
+    3. [Additional stakeholder group and their role]\n
 
-    Follow this exact example template: 
-    **Current Situation**
-    In today’s fast-paced world, many individuals are struggling with stress, anxiety, and mental health issues. The demand for accessible mental wellness tools is growing as more people seek ways to manage their mental well-being. Existing resources, while helpful, often fall short in providing holistic support tailored to the diverse needs of different user groups.\n
+    **Primary User Persona**:
+    - Demographics: [Key demographic information]
+    - Goals: [Main user goals]
+    - Pain Points: [User's main challenges]
+    - Usage Patterns: [How they will use the product]\n
 
-   **Pain Points**
-    1.Many users feel overwhelmed and don’t know where to start when it comes to managing their mental health.
-    2.Existing tools lack personalization, making it hard for users to find resources that fit their specific situations and goals.
-    3.There is a significant gap in community support, where users could benefit from shared experiences and encouragement.\n
+    Example of good formatting:
+    **Project Description**
+    TaskFlow Pro is a comprehensive project management platform designed specifically for remote development teams. It combines real-time collaboration tools, automated workflow management, and AI-powered productivity insights into a single, intuitive interface. The platform addresses the unique challenges of distributed teams while maintaining high productivity and team cohesion.\n
 
-    **Opportunity**
-    MindMap offers an innovative solution by combining personalized wellness plans, mood tracking, and community support into one platform. By addressing the unique needs of various user personas, MindMap stands to fill a vital gap in the market, providing accessible, flexible, and effective mental wellness resources.
- `,
+    **Current Situation & Problem**
+    Remote work has become the norm for many development teams, with 67% of tech companies adopting hybrid or fully remote models. Traditional project management tools lack the specific features needed for effective remote collaboration and often result in fragmented communication and reduced productivity.\n
 
-    userPersonas: `Create detailed user personas for the primary and secondary users of the project. For each persona, include demographic information, goals, frustrations, and motivations. Describe their typical day, tech-savviness, and how they might interact with your product. Ensure these personas are diverse and representative of your target user base. Create at least one primary user persona and 1-2 secondary user personas 
+    **Key Pain Points**:
+    1. Lack of seamless integration between communication and task management tools
+    2. Difficulty in tracking real-time progress across different time zones
+    3. Limited visibility into team member workload and availability\n
 
-    Follow this exact example template:
-
-    ### Primary User: 
-    Alex, the Busy Professional\n
-
-    **Demographics**: 30, Marketing Manager, lives in a metropolitan city.\n
-
-    **Goals**: Alex wants to incorporate mindfulness into his daily routine and manage his stress more effectively to improve work-life balance.\n
-
-    **Frustrations**: Often feels overwhelmed by work, has difficulty finding time for self-care, and isn’t sure which mindfulness techniques will work best.\n
-
-    **Motivations**: Alex wants to stay productive without burning out and seeks ways to enhance his mental resilience.\n
-
-    **Tech-savviness**: Moderate to high; uses productivity and fitness apps regularly but is not a tech expert.\n
-
-    **Typical Day**: Alex spends most of his day in meetings, juggling work deadlines, and interacting with clients. In his free time, he tries to stay active with workouts but struggles to maintain a mindfulness routine.\n
-    
-    **Interaction with Product**: Alex will use MindMap to track his mood and receive personalized wellness tips. He will benefit from guided meditations during work breaks and the daily reminders to focus on mindfulness.\n
-
-    [Repeat this structure for secondary users] `,
-
-    featuresInOut: `For the project, create a comprehensive feature list. Divide this into "Features In" (included in this version) and "Features Out" (explicitly not included). For Features In, describe each feature concisely but clearly, focusing on user benefits. Aim for 3-5 key features that directly address the pain points identified in the Problem Statement and align with the project goals. For Features Out, briefly explain the rationale for exclusion. This could include features that are out of scope, technically challenging, or planned for future versions. Ensure the feature set aligns with project goals, user needs, and the defined success metrics. 
-
-    Here is the example template:
-    ### Features In \n
-    **1. Mood Tracker**: A simple tool allowing users to log their daily emotions and mental state, helping them identify patterns and triggers.\n
-    **User benefit**: Helps users become more self-aware and track their mental health over time.\n
-
-    **2. Guided Meditations**: A library of audio-guided mindfulness exercises, categorized by goals like stress relief, sleep, and focus.\n
-    **User benefit**: Provides easy access to mindfulness exercises for specific needs and helps users integrate meditation into their routine.\n
-
-    **3. Personalized Wellness Plans**: Tailored plans based on the user's mood tracker and mental wellness goals.\n
-    **User benefit**: Offers a customized roadmap for mental health improvement, making it easier for users to start and stick with a wellness routine.\n
-
-    **4. Community Support Groups**: Virtual spaces where users can connect with like-minded individuals, share their experiences, and support each other.\n
-    **User benefit**: Builds a sense of community and reduces feelings of isolation, especially for those seeking peer support.\n
-
-    **5. Daily Mindfulness Reminders**: Push notifications encouraging users to take mindful breaks or engage in wellness activities throughout the day.\n
-    **User benefit**: Keeps mindfulness practices top of mind and integrates them into daily life.\n
-
-    ### Features Out \n
-    **1. In-Person Therapy Booking**: Not included in the initial version to focus on self-guided resources.\n
-    **Rationale for exclusion**: Adding therapy services would require significant additional resources and partnerships, which can be considered for future versions.\n
-
-    **2. Extensive Customization Options**: Simplified user interface without overwhelming customization options.\n
-    **Rationale for exclusion**: Keeping the app user-friendly and streamlined is essential for the target demographic.\n
-
-    **3. Social Media Integration**: Direct sharing on social media is not included to prioritize privacy.\n
-    **Rationale for exclusion**: Focusing on personal mental wellness rather than public sharing supports user privacy and reduces external pressure.\n
-
-    **4. Complex Analytics**: Detailed insights and analytics are not included at launch.\n
-    **Rationale for exclusion**: Initially, the focus is on encouraging engagement with basic tracking, with more complex features to be developed later.\n
-
-    **5. Multilingual Support**: The app will launch only in English.\n
-    **Rationale for exclusion**: Resources for translation and support across multiple languages will be developed based on user demand in future iterations.
-`,
-
-}
+    [Continue with the same level of detail and formatting for each section...]`
+};
 
 
