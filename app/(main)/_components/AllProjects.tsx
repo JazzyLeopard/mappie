@@ -156,7 +156,7 @@ export default function Component() {
                   Ideate with AI
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="min-w-96">
+              <PopoverContent className="min-w-[36rem] min-h-[36rem]">
                 <div className="space-y-4">
                   <Textarea
                     placeholder="Describe the type of project/product/app/feature you want to create. Mappie will generate a project with populated fields as a starting point for you to build upon."
@@ -164,7 +164,7 @@ export default function Component() {
                     onChange={(e) => setAiPrompt(e.target.value)}
                     rows={4}
                     disabled={isGenerating}
-                    className="resize-none"
+                    className="resize-none min-h-[28rem]"
                   />
                   <Button
                     onClick={handleGenerateProject}
