@@ -39,7 +39,6 @@ const CommonLayout = ({
 }: CommonLayoutProps) => {
 
     const [isPresentationMode, setIsPresentationMode] = useState(false);
-    const [isGenerateButtonActive, setIsGenerateButtonActive] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isFrGenerated, setIsFrGenerated] = useState(false);
     const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
@@ -47,10 +46,7 @@ const CommonLayout = ({
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
 
-    useEffect(() => {
-        setIsGenerateButtonActive(data.overview.trim() !== '');
-    }, [data.overview]);
-
+    // Check if the functional requirements are already generated
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
         projectId: data._id
     });
@@ -74,7 +70,9 @@ const CommonLayout = ({
     }
 
     const handleGenerateFR = () => {
-        setIsConfirmModalOpen(true);
+        if (!isFrGenerated) {
+            setIsConfirmModalOpen(true);
+        }
     };
 
     const confirmGenerateFR = async () => {
@@ -194,7 +192,7 @@ const CommonLayout = ({
                             <Button
                                 onClick={handleGenerateFR}
                                 className="bg-white text-black border border-gray-300 hover:bg-gray-200 ml-auto"
-                                disabled={!isGenerateButtonActive || isGenerating}
+                                disabled={isFrGenerated || isGenerating}
                             >
                                 {isGenerating ? (
                                     <>
@@ -203,10 +201,10 @@ const CommonLayout = ({
                                     </>
                                 ) : (
                                     <>
-                                    <AiGenerationIcon />
-                                    <span className="ml-2 font-semibold">
-                                            {isFrGenerated ? "Regenerate FR" : "Generate FR"}
-                                    </span>
+                                        <AiGenerationIcon />
+                                        <span className="ml-2 font-semibold">
+                                            {isFrGenerated ? "FR Generated" : "Generate FR"}
+                                        </span>
                                     </>
                                 )}
                             </Button>

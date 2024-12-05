@@ -4,18 +4,21 @@ import AIStoryCreator from '@/ai/ai-chat'
 import LabelToInput from "@/app/(main)/_components/LabelToInput"
 import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { api } from '@/convex/_generated/api'
 import { Id } from "@/convex/_generated/dataModel"
 import AiGenerationIcon from '@/icons/AI-Generation'
 import AiGenerationIconWhite from "@/icons/AI-Generation-White"
+import { cn } from '@/lib/utils'
 import empty from "@/public/empty.png"
+import { useAuth } from '@clerk/nextjs'
+import { useMutation } from 'convex/react'
 import { GitPullRequest, Plus, Trash } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'react-hot-toast'
-import { Progress } from "@/components/ui/progress"
-import { useAuth } from '@clerk/nextjs'
 
 type SelectedItems = {
   useCase: string | null;
@@ -23,11 +26,9 @@ type SelectedItems = {
 
 interface UseCasesLayoutProps {
   projectId: Id<"projects">
-  handleEditorChange: (useCaseId: Id<"useCases">, field: string, value: any) => Promise<void>;
+  handleEditorChange: (useCaseId: Id<"useCases">, field: string, value: any) => Promise<void>
   onAddUseCase: () => Promise<void>;
   onDeleteUseCase: (id: Id<"useCases">) => Promise<void>;
-  onEditorBlur: () => Promise<void>;
-  onUseCaseNameChange: (useCaseId: Id<"useCases">, name: string) => Promise<void>;
   useCases: any[];
   isOnboardingComplete: boolean;
 }
@@ -37,8 +38,6 @@ export default function UseCasesLayout({
   handleEditorChange,
   onAddUseCase,
   onDeleteUseCase,
-  onEditorBlur,
-  onUseCaseNameChange,
   useCases,
   isOnboardingComplete,
 }: UseCasesLayoutProps) {
@@ -54,6 +53,9 @@ export default function UseCasesLayout({
     useCase: null
   })
 
+  const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   // Select a use case
   const selectItem = useCallback((id: string) => {
     setSelectedItems({ useCase: id })
@@ -62,17 +64,44 @@ export default function UseCasesLayout({
   // Get selected use case
   const selectedUseCase = useCases?.find(uc => uc._id === selectedItems.useCase)
 
-  const handleInsertMarkdown = async (content: string) => {
-    if (selectedItems.useCase) {
-      await handleEditorChange(selectedItems.useCase as Id<"useCases">, 'description', content)
-    }
-  }
+  const updateUseCase = useMutation(api.useCases.updateUseCase)
 
   useEffect(() => {
     if (useCases?.length > 0 && !selectedItems.useCase) {
       selectItem(useCases[0]._id)
     }
   }, [useCases, selectedItems.useCase, selectItem])
+
+  useEffect(() => {
+    console.log('Selected use case changed:', selectedItems.useCase);
+    console.log('Selected use case data:', selectedUseCase);
+  }, [selectedItems.useCase, selectedUseCase]);
+
+
+  const handleInsertMarkdown = async (content: string) => {
+    if (selectedItems.useCase) {
+      // await handleEditorChange(selectedItems.useCase as Id<"useCases">, 'description', content)
+    }
+  }
+
+  const toggleAIChat = () => {
+    setIsAIChatCollapsed(!isAIChatCollapsed);
+  };
+
+  const handleUcChange = useCallback((UcId: Id<"useCases">, field: string, value: any) => {
+    // Skip if no changes or no value
+    if (!value || !UcId) {
+      return;
+    }
+
+    // Single update to database
+    updateUseCase({
+      id: UcId,
+      [field]: value
+    }).catch(error => {
+      console.error("Error updating use case:", error);
+    });
+  }, [updateUseCase]);
 
   // Add progress simulation function
   const simulateProgress = () => {
@@ -175,10 +204,10 @@ export default function UseCasesLayout({
         <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
           <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
           <h2 className="text-lg md:text-xl font-semibold text-center">
-             Project Overview is empty or missing.
+            Project Overview is empty or missing.
           </h2>
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             onClick={() => router.push(`/projects/${projectId}`)}
           >
             Go to Project Overview
@@ -252,19 +281,23 @@ export default function UseCasesLayout({
                 <div className="flex flex-col h-full">
                   <header className="flex items-center justify-between px-4 pb-3 w-full">
                     <LabelToInput
+                      key={`${selectedUseCase._id}-${selectedUseCase.title}`}
                       value={selectedUseCase.title}
-                      setValue={(newTitle) => onUseCaseNameChange(selectedItems.useCase as Id<"useCases">, newTitle)}
+                      setValue={(newTitle) => handleUcChange(selectedUseCase._id, "title", newTitle)}
                       onBlur={() => { }}
                     />
                   </header>
                   <ScrollArea className="flex-1 min-h-0 pr-2" withShadow={true}>
                     <LexicalEditor
-                      key={selectedItems.useCase}
+                      key={selectedItems.useCase as string}
                       itemId={selectedItems.useCase as Id<'useCases'>}
-                      onBlur={onEditorBlur}
+                      onBlur={async () => { }}
                       attribute="description"
                       projectDetails={selectedUseCase}
-                      setProjectDetails={(value) => handleEditorChange(selectedUseCase._id, 'description', value)}
+                      setProjectDetails={(value) => {
+                        console.log('LexicalEditor value change:', value);
+                        handleEditorChange(selectedUseCase._id as Id<"useCases">, 'description', value);
+                      }}
                       context="useCase"
                       isRichText={true}
                     />
@@ -277,7 +310,10 @@ export default function UseCasesLayout({
               )}
             </div>
 
-            <div className="w-[40%] max-w-[600px]">
+            <div className={cn(
+              `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-[40%]'} max-w-[600px] transition-width duration-300`,
+              isResetting && "transition-all ease-in-out duration-300"
+            )}>
               <div className="shadow-sm bg-white rounded-xl h-full">
                 {selectedItems.useCase && (
                   <AIStoryCreator
@@ -288,8 +324,8 @@ export default function UseCasesLayout({
                     selectedEpic={null}
                     projectId={projectId as Id<'projects'>}
                     selectedItemId={selectedItems.useCase as Id<'useCases'>}
-                    isCollapsed={false}
-                    toggleCollapse={() => { }}
+                    isCollapsed={isAIChatCollapsed}
+                    toggleCollapse={toggleAIChat}
                   />
                 )}
               </div>

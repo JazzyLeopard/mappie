@@ -25,98 +25,21 @@ const convertBigIntToNumber = (obj: any): any => {
 };
 
 // Add function to create Lexical editor state
-function createLexicalEditorState(requirement: any) {
-  return {
-    root: {
-      children: [
-        {
-          children: [
-            {
-              detail: 0,
-              format: 0,
-              mode: "normal",
-              style: "",
-              text: `Requirement ID: ${requirement.id}`,
-              type: "text",
-              version: 1
-            }
-          ],
-          direction: "ltr",
-          format: "",
-          indent: 0,
-          type: "heading",
-          tag: "h3",
-          version: 1
-        },
-        {
-          type: "table",
-          version: 1,
-          children: [
-            // Header row
-            {
-              type: "tablerow",
-              version: 1,
-              children: [
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Req ID" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Priority" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Description" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Comments" }]
-                }
-              ]
-            },
-            // Data rows
-            ...requirement.table.rows.map((row: any) => ({
-              type: "tablerow",
-              version: 1,
-              children: [
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.reqId }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.priority }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.description }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.comments || "" }]
-                }
-              ]
-            }))
-          ]
-        }
-      ],
-      direction: "ltr",
-      format: "",
-      indent: 0,
-      type: "root",
-      version: 1
-    }
-  };
-}
+const createMarkdownTable = (requirement: any) => {
+  // Create the markdown string
+  let markdown = `### Requirement ID: ${requirement.id}\n\n`;
+
+  // Add table header with Comments column
+  markdown += `| Req ID | Priority | Description | Comments |\n`;
+  markdown += `|---------|----------|-------------|----------|\n`;
+
+  // Add table rows with Comments
+  requirement.table.rows.forEach((row: any) => {
+    markdown += `| ${row.reqId} | ${row.priority} | ${row.description} | ${row.comments || ''} |\n`;
+  });
+
+  return markdown;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -173,7 +96,7 @@ export default async function handler(
     sendEvent({ progress: 35, status: 'Preparing project context...' });
     const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
 
-    const projectDetails = `Overview: ${project.overview}`; 
+    const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
     const prompt = singleFR
@@ -191,6 +114,7 @@ export default async function handler(
             "reqId": "FR_001",
             "priority": "Must have",
             "description": "The system shall provide a secure user authentication mechanism",
+            "comments": "Implements industry standard security protocols"
           },
           {
             "reqId": "FR_001.1",
@@ -243,25 +167,18 @@ ${projectDetails}`;
       parsedContent = JSON.parse(jsonContent);
       console.log('Parsed requirements:', JSON.stringify(parsedContent, null, 2));
 
+      sendEvent({ progress: 85, status: 'Saving requirements...' });
       if (parsedContent && parsedContent.requirements) {
-        // Create functional requirements
-        sendEvent({ progress: 85, status: 'Saving requirements...' });
-        const createdFRs = await Promise.all(parsedContent.requirements.map(async (requirement: any) => {
-          const editorState = createLexicalEditorState(requirement);
-
-          return await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
-            projectId: projectId as Id<"projects">,
-            title: `${requirement.id}: ${requirement.title}`,
-            description: JSON.stringify(editorState),
-          });
+        const formattedRequirements = parsedContent.requirements.map((req: any) => ({
+          title: `${req.id}: ${req.title}`,
+          description: createMarkdownTable(req)
         }));
 
-        // Send final response
         sendEvent({ progress: 95, status: 'Finalizing...' });
-        const serializedFRs = convertBigIntToNumber(createdFRs);
-
-        sendEvent({ progress: 100, status: 'Complete!' });
-        sendEvent({ done: true, content: serializedFRs });
+        sendEvent({
+          type: 'requirements',
+          content: formattedRequirements
+        });
       }
     } else {
       console.warn('Invalid response format from AI');

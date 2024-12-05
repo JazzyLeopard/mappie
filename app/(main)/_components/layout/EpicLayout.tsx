@@ -1,62 +1,65 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, memo, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Plus, MoreVertical, Trash, Edit, Save, BookOpen, X, ArrowRight, PanelLeftOpen, PanelLeftClose, Wand2 } from 'lucide-react'
+import AIStoryCreator from '@/ai/ai-chat'
 import LabelToInput from "@/app/(main)/_components/LabelToInput"
+import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Progress } from "@/components/ui/progress"
 import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import { useQuery, useMutation, useConvex } from "convex/react"
-import { useAuth } from "@clerk/clerk-react"
-import { toast } from "sonner"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
 import AiGenerationIcon from '@/icons/AI-Generation'
 import AiGenerationIconWhite from '@/icons/AI-Generation-White'
-import AIStoryCreator from '@/ai/ai-chat'
-import Image from 'next/image'
-import empty from '@/public/empty.png'
-import { useRouter } from 'next/navigation'
-import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor'
 import { cn } from '@/lib/utils'
-import { Progress } from "@/components/ui/progress"
-import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import empty from '@/public/empty.png'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import Empty from '@/public/empty.png'
+import { useAuth } from '@clerk/nextjs'
+import { useMutation, useQuery } from 'convex/react'
+import { BookOpen, ChevronDown, ChevronRight, Plus, Trash, Wand2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 type SelectedItems = {
   epic: string | null;
   story: string | null;
 }
 
-export default function EpicLayout({ params, handleEditorChange, onAddEpics, onDeleteEpic, onEditorBlur, onEpicNameChange }: { 
-  params: { 
+interface EpicLayoutProps {
+  params: {
     projectId: Id<"projects">;
     epicId?: Id<"epics">;
   },
   handleEditorChange: (epicId: Id<"epics">, field: string, value: any) => Promise<void>;
   onAddEpics: () => Promise<void>;
   onDeleteEpic: (epicId: Id<"epics">) => Promise<void>;
-  onEditorBlur: () => Promise<void>;
-  onEpicNameChange: (epicId: Id<"epics">, name: string) => Promise<void>;
   epics: any[];
-}) {
+}
+const EpicLayout = ({
+  params,
+  handleEditorChange,
+  onAddEpics,
+  onDeleteEpic,
+  epics
+}: EpicLayoutProps) => {
   const router = useRouter()
-  
+
   // Use the projectId from params
   const projectId = params.projectId;
   const epicId = params.epicId;
 
   // Initialize selected items with the first epic if available, otherwise null
-  const [selectedItems, setSelectedItems] = useState<SelectedItems>({ 
-    epic: null, 
-    story: null 
+  const [selectedItems, setSelectedItems] = useState<SelectedItems>({
+    epic: null,
+    story: null
   });
 
   // State to manage expanded epics
   const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set())
-  // State to manage editing epic ID
-  const [editingEpicId, setEditingEpicId] = useState<string | null>(null)
-  // State to manage editing epic name
-  const [editingEpicName, setEditingEpicName] = useState<string>('')
+
   // State to manage sidebar collapse
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -69,41 +72,39 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
   // Get authentication token
   const { getToken } = useAuth()
 
-  // Query to get epics for the project
-  const epics = useQuery(api.epics.getEpics, { projectId })
   // Query to get all user stories for the project
   const allUserStories = useQuery(api.userstories.getUserStories, { projectId });
+
   // Query to get selected epic by ID
   const selectedEpic = useQuery(api.epics.getEpicById,
     selectedItems.epic ? { epicId: selectedItems.epic as Id<"epics"> } : "skip"
   )
-  // Log selected epic query result
-  // useEffect(() => {
-  //   console.log('selectedEpic query result:', selectedEpic);
-  // }, [selectedEpic]);
 
   // Query to get selected user story by ID
   const selectedUserStory = useQuery(api.userstories.getUserStoryById,
     selectedItems.story ? { userStoryId: selectedItems.story as Id<"userStories"> } : "skip"
   )
-  // Log selected user story query result
-  // useEffect(() => {
-  //   console.log('selectedUserStory query result:', selectedUserStory);
-  // }, [selectedUserStory]);
 
   // Mutation to create a new epic
   const createEpic = useMutation(api.epics.createEpics)
   // Mutation to update an epic
   const updateEpic = useMutation(api.epics.updateEpic)
-  // Mutation to delete an epic
-  const deleteEpic = useMutation(api.epics.deleteEpic)
   // Mutation to create a new user story
   const createUserStory = useMutation(api.userstories.createUserStory)
   // Mutation to update a user story
   const updateUserStory = useMutation(api.userstories.updateUserStory)
   // Mutation to delete a user story
   const deleteUserStory = useMutation(api.userstories.deleteUserStory)
-  
+
+  const [content, setContent] = useState<any[]>([])
+
+  useEffect(() => {
+    if (allUserStories && allUserStories.length > 0) {
+      setContent(allUserStories)
+    }
+  }, [allUserStories])
+
+
   // Toggle the expansion of an epic
   const toggleEpic = useCallback((epicId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -138,15 +139,6 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
     setExpandedEpics(new Set(expandedEpics).add(newEpicId))
   }
 
-  // Handle deleting an epic
-  const handleDeleteEpic = async (epicId: Id<"epics">) => {
-    await deleteEpic({ _id: epicId })
-    if (selectedItems.epic === epicId) {
-      setSelectedItems({ epic: null, story: null })
-    }
-    setExpandedEpics(new Set(Array.from(expandedEpics).filter(id => id !== epicId)))
-  }
-
   // First, update the handleCreateUserStory function to properly return the ID
   const handleCreateUserStory = async (epicId: Id<"epics">) => {
     try {
@@ -165,12 +157,18 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
   };
 
   // Handle deleting a user story
-  const handleDeleteUserStory = async (userStoryId: Id<"userStories">) => {
-    await deleteUserStory({ id: userStoryId })
-    if (selectedItems.story === userStoryId) {
-      setSelectedItems(prev => ({ ...prev, story: null }))
+  const handleDeleteUserStory = useCallback(async (id: Id<"userStories">) => {
+    try {
+      await deleteUserStory({ id });
+      setContent((prevContent: any[]) => prevContent.filter((us: any) => us._id !== id));
+      toast.success("Epic deleted successfully");
+
+    } catch (error) {
+      console.error("Error deleting user story:", error);
+      toast.error("Failed to delete epic");
+
     }
-  }
+  }, [deleteUserStory]);
 
   // Handle changes to an epic
   const handleEpicChange = useCallback((epicId: Id<"epics">, field: string, value: any) => {
@@ -204,11 +202,14 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
     });
   }, [updateUserStory]);
 
-  // Log selected epic and user story
-  // useEffect(() => {
-  //   console.log('Selected Epic:', selectedEpic)
-  //   console.log('Selected User Story:', selectedUserStory)
-  // }, [selectedEpic, selectedUserStory])
+  const handleEditorUSChange = useCallback(async (id: Id<"userStories">, field: string, value: any) => {
+    console.log('Editor change:', { id, field, value });
+    try {
+      await updateUserStory({ id, [field]: value })
+    } catch (error) {
+      console.error("Error updating epic:", error);
+    }
+  }, [updateUserStory]);
 
   // Log changes to selected items
   useEffect(() => {
@@ -233,9 +234,8 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
     return (
       <div key={epic._id} className="">
         <div
-          className={`flex items-center rounded-lg px-4 py-1 hover:bg-white transition-colors ${
-            isSelected ? 'bg-white font-semibold' : ''
-          } cursor-pointer group`}
+          className={`flex items-center rounded-lg px-4 py-1 hover:bg-white transition-colors ${isSelected ? 'bg-white font-semibold' : ''
+            } cursor-pointer group`}
           onClick={() => {
             selectItem('epic', epic._id)
             setSelectedItems({ epic: epic._id, story: null })
@@ -247,7 +247,7 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
           >
             {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
           </button>
-          <span 
+          <span
             className="flex-grow text-left text-sm w-3/4"
             onClick={() => selectItem('epic', epic._id)}
           >
@@ -269,7 +269,7 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                handleDeleteEpic(epic._id)
+                onDeleteEpic(epic._id)
               }}
             >
               <Trash className="h-3 w-3" />
@@ -296,7 +296,8 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
           </div>
         )}
       </div>
-    )}, 
+    )
+  },
     [expandedEpics, selectedItems.epic, selectedItems.story]
   )
 
@@ -307,9 +308,8 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
         {stories.map(story => (
           <div
             key={story._id}
-            className={`pl-6 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer ${
-              selectedItems.story === story._id ? 'bg-slate-200 font-semibold' : ''
-            } group flex items-center justify-between`}
+            className={`pl-6 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer ${selectedItems.story === story._id ? 'bg-slate-200 font-semibold' : ''
+              } group flex items-center justify-between`}
             onClick={(e) => {
               e.stopPropagation()
               selectItem('story', story._id)
@@ -335,12 +335,6 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
       </div>
     )
   }, [selectedItems.story])
-
-  // State to manage refresh key
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  // State to track the latest inserted content
-  const [latestInsertedContent, setLatestInsertedContent] = useState<Array<{ type: "add" | "remove" | "unchanged"; content: string; }> | undefined>(undefined);
 
   // Function to handle inserting markdown content into the selected item
   // This function updates the description of the selected user story or epic with the provided markdown content
@@ -370,79 +364,9 @@ export default function EpicLayout({ params, handleEditorChange, onAddEpics, onD
   ) => {
     if (typeof window === 'undefined') return;
 
-    // Handle structured user story
-    if (typeof content === 'object' && content.type === 'structuredUserStory') {
-      const { title, description } = content.content;
-      
-      // Convert structured description to markdown string
-      const formattedDescription = `
-${description.description}
 
-## Acceptance Criteria
-${description.acceptance_criteria.map(ac => `
-### Scenario: ${ac.scenario}
-- Given: ${ac.given}
-- When: ${ac.when}
-- Then: ${ac.then}
-`).join('\n')}
-
-${description.interface_elements ? `## Interface Elements\n${description.interface_elements}\n` : ''}
-${description.functional_flow ? `## Functional Flow\n${description.functional_flow}\n` : ''}
-${description.states_and_emptyStates ? `## States and Empty States\n${description.states_and_emptyStates}\n` : ''}
-${description.errorMessages_and_validation ? `## Error Messages and Validation\n${description.errorMessages_and_validation}\n` : ''}
-`.trim();
-
-      // If we have a selected story, update it
-      if (selectedItems.story) {
-        // Update existing story
-        handleUserStoryChange(
-          selectedItems.story as Id<"userStories">, 
-          'title', 
-          title
-        );
-
-        if ((window as any).__insertMarkdown) {
-          (window as any).__insertMarkdown(formattedDescription);
-        }
-
-        handleUserStoryChange(
-          selectedItems.story as Id<"userStories">, 
-          'description', 
-          formattedDescription
-        );
-      } 
-      // If we have a selected epic, create a new story under it
-      else if (selectedItems.epic) {
-        // Create new story and handle the Promise properly
-        handleCreateUserStory(selectedItems.epic as Id<"epics">)
-          .then((newStoryId: Id<"userStories">) => {
-            if (!newStoryId) return;
-
-            // Update the new story with the generated content
-            handleUserStoryChange(
-              newStoryId, 
-              'title', 
-              title
-            );
-            
-            if ((window as any).__insertMarkdown) {
-              (window as any).__insertMarkdown(formattedDescription);
-            }
-
-            handleUserStoryChange(
-              newStoryId, 
-              'description', 
-              formattedDescription
-            );
-          })
-          .catch(error => {
-            console.error("Error creating new story:", error);
-            toast.error("Failed to create new story");
-          });
-      }
-    } 
     // Handle regular markdown
-    else if (typeof content === 'string') {
+    if (typeof content === 'string') {
       if ((window as any).__insertMarkdown) {
         (window as any).__insertMarkdown(content);
       }
@@ -450,31 +374,27 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
       // Update the database
       if (selectedItems.story) {
         handleUserStoryChange(
-          selectedItems.story as Id<"userStories">, 
-          'description', 
+          selectedItems.story as Id<"userStories">,
+          'description',
           content
         );
       } else if (selectedItems.epic) {
         handleEpicChange(
-          selectedItems.epic as Id<"epics">, 
-          'description', 
+          selectedItems.epic as Id<"epics">,
+          'description',
           content
         );
       }
     }
-  }, [selectedItems, handleUserStoryChange, handleEpicChange, handleCreateUserStory]);
+  }, [selectedItems, handleUserStoryChange, handleCreateUserStory]);
 
-  // Memoize handlers
-  const handleEpicEditorChange = useCallback((id: Id<"epics">, field: string, value: string) => {
-    handleEpicChange(id, field, value);
-  }, [handleEpicChange]);
 
   // Memoize the epic editor section
   const EpicEditor = useMemo(() => {
     if (!selectedEpic) return null;
-    
+
     const epicUserStories = allUserStories?.filter((story: any) => story.epicId === selectedEpic._id) || []
-    
+
     return (
       <div className="flex flex-col h-full">
         <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
@@ -482,12 +402,12 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             key={`${selectedEpic._id}-${selectedEpic.name}`}
             value={selectedEpic.name}
             setValue={(newName) => handleEpicChange(selectedEpic._id, 'name', newName)}
-            onBlur={() => {}}
+            onBlur={() => { }}
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="default" 
+                variant="default"
                 className="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-blue-300 text-white font-semibold"
               >
                 <AiGenerationIconWhite />
@@ -504,7 +424,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                 <Wand2 className="h-4 w-4" />
                 Generate Initial User Stories
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleGenerateUserStories(selectedEpic._id)}
                 className="flex items-center gap-2 p-2"
               >
@@ -518,21 +438,12 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           <LexicalEditor
             key={selectedItems.epic as string}
             itemId={selectedItems.epic as Id<"epics">}
-            onBlur={onEditorBlur}
+            onBlur={async () => { }}
             attribute="description"
-            projectDetails={{
-              _id: selectedItems.epic,
-              description: selectedEpic?.description || ''
-            }}
-            setProjectDetails={(newDetails) => {
-              if (selectedItems.epic) {
-                handleEditorChange(
-                  selectedItems.epic as Id<"epics">,
-                  'description',
-                  newDetails.description
-                );
-              }
-            }}
+            projectDetails={selectedEpic}
+            setProjectDetails={(value) =>
+              handleEditorChange(selectedEpic._id as Id<"epics">, 'description', value)
+            }
             context="epics"
             isRichText={true}
           />
@@ -544,7 +455,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
   // Create a memoized UserStory editor component
   const UserStoryEditor = useMemo(() => {
     if (!selectedUserStory) return null;
-    
+
     return (
       <div className='flex flex-col h-full'>
         <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
@@ -552,36 +463,28 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
             key={`${selectedUserStory._id}-${selectedUserStory.title}`}
             value={selectedUserStory.title}
             setValue={(newTitle) => handleUserStoryChange(selectedUserStory._id, 'title', newTitle)}
-            onBlur={() => {}}
+            onBlur={() => { }}
           />
         </header>
-        <ScrollArea className="flex-1 min-h-0 pr-2" withShadow={true}>
-          <LexicalEditor
-            key={selectedItems.story as string}
+        <ScrollArea className='flex-1 overflow-y-auto flex h-full'>
+          <div className='flex-1 px-0 h-[500px]'>
+            <LexicalEditor
+              key={selectedItems.story as string}
               itemId={selectedItems.story as Id<"userStories">}
-              onBlur={async () => {}}
+              onBlur={async () => { }}
               attribute="description"
-              projectDetails={{
-                _id: selectedItems.story,
-                description: selectedUserStory?.description || ''
-              }}
-              setProjectDetails={(newDetails) => {
-                console.log('Updating user story with:', newDetails);
-                if (selectedItems.story) {
-                  handleUserStoryChange(
-                    selectedItems.story as Id<"userStories">,
-                    'description',
-                    newDetails.description
-                  );
-                }
-              }}
+              projectDetails={selectedUserStory}
+              setProjectDetails={(value) =>
+                handleEditorUSChange(selectedUserStory._id as Id<"userStories">, "description", value)
+              }
               context="userStories"
               isRichText={true}
-          />
+            />
+          </div>
         </ScrollArea>
       </div>
     );
-  }, [selectedUserStory, handleUserStoryChange]);
+  }, [selectedUserStory, handleUserStoryChange, handleEditorUSChange]);
 
   // Add these state variables at the top of the component
   const [isGenerating, setIsGenerating] = useState(false);
@@ -624,7 +527,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           projectId: params.projectId,
         }),
       });
@@ -639,19 +542,19 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n');
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(5).trim());
-              
+
               if (data.error) {
                 throw new Error(data.error);
               }
-              
+
               if (data.done) {
                 // Clear the simulation interval
                 if (progressInterval.current) {
@@ -668,7 +571,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                 }
                 return;
               }
-              
+
               // Update status message from the server if provided
               if (data.status) {
                 setGenerationStatus(data.status);
@@ -709,14 +612,6 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     console.log('Selected epic data:', selectedEpic);
   }, [selectedItems.epic, selectedEpic]);
 
-  // Modify your selection handler
-  const handleEpicSelect = useCallback((epicId: string) => {
-    setSelectedItems(prev => ({
-      ...prev,
-      epic: epicId,
-      story: null
-    }));
-  }, []);
 
   // Add this new handler for single epic generation
   const handleGenerateSingleEpic = async () => {
@@ -738,7 +633,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           projectId: params.projectId,
         }),
       });
@@ -753,19 +648,19 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n');
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(5).trim());
-              
+
               if (data.error) {
                 throw new Error(data.error);
               }
-              
+
               if (data.done) {
                 // Clear the simulation interval
                 if (progressInterval.current) {
@@ -782,7 +677,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                 }
                 return;
               }
-              
+
               // Update status message from the server if provided
               if (data.status) {
                 setGenerationStatus(data.status);
@@ -823,6 +718,8 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     // Start progress simulation
     progressInterval.current = setInterval(simulateProgress, 300);
 
+    setGenerationStatus('Generating user stories...');
+
     try {
       const token = await getToken();
       const response = await fetch('/api/userstories', {
@@ -831,7 +728,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           epicId,
           projectId: params.projectId,
         }),
@@ -843,7 +740,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
       }
 
       const data = await response.json();
-      
+
       // Clear the simulation interval
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
@@ -866,6 +763,8 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           data.markdown
         );
       }
+
+      // ... rest of the streaming logic similar to handleGenerateEpics ...
 
     } catch (error) {
       console.error("Error generating user stories:", error);
@@ -897,7 +796,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           <h2 className="text-xl font-semibold text-center">
             Project Overview is empty or missing.
           </h2>
-          <Button 
+          <Button
             className="bg-white text-black border border-gray-300 hover:bg-gray-200"
             onClick={() => router.push(`/projects/${projectId}`)}
             variant="default"
@@ -920,7 +819,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                 <Plus className="mr-2 h-4 w-4" /> Add Epic
               </Button>
               <Button onClick={handleGenerateSingleEpic} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
-                <AiGenerationIcon /> 
+                <AiGenerationIcon />
                 <span className="ml-2 font-semibold ">Generate Epic</span>
               </Button>
             </div>
@@ -935,7 +834,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
           </ScrollArea>
         </div>
       </div>
-      
+
       <div className="flex flex-1 gap-2">
         {epics && epics.length > 0 ? (
           <>
@@ -950,16 +849,16 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                 </div>
               )}
             </div>
-            
+
             <div className={cn(
               `group/sidebar ${isCollapsed ? 'w-16' : 'w-[40%]'} max-w-[600px] transition-width duration-300`,
               isResetting && "transition-all ease-in-out duration-300"
             )}>
               <div className="shadow-sm bg-white rounded-xl h-full">
                 {selectedItems.story ? (
-                  <AIStoryCreator 
+                  <AIStoryCreator
                     key={`story-${selectedItems.story}`}
-                    onInsertMarkdown={handleInsertMarkdown} 
+                    onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedUserStory?.description || ''}
                     selectedItemType="userStory"
                     selectedEpic={selectedEpic ? {
@@ -973,9 +872,9 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
                     toggleCollapse={toggleCollapse}
                   />
                 ) : selectedItems.epic ? (
-                  <AIStoryCreator 
+                  <AIStoryCreator
                     key={`epic-${selectedItems.epic}`}
-                    onInsertMarkdown={handleInsertMarkdown} 
+                    onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedEpic?.description || ''}
                     selectedItemType="epic"
                     selectedEpic={selectedEpic ? {
@@ -1015,7 +914,7 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
               <div className="text-center">
                 <span className="text-gray-500">or</span>
               </div>
-              <Button variant="outline" onClick={() => {}}>
+              <Button variant="outline" onClick={() => { }}>
                 Add Epic manually
               </Button>
             </div>
@@ -1037,3 +936,5 @@ ${description.errorMessages_and_validation ? `## Error Messages and Validation\n
     </div>
   )
 }
+
+export default EpicLayout;
