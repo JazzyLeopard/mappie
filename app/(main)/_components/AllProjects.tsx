@@ -81,7 +81,7 @@ export default function Component() {
     setIsGenerating(true);
 
     try {
-      // Phase 1: Create the project
+      // Phase 1: Create the project first
       const projectId = await createProject({
         title: "New AI Generated Project",
       });
@@ -90,6 +90,7 @@ export default function Component() {
         throw new Error("Failed to create project");
       }
 
+      // Show success toast for project creation
       toast.success("Project created. Generating details...");
 
       // Phase 2: Generate project details
@@ -109,7 +110,7 @@ export default function Component() {
         throw new Error(errorData.error || 'Failed to generate project details');
       }
 
-      const data = await response.json();
+      await response.json(); // Wait for the response
 
       // Success handling
       toast.success("Project details generated successfully!");
@@ -156,7 +157,7 @@ export default function Component() {
                   Ideate with AI
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="min-w-[36rem] min-h-[36rem]">
+              <PopoverContent className="min-w-[24rem]">
                 <div className="space-y-4">
                   <Textarea
                     placeholder="Describe the type of project/product/app/feature you want to create. Mappie will generate a project with populated fields as a starting point for you to build upon."
@@ -164,7 +165,8 @@ export default function Component() {
                     onChange={(e) => setAiPrompt(e.target.value)}
                     rows={4}
                     disabled={isGenerating}
-                    className="resize-none min-h-[28rem]"
+                    className="resize-none"
+                    variant="default"
                   />
                   <Button
                     onClick={handleGenerateProject}
