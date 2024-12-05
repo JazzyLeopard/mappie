@@ -84,8 +84,8 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
         {/* Message Bubble */}
         <div className={cn(
           "text-sm w-full break-words overflow-hidden", // added overflow-hidden
-          message.role === "user" 
-            ? "bg-slate-100 text-gray-900 px-2 py-4 rounded-lg mb-2 mt-2" 
+          message.role === "user"
+            ? "bg-slate-100 text-gray-900 px-2 py-4 rounded-lg mb-2 mt-2"
             : "text-foreground"
         )}>
           <ReactMarkdown
@@ -94,7 +94,7 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
             rehypePlugins={[rehypeRaw]}
             components={{
               h1: ({ node, ...props }) => (
-              <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
+                <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
               ),
               h2: ({ node, ...props }) => (
                 <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
@@ -118,7 +118,7 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
                 <li className="leading-relaxed" {...props} />
               ),
               code: ({ node, ...props }) => (
-                  <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
+                <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
               ),
               blockquote: ({ node, ...props }) => (
                 <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
@@ -421,7 +421,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
       {!isCollapsed && (
         <>
           <Separator />
-          <ScrollArea 
+          <ScrollArea
             ref={scrollRef}
             className="flex-1"
             withShadow={true}
@@ -468,7 +468,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                         e.preventDefault()
                         handleSubmit(e as any)
                       }
-                    }}              
+                    }}
                     placeholder="Ask me to improve or generate content..."
                     rows={3}
                     className={cn(
@@ -479,8 +479,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
                       {
                         type: selectedItemType === 'userStory' ? 'User Story' :
                           selectedItemType === 'epic' ? 'Epic' :
-                          selectedItemType === 'useCase' ? 'Use Case' :
-                          selectedItemType,
+                            selectedItemType === 'useCase' ? 'Use Case' :
+                              selectedItemType,
                         name: (() => {
                           if (selectedItemType === 'epic') {
                             return selectedEpic?.name || 'Untitled Epic';
@@ -492,6 +492,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                       }
                       // Add more context labels here as needed
                     ]}
+                    variant='chat'
                   />
                 </div>
               </form>

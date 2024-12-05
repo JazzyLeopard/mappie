@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import ConvexClientProvider from "./ConvexClientProvider";
 import { OpenPanelComponent } from '@openpanel/nextjs';
+import { Toaster } from 'sonner';
 
 import "@/app/globals.css";
 
@@ -46,6 +47,7 @@ export default function RootLayout({
           // profileId={'123'} // If you have a user id
           />
           {children}
+          <Toaster />
         </ConvexClientProvider>
       </body>
     </html>
