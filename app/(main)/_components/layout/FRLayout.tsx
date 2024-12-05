@@ -2,62 +2,59 @@ import AIStoryCreator from '@/ai/ai-chat';
 import LabelToInput from "@/app/(main)/_components/LabelToInput";
 import LexicalEditor from '@/app/(main)/_components/Lexical/LexicalEditor';
 import { Button } from '@/components/ui/button';
-import { Progress } from "@/components/ui/progress";
+import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from '@/icons/AI-Generation';
 import AiGenerationIconWhite from "@/icons/AI-Generation-White";
-import { FunctionalRequirement } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import Empty from "@/public/empty.png";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from '@clerk/nextjs';
+import { useMutation } from 'convex/react';
 import { BookOpen, Plus, Trash } from 'lucide-react';
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 type SelectedItems = {
     fr: string | null;
 }
-
 interface FRLayoutProps {
     projectId: Id<"projects">;
     handleEditorChange: (frId: Id<"functionalRequirements">, field: string, value: any) => Promise<void>;
     onManualAddFR: () => Promise<void>;
-    onGenerateFR: () => Promise<void>;
     onDeleteFR: (id: Id<"functionalRequirements">) => Promise<void>;
-    onEditorBlur: () => Promise<void>;
-    onFRNameChange: (frId: Id<"functionalRequirements">, title: string) => Promise<void>;
-    functionalRequirements: FunctionalRequirement[];
+    functionalRequirements: any[];
     isOnboardingComplete: boolean;
-    updateProject: (payload: any) => Promise<void>;
 }
 
 const FRLayout: React.FC<FRLayoutProps> = ({
     projectId,
     handleEditorChange,
     onManualAddFR,
-    onGenerateFR,
     onDeleteFR,
-    onEditorBlur,
-    onFRNameChange,
     functionalRequirements,
     isOnboardingComplete,
-    updateProject
 }) => {
     const { getToken } = useAuth();
     const router = useRouter();
-    const [selectedItems, setSelectedItems] = useState<SelectedItems>({
-        fr: null
-    });
     const [generationProgress, setGenerationProgress] = useState(0);
     const [generationStatus, setGenerationStatus] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
+    const [selectedItems, setSelectedItems] = useState<SelectedItems>({
+        fr: null
+    });
+
     const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+
+    const onCreateFR = useMutation(api.functionalRequirements.createFunctionalRequirement);
+
+    const updateFR = useMutation(api.functionalRequirements.updateFunctionalRequirement);
 
     const selectItem = useCallback((id: string) => {
         setSelectedItems({ fr: id });
@@ -66,6 +63,20 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const selectedFR = functionalRequirements && functionalRequirements.length > 0 ?
         functionalRequirements.find(fr => fr._id === selectedItems.fr) :
         null;
+
+    const searchParams = useSearchParams();
+    const hasGenerated = useRef(false);
+
+    // Effect to handle auto-generation when generate=true
+    useEffect(() => {
+        if (!searchParams || hasGenerated.current) return;
+
+        const shouldGenerate = searchParams.get('generate') === 'true';
+        if (shouldGenerate && !isGenerating) {
+            handleGenerateMultipleFRs();
+            hasGenerated.current = true;
+        }
+    }, [searchParams, isGenerating]);
 
     useEffect(() => {
         if (functionalRequirements && functionalRequirements.length > 0 && !selectedItems.fr) {
@@ -79,25 +90,117 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         }
     };
 
-    const mandatoryFields = ["overview", "problemStatement", "userPersonas", "featuresInOut"];
-
-    const handleManualAdd = async () => {
-        console.log("Manual Add FR button clicked");
-        try {
-            await onManualAddFR();
-        } catch (error) {
-            console.error("Error in manual add:", error);
+    const handleFRNameChange = useCallback((frId: Id<"functionalRequirements">, field: string, value: any) => {
+        // Skip if no changes or no value
+        if (!value || !frId) {
+            return;
         }
-    };
 
-    const simulateProgress = () => {
-        setGenerationProgress(prev => {
-            if (prev >= 99) return prev;
-            const remaining = 99 - prev;
-            const increment = Math.max(0.5, remaining * 0.1);
-            return Math.min(99, prev + increment);
+        // Single update to database
+        updateFR({
+            id: frId,
+            [field]: value
+        }).catch(error => {
+            console.error("Error updating functional requirements:", error);
         });
-    };
+    }, [updateFR]);
+
+    function createLexicalState(requirement: any) {
+        const editorState = {
+            root: {
+                children: [
+                    // Heading node
+                    {
+                        children: [
+                            {
+                                detail: 0,
+                                format: 0,
+                                mode: "normal",
+                                style: "",
+                                text: requirement.title,
+                                type: "text",
+                                version: 1
+                            }
+                        ],
+                        direction: "ltr",
+                        format: "",
+                        indent: 0,
+                        type: "heading",
+                        tag: "h3",
+                        version: 1
+                    },
+                    // Table node
+                    {
+                        type: "table",
+                        version: 1,
+                        children: [
+                            // Header row
+                            {
+                                type: "tablerow",
+                                version: 1,
+                                children: [
+                                    {
+                                        type: "tablecell",
+                                        headerState: 1,
+                                        children: [{ type: "text", text: "Req ID" }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 1,
+                                        children: [{ type: "text", text: "Priority" }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 1,
+                                        children: [{ type: "text", text: "Description" }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 1,
+                                        children: [{ type: "text", text: "Comments" }]
+                                    }
+                                ]
+                            },
+                            // Data rows
+                            ...requirement.rows.map((row: any) => ({
+                                type: "tablerow",
+                                version: 1,
+                                children: [
+                                    {
+                                        type: "tablecell",
+                                        headerState: 0,
+                                        children: [{ type: "text", text: row.reqId }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 0,
+                                        children: [{ type: "text", text: row.priority }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 0,
+                                        children: [{ type: "text", text: row.description }]
+                                    },
+                                    {
+                                        type: "tablecell",
+                                        headerState: 0,
+                                        children: [{ type: "text", text: row.comments || "" }]
+                                    }
+                                ]
+                            }))
+                        ]
+                    }
+                ],
+                direction: "ltr",
+                format: "",
+                indent: 0,
+                type: "root",
+                version: 1
+            }
+        };
+
+        return JSON.stringify(editorState);
+    }
 
     const handleGenerateSingleFR = async () => {
         if (!projectId) {
@@ -105,12 +208,17 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             return;
         }
 
-        setIsGenerating(true);
-        setGenerationProgress(0);
-        setGenerationStatus('Generating a new requirement...');
-        progressInterval.current = setInterval(simulateProgress, 300);
-
         try {
+            // Create empty FR first
+            const newFR = await onCreateFR({
+                projectId,
+                title: 'New Functional Requirement',
+                description: ''
+            });
+
+            const frId = newFR?._id as Id<'functionalRequirements'>;
+            selectItem(frId);
+
             const token = await getToken();
             const response = await fetch('/api/functional-requirements/single', {
                 method: 'POST',
@@ -123,16 +231,22 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 },
                 body: JSON.stringify({
                     projectId,
+                    frId
                 }),
             });
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
+            let currentTable = {
+                title: '',
+                rows: []
+            };
 
             if (!reader) {
                 throw new Error('No reader available');
             }
 
+            // Process the stream
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -141,47 +255,46 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 const lines = chunk.split('\n');
 
                 for (const line of lines) {
-                    if (line.startsWith('data: ')) {
+                    if (line.startsWith('9:') || line.startsWith('a:')) {
                         try {
-                            const data = JSON.parse(line.slice(5).trim());
+                            const data = JSON.parse(line.slice(2));
+                            console.log("Parsed data:", data);
 
-                            if (data.error) {
-                                throw new Error(data.error);
+                            // Handle title setting
+                            if (data.toolName === 'setFRTitle' && data.args?.title) {
+                                currentTable.title = data.args.title;
+                                await handleFRNameChange(frId, 'title', data.args.title);
                             }
+                            // Handle row generation
+                            else if (data.toolName === 'generateTableRow' && data.args) {
+                                const newRow = {
+                                    reqId: data.args.reqId,
+                                    priority: data.args.priority,
+                                    description: data.args.description,
+                                    comments: data.args.comments || ''
+                                };
 
-                            if (data.done) {
-                                if (progressInterval.current) {
-                                    clearInterval(progressInterval.current);
-                                }
-                                setGenerationProgress(100);
-                                setGenerationStatus('Complete!');
-                                toast.success("New requirement generated successfully");
-                                setTimeout(() => {
-                                    setIsGenerating(false);
-                                }, 1000);
-                                if (onGenerateFR) {
-                                    await onGenerateFR();
-                                }
+                                currentTable.rows.push(newRow as never);
+
+                                // Update the editor with the current state
+                                const lexicalState = createLexicalState(currentTable);
+                                await handleEditorChange(frId, 'description', lexicalState);
+                            }
+                            // Handle completion
+                            else if (data.finishReason === 'tool-calls') {
+                                toast.success("Requirement generated successfully");
                                 return;
                             }
-
-                            if (data.status) {
-                                setGenerationStatus(data.status);
-                            }
                         } catch (e) {
-                            console.error('Error parsing SSE data:', e);
+                            console.error('Error parsing stream data:', e);
                         }
                     }
                 }
             }
+
         } catch (error) {
             console.error("Error generating requirement:", error);
-            toast.error("Failed to generate requirement. Please try again.");
-        } finally {
-            if (progressInterval.current) {
-                clearInterval(progressInterval.current);
-            }
-            setIsGenerating(false);
+            toast.error("Failed to generate requirement");
         }
     };
 
@@ -193,8 +306,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
         setIsGenerating(true);
         setGenerationProgress(0);
-        setGenerationStatus('Initializing...');
-
+        setGenerationStatus('Initializing functional requirement generation...');
         progressInterval.current = setInterval(simulateProgress, 300);
 
         try {
@@ -237,31 +349,70 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 throw new Error(data.error);
                             }
 
-                            if (data.done) {
+                            // Handle status updates
+                            if (data.status) {
+                                setGenerationStatus(data.status);
+                            }
+
+                            // Handle parsed requirements data
+                            if (data.type === 'requirements' && Array.isArray(data.content)) {
+                                // Process each requirement
+                                for (const requirement of data.content) {
+                                    try {
+                                        // Create new FR
+                                        const newFR = await onCreateFR({
+                                            projectId,
+                                            title: requirement.title,
+                                            description: JSON.stringify(requirement.description)
+                                        });
+
+                                        if (!newFR?._id) {
+                                            console.error('Failed to create FR:', requirement.title);
+                                            continue;
+                                        }
+
+                                        // Update the editor state with the Lexical format
+                                        await handleEditorChange(
+                                            newFR._id,
+                                            'description',
+                                            requirement.description
+                                        );
+
+                                    } catch (error) {
+                                        console.error('Error processing requirement:', error);
+                                        toast.error(`Failed to process requirement: ${requirement.title}`);
+                                    }
+                                }
+
+                                // Update progress and status
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
                                 }
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
-                                toast.success("Functional requirements generated successfully");
+                                toast.success("Requirements generated successfully");
+
+                                // Refresh the FR list if needed
+                                if (onManualAddFR) {
+                                    await onManualAddFR();
+                                }
+
+                                // Clean up
                                 setTimeout(() => {
                                     setIsGenerating(false);
                                 }, 1000);
-                                if (onGenerateFR) {
-                                    await onGenerateFR();
-                                }
+
                                 return;
                             }
 
-                            if (data.status) {
-                                setGenerationStatus(data.status);
-                            }
                         } catch (e) {
                             console.error('Error parsing SSE data:', e);
+                            toast.error("Error processing requirements data");
                         }
                     }
                 }
             }
+
         } catch (error) {
             console.error("Error generating functional requirements:", error);
             toast.error("Failed to generate functional requirements. Please try again.");
@@ -272,14 +423,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             setIsGenerating(false);
         }
     };
-
-    useEffect(() => {
-        return () => {
-            if (progressInterval.current) {
-                clearInterval(progressInterval.current);
-            }
-        };
-    }, []);
 
     // Add this sorting function
     const sortFunctionalRequirements = (frs: any[]) => {
@@ -296,6 +439,18 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const toggleAIChat = () => {
         setIsAIChatCollapsed(!isAIChatCollapsed);
     };
+
+    // Add progress simulation function
+    const simulateProgress = () => {
+        setGenerationProgress(prev => {
+            if (prev >= 99) return prev;
+            const remaining = 99 - prev;
+            const increment = Math.max(0.5, remaining * 0.1);
+            return Math.min(99, prev + increment);
+        });
+    };
+
+
 
     if (!isOnboardingComplete) {
         return (
@@ -329,7 +484,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     <div className="p-2 pt-4">
                         <div className="flex flex-col items-center space-y-2 mb-4">
                             <Button
-                                onClick={handleManualAdd}
+                                onClick={onManualAddFR}
                                 variant='ghost'
                                 className="w-full text-sm justify-start hover:bg-slate-200 pl-2"
                             >
@@ -394,8 +549,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 <div className="flex flex-col h-full">
                                     <header className="flex items-center justify-between px-4 pb-3 w-full">
                                         <LabelToInput
+                                            key={`${selectedFR._id}-${selectedFR.title}`}
                                             value={selectedFR.title}
-                                            setValue={(newTitle) => onFRNameChange(selectedItems.fr as Id<"functionalRequirements">, newTitle)}
+                                            setValue={(newTitle) => handleFRNameChange(selectedFR._id as Id<"functionalRequirements">, 'title', newTitle)}
                                             onBlur={() => { }}
                                         />
                                     </header>
@@ -403,7 +559,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                         <LexicalEditor
                                             key={selectedItems.fr}
                                             itemId={selectedItems.fr as Id<'functionalRequirements'>}
-                                            onBlur={onEditorBlur}
+                                            onBlur={async () => { }}
                                             attribute="description"
                                             projectDetails={selectedFR}
                                             setProjectDetails={(value) => handleEditorChange(selectedFR._id, 'description', value)}
@@ -420,7 +576,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         </div>
 
                         <div className={cn(
-                            `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-2/5'} transition-width duration-300`,
+                            `group/sidebar ${isAIChatCollapsed ? 'w-16' : 'w-[40%]'} max-w-[600px] transition-width duration-300`,
                             isResetting && "transition-all ease-in-out duration-300"
                         )}>
                             <div className="shadow-sm bg-white rounded-xl h-full">
@@ -482,12 +638,11 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                     </div>
                 )}
             </div>
-
             {isGenerating && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
                     <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
                         <div className="flex flex-col space-y-4">
-                            <h3 className="text-lg font-semibold">Generating Requirements</h3>
+                            <h3 className="text-lg font-semibold">Generating Functional requirements</h3>
                             <Progress value={generationProgress} className="w-full" />
                             <p className="text-sm text-muted-foreground">{generationStatus}</p>
                         </div>

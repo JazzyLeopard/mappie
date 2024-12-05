@@ -11,21 +11,14 @@ import { toast } from "sonner"
 
 interface UseCasesProps {
   params: {
-    projectId: string;
-    propertyPrompts: typeof propertyPrompts;
+    projectId: Id<"projects">;
   };
 }
 
-function UseCasesErrorFallback({ error, resetErrorBoundary }: {
-  error: Error,
-  resetErrorBoundary: () => void
-}) {
-  return <div>Error loading use cases: {error.message}</div>;
-}
+const UseCasesPage = ({ params }: UseCasesProps) => {
 
-const UseCasesContent = ({ params }: UseCasesProps) => {
+
   const projectId = params.projectId as Id<"projects">;
-  const [error, setError] = useState<Error | null>(null);
   const [content, setContent] = useState<any>([])
   const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId });
   const createUseCase = useMutation(api.useCases.createUseCase);
@@ -43,22 +36,24 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
   })
 
   const handleCreateUseCase = useCallback(async () => {
-    let newUc = {
+    await createUseCase({
       projectId,
-      title: `Use Case ${useCases?.length ?? 0 + 1}`,
+      title: `New Use case ${useCases?.length ?? 0 + 1}`,
       description: ''
-    }
-    const newUseCaseId = await createUseCase(newUc);
-  }, [createUseCase, useCases, projectId]);
-
-  const handleUpdateUseCase = useCallback(async (id: Id<"useCases">, field: 'title' | 'description', value: any) => {
-    await updateUseCase({ id, [field]: value });
-  }, [updateUseCase]);
+    })
+  }, [projectId, useCases, createUseCase]);
 
   const handleEditorChange = useCallback(async (id: Id<"useCases">, field: string, value: any) => {
-    await handleUpdateUseCase(id, field as 'title' | 'description', value);
-  }, [handleUpdateUseCase]);
-
+    console.log('Editor change:', { id, field, value });
+    try {
+      await updateUseCase({
+        id,
+        [field]: value
+      })
+    } catch (error) {
+      console.error("Error updating use case:", error);
+    }
+  }, [updateUseCase]);
 
   const handleDelete = useCallback(async (id: Id<"useCases">) => {
     try {
@@ -76,9 +71,6 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
     return project.overview?.trim() !== '';
   }, [project]);
 
-  if (error) {
-    return <div>Error loading use cases: {error.message}</div>;
-  }
 
   if (useCases === undefined || project === undefined) {
     return <Spinner size={"lg"} />;
@@ -86,32 +78,14 @@ const UseCasesContent = ({ params }: UseCasesProps) => {
 
   return (
     <UseCasesLayout
+      projectId={projectId}
       handleEditorChange={handleEditorChange}
       onAddUseCase={handleCreateUseCase}
       onDeleteUseCase={handleDelete}
       useCases={content || []}
       isOnboardingComplete={isOnboardingComplete}
-      projectId={projectId}
-      onEditorBlur={async () => { }}
-      onUseCaseNameChange={async (useCaseId, name) => {
-        await handleUpdateUseCase(useCaseId, 'title', name);
-      }}
     />
   );
 };
 
-const UseCases = (props: UseCasesProps) => {
-  return (
-    <ErrorBoundary
-      FallbackComponent={UseCasesErrorFallback}
-      onReset={() => {
-        // Reset any state that might have caused the error
-        window.location.reload();
-      }}
-    >
-      <UseCasesContent {...props} />
-    </ErrorBoundary>
-  );
-};
-
-export default UseCases;
+export default UseCasesPage;
