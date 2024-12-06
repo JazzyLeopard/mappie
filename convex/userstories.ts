@@ -47,7 +47,8 @@ export const updateUserStory = mutation({
 export const deleteUserStory = mutation({
   args: { id: v.id("userStories") },
   handler: async (ctx: any, args: any) => {
-    await ctx.db.delete(args.id);
+    const { id } = args;
+    await ctx.db.delete(id);
   },
 });
 
@@ -68,7 +69,7 @@ export const getUserStories = query({
 
     let userStoriesQuery = ctx.db
       .query("userStories")
-      .filter((q: any) => 
+      .filter((q: any) =>
         q.or(
           ...epicIds.map((epicId: any) => q.eq(q.field("epicId"), epicId))
         )

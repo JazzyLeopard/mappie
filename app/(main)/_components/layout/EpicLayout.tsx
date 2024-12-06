@@ -46,10 +46,8 @@ const EpicLayout = ({
   epics
 }: EpicLayoutProps) => {
   const router = useRouter()
-
   // Use the projectId from params
   const projectId = params.projectId;
-  const epicId = params.epicId;
 
   // Initialize selected items with the first epic if available, otherwise null
   const [selectedItems, setSelectedItems] = useState<SelectedItems>({
@@ -63,6 +61,8 @@ const EpicLayout = ({
   // State to manage sidebar collapse
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
+  const [content, setContent] = useState<any[]>([])
+
 
   // Toggle sidebar collapse
   const toggleCollapse = () => {
@@ -74,6 +74,27 @@ const EpicLayout = ({
 
   // Query to get all user stories for the project
   const allUserStories = useQuery(api.userstories.getUserStories, { projectId });
+
+  // Select an item (epic or story)
+  const selectItem = useCallback((type: 'epic' | 'story', id: string, epicId?: string) => {
+    setSelectedItems(prev => {
+      if (type === 'epic') {
+        // When selecting an epic, clear the story selection
+        return { epic: id, story: null };
+      } else {
+        // When selecting a story, keep track of both epic and story
+        return { epic: epicId || prev.epic, story: id };
+      }
+    });
+  }, []);
+
+  // Automatically select the first epic if available
+  useEffect(() => {
+    if (!selectedItems.epic && epics && epics.length > 0 && !params.epicId) {
+      const firstEpicId = epics[0]._id;
+      selectItem('epic', firstEpicId);
+    }
+  }, [epics, params.epicId, selectItem]);
 
   // Query to get selected epic by ID
   const selectedEpic = useQuery(api.epics.getEpicById,
@@ -96,14 +117,11 @@ const EpicLayout = ({
   // Mutation to delete a user story
   const deleteUserStory = useMutation(api.userstories.deleteUserStory)
 
-  const [content, setContent] = useState<any[]>([])
-
   useEffect(() => {
     if (allUserStories && allUserStories.length > 0) {
       setContent(allUserStories)
     }
   }, [allUserStories])
-
 
   // Toggle the expansion of an epic
   const toggleEpic = useCallback((epicId: string, e: React.MouseEvent) => {
@@ -118,19 +136,6 @@ const EpicLayout = ({
       return newSet
     })
   }, [])
-
-  // Select an item (epic or story)
-  const selectItem = useCallback((type: 'epic' | 'story', id: string, epicId?: string) => {
-    setSelectedItems(prev => {
-      if (type === 'epic') {
-        // When selecting an epic, clear the story selection
-        return { epic: id, story: null };
-      } else {
-        // When selecting a story, keep track of both epic and story
-        return { epic: epicId || prev.epic, story: id };
-      }
-    });
-  }, []);
 
   // Handle adding a new epic
   const handleAddEpic = async () => {
@@ -160,12 +165,12 @@ const EpicLayout = ({
   const handleDeleteUserStory = useCallback(async (id: Id<"userStories">) => {
     try {
       await deleteUserStory({ id });
-      setContent((prevContent: any[]) => prevContent.filter((us: any) => us._id !== id));
-      toast.success("Epic deleted successfully");
+      // setContent((prevContent: any[]) => prevContent.filter((us: any) => us._id !== id));
+      toast.success("User story deleted successfully");
 
     } catch (error) {
       console.error("Error deleting user story:", error);
-      toast.error("Failed to delete epic");
+      toast.error("Failed to delete User story");
 
     }
   }, [deleteUserStory]);
@@ -216,27 +221,20 @@ const EpicLayout = ({
     console.log('selectedItems changed:', selectedItems);
   }, [selectedItems]);
 
-  // Automatically select the first epic if available
-  useEffect(() => {
-    if (!selectedItems.epic && epics && epics.length > 0 && !params.epicId) {
-      const firstEpicId = epics[0]._id;
-      selectItem('epic', firstEpicId);
-    }
-  }, [epics, selectedItems.epic, params.epicId]);
-
-
   // Render an epic
   const renderEpic = useCallback((epic: any) => {
     const isExpanded = expandedEpics.has(epic._id)
     const isSelected = selectedItems.epic === epic._id && selectedItems.story === null
     const epicUserStories = allUserStories?.filter((story: any) => story.epicId === epic._id) || []
 
+    const truncatedEpicName = epic.name.length > 22
+      ? epic.name.substring(0, 22) + '...'
+      : epic.name;
     return (
       <div key={epic._id} className="">
         <div
-          className={`flex items-center rounded-lg px-4 py-1 mb-2 hover:bg-white transition-colors ${
-            isSelected ? 'bg-white font-semibold' : ''
-          } cursor-pointer group`}
+          className={`flex items-center rounded-lg px-4 py-1 mb-2 hover:bg-white transition-colors ${isSelected ? 'bg-white font-semibold' : ''
+            } cursor-pointer group`}
           onClick={() => {
             selectItem('epic', epic._id)
             setSelectedItems({ epic: epic._id, story: null })
@@ -252,7 +250,7 @@ const EpicLayout = ({
             className="flex-grow text-left text-sm w-3/4"
             onClick={() => selectItem('epic', epic._id)}
           >
-            {epic.name}
+            {truncatedEpicName}
           </span>
           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity w-1/4 justify-end">
             <Button
@@ -395,7 +393,6 @@ const EpicLayout = ({
     }
   }, [selectedItems, handleUserStoryChange, handleCreateUserStory]);
 
-
   // Memoize the epic editor section
   const EpicEditor = useMemo(() => {
     if (!selectedEpic) return null;
@@ -404,7 +401,7 @@ const EpicLayout = ({
 
     return (
       <div className="flex flex-col h-full">
-        <header className="flex items-center justify-between pt-4 px-4 pb-4 w-full">
+        <header className="flex items-center justify-between gap-6 pt-4 px-4 pb-4 w-full">
           <LabelToInput
             key={`${selectedEpic._id}-${selectedEpic.name}`}
             value={selectedEpic.name}
@@ -512,6 +509,24 @@ const EpicLayout = ({
     });
   };
 
+  // Clean up the interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, []);
+
+  // Memoize the projectId if it's being transformed
+  const stableProjectId = useMemo(() => params.projectId?.toString(), [params.projectId]);
+
+  // Add useEffect to log selection changes
+  useEffect(() => {
+    console.log('Selected epic changed:', selectedItems.epic);
+    console.log('Selected epic data:', selectedEpic);
+  }, [selectedItems.epic, selectedEpic]);
+
   // Update the handleGenerateEpics function
   const handleGenerateEpics = async () => {
     if (!params.projectId) {
@@ -601,25 +616,6 @@ const EpicLayout = ({
     }
   };
 
-  // Clean up the interval on component unmount
-  useEffect(() => {
-    return () => {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-      }
-    };
-  }, []);
-
-  // Memoize the projectId if it's being transformed
-  const stableProjectId = useMemo(() => params.projectId?.toString(), [params.projectId]);
-
-  // Add useEffect to log selection changes
-  useEffect(() => {
-    console.log('Selected epic changed:', selectedItems.epic);
-    console.log('Selected epic data:', selectedEpic);
-  }, [selectedItems.epic, selectedEpic]);
-
-
   // Add this new handler for single epic generation
   const handleGenerateSingleEpic = async () => {
     if (!params.projectId) {
@@ -706,11 +702,6 @@ const EpicLayout = ({
     }
   };
 
-  // Rename existing handler to be more specific
-  const handleGenerateMultipleEpics = async () => {
-    // ... existing handleGenerateEpics code ...
-  };
-
   // Add this new function to handle user story generation:
   const handleGenerateUserStories = async (epicId: Id<"epics">) => {
     if (!params.projectId) {
@@ -757,11 +748,6 @@ const EpicLayout = ({
       setGenerationStatus('Complete!');
       toast.success("User stories generated successfully");
 
-      // Refresh the user stories list
-      if (allUserStories) {
-        await allUserStories();
-      }
-
       // Update the editor content if a story is selected
       if (selectedItems.story && data.markdown) {
         handleUserStoryChange(
@@ -770,8 +756,6 @@ const EpicLayout = ({
           data.markdown
         );
       }
-
-      // ... rest of the streaming logic similar to handleGenerateEpics ...
 
     } catch (error) {
       console.error("Error generating user stories:", error);
@@ -916,7 +900,7 @@ const EpicLayout = ({
                 disabled={!projectId}
               >
                 <AiGenerationIconWhite />
-                Generate Epics
+                Generate Initial Epics
               </Button>
               <div className="text-center">
                 <span className="text-gray-500">or</span>

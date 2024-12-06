@@ -75,9 +75,16 @@ export default async function handler(
       .map((fr: any) => `${fr.title}\n${fr.description}`)
       .join('\n\n');
 
+    //Fetch the useCases
+    const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
+
+    if (!useCases) {
+      return res.status(400).json({ message: "No Use cases found for the project" });
+    }
+
     // Generate epics with OpenAI
     sendEvent({ progress: 55, status: 'Generating epics...' });
-    const prompt = `
+    let prompt = `
 Project Context:
 ${context}
 
@@ -87,22 +94,39 @@ ${functionalRequirementsText}
 Based on the above project context and functional requirements, please generate a reasonable number of high-level epics. Each epic name should be kept short and unique. Each epic should follow this format:
 
 ### Epic: [Epic Name]
+
 **Description**: [Detailed description of what this epic entails]
+
 **Business Value**: [Clear statement of the business value this epic delivers]
+
 **Acceptance Criteria**:
-- [Criterion 1]
-- [Criterion 2]
-- [Criterion 3]
+- Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
+- Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
+- Criterion 3: [Address edge cases, error scenarios, or quality requirements]
 
 **Dependencies**:
-- [Dependency 1]
-- [Dependency 2]
+- Dependency 1: [Technical or system dependency that is critical to success]
+- Dependency 2: [External factor or prerequisite that must be in place]
 
 **Risks**:
-- [Risk 1]
-- [Risk 2]
+- Risk 1: [Technical, business, or operational risk that could impact delivery]
+- Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+
+IMPORTANT:
+- Each epic MUST have EXACTLY 3 acceptance criteria
+- Each epic MUST have EXACTLY 2 dependencies
+- Each epic MUST have EXACTLY 2 risks
+- Each point should be detailed and specific
+- Start acceptance criteria with action verbs
+- Include measurable outcomes where possible
+- Consider both technical and business aspects
 
 Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.`;
+
+    if (useCases?.length > 0) {
+      const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
+      prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
+    }
 
     const completion = await generateText({
       model: openai("gpt-4o-mini"),
@@ -111,6 +135,8 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
     });
 
     const content = completion.text;
+    console.log('AI Response:', content);
+
     if (!content) throw new Error('No content generated from OpenAI');
 
     // Process AI response
@@ -120,23 +146,39 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
       .filter(section => section.trim())
       .map(section => {
         const nameMatch = section.match(/Epic:\s*(.+?)(?=\n|$)/);
-        const descriptionMatch = section.match(/\*\*Description\*\*:\s*(.+?)(?=\*\*|$)/m);
-        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*(.+?)(?=\*\*|$)/m);
-        const acceptanceCriteriaMatch = section.match(/\*\*Acceptance Criteria\*\*:\s*((?:-.+?\n?)+)/m);
-        const dependenciesMatch = section.match(/\*\*Dependencies\*\*:\s*((?:-.+?\n?)+)/m);
-        const risksMatch = section.match(/\*\*Risks\*\*:\s*((?:-.+?\n?)+)/m);
+        const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
+        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Acceptance Criteria|$)/m);
 
+        // Updated regex patterns to better capture multiple bullet points
+        const acceptanceCriteriaMatch = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\s*\*\*Dependencies\*\*|$)/m);
+        const dependenciesMatch = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\s*\*\*Risks\*\*|$)/m);
+        const risksMatch = section.match(/\*\*Risks\*\*:\s*([^]*?)(?=(\s*---|$))/m);
+
+        // Improved formatList function to handle multiple bullet points
         const formatList = (match: RegExpMatchArray | null): string[] => {
           if (!match?.[1]) return [];
+
           return match[1]
             .split('\n')
-            .map(item => item.trim())
-            .filter(item => item.startsWith('-'))
-            .map(item => item.slice(1).trim())
+            .map(line => line.trim())
+            .filter(line => line.startsWith('-'))
+            .map(line => {
+              // Remove the bullet point and trim
+              const content = line.substring(1).trim();
+              // Remove any trailing periods if they exist
+              return content.endsWith('.') ? content.slice(0, -1) : content;
+            })
             .filter(Boolean);
         };
 
-        return {
+        // Debug logging
+        console.log('Raw section matches:', {
+          acceptanceCriteria: acceptanceCriteriaMatch?.[1],
+          dependencies: dependenciesMatch?.[1],
+          risks: risksMatch?.[1]
+        });
+
+        const processedData = {
           name: nameMatch?.[1]?.trim() || 'Untitled Epic',
           description: {
             Description: descriptionMatch?.[1]?.trim() || '',
@@ -146,6 +188,11 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
             Risks: formatList(risksMatch)
           }
         };
+
+        // Debug logging for processed data
+        console.log('Processed data:', JSON.stringify(processedData, null, 2));
+
+        return processedData;
       });
 
     // Create epics in database
@@ -160,13 +207,19 @@ ${epic.description.Description}
 ${epic.description["Business Value"]}
 
 ## Acceptance Criteria
-${epic.description["Acceptance Criteria"].map(criterion => `- ${criterion}`).join('\n')}
+${epic.description["Acceptance Criteria"].length > 0
+          ? epic.description["Acceptance Criteria"].map(criterion => `- ${criterion}`).join('\n')
+          : '- No acceptance criteria specified'}
 
 ## Dependencies
-${epic.description.Dependencies.map(dep => `- ${dep}`).join('\n')}
+${epic.description.Dependencies.length > 0
+          ? epic.description.Dependencies.map(dep => `- ${dep}`).join('\n')
+          : '- No dependencies specified'}
 
 ## Risks
-${epic.description.Risks.map(risk => `- ${risk}`).join('\n')}`;
+${epic.description.Risks.length > 0
+          ? epic.description.Risks.map(risk => `- ${risk}`).join('\n')
+          : '- No risks specified'}`;
 
       return await convex.mutation(api.epics.createEpics, {
         projectId: convexProjectId,
