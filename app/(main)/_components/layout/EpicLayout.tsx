@@ -165,15 +165,33 @@ const EpicLayout = ({
   const handleDeleteUserStory = useCallback(async (id: Id<"userStories">) => {
     try {
       await deleteUserStory({ id });
-      // setContent((prevContent: any[]) => prevContent.filter((us: any) => us._id !== id));
-      toast.success("User story deleted successfully");
+      setContent((prevContent: any[]) => prevContent.filter((us: any) => us._id !== id));
 
+      // If we're deleting the currently selected story, find a sibling to select
+      if (selectedItems.story === id) {
+        // Get all stories for the current epic
+        const epicStories = allUserStories?.filter(
+          (story: any) => story.epicId === selectedItems.epic
+        ) || [];
+
+        // Find the index of the deleted story
+        const deletedIndex = epicStories.findIndex((story: any) => story._id === id);
+        
+        // Try to select the next story, or the previous one if we're at the end
+        const siblingStory = epicStories[deletedIndex + 1] || epicStories[deletedIndex - 1];
+
+        setSelectedItems(prev => ({
+          ...prev,
+          story: siblingStory ? siblingStory._id : null
+        }));
+      }
+      
+      toast.success("User story deleted successfully");
     } catch (error) {
       console.error("Error deleting user story:", error);
       toast.error("Failed to delete User story");
-
     }
-  }, [deleteUserStory]);
+  }, [deleteUserStory, selectedItems.epic, selectedItems.story, allUserStories]);
 
   // Handle changes to an epic
   const handleEpicChange = useCallback((epicId: Id<"epics">, field: string, value: any) => {
