@@ -748,12 +748,23 @@ const EpicLayout = ({
       setGenerationStatus('Complete!');
       toast.success("User stories generated successfully");
 
-      // Update the editor content if a story is selected
-      if (selectedItems.story && data.markdown) {
-        handleUserStoryChange(
-          selectedItems.story as Id<"userStories">,
+      // loop through the user stories and add them to the database
+      for (const story of data.userStories) {
+        let userStoryId = await createUserStory({
+          epicId: epicId,
+          title: story.title,
+          description: story.description
+        })
+
+        if (!userStoryId) {
+          toast.error(`Failed to save user story: ${story.title}`);
+          return;
+        }
+
+        await handleEditorUSChange(
+          userStoryId,
           'description',
-          data.markdown
+          story.description
         );
       }
 
