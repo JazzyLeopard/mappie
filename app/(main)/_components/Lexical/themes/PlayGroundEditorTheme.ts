@@ -8,7 +8,7 @@
 
 import type {EditorThemeClasses} from 'lexical';
 
-import './PlaygroundEditorTheme.css';
+import '@/app/(main)/_components/Lexical/themes/PlayGroundEditorTheme.css';
 
 const theme: EditorThemeClasses = {
   ltr: 'PlaygroundEditorTheme__ltr',
