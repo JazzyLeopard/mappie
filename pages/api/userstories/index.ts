@@ -9,35 +9,33 @@ import { getAuth } from "@clerk/nextjs/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-function convertUsDescriptionToMarkdown(description: any): string {
+function convertUsDescriptionToMarkdown(story: any): string {
   let markdown = '';
 
-  if (typeof description === 'string') {
-    return description;
+
+  // Main description
+  if (story.description) {
+    markdown += `${story.description}\n\n`;
   }
 
-  if (description.Description) {
-    markdown += `## Description\n${description.Description}\n\n`;
+  // Acceptance Criteria
+  if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
+    markdown += `## Acceptance Criteria\n`;
+    story.acceptance_criteria.forEach((criteria: string) => {
+      // Replace "Scenario X:" with bold version while preserving the hyphen
+      const formattedCriteria = criteria.replace(/(Scenario \d+):/, '**$1**:');
+      markdown += `- ${formattedCriteria}\n`;
+    });
+    markdown += '\n';
   }
 
-  if (description.acceptance_criteria) {
-    markdown += `## Acceptance Criteria\n${description.acceptance_criteria}\n\n`;
-  }
-
-  if (description.interface_elements) {
-    markdown += `## Interface Elements\n${description.interface_elements}\n\n`;
-  }
-
-  if (description.functional_flow) {
-    markdown += `## Functional Flow\n${description.functional_flow}\n\n`;
-  }
-
-  if (description.states_and_emptyStates) {
-    markdown += `## States and Empty States\n${description.states_and_emptyStates}\n\n`;
-  }
-
-  if (description.errorMessages_and_validation) {
-    markdown += `## Error Messages and Validation\n${description.errorMessages_and_validation}\n\n`;
+  // Additional Considerations
+  if (story.additional_considerations && Array.isArray(story.additional_considerations)) {
+    markdown += `## Additional Considerations\n`;
+    story.additional_considerations.forEach((consideration: string) => {
+      markdown += `- ${consideration}\n`;
+    });
+    markdown += '\n';
   }
 
   return markdown;
@@ -78,26 +76,37 @@ export default async function handler(
 
     let userStoryBasePrompt = `As an expert user stories analyst, generate a comprehensive list of user stories for the following project. Each user stories should be detailed and specific to the project's need following this exact structure and level of detail, and should not use Heading 1 and 2.
     {
+      "title": "User Story Title",
+      "description": "This user story focuses on a new user creating an account to access personalized features. The goal is to streamline the registration process, ensuring a smooth onboarding experience. Simplifying the sign-up reduces barriers, improves accessibility, and boosts user retention and engagement, supporting the platform's growth in active users.",
+      
+      "acceptance_criteria": [
+        "Scenario 1: Given I am on the registration page, when I enter valid personal details and click Submit, then I should receive a confirmation email with an activation link",
+        "Scenario 2: Given I am on the registration page, when I submit the form with an already registered email, then I should see an error message saying Email is already registered. Please log in.",
+        "Scenario 3: Given I have received a confirmation email, when I click the activation link, then my account should be activated and I should be able to log in"
+      ],
 
-      "description": "Create a detailed description of the user story that addresses the business need it fulfills, including the following elements:
-
-        - **Description**: This user story focuses on a new user creating an account to access personalized features. The goal is to streamline the registration process, ensuring a smooth onboarding experience. Simplifying the sign-up reduces barriers, improves accessibility, and boosts user retention and engagement, supporting the platform's growth in active users.
-
-        - **Acceptance Criteria**: 
-          - **Scenario 1**: Given I am on the registration page, when I enter valid personal details and click Submit, then I should receive a confirmation email with an activation link.
-          - **Scenario 2**: Given I am on the registration page, when I submit the form with an already registered email, then I should see an error message saying Email is already registered. Please log in.
-          - **Scenario 3**: Given I have received a confirmation email, when I click the activation link, then my account should be activated, and I should be able to log in.
-          ...
-
-        - **Additional considerations**:
-
-          Present the description as a single cohesive string, combining all these elements in a clear and engaging manner.Also ensure that each element starts from a new line" 
+      "additional_considerations": [
+        "Security requirements for password strength",
+        "Email validation format",
+        "Rate limiting for registration attempts",
+        "Data privacy compliance",
+        "Accessibility standards"
+      ]
     }`
 
-    let userStoryPrompt = context
-    userStoryPrompt += `Based on the following epics- ${epicsText} generate a comprehensive list of user stories using this format- ${userStoryBasePrompt}. Be creative and consider edge cases that might not be immediately obvious. 
-    Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block don't use Heading 1 and Heading 2 in Markdown.
-    `;
+    let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
+    userStoryPrompt += `And these existing epics:\n${epicsText}\n\n`;
+    userStoryPrompt += `As an expert user story analyst, generate a comprehensive list of user stories that align with the project context and epics above. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
+    userStoryPrompt += `Important guidelines:
+    - Ensure each user story directly relates to and supports the epics
+    - Include detailed acceptance criteria with clear given/when/then scenarios
+    - Consider edge cases, error states and validation requirements
+    - Focus on user value and business outcomes
+    - Make stories specific, measurable and testable
+    - Include relevant technical and non-functional requirements
+    - Format the output as a JSON array of user story objects
+    
+    Generate the user stories now.`;
 
     console.log("Calling OpenAI Api...");
     const response = await generateText({
@@ -130,28 +139,21 @@ export default async function handler(
       return res.status(500).json({ message: 'Invalid JSON response from OpenAI for user stories', parseError })
     }
 
-    console.log('Parsed user stories', JSON.stringify(generatedUserStories, null, 2));
-
     console.log("Creating user stories...");
 
-    for (const userStory of generatedUserStories) {
+    const formattedUserStories = generatedUserStories.map((userStory: any) => {
       if (userStory && userStory?.description) {
-        const formattedDescription = convertUsDescriptionToMarkdown(userStory?.description);
-
-        let userStoryId = await convex.mutation(api.userstories.createUserStory, {
-          epicId: convexEpicId,
-          title: userStory?.title || 'Untitled Epic',
-          description: formattedDescription,
-        });
-        userStory['id'] = userStoryId
+        return {
+          title: userStory?.title || 'Untitled User Story',
+          description: convertUsDescriptionToMarkdown(userStory)
+        };
       }
-      else {
-        console.warn('Skipping invalid user stories:', userStory)
-      }
-    }
+      console.warn('Skipping invalid user story:', userStory);
+      return null;
+    }).filter(Boolean);
     console.log("User stories created successfully");
 
-    res.status(200).json({ userStories: generatedUserStories, markdown: convertUsDescriptionToMarkdown(generatedUserStories[0]?.description || {}) });
+    res.status(200).json({ userStories: formattedUserStories, type: 'userstories' });
   } catch (error) {
     console.error('Error generating user stories:', error);
     if (error instanceof Error) {
