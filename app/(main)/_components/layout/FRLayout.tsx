@@ -465,7 +465,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     if (!isOnboardingComplete) {
         return (
-            <div className="p-4 w-full h-screen">
+            <div className="pt-4 pb-4 pr-4 w-full h-screen">
                 <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
                     <Image src={Empty} alt="No functional requirements" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
                     <h2 className="text-xl font-semibold text-center">
@@ -489,7 +489,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     }
 
     return (
-        <div className="flex h-screen gap-2 p-4">
+        <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="w-72">
                 <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
                     <div className="p-2 pt-4">

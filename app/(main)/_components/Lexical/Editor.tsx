@@ -130,6 +130,7 @@ const UPDATE_EDITOR_COMMAND: LexicalCommand<void> = createCommand('UPDATE_EDITOR
 export default function Editor({
   setProjectDetails,
   initialContent,
+  context,
 }: EditorProps): JSX.Element {
   const { historyState } = useSharedHistoryContext();
   const {
@@ -202,10 +203,13 @@ export default function Editor({
     }
   };
 
-  const placeholder = isCollab
-    ? 'Enter some collaborative rich text...'
-    :
-    'Enter your text here...';
+  const placeholder = useMemo(() => {
+    if (isCollab) {
+      return 'Enter some collaborative rich text...';
+    }
+    
+    return 'Enter your text here...';
+  }, [isCollab, context]);
 
   // Modify the insertMarkdown function to handle immediate updates
   const insertMarkdown = useCallback((markdown: string) => {
@@ -279,7 +283,7 @@ export default function Editor({
             <div className="h-full w-full overflow-auto scrollbar-thin">
               <div className="w-full min-h-[800px] relative" ref={onRef}>
                 <ContentEditable
-                  className="h-full w-full pl-6 outline-none"
+                  className="min-h-[800px] w-full pl-6 outline-none"
                   placeholder={placeholder}
                 />
               </div>
