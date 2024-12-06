@@ -4,7 +4,7 @@ import { epicMenuItems } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type EpicsPageProps = {
     params: {
@@ -41,9 +41,12 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
         }
     };
 
-    const handleEditorChange = (attribute: string, value: any) => {
-        setEpicDetails({ ...epicDetails, [attribute]: value });
-    };
+    const handleEditorChange = useCallback(async (attribute: string, value: any) => {
+        await updateEpicMutation({
+            id: id,
+            [attribute]: value
+        });
+    }, [updateEpicMutation, id]);
 
 
     if (epic instanceof Error) {
@@ -55,7 +58,6 @@ const ProjectEpicPage = ({ params }: EpicsPageProps) => {
             data={epicDetails}
             onEditorBlur={handleEditorBlur}
             handleEditorChange={handleEditorChange}
-            updateProject={updateEpicMutation}
             projectId={params.projectId}
             parent="epic"
         />
