@@ -10,7 +10,7 @@ import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from "@/icons/AI-Generation";
 import type { Project } from "@/lib/types";
 import { cn } from '@/lib/utils';
-import { ReactMutation, useQuery } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -23,7 +23,6 @@ interface CommonLayoutProps {
     data: Project;
     onEditorBlur: () => Promise<void>;
     handleEditorChange: (attribute: string, value: any) => void,
-    updateProject: ReactMutation<any>;
     projectId: Id<"projects">;
     parent: 'project' | 'epic';
 }
@@ -33,7 +32,6 @@ const CommonLayout = ({
     data,
     onEditorBlur,
     handleEditorChange,
-    updateProject,
     projectId,
     parent
 }: CommonLayoutProps) => {
@@ -90,64 +88,21 @@ const CommonLayout = ({
         }
     };
 
-
-    // Helper function to clean the data object
-    const cleanDataForUpdate = useCallback((data: any) => {
-        // Fields that are allowed in the update
-        const allowedFields = [
-            '_id',
-            'isArchived',
-            'isPublished',
-            'overview',
-            'title'
-        ];
-
-        // Create a new object with only allowed fields
-        return Object.fromEntries(
-            Object.entries(data)
-                .filter(([key]) => allowedFields.includes(key))
-                .filter(([_, value]) => value !== undefined)
-        );
-    }, []);
-
     // Update the handleSectionChange function
     const handleSectionChange = useCallback(async (field: string, value: any) => {
         try {
             // if (!value || data[field as keyof typeof data] === value) {
             //     return;
             // }
-
-            const cleanData = cleanDataForUpdate({
-                _id: data._id,
-                [field]: value
-            });
-
-            await updateProject(cleanData);
             handleEditorChange(field, value);
         } catch (error) {
             console.error("Error updating project section:", error);
             toast.error("Failed to save changes");
         }
-    }, [data, handleEditorChange, updateProject, cleanDataForUpdate]);
+    }, [data, handleEditorChange]);
 
     // Separate editorKey from other props
 
-    const editorProps = useMemo(() => ({
-        onBlur: onEditorBlur,
-        attribute: parent === 'project' ? 'overview' : 'description',
-        projectDetails: data,
-        setProjectDetails: (value: any) => {
-            console.log('Editor change:', {
-                section: parent === 'project' ? 'overview' : 'description',
-                value
-            });
-            handleSectionChange(parent === 'project' ? 'overview' : 'description', value);
-        },
-        isRichText: true,
-        context: "project" as const,
-        itemId: data._id,
-        updateProject
-    }), [data, onEditorBlur, handleSectionChange, updateProject]);
 
     const toggleAIChat = () => {
         setIsAIChatCollapsed(!isAIChatCollapsed);
@@ -162,17 +117,12 @@ const CommonLayout = ({
                 (window as any).__insertMarkdown(content);
             }
 
-            const cleanData = cleanDataForUpdate({
-                _id: data._id,
-                overview: content
-            });
-
-            updateProject(cleanData);
+            handleEditorChange('overview', content);
         } catch (error) {
             console.error("Error updating content:", error);
             toast.error("Failed to update content");
         }
-    }, [data._id, updateProject, cleanDataForUpdate]);
+    }, [data._id, handleEditorChange]);
 
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
@@ -214,7 +164,13 @@ const CommonLayout = ({
                         <div className="px-12 relative min-h-full">
                             <LexicalEditor
                                 key={`overview-${data.overview}`}
-                                {...editorProps}
+                                itemId={data._id}
+                                onBlur={async () => { }}
+                                attribute="overview"
+                                projectDetails={data}
+                                setProjectDetails={(value) => handleEditorChange('overview', value)}
+                                context="project"
+                                isRichText={true}
                             />
                         </div>
                     </ScrollArea>

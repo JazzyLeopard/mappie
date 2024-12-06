@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CommonLayout from "@/app/(main)/_components/layout/CommonLayout";
 import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
@@ -19,6 +19,18 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   const [projectDetails, setProjectDetails] = useState<any>();
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
+  const handleEditorChange = useCallback(async (attribute: string, value: any) => {
+    try {
+      await updateProjectMutation({
+        _id: id,
+        [attribute]: value
+      });
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast.error('Failed to update project section');
+    }
+  }, [updateProjectMutation, id]);
+
   const project = useQuery(api.projects.getProjectById, {
     projectId: id,
   });
@@ -33,37 +45,11 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
     return <div className="flex justify-center items-center mx-auto"><Spinner size={"lg"} /></div>;
   }
 
-  const handleEditorBlur = async () => {
-    // No need to do anything on blur since changes are handled by handleEditorChange
-    return Promise.resolve();
-  };
-
-  const handleEditorChange = async (attribute: string, value: any) => {
-    try {
-      // Update local state
-      setProjectDetails((prevDetails: any) => ({
-        ...prevDetails,
-        [attribute]: value
-      }));
-
-      // Only send the specific field being updated plus the ID
-      await updateProjectMutation({
-        _id: id,
-        [attribute]: value
-      });
-
-    } catch (error) {
-      console.error('Error updating project:', error);
-      toast.error('Failed to update project section');
-    }
-  };
-
   return (
     <CommonLayout
       data={projectDetails}
       onEditorBlur={async () => {}}
       handleEditorChange={handleEditorChange}
-      updateProject={updateProjectMutation}
       projectId={params.projectId as Id<"projects">}
       parent="project"
     />
