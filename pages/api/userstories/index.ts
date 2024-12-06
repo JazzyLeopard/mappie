@@ -66,23 +66,23 @@ export default async function handler(
     const context = await useContextChecker({ projectId })
     console.log("context", context);
 
-    const epics = await convex.query(api.epics.getEpics, { projectId });
+    const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
-    if (!epics) {
-      return res.status(400).json({ message: "No userStories found for the project" });
+    if (!epic) {
+      return res.status(400).json({ message: "Epic not found" });
     }
 
-    const epicsText = epics.map((epic: any) => epic?.description).join('\n');
+    const epicText = epic.description;
 
-    let userStoryBasePrompt = `As an expert user stories analyst, generate a comprehensive list of user stories for the following project. Each user stories should be detailed and specific to the project's need following this exact structure and level of detail, and should not use Heading 1 and 2.
+    let userStoryBasePrompt = `As an expert user stories analyst, generate a focused set of 3-5 high-quality user stories that specifically implement the functionality described in this epic. Each user story should be detailed and comprehensive, following this exact structure:
     {
       "title": "User Story Title",
-      "description": "This user story focuses on a new user creating an account to access personalized features. The goal is to streamline the registration process, ensuring a smooth onboarding experience. Simplifying the sign-up reduces barriers, improves accessibility, and boosts user retention and engagement, supporting the platform's growth in active users.",
+      "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].\n\nThis user story focuses on [detailed explanation of the functionality and its importance in the context of the epic].",
       
       "acceptance_criteria": [
-        "Scenario 1: Given I am on the registration page, when I enter valid personal details and click Submit, then I should receive a confirmation email with an activation link",
-        "Scenario 2: Given I am on the registration page, when I submit the form with an already registered email, then I should see an error message saying Email is already registered. Please log in.",
-        "Scenario 3: Given I have received a confirmation email, when I click the activation link, then my account should be activated and I should be able to log in"
+        "Scenario 1: **Given** I am on the registration page, **when** I enter valid personal details and click Submit, **then** I should receive a confirmation email with an activation link",
+        "Scenario 2: **Given** I am on the registration page, **when** I submit the form with an already registered email, **then** I should see an error message saying Email is already registered. Please log in.",
+        "Scenario 3: **Given** I have received a confirmation email, **when** I click the activation link, **then** my account should be activated and I should be able to log in"
       ],
 
       "additional_considerations": [
@@ -95,17 +95,20 @@ export default async function handler(
     }`
 
     let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
-    userStoryPrompt += `And these existing epics:\n${epicsText}\n\n`;
-    userStoryPrompt += `As an expert user story analyst, generate a comprehensive list of user stories that align with the project context and epics above. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
+    userStoryPrompt += `For this specific epic:\n${epicText}\n\n`;
+    userStoryPrompt += `Generate a focused set of user stories that directly implement this epic's functionality. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
     userStoryPrompt += `Important guidelines:
-    - Ensure each user story directly relates to and supports the epics
+    - Generate only 3-5 high-quality, comprehensive user stories
+    - Each story must directly contribute to implementing the epic's functionality
+    - Stories should be independent but related through the epic's goal
+    - Each description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
+    - Include a detailed explanation after the user story format
     - Include detailed acceptance criteria with clear given/when/then scenarios
-    - Consider edge cases, error states and validation requirements
-    - Focus on user value and business outcomes
-    - Make stories specific, measurable and testable
+    - Focus on delivering complete, testable functionality
+    - Consider edge cases and error states
     - Include relevant technical and non-functional requirements
     - Format the output as a JSON array of user story objects
-    
+
     Generate the user stories now.`;
 
     console.log("Calling OpenAI Api...");
@@ -151,6 +154,11 @@ export default async function handler(
       console.warn('Skipping invalid user story:', userStory);
       return null;
     }).filter(Boolean);
+
+    if (formattedUserStories.length < 3 || formattedUserStories.length > 5) {
+      console.warn(`Generated ${formattedUserStories.length} stories, which is outside the desired range of 3-5`);
+    }
+
     console.log("User stories created successfully");
 
     res.status(200).json({ userStories: formattedUserStories, type: 'userstories' });

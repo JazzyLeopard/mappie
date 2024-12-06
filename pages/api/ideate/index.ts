@@ -19,9 +19,14 @@ export default async function handler(
     }
 
     try {
-      const promptWithPropertyInstructions = `Generate a comprehensive project overview based on the following description: ${prompt}. 
-      Ensure the response is in markdown format in the language of the prompt. 
-      Use the ${placeholderOverview} object to guide the generation of the overview.`;
+      const promptWithPropertyInstructions = `Generate a comprehensive project overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
+Return the response in the following JSON format:
+{
+  "title": "The generated title here",
+  "overview": "The comprehensive overview in markdown format here"
+}
+Ensure the overview is in markdown format in the language of the prompt.
+Use the ${placeholderOverview} object to guide the generation of the overview.`;
 
       console.log("Calling OpenAi Api...");
 
@@ -34,12 +39,15 @@ export default async function handler(
       });
       console.log("OpenAi response received");
 
-      const generatedContent = completions.text || '';
+      // Parse the JSON response
+      const parsedResponse = JSON.parse(completions.text);
+      const { title, overview } = parsedResponse;
 
-      // Update the project with the generated Overview
+      // Update the project with both title and overview
       await convex.mutation(api.projects.updateProject, {
         _id: projectId,
-        overview: generatedContent,
+        title: title,
+        overview: overview,
       });
 
       return res.status(200).json({ message: 'Project overview generated and updated successfully' });
