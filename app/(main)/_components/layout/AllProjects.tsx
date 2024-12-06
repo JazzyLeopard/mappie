@@ -81,16 +81,15 @@ export default function Component() {
     setIsGenerating(true);
 
     try {
-      // Phase 1: Create the project first
+      // Phase 1: Create the project first with a temporary title
       const projectId = await createProject({
-        title: "New AI Generated Project",
+        title: "Generating Project...",
       });
 
       if (!projectId) {
         throw new Error("Failed to create project");
       }
 
-      // Show success toast for project creation
       toast.success("Project created. Generating details...");
 
       // Phase 2: Generate project details
