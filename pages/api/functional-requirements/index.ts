@@ -101,7 +101,7 @@ export default async function handler(
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
     const prompt = singleFR
       ? `${context}\n\nPlease write a single functional requirement based on the following project details:\n\n${projectDetails}`
-      : `${context}\n\nGenerate 5-10 functional requirements, with detailed subrequirements based on the following project details. Return the response in this exact JSON structure:
+      : `${context}\n\nGenerate 5-10 functional requirements with detailed subrequirements based on the following project details. Format the response as markdown using this structure:
 
 {
   "requirements": [
@@ -178,8 +178,7 @@ ${projectDetails}`;
         });
       }
     } else {
-      console.warn('Invalid response format from AI');
-      throw new Error('Invalid response format from AI');
+      throw new Error('No content generated from OpenAI');
     }
 
   } catch (error) {

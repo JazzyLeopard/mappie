@@ -1,11 +1,47 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
 import type {EditorThemeClasses} from 'lexical';
 
-import '@/app/(main)/_components/Lexical/themes/PlayGroundEditorTheme.css';
+import './PlaygroundEditorTheme.css';
 
 const theme: EditorThemeClasses = {
-  autocomplete: 'PlaygroundEditorTheme__autocomplete',
-  blockCursor: 'PlaygroundEditorTheme__blockCursor',
-  characterLimit: 'PlaygroundEditorTheme__characterLimit',
+  ltr: 'PlaygroundEditorTheme__ltr',
+  rtl: 'PlaygroundEditorTheme__rtl',
+  paragraph: 'PlaygroundEditorTheme__paragraph',
+  heading: {
+    h1: 'PlaygroundEditorTheme__h1',
+    h2: 'PlaygroundEditorTheme__h2',
+    h3: 'PlaygroundEditorTheme__h3',
+    h4: 'PlaygroundEditorTheme__h4',
+  },
+  text: {
+    bold: 'PlaygroundEditorTheme__textBold',
+    code: 'PlaygroundEditorTheme__textCode',
+    italic: 'PlaygroundEditorTheme__textItalic',
+    strikethrough: 'PlaygroundEditorTheme__textStrikethrough',
+    subscript: 'PlaygroundEditorTheme__textSubscript',
+    superscript: 'PlaygroundEditorTheme__textSuperscript',
+    underline: 'PlaygroundEditorTheme__textUnderline',
+    underlineStrikethrough: 'PlaygroundEditorTheme__textUnderlineStrikethrough',
+  },
+  list: {
+    nested: {
+      listitem: 'PlaygroundEditorTheme__nestedListItem',
+    },
+    ol: 'PlaygroundEditorTheme__ol1',
+    ul: 'PlaygroundEditorTheme__ul',
+    listitem: 'PlaygroundEditorTheme__listItem',
+    listitemChecked: 'PlaygroundEditorTheme__listItemChecked',
+    listitemUnchecked: 'PlaygroundEditorTheme__listItemUnchecked',
+  },
+  image: 'editor-image',
+  link: 'PlaygroundEditorTheme__link',
   code: 'PlaygroundEditorTheme__code',
   codeHighlight: {
     atrule: 'PlaygroundEditorTheme__tokenAttr',
@@ -39,75 +75,20 @@ const theme: EditorThemeClasses = {
     url: 'PlaygroundEditorTheme__tokenOperator',
     variable: 'PlaygroundEditorTheme__tokenVariable',
   },
+  hashtag: 'PlaygroundEditorTheme__hashtag',
+  mark: 'PlaygroundEditorTheme__mark',
+  markOverlap: 'PlaygroundEditorTheme__markOverlap',
   embedBlock: {
     base: 'PlaygroundEditorTheme__embedBlock',
     focus: 'PlaygroundEditorTheme__embedBlockFocus',
   },
-  hashtag: 'PlaygroundEditorTheme__hashtag',
-  heading: {
-    h1: 'text-2xl font-bold my-3',
-    h2: 'text-xl font-bold my-2',
-    h3: 'text-lg font-bold my-2',
-    h4: 'text-base font-bold my-1',
-    h5: 'text-sm font-bold my-1',
-    h6: 'text-xs font-bold my-1',
-  },
-  hr: 'PlaygroundEditorTheme__hr',
-  image: 'editor-image',
-  indent: 'PlaygroundEditorTheme__indent',
-  inlineImage: 'inline-editor-image',
-  layoutContainer: 'PlaygroundEditorTheme__layoutContainer',
-  layoutItem: 'PlaygroundEditorTheme__layoutItem',
-  link: 'text-blue-600 underline cursor-pointer',
-  list: {
-    checklist: 'PlaygroundEditorTheme__checklist',
-    listitem: 'PlaygroundEditorTheme__listItem',
-    listitemChecked: 'PlaygroundEditorTheme__listItemChecked',
-    listitemUnchecked: 'PlaygroundEditorTheme__listItemUnchecked',
-    nested: {
-      listitem: 'pl-8',
-    },
-    ol: 'list-decimal pl-8 space-y-1',
-    olDepth: [
-      'PlaygroundEditorTheme__ol1',
-      'PlaygroundEditorTheme__ol2',
-      'PlaygroundEditorTheme__ol3',
-      'PlaygroundEditorTheme__ol4',
-      'PlaygroundEditorTheme__ol5',
-    ],
-    ul: 'list-disc pl-8 space-y-1',
-  },
-  ltr: 'PlaygroundEditorTheme__ltr',
-  mark: 'PlaygroundEditorTheme__mark',
-  markOverlap: 'PlaygroundEditorTheme__markOverlap',
-  paragraph: 'my-2',
-  quote: 'PlaygroundEditorTheme__quote',
-  rtl: 'PlaygroundEditorTheme__rtl',
   table: 'PlaygroundEditorTheme__table',
   tableCell: 'PlaygroundEditorTheme__tableCell',
-  tableCellActionButton: 'PlaygroundEditorTheme__tableCellActionButton',
-  tableCellActionButtonContainer:
-    'PlaygroundEditorTheme__tableCellActionButtonContainer',
-  tableCellEditing: 'PlaygroundEditorTheme__tableCellEditing',
   tableCellHeader: 'PlaygroundEditorTheme__tableCellHeader',
-  tableCellPrimarySelected: 'PlaygroundEditorTheme__tableCellPrimarySelected',
-  tableCellResizer: 'PlaygroundEditorTheme__tableCellResizer',
   tableCellSelected: 'PlaygroundEditorTheme__tableCellSelected',
-  tableCellSortedIndicator: 'PlaygroundEditorTheme__tableCellSortedIndicator',
-  tableResizeRuler: 'PlaygroundEditorTheme__tableCellResizeRuler',
-  tableRowStriping: 'PlaygroundEditorTheme__tableRowStriping',
+  tableRow: 'PlaygroundEditorTheme__tableRow',
   tableSelected: 'PlaygroundEditorTheme__tableSelected',
   tableSelection: 'PlaygroundEditorTheme__tableSelection',
-  text: {
-    bold: 'font-bold',
-    code: 'PlaygroundEditorTheme__textCode',
-    italic: 'italic',
-    strikethrough: 'line-through',
-    subscript: 'PlaygroundEditorTheme__textSubscript',
-    superscript: 'PlaygroundEditorTheme__textSuperscript',
-    underline: 'underline',
-    underlineStrikethrough: 'underline line-through',
-  },
 };
 
 export default theme;
