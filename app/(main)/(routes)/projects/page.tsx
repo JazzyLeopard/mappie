@@ -1,6 +1,6 @@
 "use client";
 
-import AllProjects from "@/app/(main)/_components/AllProjects";
+import AllProjects from "@/app/(main)/_components/layout/AllProjects";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { api } from "@/convex/_generated/api";
@@ -87,7 +87,7 @@ const ProjectsPage = () => {
 
   return (
     <>
-      <div className="p-4 w-full h-screen">
+      <div className="pt-4 pr-4 pb-4 w-full h-screen">
         <div className={projects?.length === 0 ? "bg-white h-full rounded-xl flex flex-col items-center justify-center gap-6" : "bg-white h-full rounded-xl p-4"}>
           {(projects?.length ?? 0) > 0 ? (
             <AllProjects />

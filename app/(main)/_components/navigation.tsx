@@ -337,7 +337,9 @@ export const Navigation = () => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Separator className="bg-slate-300 ml-2 mb-2" />
+            <div className="px-2 mb-2">
+              <Separator className="bg-slate-300" />
+            </div>
             <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
               {selectedProject && projects && (
                 <>
