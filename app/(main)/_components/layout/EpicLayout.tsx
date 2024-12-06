@@ -245,14 +245,16 @@ const EpicLayout = ({
     const isSelected = selectedItems.epic === epic._id && selectedItems.story === null
     const epicUserStories = allUserStories?.filter((story: any) => story.epicId === epic._id) || []
 
-    const truncatedEpicName = epic.name.length > 22
-      ? epic.name.substring(0, 22) + '...'
+    const truncatedEpicName = epic.name.length > 20
+      ? epic.name.substring(0, 20) + '...'
       : epic.name;
+    
     return (
-      <div key={epic._id} className="">
+      <div key={epic._id} className={`mb-1 rounded-lg ${isExpanded ? 'bg-white' : ''}`}>
         <div
-          className={`flex items-center rounded-lg px-4 py-1 mb-2 hover:bg-white transition-colors ${isSelected ? 'bg-white font-semibold' : ''
-            } cursor-pointer group`}
+          className={`flex items-center px-4 py-1 hover:bg-slate-200 transition-colors ${
+            isSelected ? 'bg-slate-200 font-semibold' : ''
+          } cursor-pointer group ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
           onClick={() => {
             selectItem('epic', epic._id)
             setSelectedItems({ epic: epic._id, story: null })
@@ -294,7 +296,7 @@ const EpicLayout = ({
           </div>
         </div>
         {isExpanded && (
-          <div>
+          <div className="py-2">
             {epicUserStories.length === 0 ? (
               <>
                 <span className="text-sm text-gray-500 ml-10 mt-2">
@@ -303,7 +305,7 @@ const EpicLayout = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="ml-8 mt-2 mb-4 text-xs flex items-center gap-2 hover:bg-gray-200 transition-colors"
+                  className="ml-8 mt-2 mb-2 text-xs flex items-center gap-2 hover:bg-gray-200 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleGenerateUserStories(epic._id);
@@ -327,12 +329,13 @@ const EpicLayout = ({
   // Render user stories
   const renderUserStories = useCallback((stories: any[]) => {
     return (
-      <div className="mb-4">
+      <div className="mb-2">
         {stories.map(story => (
           <div
             key={story._id}
-            className={`pl-8 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer ${selectedItems.story === story._id ? 'bg-slate-200 font-semibold' : ''
-              } group flex items-center justify-between`}
+            className={`pl-8 hover:bg-slate-50 transition-colors cursor-pointer ${
+              selectedItems.story === story._id ? 'bg-slate-50 font-semibold' : ''
+            } group flex items-center justify-between`}
             onClick={(e) => {
               e.stopPropagation()
               selectItem('story', story._id)
