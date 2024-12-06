@@ -7,9 +7,6 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { toast } from 'sonner'
 import { Skeleton } from "@/components/ui/skeleton"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
-import { ToolState } from '@/lib/types';
 import { useState, useEffect } from 'react';
 
 interface MarkdownCardProps {
@@ -115,7 +112,7 @@ export function MarkdownCard({ content, metadata, onInsert, isLoading }: Markdow
               <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
             ),
             h4: ({ node, ...props }) => (
-              <h4 className="text-lg font-medium mb-2 mt-4" {...props} />
+              <h4 className="text-xs uppercase font-extrabold mb-2 mt-4" {...props} />
             ),
             p: ({ node, ...props }) => (
               <p className="text-gray-600 leading-relaxed mb-4" {...props} />

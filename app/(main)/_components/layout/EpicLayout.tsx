@@ -309,11 +309,11 @@ const EpicLayout = ({
   // Render user stories
   const renderUserStories = useCallback((stories: any[]) => {
     return (
-      <div>
+      <div className="mb-4">
         {stories.map(story => (
           <div
             key={story._id}
-            className={`pl-6 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer ${selectedItems.story === story._id ? 'bg-slate-200 font-semibold' : ''
+            className={`pl-8 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer ${selectedItems.story === story._id ? 'bg-slate-200 font-semibold' : ''
               } group flex items-center justify-between`}
             onClick={(e) => {
               e.stopPropagation()
@@ -781,7 +781,7 @@ const EpicLayout = ({
   // Add this condition before your main return statement
   if (!isOnboardingComplete) {
     return (
-      <div className="p-4 w-full h-screen">
+      <div className="pt-4 pr-4 pb-4 w-full h-screen">
         <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
           <Image src={Empty} alt="No epics" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
           <h2 className="text-xl font-semibold text-center">
@@ -801,7 +801,7 @@ const EpicLayout = ({
 
   // Render the main layout
   return (
-    <div className="flex h-screen gap-2 p-4">
+    <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
       <div className="w-72">
         <div className="shadow-[0_0_2px_rgba(0,0,0,0.1)] bg-slate-100 rounded-xl h-full">
           <div className="p-2 pt-4">

@@ -2,22 +2,22 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-export const generateUploadUrl = mutation(async (ctx) => {
+export const generateUploadUrl = mutation(async (ctx: any) => {
     return await ctx.storage.generateUploadUrl();
 });
 
 export const getStorageById = query({
     args: { storageId: v.id("_storage") },
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
         return await ctx.db.system.query("_storage")
-            .filter((q) => q.eq(q.field("_id"), args.storageId))
+            .filter((q: any) => q.eq(q.field("_id"), args.storageId))
             .first();
     },
 });
 
 export const getStorageURL = query({
     args: { storageId: v.id("_storage") },
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
         return await ctx.storage.getUrl(args.storageId)
     },
 });
@@ -26,10 +26,10 @@ export const getDocumentById = query({
     args: {
         projectId: v.id("projects"),
     },
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
         const document = await ctx.db
             .query("documents")
-            .filter((q) => q.eq(q.field("projectId"), args.projectId))
+            .filter((q: any) => q.eq(q.field("projectId"), args.projectId))
             .first();
 
         return document
@@ -40,7 +40,7 @@ export const deleteDocument = mutation({
     args: {
         documentId: v.id("documents"),
     },
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
         const identity = await ctx.auth.getUserIdentity();
 
         if (!identity) {
@@ -68,7 +68,7 @@ export const saveDocument = mutation({
         summarizedContent: v.string(),
         filename: v.optional(v.string()),
     },
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
         const identity = await ctx.auth.getUserIdentity();
 
         if (!identity) {
@@ -91,11 +91,11 @@ export const saveDocument = mutation({
 export const getDocuments = query({
     args: { projectId: v.id("projects") },
 
-    handler: async (ctx, args) => {
+    handler: async (ctx: any, args: any) => {
 
         const documents = await ctx.db
             .query("documents")
-            .filter((q) => q.eq(q.field("projectId"), args.projectId),
+            .filter((q: any) => q.eq(q.field("projectId"), args.projectId),
             )
             ?.collect();
 

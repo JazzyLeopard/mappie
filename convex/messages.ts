@@ -9,13 +9,13 @@ export const getChatHistory = query({
     itemType: v.string(),
     projectId: v.id("projects"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { itemId, itemType, projectId} = args;
     
     // Get only the most recent message history entry
     const latestMessage = await ctx.db
       .query("messages")
-      .withIndex("by_itemId_and_type_and_created", q => 
+      .withIndex("by_itemId_and_type_and_created", (q: any) => 
         q.eq("itemId", itemId)
         .eq("itemType", itemType)
       )
@@ -73,13 +73,13 @@ export const storeChatHistory = mutation({
       })
     )
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { itemId, itemType, projectId, messages } = args;
 
     // Get the latest message history for this item
     const existingHistory = await ctx.db
       .query("messages")
-      .filter(q => q.eq(q.field("itemId"), itemId))
+      .filter((q: any) => q.eq(q.field("itemId"), itemId))
       .order("desc")
       .first();
 
