@@ -177,7 +177,7 @@ const CommonLayout = ({
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
-                <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%]">
+                <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%] relative">
                     <div className="flex items-center justify-between px-2 pb-3 w-full overflow-x-auto sm:mr-2">
                         <div className="pl-10 mt-2 mr-2">
                             <LabelToInput
@@ -210,11 +210,13 @@ const CommonLayout = ({
                             </Button>
                         </div>
                     </div>
-                    <ScrollArea className="flex-1 min-h-0 pr-8 pl-8" withShadow={true}>
-                        <LexicalEditor
-                            key={`overview-${data.overview}`}
-                            {...editorProps}
-                        />
+                    <ScrollArea className="flex-1 min-h-0 relative" withShadow={true}>
+                        <div className="px-12 relative min-h-full">
+                            <LexicalEditor
+                                key={`overview-${data.overview}`}
+                                {...editorProps}
+                            />
+                        </div>
                     </ScrollArea>
                 </div>
 

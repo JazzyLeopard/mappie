@@ -146,12 +146,26 @@ export function InsertTableDialog({
   );
 }
 
+type TableColumnConfig = {
+  width: string;
+  minWidth?: string;
+};
+
+const DEFAULT_COLUMN_CONFIG: TableColumnConfig[] = [
+  { width: '120px', minWidth: '100px' },  // Req ID
+  { width: '120px', minWidth: '100px' },  // Priority
+  { width: 'auto', minWidth: '400px' },   // Description
+  { width: '150px', minWidth: '120px' },  // Comments
+];
+
 export function TablePlugin({
   cellEditorConfig,
   children,
+  columnConfig = DEFAULT_COLUMN_CONFIG,
 }: {
   cellEditorConfig: CellEditorConfig;
   children: JSX.Element | Array<JSX.Element>;
+  columnConfig?: TableColumnConfig[];
 }): JSX.Element | null {
   const [editor] = useLexicalComposerContext();
   const cellContext = useContext(CellContext);
@@ -165,18 +179,88 @@ export function TablePlugin({
 
     return editor.registerCommand<InsertTableCommandPayload>(
       INSERT_NEW_TABLE_COMMAND,
-      ({columns, rows, includeHeaders}) => {
+      ({ columns, rows, includeHeaders }) => {
         const tableNode = $createTableNodeWithDimensions(
           Number(rows),
           Number(columns),
           includeHeaders,
         );
+
+        // Add custom styles to the table node
+        if (columnConfig) {
+          const styleString = columnConfig
+            .map((config, index) => 
+              `.table-cell-${index} { 
+                width: ${config.width}; 
+                ${config.minWidth ? `min-width: ${config.minWidth};` : ''} 
+              }`
+            )
+            .join('\n');
+
+          // Add the styles to the document head
+          const styleId = 'lexical-table-styles';
+          let styleElement = document.getElementById(styleId);
+          if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = styleId;
+            document.head.appendChild(styleElement);
+          }
+          styleElement.textContent = styleString;
+        }
+
         $insertNodes([tableNode]);
         return true;
       },
       COMMAND_PRIORITY_EDITOR,
     );
-  }, [cellContext, cellEditorConfig, children, editor]);
+  }, [cellContext, cellEditorConfig, children, editor, columnConfig]);
+
+  // Add CSS to style the table cells
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .editor-table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      .editor-table td,
+      .editor-table th {
+        overflow: visible;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 8px;
+        border: 1px solid #ccc;
+      }
+
+      /* Column-specific styles */
+      .editor-table td:nth-child(1),
+      .editor-table th:nth-child(1) {
+        width: 120px;
+      }
+
+      .editor-table td:nth-child(2),
+      .editor-table th:nth-child(2) {
+        width: 120px;
+      }
+
+      .editor-table td:nth-child(3),
+      .editor-table th:nth-child(3) {
+        width: auto;
+      }
+
+      .editor-table td:nth-child(4),
+      .editor-table th:nth-child(4) {
+        width: 150px;
+      }
+    `;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   return null;
 }

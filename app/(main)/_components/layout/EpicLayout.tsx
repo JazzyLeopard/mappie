@@ -234,8 +234,9 @@ const EpicLayout = ({
     return (
       <div key={epic._id} className="">
         <div
-          className={`flex items-center rounded-lg px-4 py-1 hover:bg-white transition-colors ${isSelected ? 'bg-white font-semibold' : ''
-            } cursor-pointer group`}
+          className={`flex items-center rounded-lg px-4 py-1 mb-2 hover:bg-white transition-colors ${
+            isSelected ? 'bg-white font-semibold' : ''
+          } cursor-pointer group`}
           onClick={() => {
             selectItem('epic', epic._id)
             setSelectedItems({ epic: epic._id, story: null })
@@ -279,17 +280,23 @@ const EpicLayout = ({
         {isExpanded && (
           <div>
             {epicUserStories.length === 0 ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-8 mt-2 text-xs flex items-center gap-2"
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
-              >
-                <AiGenerationIcon />
-                Generate User Stories
-              </Button>
+              <>
+                <span className="text-sm text-gray-500 ml-10 mt-2">
+                  No user stories.
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-8 mt-2 mb-4 text-xs flex items-center gap-2 hover:bg-gray-200 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGenerateUserStories(epic._id);
+                  }}
+                >
+                  <AiGenerationIcon />
+                  Generate User Stories
+                </Button>
+              </>
             ) : (
               renderUserStories(epicUserStories)
             )}
