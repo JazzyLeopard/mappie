@@ -34,7 +34,7 @@ const createMarkdownTable = (requirement: any) => {
   markdown += `|---------|----------|-------------|----------|\n`;
 
   // Add table rows with Comments
-  requirement.table.rows.forEach((row: any) => {
+  requirement.rows.forEach((row: any) => {
     markdown += `| ${row.reqId} | ${row.priority} | ${row.description} | ${row.comments || ''} |\n`;
   });
 
@@ -108,21 +108,19 @@ export default async function handler(
     {
       "id": "FR-001",
       "title": "User Authentication System",
-      "table": {
-        "rows": [
-          {
-            "reqId": "FR_001",
-            "priority": "Must have",
-            "description": "The system shall provide a secure user authentication mechanism",
-            "comments": "Implements industry standard security protocols"
-          },
-          {
-            "reqId": "FR_001.1",
-            "priority": "Must have",
-            "description": "The system shall allow users to register with email and password",
-          }
-        ]
-      }
+      "rows": [
+        {
+          "reqId": "FR_001",
+          "priority": "Must have",
+          "description": "The system shall provide a secure user authentication mechanism",
+          "comments": "Implements industry standard security protocols"
+        },
+        {
+          "reqId": "FR_001.1",
+          "priority": "Must have",
+          "description": "The system shall allow users to register with email and password",
+        }
+      ]
     }
   ]
 }

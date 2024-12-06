@@ -214,6 +214,16 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         progressInterval.current = setInterval(simulateProgress, 300);
 
         try {
+            // Create empty FR first
+            const newFR = await onCreateFR({
+                projectId,
+                title: 'New Functional Requirement',
+                description: ''
+            });
+
+            const frId = newFR?._id as Id<'functionalRequirements'>;
+            selectItem(frId);
+
             const token = await getToken();
             const response = await fetch('/api/functional-requirements/single', {
                 method: 'POST',
@@ -226,12 +236,16 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 },
                 body: JSON.stringify({
                     projectId,
-                    singleFR: true
+                    frId
                 }),
             });
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
+            let currentTable = {
+                title: '',
+                rows: []
+            };
 
             if (!reader) {
                 throw new Error('No reader available');
@@ -253,46 +267,32 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             if (data.error) {
                                 throw new Error(data.error);
                             }
-
-                            // Handle status updates
                             if (data.status) {
                                 setGenerationStatus(data.status);
                             }
-                            if (data.done && data.content) {
-                                try {
-                                    // Update the editor state
-                                    await handleEditorChange(
-                                        selectedFR?._id,
-                                        'description',
-                                        data.content.description
-                                    );
-                                } catch (error) {
-                                    console.error('Error processing requirement:', error);
-                                    toast.error(`Failed to process requirement`);
+
+                            if (data.content && data?.content && 'title' in data.content) {
+                                // Create new FR
+                                const newFR = await onCreateFR({
+                                    projectId,
+                                    title: data.content.title,
+                                    description: JSON.stringify(data.content.description)
+                                });
+
+                                if (!newFR?._id) {
+                                    console.error('Failed to create FR:', data.content.title);
+                                    continue;
                                 }
-                            }
-                            // Update progress and status
-                            if (progressInterval.current) {
-                                clearInterval(progressInterval.current);
-                            }
-                            setGenerationProgress(100);
-                            setGenerationStatus('Complete!');
-                            toast.success("Requirement generated successfully");
 
-                            // Refresh the FR list if needed
-                            if (onManualAddFR) {
-                                await onManualAddFR();
+                                // Update the editor state with the Lexical format
+                                await handleEditorChange(
+                                    newFR._id,
+                                    'description',
+                                    data.content.description
+                                );
                             }
-                            // Clean up
-                            setTimeout(() => {
-                                setIsGenerating(false);
-                            }, 1000);
-
-                            return;
-
                         } catch (e) {
-                            console.error('Error parsing SSE data:', e);
-                            toast.error("Error processing requirements data");
+                            console.error('Error parsing stream data:', e);
                         }
                     }
                 }
@@ -302,10 +302,13 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             console.error("Error generating requirement:", error);
             toast.error("Failed to generate requirement");
         } finally {
+            // Ensure cleanup happens even if there's an error
             if (progressInterval.current) {
                 clearInterval(progressInterval.current);
             }
             setIsGenerating(false);
+            setGenerationProgress(0);
+            setGenerationStatus('');
         }
     };
 
@@ -399,6 +402,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
                                 }
+                                setIsGenerating(false);
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
                                 toast.success("Requirements generated successfully");

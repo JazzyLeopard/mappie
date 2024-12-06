@@ -33,7 +33,7 @@ const createMarkdownTable = (requirement: any) => {
   markdown += `|---------|----------|-------------|----------|\n`;
 
   // Add table rows with Comments
-  requirement.table.rows.forEach((row: any) => {
+  requirement.rows.forEach((row: any) => {
     markdown += `| ${row.reqId} | ${row.priority} | ${row.description} | ${row.comments || ''} |\n`;
   });
 
@@ -50,7 +50,8 @@ export default async function handler(
   res.setHeader('Connection', 'keep-alive');
 
   const sendEvent = (data: any) => {
-    res.write(`data: ${JSON.stringify(data)}\n\n`);
+    const serializedData = convertBigIntToNumber(data);
+    res.write(`data: ${JSON.stringify(serializedData)}\n\n`);
   };
 
   try {
@@ -74,19 +75,13 @@ export default async function handler(
 
     sendEvent({ progress: 15, status: 'Setting up connection...' });
     convex.setAuth(token);
-    const { projectId, singleFR } = req.body;
+    const { projectId } = req.body;
+    const convexProjectId = projectId as Id<"projects">;
 
     sendEvent({ progress: 25, status: 'Loading project...' });
     const project = await convex.query(api.projects.getProjectById, {
       projectId: projectId as Id<"projects">
     });
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-    if (project.userId !== userId) {
-      throw new Error('Unauthorized access to project');
-    }
 
     sendEvent({ progress: 35, status: 'Preparing project context...' });
     const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
@@ -101,16 +96,17 @@ export default async function handler(
     const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
-    const prompt = singleFR
-      ? `${context}\n\nGenrate a single functional requirement with detailed subrequirements based on the following project details.Also make sure that the requirement title is unique and not of this ${existingFRNames}. Return the response in this exact JSON structure:`
-      : `${context}\n\nGenerate 5-10 functional requirements, with detailed subrequirements based on the following project details. Return the response in this exact JSON structure:
+    const prompt = `Generate a functional requirement that adds onto the existing requirements. Here are the existing requirements:
+        
+    ${existingFRs.length > 0 ? `${existingFRs.map((fr: any) => `${fr.title}: ${fr.description}`).join('\n')}
+    
+    Current requirement IDs: ${existingFRNames.join(', ')}` : ''}
+    
+    Make sure to add single row with a sufficient amount of subrequirements and avoid duplicating any existing requirements. Return it in the following JSON structure:
 
-{
-  "requirements": [
     {
       "id": "FR-001",
       "title": "User Authentication System",
-      "table": {
         "rows": [
           {
             "reqId": "FR_001",
@@ -122,9 +118,7 @@ export default async function handler(
             "reqId": "FR_001.1",
             "priority": "Must have",
             "description": "The system shall allow users to register with email and password",
-          }
-        ]
-      }
+            "comments": ""
     }
   ]
 }
@@ -151,31 +145,29 @@ ${projectDetails}`;
     // Process AI response
     sendEvent({ progress: 75, status: 'Processing AI response...' });
 
-    let parsedContent;
+    let requirement;
     const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
 
     if (jsonMatch) {
       const jsonContent = jsonMatch[1];
-      parsedContent = JSON.parse(jsonContent);
-      console.log('Parsed requirement:', JSON.stringify(parsedContent, null, 2));
+      requirement = JSON.parse(jsonContent);
+      console.log('Parsed requirement:', JSON.stringify(requirement, null, 2));
 
-      sendEvent({ progress: 85, status: 'Saving requirements...' });
-      if (parsedContent && parsedContent.requirements) {
-        const formattedRequirements = parsedContent.requirements.map((req: any) => ({
-          title: `${req.id}: ${req.title}`,
-          description: createMarkdownTable(req)
-        }));
+      if (requirement) {
+        sendEvent({ progress: 75, status: 'Processing AI response...' });
+        const markdownTable = createMarkdownTable(requirement);
+
+        const formattedFr = {
+          title: `${requirement.id}: ${requirement.title}`,
+          description: markdownTable
+        }
 
         sendEvent({ progress: 95, status: 'Finalizing...' });
         sendEvent({ progress: 100, status: 'Complete!' });
-        sendEvent({
-          type: 'requirements',
-          content: formattedRequirements
-        });
+        sendEvent({ done: true, content: formattedFr });
       }
-    } else {
-      console.warn('Invalid response format from AI');
-      throw new Error('Invalid response format from AI');
+    } else {  
+      throw new Error('No content generated from OpenAI');
     }
 
   } catch (error) {
