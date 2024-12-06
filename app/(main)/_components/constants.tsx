@@ -230,112 +230,138 @@ Finally, ensure that this section provides a balanced view that acknowledges cha
     userStories: "Enhance the provided userStory based on the following project details. Each userStory should include: userStoryId: A unique identifier for the userStory. Title: A brief, descriptive title summarizing the uerStory. Description: A detailed description of the epic. Use the language of the project details to enhance the userStory. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete userStory description. If the userStory can be made more granular by splitting them up, please do so. Use plain language that anyone can understand.Format the output as a complete MARKDOWN format, with each epic as a separate item. Maintain the structure and format of the inputted data.Remove the top headings if any",
 };
 
-export const placeholders = {
-    description: `- What to write:
-      - Imagine you're pitching your project to a friend at a coffee shop ☕. Give a brief summary of your project or product, focusing on the main purpose, the problem you're solving, and the overall goal. Think of it as your project's elevator pitch 🚀.
-  - How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-  - **Example**:
-      - **For** busy professionals and families 
-      **Who** want convenient access to restaurant-quality meals without the hassle of cooking or dining out, 
-      **The** "QuickEats" **Is** a mobile food delivery app 
-      **That** allows users to browse menus, place orders, and track deliveries from their favorite local restaurants in real-time. 
-      **Unlike** traditional takeout or competing apps, 
-      **Our product** offers personalized meal recommendations, faster delivery times, and a rewards program that enhances user loyalty and satisfaction.`,
-    objectives: `- **What to write**:
-      - Clearly define the objectives of the project. Each objective should be specific, measurable, achievable, relevant, and time-bound (SMART).
-      - **How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-      - **Example**:
-      - **Objective**: Increase customer satisfaction by 20%
-      - **How**: By implementing a new customer feedback system and improving the delivery process.
-      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
-    requirements: `- **What to write**:
-      - Clearly define the requirements of the project. Each requirement should be specific, measurable, achievable, relevant, and time-bound (SMART).
-      - **How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-      - **Example**:
-      - **Requirement**: The system should be able to handle 1000 concurrent users.
-      - **How**: By implementing a new customer feedback system and improving the delivery process.
-      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
-    stakeholders: `- **What to write**:
-      - Clearly define the stakeholders of the project. Each stakeholder should be specific, measurable, achievable, relevant, and time-bound (SMART).
-      - **How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-      - **Example**:
-      - **Stakeholder**: The CEO of the company.
-      - **How**: By implementing a new customer feedback system and improving the delivery process.
-      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
-    timeline: `- **What to write**:
-      - Clearly define the timeline of the project. Each timeline should be specific, measurable, achievable, relevant, and time-bound (SMART).
-      - **How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-      - **Example**:
-      - **Timeline**: The project should be completed in 3 months.
-      - **How**: By implementing a new customer feedback system and improving the delivery process.
-      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
-    successMetrics: `- **What to write**:
-      - Clearly define the success metrics of the project. Each success metric should be specific, measurable, achievable, relevant, and time-bound (SMART).
-      - **How the tool helps**:
-      - 🛠️ The tool is like your grammar-savvy buddy 🤓 who's always there to make your pitch clearer, more concise, and aligned with best practices. It might even suggest some fancy improvements or extra details you hadn't thought of. You'll sound like a pro in no time!
-      - **Example**:
-      - **Success Metric**: The project should be completed in 3 months.
-      - **How**: By implementing a new customer feedback system and improving the delivery process.
-      - **Result**: Satisfied customers will be more likely to return and recommend the product to others.`,
-};
+export const placeholderOverview = `
+
+## Project Template 🎯
+### Overview 🚀
+- For [Who's your target audience?]
+- Who [What problem do they have?]
+- The [Your project's name]
+- Is [What type of solution is it?]
+- That [What are the main benefits?]
+- Unlike [Who/what are you competing with?]
+- Our Solution [What makes you special:]
+
+#### Example:
+- **For** product manager and analysts
+- **Who** struggle with documenting their product requirements and stories
+- **The** Mappie AI app
+- **Is** a comprehensive product requirements and user stories documentation tool
+- **That** helps them save time and get back to shipping
+- **Unlike** other tools that require a lot of manual work
+- **Our Solution** provides a seamless way to document, track, and ship products faster
+
+### Problem 💭
+[Describe the current situation and why it needs fixing]
+
+### Objectives (SMART) 🎯
+1. [First specific, measurable goal]
+2. [Second specific, measurable goal]
+3. [Third specific, measurable goal]
+
+### Constraints 🚧
+1. [Time/budget/technical limitation]
+2. [Resource/skill limitation]
+3. [Other key constraints]
+
+### Personas 👥
+#### Key Persona:
+- [Who's your primary user?]
+
+#### Secondary Personas:
+1. [Second user type]
+2. [Third user type]
+
+### Use Cases 📱
+1. [First detailed usage scenario]
+2. [Second usage scenario]
+3. [Optional third scenario]
+
+### Features In ✅
+1. [Must-have feature + why]
+2. [Second key feature + why]
+3. [Third key feature + why]
+
+### Features Out ❌
+1. [What you won't build + why]
+2. [Second excluded feature + why]
+3. [Third excluded feature + why]
+
+### Technical Considerations ⚙️
+[Any technical requirements or limitations]
+
+### Success Metrics 📊
+1. [How will you measure success?]
+2. [Second success metric]
+3. [Third success metric]
+`;
 
 export const ideatePrompts: { [key: string]: string } = {
-    overview: `Create a comprehensive project overview that includes all essential aspects of the project. Follow this exact template structure, maintaining the formatting with appropriate sections and bullet points:
+    overview: `Create a comprehensive project overview following this exact template structure:
 
-    **Project Description**
-    [Provide a concise yet comprehensive description of the project, explaining what it is, its main purpose, and its unique value proposition. Include the target market and the core problem it solves.]\n
+## Project Template 🎯
+### Overview 🚀
+- For [Who's your target audience?]
+- Who [What problem do they have?]
+- The [Your project's name]
+- Is [What type of solution is it?]
+- That [What are the main benefits?]
+- Unlike [Who/what are you competing with?]
+- Our Solution [What makes you special:]
 
-    **Current Situation & Problem**
-    [Describe the current market situation and key challenges that exist. Include relevant statistics or market data if applicable.]\n
+#### Example:
+- **For** product manager and analysts
+- **Who** struggle with documenting their product requirements and stories
+- **The** Mappie AI app
+- **Is** a comprehensive product requirements and user stories documentation tool
+- **That** helps them save time and get back to shipping
+- **Unlike** other tools that require a lot of manual work
+- **Our Solution** provides a seamless way to document, track, and ship products faster
 
-    **Key Pain Points**:
-    1. [First major pain point]
-    2. [Second major pain point]
-    3. [Third major pain point]\n
+### Problem 💭
+[Describe the current situation and why it needs fixing]
 
-    **Solution & Opportunity**
-    [Explain how your project addresses these pain points and what opportunity it captures in the market.]\n
+### Objectives (SMART) 🎯
+1. [First specific, measurable goal]
+2. [Second specific, measurable goal]
+3. [Third specific, measurable goal]
 
-    **Core Features**:
-    1. [Primary feature with brief description]
-    2. [Secondary feature with brief description]
-    3. [Third feature with brief description]
-    Future Considerations: [Brief mention of planned future features]\n
+### Constraints 🚧
+1. [Time/budget/technical limitation]
+2. [Resource/skill limitation]
+3. [Other key constraints]
 
-    **Goals and Objectives**:
-    1. [Specific, measurable goal with timeline]
-    2. [Specific, measurable goal with timeline]
-    3. [Specific, measurable goal with timeline]\n
+### Personas 👥
+#### Key Persona:
+- [Who's your primary user?]
 
-    **Key Stakeholders**:
-    1. [Primary stakeholder group and their role]
-    2. [Secondary stakeholder group and their role]
-    3. [Additional stakeholder group and their role]\n
+#### Secondary Personas:
+1. [Second user type]
+2. [Third user type]
 
-    **Primary User Persona**:
-    - Demographics: [Key demographic information]
-    - Goals: [Main user goals]
-    - Pain Points: [User's main challenges]
-    - Usage Patterns: [How they will use the product]\n
+### Use Cases 📱
+1. [First detailed usage scenario]
+2. [Second usage scenario]
+3. [Optional third scenario]
 
-    Example of good formatting:
-    **Project Description**
-    TaskFlow Pro is a comprehensive project management platform designed specifically for remote development teams. It combines real-time collaboration tools, automated workflow management, and AI-powered productivity insights into a single, intuitive interface. The platform addresses the unique challenges of distributed teams while maintaining high productivity and team cohesion.\n
+### Features In ✅
+1. [Must-have feature + why]
+2. [Second key feature + why]
+3. [Third key feature + why]
 
-    **Current Situation & Problem**
-    Remote work has become the norm for many development teams, with 67% of tech companies adopting hybrid or fully remote models. Traditional project management tools lack the specific features needed for effective remote collaboration and often result in fragmented communication and reduced productivity.\n
+### Features Out ❌
+1. [What you won't build + why]
+2. [Second excluded feature + why]
+3. [Third excluded feature + why]
 
-    **Key Pain Points**:
-    1. Lack of seamless integration between communication and task management tools
-    2. Difficulty in tracking real-time progress across different time zones
-    3. Limited visibility into team member workload and availability\n
+### Technical Considerations ⚙️
+[Any technical requirements or limitations]
 
-    [Continue with the same level of detail and formatting for each section...]`
+### Success Metrics 📊
+1. [How will you measure success?]
+2. [Second success metric]
+3. [Third success metric]
+`
 };
 
 

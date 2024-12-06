@@ -15,7 +15,7 @@
 .PlaygroundEditorTheme__paragraph {
   color: rgb(75 85 99); /* text-gray-600 */
   line-height: 1.625; /* leading-relaxed */
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 .PlaygroundEditorTheme__quote {
   border-left: 4px solid #e5e5e5;
@@ -44,10 +44,11 @@
   margin-top: 1rem; /* mt-4 */
 }
 .PlaygroundEditorTheme__h4 {
-  font-size: 1.125rem; /* text-lg */
-  font-weight: 500; /* font-medium */
+  font-size: 0.775rem; /* text-lg */
+  font-weight: 700; /* font-medium */
   margin-bottom: 0.5rem; /* mb-2 */
   margin-top: 1rem; /* mt-4 */
+  text-transform: uppercase;
 }
 .PlaygroundEditorTheme__indent {
   --lexical-indent-base-value: 40px;

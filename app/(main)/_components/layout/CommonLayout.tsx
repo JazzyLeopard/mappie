@@ -11,13 +11,15 @@ import AiGenerationIcon from "@/icons/AI-Generation";
 import type { Project } from "@/lib/types";
 import { cn } from '@/lib/utils';
 import { ReactMutation, useQuery } from 'convex/react';
-import { Loader2 } from "lucide-react";
+import { BookTemplateIcon, Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
 import LabelToInput from "../LabelToInput";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { TemplateGuideDialog } from "../TemplateGuideDialog";
 
 interface CommonLayoutProps {
     data: Project;
@@ -45,6 +47,7 @@ const CommonLayout = ({
     const [isResetting, setIsResetting] = useState(false);
     const router = useRouter();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isTemplateGuideOpen, setIsTemplateGuideOpen] = useState(false);
 
     // Check if the functional requirements are already generated
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
@@ -174,12 +177,17 @@ const CommonLayout = ({
         }
     }, [data._id, updateProject, cleanDataForUpdate]);
 
+    const handleUseTemplate = useCallback((content: string) => {
+        handleInsertMarkdown(content);
+        setIsTemplateGuideOpen(false);
+    }, [handleInsertMarkdown]);
+
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
                 <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%] relative">
                     <div className="flex items-center justify-between px-2 pb-3 w-full overflow-x-auto sm:mr-2">
-                        <div className="pl-10 mt-2 mr-2">
+                        <div className="pl-10 mt-2 mr-2 flex flex-row gap-2">
                             <LabelToInput
                                 value={data.title}
                                 setValue={(newTitle) => {
@@ -187,6 +195,14 @@ const CommonLayout = ({
                                 }}
                                 onBlur={onEditorBlur}
                             />
+                            <Button 
+                                variant="outline" 
+                                className="ml-2"
+                                onClick={() => setIsTemplateGuideOpen(true)}
+                            >
+                                <BookTemplateIcon className="w-4 h-4 mr-2" />
+                                Use Project Template
+                            </Button>
                         </div>
                         <div className="mr-8 mt-2">
                             <Button
@@ -256,6 +272,12 @@ const CommonLayout = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <TemplateGuideDialog 
+                isOpen={isTemplateGuideOpen}
+                onClose={() => setIsTemplateGuideOpen(false)}
+                onUseTemplate={handleUseTemplate}
+            />
         </div>
     );
 };

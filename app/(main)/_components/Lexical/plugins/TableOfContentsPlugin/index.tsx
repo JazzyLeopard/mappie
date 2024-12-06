@@ -100,9 +100,10 @@ function TableOfContentsList({
                   onClick={() => scrollToNode(key, index)}
                   className={cn(
                     'transition-colors duration-150 text-left ease-in-out w-full p-2 rounded-lg hover:rounded-md hover:bg-gray-100', // Custom button styles with hover effect
-                    tag === 'h1' && 'text-md',
-                    tag === 'h2' && 'ml-5 text-sm', // Distinct style for h2
-                    tag === 'h3' && 'ml-10 text-xs', // Distinct style for h3
+                    tag === 'h1' && 'text-lg',
+                    tag === 'h2' && 'ml-5 text-md', // Distinct style for h2
+                    tag === 'h3' && 'ml-10 text-sm', // Distinct style for h3
+                    tag === 'h4' && 'ml-14 text-xs uppercase', // Distinct style for h4
                     selectedKey === key && 'bg-gray-100 font-semibold'
                   )}
                   title={text}
