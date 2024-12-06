@@ -98,7 +98,7 @@ export default function UseCasesLayout({
     updateUseCase({
       id: UcId,
       [field]: value
-    }).catch(error => {
+    }).catch((error: any) => {
       console.error("Error updating use case:", error);
     });
   }, [updateUseCase]);

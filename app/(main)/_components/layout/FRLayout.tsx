@@ -100,7 +100,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         updateFR({
             id: frId,
             [field]: value
-        }).catch(error => {
+        }).catch((error: any) => {
             console.error("Error updating functional requirements:", error);
         });
     }, [updateFR]);
