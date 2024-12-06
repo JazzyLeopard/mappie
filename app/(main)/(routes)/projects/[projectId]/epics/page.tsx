@@ -27,7 +27,7 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         if (epics && epics?.length > 0) {
             setContent(epics);
         }
-    }, [epics]);
+    }, [epics])
 
     const handleCreateEpic = useCallback(async () => {
         await createEpic({
@@ -49,14 +49,14 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     const handleDeleteEpic = useCallback(async (_id: Id<"epics">) => {
         try {
             await deleteEpic({ _id });
-            setContent((prevContent: any[]) => prevContent.filter((epic: any) => epic._id !== _id));
+            console.log('Epic deleted:', _id);
+            setContent((prevEpics: any) => prevEpics.filter((epic: any) => epic._id !== _id));
             toast.success("Epic deleted successfully");
         } catch (error) {
             console.error("Error deleting epic:", error);
             toast.error("Failed to delete epic");
         }
     }, [deleteEpic]);
-
 
     if (epics === undefined) {
         return <Spinner size={"lg"} />;

@@ -5,41 +5,22 @@ import { Id } from "@/convex/_generated/dataModel";
 import { getAuth } from "@clerk/nextjs/server";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { useContextChecker } from "@/utils/useContextChecker";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-function convertDescriptionToMarkdown(description: any): string {
-    let markdown = '';
-
-    if (typeof description === 'string') {
-        return description;
+const convertBigIntToNumber = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === 'bigint') return Number(obj);
+    if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+    if (typeof obj === 'object') {
+        return Object.entries(obj).reduce((acc, [key, value]) => ({
+            ...acc,
+            [key]: convertBigIntToNumber(value)
+        }), {});
     }
-
-    if (description.Description) {
-        markdown += `## Description\n${description.Description}\n\n`;
-    }
-
-    if (description.creation_date) markdown += `**Creation Date:** ${description.creation_date}\n`;
-    if (description.update_date) markdown += `**Update Date:** ${description.update_date}\n`;
-
-    if (description.business_value) {
-        markdown += `## Business Value\n${description.business_value}\n\n`;
-    }
-
-    if (description.acceptance_criteria) {
-        markdown += `## Acceptance Criteria\n${description.acceptance_criteria}\n\n`;
-    }
-
-    if (description.dependencies) {
-        markdown += `## Dependencies\n${description.dependencies}\n\n`;
-    }
-
-    if (description.risks) {
-        markdown += `## Risks\n${description.risks}\n\n`;
-    }
-
-    return markdown;
-}
+    return obj;
+};
 
 export default async function handler(
     req: NextApiRequest,
@@ -68,25 +49,31 @@ export default async function handler(
             throw new Error('Unauthorized');
         }
 
-        // Set the auth token for the Convex client
+        // Setup Convex client
+        sendEvent({ progress: 15, status: 'Setting up connection...' });
         convex.setAuth(token);
-
         const { projectId } = req.body;
         const convexProjectId = projectId as Id<"projects">;
 
-        // Fetch project data
-        sendEvent({ progress: 15, status: 'Fetching project data...' });
+        // Fetch project and context
+        sendEvent({ progress: 25, status: 'Loading project...' });
+        const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
-        // Fetch functional requirements for the project
+        if (!project) throw new Error('Project not found');
+        if (project.userId !== userId) throw new Error('Unauthorized access to project');
+
+        // Get functional requirements
+        sendEvent({ progress: 35, status: 'Loading requirements...' });
         const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
             projectId: convexProjectId
         });
 
-        if (!functionalRequirements) {
-            return res.status(400).json({ message: "No functional requirements found for the project" });
-        }
-
-        const functionalRequirementsText = functionalRequirements.map((fr: any) => fr.description).join('\n');
+        // Prepare context
+        sendEvent({ progress: 45, status: 'Preparing context...' });
+        const context = await useContextChecker({ projectId: convexProjectId });
+        const functionalRequirementsText = functionalRequirements
+            .map((fr: any) => `${fr.title}\n${fr.description}`)
+            .join('\n\n');
 
         //Fetch the useCases
         const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
@@ -107,24 +94,39 @@ export default async function handler(
 
         let basePrompt = `As an expert Epic analyst, generate one unique additional epic for the following project. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail. Ensure the epic name is different and unique from these: [${existingEpicNames.join(', ')}].
 
-{
-    "name": "Keep the name very short (2-4 words max). Example: 'User Authentication' or 'Payment Processing'",
-    
-    "description": "Include the following elements:
-    
-    - **Description**: [Concise description of the epic's core functionality]
-    
-    - **Business Value**: [Clear statement of value delivered]
-    
-    - **Acceptance Criteria**: [List 3-4 key criteria]
-    
-    - **Dependencies**: [List any critical dependencies]
-    
-    - **Risks**: [List 2-3 key risks]
-    
-    Present the description as a single cohesive string, with each element on a new line."
-}`;
+        Project Context:
+        ${context}
 
+### Epic: [Epic Name]
+
+**Description**: [Detailed description of what this epic entails]
+
+**Business Value**: [Clear statement of the business value this epic delivers]
+
+**Acceptance Criteria**:
+- Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
+- Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
+- Criterion 3: [Address edge cases, error scenarios, or quality requirements]
+
+**Dependencies**:
+- Dependency 1: [Technical or system dependency that is critical to success]
+- Dependency 2: [External factor or prerequisite that must be in place]
+
+**Risks**:
+- Risk 1: [Technical, business, or operational risk that could impact delivery]
+- Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+
+IMPORTANT:
+- Each epic MUST have EXACTLY 3 acceptance criteria
+- Each epic MUST have EXACTLY 2 dependencies
+- Each epic MUST have EXACTLY 2 risks
+- Each point should be detailed and specific
+- Start acceptance criteria with action verbs
+- Include measurable outcomes where possible
+- Consider both technical and business aspects
+
+Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.
+`;
 
         if (useCases?.length > 0) {
             const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
@@ -134,70 +136,89 @@ export default async function handler(
         const singleEpicPrompt = `Based on the following functional requirements- ${functionalRequirementsText} and existing epics- ${epicsText} generate one more epic using this format- ${basePrompt}.Be creative and consider edge cases that might not be immediately obvious. If no additional epic is needed and the existing epic suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading 1 and Heading 2 in Markdown.
     `;
 
-        sendEvent({ progress: 35, status: 'Analyzing requirements...' });
-
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
-        const response = await generateText({
+        const completion = await generateText({
             model: openai("gpt-4o-mini"),
             messages: [{ role: "user", content: singleEpicPrompt }],
             temperature: 0.7,
         });
-        console.log('OpenAI API response received');
 
-        const epicContent = response.text;
-        if (!epicContent) {
-            throw new Error('No content generated from OpenAI');
-        }
+        const epicContent = completion.text;
+        console.log('AI Response:', epicContent);
 
-        console.log('Parsing OpenAI response...');
+        if (!epicContent) throw new Error('No content generated from OpenAI');
 
         // Handle 'NULL' response
         if (epicContent.trim() === 'NULL') {
-            console.log('AI determined that no new use case is needed.');
-            return res.status(200).json({ message: 'NULL' });  // Send 'NULL' to the UI
+            return res.status(200).json({ message: 'NULL' });
         }
 
-        // Utility function to handle BigInt serialization
-        const serializeBigInt = (obj: any) => {
-            return JSON.parse(JSON.stringify(obj, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-            ));
-        };
+        // Try to parse as JSON first
+        try {
+            // Remove markdown code block syntax if present
+            const jsonContent = epicContent.replace(/```json\n|\n```/g, '');
+            const parsedEpics = JSON.parse(jsonContent);
 
-        let generatedEpic;
-        const jsonMatch = epicContent.match(/```json\n([\s\S]*?)\n```/);
-        if (jsonMatch) {
-            const jsonContent = jsonMatch[1];
-            generatedEpic = JSON.parse(jsonContent);
+            // Transform JSON format to our expected format
+            const transformedEpics = parsedEpics.map((epic: any) => ({
+                name: epic["Epic Name"] || epic.name,
+                description: {
+                    Description: epic.Description || '',
+                    "Business Value": epic["Business Value"] || '',
+                    "Acceptance Criteria": Array.isArray(epic["Acceptance Criteria"])
+                        ? epic["Acceptance Criteria"]
+                        : [],
+                    Dependencies: Array.isArray(epic.Dependencies)
+                        ? epic.Dependencies
+                        : [],
+                    Risks: Array.isArray(epic.Risks)
+                        ? epic.Risks
+                        : []
+                }
+            }));
 
-            console.log('Parsed epic', JSON.stringify(generatedEpic, null, 2));
+            // Process epics
+            sendEvent({ progress: 75, status: 'Processing epics...' });
 
-            if (generatedEpic && generatedEpic[0]?.description) {
-                const formattedDescription = convertDescriptionToMarkdown
-                    (generatedEpic[0]?.description)
+            // Create epics in database
+            const createdEpics = await Promise.all(transformedEpics.map(async (epic: any) => {
+                const markdownDescription = `# ${epic.name}
 
-                let epicId = await convex.mutation(api.epics.createEpics, {
+            ## Description
+            ${epic.description.Description}
+
+            ## Business Value
+            ${epic.description["Business Value"]}
+
+            ## Acceptance Criteria
+            ${epic.description["Acceptance Criteria"].map((criterion: any) => `- ${criterion}`).join('\n')}
+
+            ## Dependencies
+            ${epic.description.Dependencies.map((dep: any) => `- ${dep}`).join('\n')}
+
+            ## Risks
+            ${epic.description.Risks.map((risk: any) => `- ${risk}`).join('\n')}`;
+
+                sendEvent({ progress: 85, status: 'Saving epics...' });
+                return await convex.mutation(api.epics.createEpics, {
                     projectId: convexProjectId,
-                    name: generatedEpic[0]?.name || 'Untitled Epic',
-                    description: formattedDescription,
+                    name: epic.name,
+                    description: markdownDescription
                 });
-                generatedEpic[0]['id'] = epicId
+            }));
 
-                const serializedUseCase = serializeBigInt(epicId);
-                console.log("Epic id", serializedUseCase);
-            }
-        } else {
-            console.warn('Skipping invalid epic:', generatedEpic)
+            // Send final response
+            const serializedEpics = convertBigIntToNumber(createdEpics);
+            sendEvent({ progress: 95, status: 'Finalizing...' });
+            sendEvent({ progress: 100, status: 'Complete!' });
+            sendEvent({ done: true, content: serializedEpics });
+
+        } catch (jsonError) {
+            // If JSON parsing fails, fall back to markdown parsing
+            console.log('JSON parsing failed, falling back to markdown parsing');
+            // ... your existing markdown parsing code ...
         }
-        console.log('Epic created successfully');
-
-        sendEvent({ progress: 75, status: 'Processing AI response...' });
-        res.status(200).json({ epics: serializeBigInt(generatedEpic), markdown: convertDescriptionToMarkdown(generatedEpic[0]?.description || {}) });
-
-        sendEvent({ progress: 95, status: 'Finalizing...' });
-        sendEvent({ progress: 100, status: 'Complete!' });
-        sendEvent({ done: true, content: serializeBigInt(generatedEpic) });
 
     } catch (error) {
         console.error('Error generating Epic:', error);

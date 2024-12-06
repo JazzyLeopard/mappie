@@ -80,7 +80,7 @@ export default function UseCasesLayout({
 
   const handleInsertMarkdown = async (content: string) => {
     if (selectedItems.useCase) {
-      // await handleEditorChange(selectedItems.useCase as Id<"useCases">, 'description', content)
+      await handleEditorChange(selectedItems.useCase as Id<"useCases">, 'description', content)
     }
   }
 
@@ -198,6 +198,91 @@ export default function UseCasesLayout({
     }
   };
 
+  // Add generation handler
+  const handleGenerateSingleUseCase = async () => {
+    if (!projectId) {
+      toast.error("Please select a project first");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationProgress(0);
+    setGenerationStatus('Initializing use case generation...');
+    progressInterval.current = setInterval(simulateProgress, 300);
+
+    try {
+      const token = await getToken();
+      const response = await fetch('/api/use-cases/single', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+        body: JSON.stringify({ projectId }),
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+
+              if (data.done) {
+                if (progressInterval.current) {
+                  clearInterval(progressInterval.current);
+                }
+                setGenerationProgress(100);
+                setGenerationStatus('Complete!');
+                toast.success("Use cases generated successfully");
+                setTimeout(() => {
+                  setIsGenerating(false);
+                }, 1000);
+                if (onAddUseCase) {
+                  await onAddUseCase();
+                }
+                return;
+              }
+
+              if (data.status) {
+                setGenerationStatus(data.status);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error generating use cases:", error);
+      toast.error("Failed to generate use cases. Please try again.");
+    } finally {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setIsGenerating(false);
+    }
+  };
+
   if (!isOnboardingComplete) {
     return (
       <div className="p-4 w-full h-screen">
@@ -226,7 +311,7 @@ export default function UseCasesLayout({
               <Button onClick={onAddUseCase} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
                 <Plus className="mr-2 h-4 w-4" /> Add Use Case
               </Button>
-              <Button onClick={onAddUseCase} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
+              <Button onClick={handleGenerateSingleUseCase} variant='ghost' className="w-full text-sm justify-start hover:bg-slate-200 pl-2">
                 <AiGenerationIcon />
                 <span className="ml-2 font-semibold">Generate Use Case</span>
               </Button>
@@ -349,7 +434,7 @@ export default function UseCasesLayout({
                 onClick={handleGenerateUseCases}
               >
                 <AiGenerationIconWhite />
-                Generate Use Cases
+                Generate Initial Use Cases
               </Button>
               <div className="text-center">
                 <span className="text-gray-500">or</span>
