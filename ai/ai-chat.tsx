@@ -451,10 +451,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
             </div>
           </ScrollArea>
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-2 p-2"
-          >
+          <div className="space-y-2 p-2">
             <div className="sticky bottom-0 p-2 bg-background">
               <form onSubmit={handleSubmit} className="relative">
                 <div className="relative">
@@ -490,7 +487,6 @@ const AIStoryCreator = memo(function AIStoryCreator({
                           return 'Untitled';
                         })()
                       }
-                      // Add more context labels here as needed
                     ]}
                     variant='chat'
                   />
@@ -501,7 +497,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                 AI responses may be inaccurate
               </div>
             </div>
-          </form>
+          </div>
         </>
       )}
     </Card>
