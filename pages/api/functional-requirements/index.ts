@@ -131,6 +131,7 @@ Project details:
 ${projectDetails}`;
 
     // Generate requirements with OpenAI
+    console.log("Calling OpenAI Api...");
     sendEvent({ progress: 55, status: 'Generating requirements...' });
     const completion = await generateText({
       model: openai("gpt-4o-mini"),
@@ -143,15 +144,10 @@ ${projectDetails}`;
       throw new Error('No content generated from OpenAI');
     }
 
+    console.log('Parsing OpenAI response...');
+
     // Process AI response
     sendEvent({ progress: 75, status: 'Processing AI response...' });
-
-    // Handle the OpenAI response
-    if (!content) {
-      throw new Error('No content generated from OpenAI');
-    }
-
-    console.log('Parsing OpenAI response...');
 
     // Handle 'NULL' response
     if (content.trim() === 'NULL') {
@@ -175,6 +171,7 @@ ${projectDetails}`;
         }));
 
         sendEvent({ progress: 95, status: 'Finalizing...' });
+        sendEvent({ progress: 100, status: 'Complete!' });
         sendEvent({
           type: 'requirements',
           content: formattedRequirements
