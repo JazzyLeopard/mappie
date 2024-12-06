@@ -7,7 +7,7 @@ export const createUseCase = mutation({
     title: v.string(),
     description: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const useCaseId = await ctx.db.insert("useCases", {
       projectId: args.projectId,
       title: args.title,
@@ -23,11 +23,11 @@ export const createUseCase = mutation({
 
 export const getUseCasesByProjectId = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     try {
       const useCases = await ctx.db
         .query("useCases")
-        .withIndex("by_projectId", q => q.eq("projectId", args.projectId))
+        .withIndex("by_projectId", (q: any) => q.eq("projectId", args.projectId))
         .collect();
 
       return useCases || [];
@@ -40,10 +40,10 @@ export const getUseCasesByProjectId = query({
 
 export const getUseCases = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     return await ctx.db
       .query("useCases")
-      .filter((q) => q.eq(q.field("projectId"), args.projectId))
+      .filter((q: any) => q.eq(q.field("projectId"), args.projectId))
       .collect();
   },
 });
@@ -54,7 +54,7 @@ export const updateUseCase = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id, ...updates } = args;
     await ctx.db.patch(id, { ...updates, updatedAt: BigInt(Date.now()) });
   },
@@ -62,7 +62,7 @@ export const updateUseCase = mutation({
 
 export const deleteUseCase = mutation({
   args: { id: v.id("useCases") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id } = args;
     await ctx.db.delete(id);
   },

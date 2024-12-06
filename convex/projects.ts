@@ -1,12 +1,12 @@
 import { mutation, query } from "@/convex/_generated/server";
 import { v } from "convex/values";
 
-export const getSidebar = query(async (ctx) => {
+export const getSidebar = query(async (ctx: any) => {
 
   const identity = await ctx.auth.getUserIdentity();
 
   const projects = await ctx.db.query("projects")
-    .filter((q) =>
+    .filter((q: any) =>
       q.and(
         q.eq(q.field("userId"), identity?.subject),
         q.eq(q.field("isArchived"), false),
@@ -16,22 +16,22 @@ export const getSidebar = query(async (ctx) => {
     .collect();
 
   const projectsWithEpicsAndUserStories = await Promise.all(
-    projects.map(async (project) => {
+    projects.map(async (project: any) => {
       const epics = await ctx.db.query("epics")
-        .filter((q) => q.eq(q.field("projectId"), project._id))
+        .filter((q: any) => q.eq(q.field("projectId"), project._id))
 
         .order("desc")
         .collect();
 
       const epicsWithUserStories = await Promise.all(
-        epics.map(async (epic) => {
+        epics.map(async (epic: any) => {
           const userStories = await ctx.db.query("userStories")
-            .filter((q) => q.eq(q.field("epicId"), epic._id))
+            .filter((q: any) => q.eq(q.field("epicId"), epic._id))
 
             .order("desc")
             .collect();
 
-          userStories.map(us => { return { ...us, type: 'user-story' } })
+          userStories.map((us: any) => { return { ...us, type: 'user-story' } })
           return {
             _id: epic._id,
             name: epic.name,
@@ -54,7 +54,7 @@ export const getSidebar = query(async (ctx) => {
 });
 
 export const getFirstProjectId = query({
-  handler: async (ctx) => {
+  handler: async (ctx: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -63,7 +63,7 @@ export const getFirstProjectId = query({
 
     const project = await ctx.db
       .query("projects")
-      .filter((q) =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("userId"), identity?.subject),
           q.eq(q.field("isArchived"), false),
@@ -75,7 +75,7 @@ export const getFirstProjectId = query({
 });
 
 export const getProjects = query({
-  handler: async (ctx) => {
+  handler: async (ctx: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -84,7 +84,7 @@ export const getProjects = query({
 
     const projects = await ctx.db
       .query("projects")
-      .filter((q) =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("userId"), identity?.subject),
           q.eq(q.field("isArchived"), false),
@@ -98,7 +98,7 @@ export const getProjects = query({
 
 export const getProjectById = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, { projectId }) => {
+  handler: async (ctx: any, { projectId }: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -111,7 +111,7 @@ export const getProjectById = query({
 
     const project = await ctx.db
       .query("projects")
-      .filter((q) =>
+      .filter((q: any) =>
         q.and(
           q.eq(q.field("userId"), identity?.subject),
           q.eq(q.field("_id"), projectId),
@@ -129,7 +129,7 @@ export const getProjectById = query({
 
 export const getProjectNameById = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx, { projectId }) => {
+  handler: async (ctx: any, { projectId }: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -155,7 +155,7 @@ export const createProject = mutation({
     title: v.string(),
     overview: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
@@ -186,7 +186,7 @@ export const updateProject = mutation({
     overview: v.optional(v.string()),
     title: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { _id, ...updates } = args;
 
     return await ctx.db.patch(_id, {
@@ -201,7 +201,7 @@ export const archiveProject = mutation({
     _id: v.id("projects"),
     isArchived: v.boolean(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { _id, isArchived } = args;
 
     await ctx.db.patch(_id, {
