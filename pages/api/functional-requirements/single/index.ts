@@ -5,8 +5,41 @@ import { Id } from "@/convex/_generated/dataModel";
 import { getAuth } from "@clerk/nextjs/server";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { useContextChecker } from "@/utils/useContextChecker";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+// Helper function to convert BigInt to number
+const convertBigIntToNumber = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'bigint') return Number(obj);
+  if (Array.isArray(obj)) return obj.map(convertBigIntToNumber);
+  if (typeof obj === 'object') {
+    return Object.entries(obj).reduce((acc, [key, value]) => ({
+      ...acc,
+      [key]: convertBigIntToNumber(value)
+    }), {});
+  }
+  return obj;
+};
+
+// Add function to create Lexical editor state
+const createMarkdownTable = (requirement: any) => {
+  // Create the markdown string
+  let markdown = `### Requirement ID: ${requirement.id}\n\n`;
+
+  // Add table header with Comments column
+  markdown += `| Req ID | Priority | Description | Comments |\n`;
+  markdown += `|---------|----------|-------------|----------|\n`;
+
+  // Add table rows with Comments
+  requirement.table.rows.forEach((row: any) => {
+    markdown += `| ${row.reqId} | ${row.priority} | ${row.description} | ${row.comments || ''} |\n`;
+  });
+
+  return markdown;
+};
+
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,11 +54,17 @@ export default async function handler(
   };
 
   try {
+    // Check if it's an SSE request
+    const isSSE = req.headers.accept === 'text/event-stream';
+    if (!isSSE) {
+      throw new Error('Invalid request type');
+    }
+
     if (req.method !== 'POST') {
       throw new Error('Method not allowed');
     }
 
-    sendEvent({ progress: 5, status: 'Authenticating...' });
+    sendEvent({ progress: 5, status: 'Generating...' });
     const { userId, getToken } = getAuth(req);
     const token = await getToken({ template: "convex" });
 
@@ -33,54 +72,72 @@ export default async function handler(
       throw new Error('Unauthorized');
     }
 
+    sendEvent({ progress: 15, status: 'Setting up connection...' });
     convex.setAuth(token);
+    const { projectId, singleFR } = req.body;
 
-    const { projectId } = req.body;
-    const convexProjectId = projectId as Id<"projects">;
+    sendEvent({ progress: 25, status: 'Loading project...' });
+    const project = await convex.query(api.projects.getProjectById, {
+      projectId: projectId as Id<"projects">
+    });
 
-    sendEvent({ progress: 15, status: 'Fetching project data...' });
+    if (!project) {
+      throw new Error('Project not found');
+    }
+    if (project.userId !== userId) {
+      throw new Error('Unauthorized access to project');
+    }
 
+    sendEvent({ progress: 35, status: 'Preparing project context...' });
+    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+
+    sendEvent({ progress: 45, status: 'Loading existing requirements...' });
     const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
-      projectId: convexProjectId
+      projectId: projectId as Id<"projects">
     });
 
     const existingFRNames = existingFRs?.map((fr: any) => fr?.title) || [];
 
-    let basePrompt = `Generate a functional requirement that adds onto the existing requirements. Here are the existing requirements:
-        
-        ${existingFRs.map((fr: any) => `${fr.title}: ${fr.description}`).join('\n')}
-        
-        Current requirement IDs: ${existingFRNames.join(', ')}
-        
-        Make sure to add multiple rows with a sufficient amount of subrequirements and avoid duplicating any existing requirements. Return it in the following JSON structure:
+    const projectDetails = `Overview: ${project.overview}`;
+    // Prepare prompt
+    sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
+    const prompt = singleFR
+      ? `${context}\n\nGenrate a single functional requirement with detailed subrequirements based on the following project details.Also make sure that the requirement title is unique and not of this ${existingFRNames}. Return the response in this exact JSON structure:`
+      : `${context}\n\nGenerate 5-10 functional requirements, with detailed subrequirements based on the following project details. Return the response in this exact JSON structure:
 
 {
-  "id": "FR-001",
-  "title": "User Authentication System",
-  "rows": [
+  "requirements": [
     {
-      "reqId": "FR_001",
-      "priority": "Must have",
-      "description": "The system shall provide a secure user authentication mechanism",
-      "comments": ""
-    },
-    {
-      "reqId": "FR_001.1",
-      "priority": "Must have",
-      "description": "The system shall allow users to register with email and password",
-      "comments": ""
+      "id": "FR-001",
+      "title": "User Authentication System",
+      "table": {
+        "rows": [
+          {
+            "reqId": "FR_001",
+            "priority": "Must have",
+            "description": "The system shall provide a secure user authentication mechanism",
+            "comments": "Implements industry standard security protocols"
+          },
+          {
+            "reqId": "FR_001.1",
+            "priority": "Must have",
+            "description": "The system shall allow users to register with email and password",
+          }
+        ]
+      }
     }
   ]
-}`;
+}
 
-    sendEvent({ progress: 35, status: 'Analyzing requirements...' });
+Project details:
+${projectDetails}`;
+
 
     console.log("Calling OpenAI Api...");
     sendEvent({ progress: 55, status: 'Generating requirement...' });
-
     const completion = await generateText({
-      model: openai("gpt-4o"),
-      messages: [{ role: "user", content: basePrompt }],
+      model: openai("gpt-4o-mini"),
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
 
@@ -91,36 +148,34 @@ export default async function handler(
 
     console.log('Parsing OpenAI response...');
 
-    let requirement;
+    // Process AI response
+    sendEvent({ progress: 75, status: 'Processing AI response...' });
+
+    let parsedContent;
     const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
 
     if (jsonMatch) {
       const jsonContent = jsonMatch[1];
-      requirement = JSON.parse(jsonContent);
-      console.log('Parsed requirement:', JSON.stringify(requirement, null, 2));
+      parsedContent = JSON.parse(jsonContent);
+      console.log('Parsed requirement:', JSON.stringify(parsedContent, null, 2));
 
-      if (requirement) {
-        sendEvent({ progress: 75, status: 'Processing AI response...' });
-        const lexicalState = createLexicalState(requirement);
-
-        const createdFR = await convex.mutation(api.functionalRequirements.createFunctionalRequirement, {
-          projectId: convexProjectId,
-          title: requirement.title,
-          description: lexicalState,
-        });
+      sendEvent({ progress: 85, status: 'Saving requirements...' });
+      if (parsedContent && parsedContent.requirements) {
+        const formattedRequirements = parsedContent.requirements.map((req: any) => ({
+          title: `${req.id}: ${req.title}`,
+          description: createMarkdownTable(req)
+        }));
 
         sendEvent({ progress: 95, status: 'Finalizing...' });
         sendEvent({ progress: 100, status: 'Complete!' });
-        sendEvent({ done: true, content: createdFR });
+        sendEvent({
+          type: 'requirements',
+          content: formattedRequirements
+        });
       }
     } else {
-      // Try parsing the content directly in case it's already JSON
-      try {
-        requirement = JSON.parse(content);
-      } catch (e) {
-        console.warn('Invalid response format from AI');
-        throw new Error('Failed to parse AI response into valid JSON');
-      }
+      console.warn('Invalid response format from AI');
+      throw new Error('Invalid response format from AI');
     }
 
   } catch (error) {
@@ -134,100 +189,3 @@ export default async function handler(
     res.end();
   }
 }
-
-function createLexicalState(requirement: any) {
-  const editorState = {
-    root: {
-      children: [
-        // Heading node
-        {
-          children: [
-            {
-              detail: 0,
-              format: 0,
-              mode: "normal",
-              style: "",
-              text: requirement.title,
-              type: "text",
-              version: 1
-            }
-          ],
-          direction: "ltr",
-          format: "",
-          indent: 0,
-          type: "heading",
-          tag: "h3",
-          version: 1
-        },
-        // Table node
-        {
-          type: "table",
-          version: 1,
-          children: [
-            // Header row
-            {
-              type: "tablerow",
-              version: 1,
-              children: [
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Req ID" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Priority" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Description" }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 1,
-                  children: [{ type: "text", text: "Comments" }]
-                }
-              ]
-            },
-            // Data rows
-            ...requirement.rows.map((row: any) => ({
-              type: "tablerow",
-              version: 1,
-              children: [
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.reqId }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.priority }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.description }]
-                },
-                {
-                  type: "tablecell",
-                  headerState: 0,
-                  children: [{ type: "text", text: row.comments || "" }]
-                }
-              ]
-            }))
-          ]
-        }
-      ],
-      direction: "ltr",
-      format: "",
-      indent: 0,
-      type: "root",
-      version: 1
-    }
-  };
-
-  return JSON.stringify(editorState);
-} 

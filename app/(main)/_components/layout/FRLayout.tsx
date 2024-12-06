@@ -208,17 +208,12 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             return;
         }
 
+        setIsGenerating(true);
+        setGenerationProgress(0);
+        setGenerationStatus('Initializing functional requirement generation...');
+        progressInterval.current = setInterval(simulateProgress, 300);
+
         try {
-            // Create empty FR first
-            const newFR = await onCreateFR({
-                projectId,
-                title: 'New Functional Requirement',
-                description: ''
-            });
-
-            const frId = newFR?._id as Id<'functionalRequirements'>;
-            selectItem(frId);
-
             const token = await getToken();
             const response = await fetch('/api/functional-requirements/single', {
                 method: 'POST',
@@ -231,16 +226,12 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 },
                 body: JSON.stringify({
                     projectId,
-                    frId
+                    singleFR: true
                 }),
             });
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
-            let currentTable = {
-                title: '',
-                rows: []
-            };
 
             if (!reader) {
                 throw new Error('No reader available');
@@ -255,38 +246,53 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 const lines = chunk.split('\n');
 
                 for (const line of lines) {
-                    if (line.startsWith('9:') || line.startsWith('a:')) {
+                    if (line.startsWith('data: ')) {
                         try {
-                            const data = JSON.parse(line.slice(2));
-                            console.log("Parsed data:", data);
+                            const data = JSON.parse(line.slice(5).trim());
 
-                            // Handle title setting
-                            if (data.toolName === 'setFRTitle' && data.args?.title) {
-                                currentTable.title = data.args.title;
-                                await handleFRNameChange(frId, 'title', data.args.title);
+                            if (data.error) {
+                                throw new Error(data.error);
                             }
-                            // Handle row generation
-                            else if (data.toolName === 'generateTableRow' && data.args) {
-                                const newRow = {
-                                    reqId: data.args.reqId,
-                                    priority: data.args.priority,
-                                    description: data.args.description,
-                                    comments: data.args.comments || ''
-                                };
 
-                                currentTable.rows.push(newRow as never);
+                            // Handle status updates
+                            if (data.status) {
+                                setGenerationStatus(data.status);
+                            }
+                            if (data.done && data.content) {
+                                try {
+                                    // Update the editor state
+                                    await handleEditorChange(
+                                        selectedFR?._id,
+                                        'description',
+                                        data.content.description
+                                    );
+                                } catch (error) {
+                                    console.error('Error processing requirement:', error);
+                                    toast.error(`Failed to process requirement`);
+                                }
+                            }
+                            // Update progress and status
+                            if (progressInterval.current) {
+                                clearInterval(progressInterval.current);
+                            }
+                            setGenerationProgress(100);
+                            setGenerationStatus('Complete!');
+                            toast.success("Requirement generated successfully");
 
-                                // Update the editor with the current state
-                                const lexicalState = createLexicalState(currentTable);
-                                await handleEditorChange(frId, 'description', lexicalState);
+                            // Refresh the FR list if needed
+                            if (onManualAddFR) {
+                                await onManualAddFR();
                             }
-                            // Handle completion
-                            else if (data.finishReason === 'tool-calls') {
-                                toast.success("Requirement generated successfully");
-                                return;
-                            }
+                            // Clean up
+                            setTimeout(() => {
+                                setIsGenerating(false);
+                            }, 1000);
+
+                            return;
+
                         } catch (e) {
-                            console.error('Error parsing stream data:', e);
+                            console.error('Error parsing SSE data:', e);
+                            toast.error("Error processing requirements data");
                         }
                     }
                 }
@@ -295,6 +301,11 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         } catch (error) {
             console.error("Error generating requirement:", error);
             toast.error("Failed to generate requirement");
+        } finally {
+            if (progressInterval.current) {
+                clearInterval(progressInterval.current);
+            }
+            setIsGenerating(false);
         }
     };
 
