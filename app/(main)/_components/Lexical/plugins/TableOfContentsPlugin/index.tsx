@@ -9,39 +9,15 @@ import type {TableOfContentsEntry} from '@lexical/react/LexicalTableOfContentsPl
 import type {HeadingTagType} from '@lexical/rich-text';
 import type {NodeKey} from 'lexical';
 
-import './index.css';
-
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {TableOfContentsPlugin as LexicalTableOfContentsPlugin} from '@lexical/react/LexicalTableOfContentsPlugin';
 import {useEffect, useRef, useState} from 'react';
-import * as React from 'react';
-
-const MARGIN_ABOVE_EDITOR = 624;
-const HEADING_WIDTH = 9;
-
-function indent(tagName: HeadingTagType) {
-  if (tagName === 'h2') {
-    return 'heading2';
-  } else if (tagName === 'h3') {
-    return 'heading3';
-  }
-}
-
-function isHeadingAtTheTopOfThePage(element: HTMLElement): boolean {
-  const elementYPosition = element?.getClientRects()[0].y;
-  return (
-    elementYPosition >= MARGIN_ABOVE_EDITOR &&
-    elementYPosition <= MARGIN_ABOVE_EDITOR + HEADING_WIDTH
-  );
-}
-function isHeadingAboveViewport(element: HTMLElement): boolean {
-  const elementYPosition = element?.getClientRects()[0].y;
-  return elementYPosition < MARGIN_ABOVE_EDITOR;
-}
-function isHeadingBelowTheTopOfThePage(element: HTMLElement): boolean {
-  const elementYPosition = element?.getClientRects()[0].y;
-  return elementYPosition >= MARGIN_ABOVE_EDITOR + HEADING_WIDTH;
-}
+import {Menu} from 'lucide-react';
+import {cn} from '@/lib/utils';
+import { TOCIcon } from './TOCIcon';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 function TableOfContentsList({
   tableOfContents,
@@ -49,139 +25,95 @@ function TableOfContentsList({
   tableOfContents: Array<TableOfContentsEntry>;
 }): JSX.Element {
   const [selectedKey, setSelectedKey] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
   const selectedIndex = useRef(0);
   const [editor] = useLexicalComposerContext();
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   function scrollToNode(key: NodeKey, currIndex: number) {
     editor.getEditorState().read(() => {
       const domElement = editor.getElementByKey(key);
       if (domElement !== null) {
-        domElement.scrollIntoView();
+        const scrollAreaViewport = domElement.closest('[data-radix-scroll-area-viewport]');
+        if (scrollAreaViewport) {
+          const elementRect = domElement.getBoundingClientRect();
+          const containerRect = scrollAreaViewport.getBoundingClientRect();
+          const relativeTop = elementRect.top - containerRect.top + scrollAreaViewport.scrollTop;
+          
+          scrollAreaViewport.scrollTo({
+            top: relativeTop - containerRect.height / 2 + elementRect.height / 2,
+            behavior: 'smooth'
+          });
+        }
         setSelectedKey(key);
         selectedIndex.current = currIndex;
       }
     });
   }
 
-  useEffect(() => {
-    function scrollCallback() {
-      if (
-        tableOfContents.length !== 0 &&
-        selectedIndex.current < tableOfContents.length - 1
-      ) {
-        let currentHeading = editor.getElementByKey(
-          tableOfContents[selectedIndex.current][0],
-        );
-        if (currentHeading !== null) {
-          if (isHeadingBelowTheTopOfThePage(currentHeading)) {
-            //On natural scroll, user is scrolling up
-            while (
-              currentHeading !== null &&
-              isHeadingBelowTheTopOfThePage(currentHeading) &&
-              selectedIndex.current > 0
-            ) {
-              const prevHeading = editor.getElementByKey(
-                tableOfContents[selectedIndex.current - 1][0],
-              );
-              if (
-                prevHeading !== null &&
-                (isHeadingAboveViewport(prevHeading) ||
-                  isHeadingBelowTheTopOfThePage(prevHeading))
-              ) {
-                selectedIndex.current--;
-              }
-              currentHeading = prevHeading;
-            }
-            const prevHeadingKey = tableOfContents[selectedIndex.current][0];
-            setSelectedKey(prevHeadingKey);
-          } else if (isHeadingAboveViewport(currentHeading)) {
-            //On natural scroll, user is scrolling down
-            while (
-              currentHeading !== null &&
-              isHeadingAboveViewport(currentHeading) &&
-              selectedIndex.current < tableOfContents.length - 1
-            ) {
-              const nextHeading = editor.getElementByKey(
-                tableOfContents[selectedIndex.current + 1][0],
-              );
-              if (
-                nextHeading !== null &&
-                (isHeadingAtTheTopOfThePage(nextHeading) ||
-                  isHeadingAboveViewport(nextHeading))
-              ) {
-                selectedIndex.current++;
-              }
-              currentHeading = nextHeading;
-            }
-            const nextHeadingKey = tableOfContents[selectedIndex.current][0];
-            setSelectedKey(nextHeadingKey);
-          }
-        }
-      } else {
-        selectedIndex.current = 0;
-      }
-    }
-    let timerId: ReturnType<typeof setTimeout>;
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 300); // 300ms delay before hiding
+  };
 
-    function debounceFunction(func: () => void, delay: number) {
-      clearTimeout(timerId);
-      timerId = setTimeout(func, delay);
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-
-    function onScroll(): void {
-      debounceFunction(scrollCallback, 10);
-    }
-
-    document.addEventListener('scroll', onScroll);
-    return () => document.removeEventListener('scroll', onScroll);
-  }, [tableOfContents, editor]);
+    setIsVisible(true);
+  };
 
   return (
-    <div className="table-of-contents">
-      <ul className="headings">
-        {tableOfContents.map(([key, text, tag], index) => {
-          if (index === 0) {
-            return (
-              <div className="normal-heading-wrapper" key={key}>
-                <div
-                  className="first-heading"
+    <div className="absolute left-0 top-0 h-full" style={{ transform: 'translateX(-3rem)' }}>
+      <div className="sticky top-1/2 -translate-y-1/2">
+        <button
+          className={cn(
+            "p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-all duration-300",
+            isVisible && "bg-gray-50"
+          )}
+          onClick={() => setIsVisible(!isVisible)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          title="Table of Contents"
+        >
+          <TOCIcon />
+        </button>
+
+        <div 
+          className={cn(
+            "absolute left-full top-1/2 -translate-y-1/2 ml-2 transition-opacity duration-300",
+            isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <nav className="bg-white shadow-lg rounded-lg px-2 py-4 min-w-[20rem]">
+            <div className="text-lg font-semibold mb-2 px-2 flex items-center">
+              Table of Contents
+            </div>
+            <Separator className="my-2" />
+            <ScrollArea className="space-y-1 max-h-[60vh] overflow-y-auto toc-scrollbar w-auto">
+              {tableOfContents.map(([key, text, tag], index) => (
+                <button
+                  key={key}
                   onClick={() => scrollToNode(key, index)}
-                  role="button"
-                  tabIndex={0}>
-                  {('' + text).length > 20
-                    ? text.substring(0, 20) + '...'
-                    : text}
-                </div>
-                <br />
-              </div>
-            );
-          } else {
-            return (
-              <div
-                className={`normal-heading-wrapper ${
-                  selectedKey === key ? 'selected-heading-wrapper' : ''
-                }`}
-                key={key}>
-                <div
-                  onClick={() => scrollToNode(key, index)}
-                  role="button"
-                  className={indent(tag)}
-                  tabIndex={0}>
-                  <li
-                    className={`normal-heading ${
-                      selectedKey === key ? 'selected-heading' : ''
-                    }
-                    `}>
-                    {('' + text).length > 27
-                      ? text.substring(0, 27) + '...'
-                      : text}
-                  </li>
-                </div>
-              </div>
-            );
-          }
-        })}
-      </ul>
+                  className={cn(
+                    'transition-colors duration-150 text-left ease-in-out w-full p-2 rounded-lg hover:rounded-md hover:bg-gray-100', // Custom button styles with hover effect
+                    tag === 'h1' && 'text-md',
+                    tag === 'h2' && 'ml-5 text-sm', // Distinct style for h2
+                    tag === 'h3' && 'ml-10 text-xs', // Distinct style for h3
+                    selectedKey === key && 'bg-gray-100 font-semibold'
+                  )}
+                  title={text}
+                >
+                  {text}
+                </button>
+              ))}
+            </ScrollArea>
+          </nav>
+        </div>
+      </div>
     </div>
   );
 }
@@ -189,9 +121,9 @@ function TableOfContentsList({
 export default function TableOfContentsPlugin() {
   return (
     <LexicalTableOfContentsPlugin>
-      {(tableOfContents) => {
-        return <TableOfContentsList tableOfContents={tableOfContents} />;
-      }}
+      {(tableOfContents) => (
+        <TableOfContentsList tableOfContents={tableOfContents} />
+      )}
     </LexicalTableOfContentsPlugin>
   );
 }
