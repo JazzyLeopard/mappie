@@ -24,7 +24,7 @@ import { TemplateGuideDialog } from "../TemplateGuideDialog";
 interface CommonLayoutProps {
     data: Project;
     onEditorBlur: () => Promise<void>;
-    handleEditorChange: (attribute: string, value: any) => void,
+    handleEditorChange: (attribute: string, value: any) => Promise<void>,
     projectId: Id<"projects">;
     parent: 'project' | 'epic';
 }
@@ -91,22 +91,6 @@ const CommonLayout = ({
         }
     };
 
-    // Update the handleSectionChange function
-    const handleSectionChange = useCallback(async (field: string, value: any) => {
-        try {
-            // if (!value || data[field as keyof typeof data] === value) {
-            //     return;
-            // }
-            handleEditorChange(field, value);
-        } catch (error) {
-            console.error("Error updating project section:", error);
-            toast.error("Failed to save changes");
-        }
-    }, [data, handleEditorChange]);
-
-    // Separate editorKey from other props
-
-
     const toggleAIChat = () => {
         setIsAIChatCollapsed(!isAIChatCollapsed);
     };
@@ -140,9 +124,7 @@ const CommonLayout = ({
                         <div className="pl-10 mt-2 mr-2 flex flex-row gap-2">
                             <LabelToInput
                                 value={data.title}
-                                setValue={(newTitle) => {
-                                    handleSectionChange('title', newTitle);
-                                }}
+                                setValue={(newTitle) => handleEditorChange('title', newTitle)}
                                 onBlur={onEditorBlur}
                             />
                             <Button 
@@ -179,7 +161,7 @@ const CommonLayout = ({
                     <ScrollArea className="flex-1 min-h-0 relative" withShadow={true}>
                         <div className="px-12 relative min-h-full">
                             <LexicalEditor
-                                key={`overview-${data.overview}`}
+                                key={`overview-${data._id}`}
                                 itemId={data._id}
                                 onBlur={async () => { }}
                                 attribute="overview"
