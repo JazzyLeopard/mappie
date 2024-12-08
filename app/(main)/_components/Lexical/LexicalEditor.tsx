@@ -13,6 +13,9 @@ import PlaygroundNodes from './nodes/PlaygroundNodes';
 import { FlashMessageContext } from './context/FlashMessageContext';
 import { useSettings } from './context/SettingsContext';
 import { SuggestionCardNode } from './plugins/AiEditPlugin';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { TRANSFORMERS } from '@lexical/markdown';
+import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
 
 type LexicalEditorProps = {
   onBlur: () => Promise<void>;
@@ -49,9 +52,10 @@ function LexicalEditor({
       <SharedHistoryContext>
         <TableContext>
           <SharedAutocompleteContext>
-            <div className="editor-shell">
-              <Editor
-                attribute={attribute}
+            <MarkdownShortcutPlugin transformers={TRANSFORMERS}/>
+              <div className="editor-shell">
+                <Editor
+                  attribute={attribute}
                 setProjectDetails={setProjectDetails}
                 initialContent={projectDetails?.[attribute]}
                 context={context}

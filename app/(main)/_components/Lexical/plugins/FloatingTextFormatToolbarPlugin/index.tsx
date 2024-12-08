@@ -46,7 +46,7 @@ import { AI_EDIT_COMMAND } from '../AiEditPlugin';
 import AiGenerationIcon from '@/icons/AI-Generation';
 
 const KEYBOARD_SHORTCUT = {
-  AI_EDIT: 'mod+shift+m',
+  AI_EDIT: 'mod+e',
 };
 
 function TextFormatFloatingToolbar({
