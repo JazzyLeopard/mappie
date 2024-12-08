@@ -1,13 +1,15 @@
 "use client";
+import ProjectIdeation from "@/components/project-ideation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { SpokenLanguage } from "@/types";
 import { useUser } from "@clerk/clerk-react";
 import { faDiagramProject, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,7 +26,8 @@ export default function Component() {
   const pathname = usePathname();
   const [activeButton, setActiveButton] = useState<string>("all");
   const [openPopover, setOpenPopover] = useState<string | null>(null);
-  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [openIdeateDialog, setOpenIdeateDialog] = useState<boolean>(false);
+  const [openArchiveDialog, setOpenArchiveDialog] = useState<boolean>(false);
   const archiveProject = useMutation(api.projects.archiveProject);
 
   const [aiPrompt, setAiPrompt] = useState("");
@@ -72,8 +75,8 @@ export default function Component() {
     }
   };
 
-  const handleGenerateProject = async () => {
-    if (!aiPrompt.trim()) {
+  const handleGenerateProject = async (description: string, language: SpokenLanguage) => {
+    if (!description.trim()) {
       toast.error("Please enter a project description.");
       return;
     }
@@ -81,7 +84,6 @@ export default function Component() {
     setIsGenerating(true);
 
     try {
-      // Phase 1: Create the project first with a temporary title
       const projectId = await createProject({
         title: "Generating Project...",
       });
@@ -92,15 +94,15 @@ export default function Component() {
 
       toast.success("Project created. Generating details...");
 
-      // Phase 2: Generate project details
       const response = await fetch('/api/ideate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: aiPrompt,
-          projectId
+          prompt: description,
+          projectId,
+          language
         }),
       });
 
@@ -124,12 +126,13 @@ export default function Component() {
       toast.error(error.message || "Failed to generate project. Please try again.");
     } finally {
       setIsGenerating(false);
+      setOpenIdeateDialog(false);
     }
   };
 
   const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
     await archiveProject({ _id: id, isArchived: !isArchived });
-    setOpenDialog(false);
+    setOpenArchiveDialog(false);
     router.push(`/projects`);
   };
 
@@ -146,8 +149,8 @@ export default function Component() {
               <PlusIcon className="mr-2 w-4 h-4" />
               <p className="mr-4">Create new</p>
             </Button>
-            <Popover>
-              <PopoverTrigger asChild>
+            <Dialog open={openIdeateDialog} onOpenChange={setOpenIdeateDialog}>
+              <DialogTrigger asChild>
                 <Button
                   variant="default"
                   className="bg-gradient-to-r from-pink-400 to-blue-300 text-white whitespace-nowrap"
@@ -155,37 +158,14 @@ export default function Component() {
                   <Wand2 className="mr-2 w-4 h-4" />
                   Ideate with AI
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="min-w-[24rem]">
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="Describe the type of project/product/app/feature you want to create. Mappie will generate a project with populated fields as a starting point for you to build upon."
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    rows={4}
-                    disabled={isGenerating}
-                    className="resize-none"
-                    variant="default"
-                  />
-                  <Button
-                    onClick={handleGenerateProject}
-                    className="w-full relative"
-                    disabled={isGenerating || !aiPrompt.trim()}
-                  >
-                    {isGenerating ? (
-                      <>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <ProjectIdeation 
+                  onSubmit={handleGenerateProject}
+                  isGenerating={isGenerating}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
           <div className="flex items-center mb-6 overflow-x-auto">
             <Button
@@ -255,7 +235,7 @@ export default function Component() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            setOpenDialog(true);
+                            setOpenArchiveDialog(true);
                           }}
                           className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full"
                         >
@@ -266,8 +246,8 @@ export default function Component() {
                   </div>
 
                   <Dialog
-                    open={openDialog}
-                    onOpenChange={() => setOpenDialog(!openDialog)}
+                    open={openArchiveDialog}
+                    onOpenChange={() => setOpenArchiveDialog(!openArchiveDialog)}
                   >
                     <DialogContent>
                       <DialogHeader>
