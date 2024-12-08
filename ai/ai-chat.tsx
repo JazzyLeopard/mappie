@@ -17,7 +17,6 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ToolState } from '@/lib/types';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -68,6 +67,21 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
   message: Message,
   onInsertMarkdown: (markdown: string) => void
 }) => {
+  const handleReplace = useCallback(async (newContent: string) => {
+    try {
+      if ((window as any).__replaceMarkdown) {
+        await (window as any).__replaceMarkdown(newContent);
+        return Promise.resolve();
+      }
+      // Fallback to insert if replace isn't available
+      onInsertMarkdown(newContent);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Replace error:', error);
+      return Promise.reject(error);
+    }
+  }, [onInsertMarkdown]);
+
   return (
     <div className="flex w-full">
       {/* Icon Column - make it flex-shrink-0 to prevent shrinking */}
@@ -144,6 +158,7 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
                 metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
                 onInsert={onInsertMarkdown}
                 isLoading={tool.state === 'call'}
+                onReplace={handleReplace}
               />
             </div>
           ))}

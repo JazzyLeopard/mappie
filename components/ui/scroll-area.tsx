@@ -9,12 +9,16 @@ const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
     withShadow?: boolean;
+    flexCol?: boolean;
+    grid?: boolean;
   }
->(({ className, children, withShadow = false, ...props }, ref) => (
+>(({ className, children, withShadow = false, flexCol = false, grid = false, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
     className={cn(
       "relative overflow-hidden",
+      flexCol && "flex flex-col",
+      grid && "grid grid-cols-1",
       withShadow && 
         "after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-8 after:bg-gradient-to-t after:from-background/90 after:to-transparent after:pointer-events-none after:z-10",
       className

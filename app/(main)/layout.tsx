@@ -26,11 +26,11 @@ function ErrorFallback({ error }: { error: Error }) {
 }
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  //@ts-ignore
-  const { isLoading } = useConvex();
-  const { isSignedIn } = useUser();
+  const convex = useConvex();
+  const { isSignedIn, isLoaded } = useUser();
 
-  if (isLoading) {
+  // Check if Convex is initialized
+  if (!convex) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Spinner size={"lg"} />
@@ -38,6 +38,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Wait for Clerk to load
+  if (!isLoaded) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Spinner size={"lg"} />
+      </div>
+    );
+  }
+
+  // Only redirect if we're sure the user isn't signed in
   if (!isSignedIn) {
     return redirect("/");
   }

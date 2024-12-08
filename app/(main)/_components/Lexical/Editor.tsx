@@ -23,6 +23,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { CAN_USE_DOM } from './shared/canUseDOM';
 import { $convertFromMarkdownString, $convertToMarkdownString } from '@lexical/markdown';
 import { debounce } from 'lodash';
+import { toast } from 'react-hot-toast';
 
 import { useSettings } from './context/SettingsContext';
 import { useSharedHistoryContext } from './context/SharedHistoryContext';
@@ -57,12 +58,14 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
-import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
+import { $createParagraphNode, $createTextNode, $getRoot, $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand, LexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { PASTE_COMMAND } from 'lexical';
 import AIEditPlugin from './plugins/AiEditPlugin';
 import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
+import ReplacementPlugin from './plugins/ReplacementPlugin/index';
 import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
+
 
 
 type EditorProps = {
@@ -241,29 +244,7 @@ export default function Editor({
     }
   }, [editor]);
 
-  useEffect(() => {
-    // Register paste handler
-    return editor.registerCommand(
-      PASTE_COMMAND,
-      (event: ClipboardEvent) => {
-        const pastedText = event.clipboardData?.getData('text/plain');
-        if (pastedText?.trim()) {
-          // Check for markdown content
-          if (pastedText.match(/[#\-*`>]|\d+\./)) {
-            event.preventDefault();
-            
-            editor.update(() => {
-              $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
-            });
-            
-            return true;
-          }
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
-  }, [editor]);
+
 
   return (
     <>
@@ -277,7 +258,10 @@ export default function Editor({
         <EmojiPickerPlugin />
         <AutoEmbedPlugin />
         <EditorOnChangePlugin onChange={handleChange} />
-        <MarkdownInsertionPlugin onInsertMarkdown={insertMarkdown} />
+        <MarkdownInsertionPlugin 
+          onInsertMarkdown={insertMarkdown} 
+        />
+        <ReplacementPlugin />
         <RichTextPlugin
           contentEditable={
             <div className="h-full w-full overflow-auto scrollbar-thin">
@@ -354,11 +338,11 @@ export default function Editor({
   );
 }
 
-// Update the MarkdownInsertionPlugin to handle immediate updates
+// Update the MarkdownInsertionPlugin
 function MarkdownInsertionPlugin({
-  onInsertMarkdown
+  onInsertMarkdown,
 }: {
-  onInsertMarkdown: (markdown: string) => void
+  onInsertMarkdown: (markdown: string) => void;
 }) {
   const [editor] = useLexicalComposerContext();
 
@@ -367,8 +351,6 @@ function MarkdownInsertionPlugin({
       (window as any).__lexicalEditor = editor;
       (window as any).__insertMarkdown = (markdown: string) => {
         onInsertMarkdown(markdown);
-
-        // Use the properly typed command
         editor.update(() => {
           editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
         });
@@ -384,4 +366,12 @@ function MarkdownInsertionPlugin({
   }, [editor, onInsertMarkdown]);
 
   return null;
+}
+
+// Update the window type declaration
+declare global {
+  interface Window {
+    __lexicalEditor: any;
+    __insertMarkdown: (markdown: string) => void;
+  }
 }

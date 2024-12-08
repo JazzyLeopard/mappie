@@ -1,13 +1,19 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Copy, FileDown, Grid } from "lucide-react"
+import { Copy, FileDown, Grid, Replace } from "lucide-react"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { toast } from 'sonner'
 import { Skeleton } from "@/components/ui/skeleton"
 import { useState, useEffect } from 'react';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $convertToMarkdownString, $convertFromMarkdownString } from '@lexical/markdown';
+import { ENHANCED_TRANSFORMERS } from '../Lexical/plugins/MarkdownTransformers';
+import { $getRoot } from 'lexical';
+import { createEditor } from 'lexical';
+import { createHeadlessEditor } from '@lexical/headless';
 
 interface MarkdownCardProps {
   content?: string;
@@ -16,6 +22,7 @@ interface MarkdownCardProps {
     type?: string;
   };
   onInsert: (markdown: string) => void;
+  onReplace: (newContent: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -31,7 +38,15 @@ const loadingAnimation = {
   }
 };
 
-export function MarkdownCard({ content, metadata, onInsert, isLoading }: MarkdownCardProps) {
+// Add this type declaration for the window object
+declare global {
+  interface Window {
+    __lexicalEditor: any;
+    __insertMarkdown: (markdown: string) => void;
+  }
+}
+
+export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading }: MarkdownCardProps) {
   // Add state to track if content is still streaming
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamedContent, setStreamedContent] = useState('');
@@ -66,7 +81,7 @@ export function MarkdownCard({ content, metadata, onInsert, isLoading }: Markdow
   }
 
   return (
-    <div className="w-full rounded-lg border border-neutral-200 overflow-hidden bg-white">
+    <div className="w-full mb-4 rounded-lg border border-neutral-200 overflow-hidden bg-white">
       <div className="h-10 overflow-hidden border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
         <div className="relative group">
           <Button
@@ -87,12 +102,31 @@ export function MarkdownCard({ content, metadata, onInsert, isLoading }: Markdow
             size="sm"
             className="h-7"
             onClick={() => {
+              // Simply copy the raw markdown content
               navigator.clipboard.writeText(content || '');
               toast.success('Copied to clipboard');
             }}
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7"
+            onClick={async () => {
+              try {
+                await onReplace(content || '');
+                toast.success('Text replaced successfully');
+              } catch (error) {
+                console.error('Replace error:', error);
+                toast.error('Failed to replace text');
+              }
+            }}
+          >
+            <Replace className="h-4 w-4 mr-2" />
+            Replace in-text
           </Button>
         </div>  
       </div>
