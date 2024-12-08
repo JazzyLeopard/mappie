@@ -12,21 +12,30 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === 'POST') {
-    const { prompt, projectId } = req.body;
+    const { prompt, projectId, language } = req.body;
 
-    if (!prompt || !projectId) {
-      return res.status(400).json({ error: 'Prompt and projectId are required' });
+    if (!prompt || !projectId || !language) {
+      return res.status(400).json({ error: 'Prompt, projectId, and language are required' });
     }
 
     try {
       const promptWithPropertyInstructions = `Generate a comprehensive project overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
-Return the response in the following JSON format:
+
+Use this exact template structure for the overview, replacing the placeholders with relevant content in ${language}:
+
+${placeholderOverview}
+
+Return the response in the following format (without any markdown code block formatting):
 {
   "title": "The generated title here",
-  "overview": "The comprehensive overview in markdown format here"
+  "overview": "The filled out template in markdown format here"
 }
-Ensure the overview is in markdown format in the language of the prompt.
-Use the ${placeholderOverview} object to guide the generation of the overview.`;
+
+Important: 
+1. Keep all emojis and formatting from the template
+2. Replace only the placeholder text in square brackets
+3. Return ONLY the JSON object without any markdown formatting or code block indicators
+4. Maintain the exact same structure and headings as the template`;
 
       console.log("Calling OpenAi Api...");
 
@@ -39,18 +48,32 @@ Use the ${placeholderOverview} object to guide the generation of the overview.`;
       });
       console.log("OpenAi response received");
 
-      // Parse the JSON response
-      const parsedResponse = JSON.parse(completions.text);
-      const { title, overview } = parsedResponse;
+      // Clean up the response text before parsing
+      const cleanResponse = completions.text
+        .replace(/```json\n?/g, '')  // Remove ```json
+        .replace(/```\n?/g, '')      // Remove closing ```
+        .trim();                     // Remove any extra whitespace
 
-      // Update the project with both title and overview
-      await convex.mutation(api.projects.updateProject, {
-        _id: projectId,
-        title: title,
-        overview: overview,
-      });
+      try {
+        const parsedResponse = JSON.parse(cleanResponse);
+        const { title, overview } = parsedResponse;
 
-      return res.status(200).json({ message: 'Project overview generated and updated successfully' });
+        if (!title || !overview) {
+          throw new Error('Invalid response format');
+        }
+
+        // Update the project with both title and overview
+        await convex.mutation(api.projects.updateProject, {
+          _id: projectId,
+          title: title,
+          overview: overview,
+        });
+
+        return res.status(200).json({ message: 'Project overview generated and updated successfully' });
+      } catch (parseError) {
+        console.error('Error parsing AI response:', parseError);
+        return res.status(500).json({ error: 'Failed to parse AI response' });
+      }
     } catch (error) {
       console.error('Error generating project overview:', error);
       return res.status(500).json({ error: 'Failed to generate project overview' });
