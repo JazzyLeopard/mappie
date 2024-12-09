@@ -48,11 +48,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
-                          <Plus className="h-4 w-4" />
+                          <Plus className="h-4 w-4 text-gray-500" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Add content</p>
+                        <p>Comming soon...</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -60,11 +60,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button type="button" size="icon" variant="ghost" className="h-8 w-8">
-                          <Paperclip className="h-4 w-4" />
+                          <Paperclip className="h-4 w-4 text-gray-500" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Attach file</p>
+                        <p>Comming soon...</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
