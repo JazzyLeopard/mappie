@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Stripes from "@/public/images-landing/stripes-dark.svg";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 export default function Cta() {
   return (

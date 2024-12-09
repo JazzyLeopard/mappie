@@ -127,7 +127,7 @@ function SuggestionCard({
               <h4 className="text-xs uppercase font-extrabold mb-2 mt-4" {...props} />
             ),
             p: ({ node, ...props }) => (
-              <p className="text-gray-600 leading-relaxed mb-4" {...props} />
+              <p className="text-gray-600 leading-relaxed mb-2" {...props} />
             ),
             ul: ({ node, ...props }) => (
               <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />

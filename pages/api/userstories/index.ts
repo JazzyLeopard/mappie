@@ -12,26 +12,38 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 function convertUsDescriptionToMarkdown(story: any): string {
   let markdown = '';
 
+  // Split the description into parts
+  const descriptionParts = story.description.split('\n\n');
+  const userStoryFormat = descriptionParts[0]; // "As a..., I want..., so that..."
+  const explanation = descriptionParts[1]; // Additional explanation
 
-  // Main description
-  if (story.description) {
-    markdown += `${story.description}\n\n`;
+  // Add user story format with proper styling
+  const [asA, iWant, soThat] = userStoryFormat.split(', ');
+  markdown += `${asA},\n\n`;
+  markdown += `${iWant},\n\n`;
+  markdown += `${soThat}\n\n`;
+  
+  if (explanation) {
+    markdown += `${explanation}\n\n`;
   }
 
-  // Acceptance Criteria
+  // Acceptance Criteria with proper formatting
   if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
-    markdown += `## Acceptance Criteria\n`;
+    markdown += `# Acceptance Criteria\n\n`;
     story.acceptance_criteria.forEach((criteria: string) => {
-      // Replace "Scenario X:" with bold version while preserving the hyphen
-      const formattedCriteria = criteria.replace(/(Scenario \d+):/, '**$1**:');
-      markdown += `- ${formattedCriteria}\n`;
+      const parts = criteria.match(/Scenario \d+: \*\*Given\*\* (.*?), \*\*when\*\* (.*?), \*\*then\*\* (.*)/);
+      if (parts) {
+        markdown += `## ${parts[0].split(':')[0]}\n\n`; // Scenario X
+        markdown += `**Given** ${parts[1]},\n\n`;
+        markdown += `**when** ${parts[2]},\n\n`;
+        markdown += `**then** ${parts[3]}\n\n`;
+      }
     });
-    markdown += '\n';
   }
 
   // Additional Considerations
   if (story.additional_considerations && Array.isArray(story.additional_considerations)) {
-    markdown += `## Additional Considerations\n`;
+    markdown += `# Additional Considerations\n\n`;
     story.additional_considerations.forEach((consideration: string) => {
       markdown += `- ${consideration}\n`;
     });
