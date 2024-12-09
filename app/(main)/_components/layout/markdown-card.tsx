@@ -50,7 +50,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
   // Add state to track if content is still streaming
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamedContent, setStreamedContent] = useState('');
-  
+
   // Update streamed content when content prop changes
   useEffect(() => {
     if (content) {
@@ -83,20 +83,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
   return (
     <div className="w-full mb-4 rounded-lg border border-neutral-200 overflow-hidden bg-white">
       <div className="h-10 overflow-hidden border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
-        <div className="relative group">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7"
-            onClick={() => {
-              onInsert(content || '');
-              toast.success('Content inserted');
-            }}
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Insert
-          </Button>
-
+        <div className="relative group flex items-center justify-between gap-2 w-full">
           <Button
             variant="ghost"
             size="sm"
@@ -128,7 +115,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
             <Replace className="h-4 w-4 mr-2" />
             Replace in-text
           </Button>
-        </div>  
+        </div>
       </div>
 
       <div className="overflow-x-auto max-w-full p-4 px-6 min-w-[300px]">
@@ -161,7 +148,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
               <li className="leading-relaxed" {...props} />
             ),
             code: ({ node, ...props }) => (
-                <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
+              <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
             ),
             blockquote: ({ node, ...props }) => (
               <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
