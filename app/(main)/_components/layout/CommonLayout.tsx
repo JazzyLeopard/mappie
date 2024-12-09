@@ -127,35 +127,35 @@ const CommonLayout = ({
                                 setValue={(newTitle) => handleEditorChange('title', newTitle)}
                                 onBlur={onEditorBlur}
                             />
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 className="ml-2"
                                 onClick={() => setIsTemplateGuideOpen(true)}
                             >
                                 <BookTemplateIcon className="w-4 h-4 mr-2" />
                                 Use Project Template
                             </Button>
-                        </div>
-                        <div className="mr-8 mt-2">
-                            <Button
-                                onClick={handleGenerateFR}
-                                className="bg-white text-black border border-gray-300 hover:bg-gray-200 ml-auto"
-                                disabled={isFrGenerated || isGenerating}
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        <span>Generating FR...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <AiGenerationIcon />
-                                        <span className="ml-2 font-semibold">
-                                            {isFrGenerated ? "FR Generated" : "Generate FR"}
-                                        </span>
-                                    </>
-                                )}
-                            </Button>
+                            <div className="mr-4">
+                                <Button
+                                    onClick={handleGenerateFR}
+                                    className="bg-white text-black border border-gray-300 hover:bg-gray-200 ml-auto"
+                                    disabled={isFrGenerated || isGenerating}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>Generating FR...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <AiGenerationIcon />
+                                            <span className="ml-2 font-semibold">
+                                                {isFrGenerated ? "FR Generated" : "Generate FR"}
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <ScrollArea className="flex-1 min-h-0 relative" withShadow={true}>
@@ -211,7 +211,7 @@ const CommonLayout = ({
                 </DialogContent>
             </Dialog>
 
-            <TemplateGuideDialog 
+            <TemplateGuideDialog
                 isOpen={isTemplateGuideOpen}
                 onClose={() => setIsTemplateGuideOpen(false)}
                 onUseTemplate={handleUseTemplate}

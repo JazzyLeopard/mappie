@@ -13,7 +13,7 @@
   text-align: right;
 }
 .PlaygroundEditorTheme__paragraph {
-  color: rgb(75 85 99); /* text-gray-600 */
+  color: black; /* text-gray-600 */
   line-height: 1.625; /* leading-relaxed */
   margin-bottom: 0.5rem;
 }
@@ -290,14 +290,14 @@
   padding-left: 1.5rem;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
-  color: rgb(75 85 99); /* text-gray-600 */
+  color: black /* text-gray-600 */
 }
 .PlaygroundEditorTheme__ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
   margin-bottom: 1rem;
   margin-top: 0.5rem;
-  color: rgb(75 85 99); /* text-gray-600 */
+  color: black /* text-gray-600 */
 }
 .PlaygroundEditorTheme__listItem {
   line-height: 1.625; /* leading-relaxed */
