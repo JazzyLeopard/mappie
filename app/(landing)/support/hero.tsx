@@ -1,4 +1,4 @@
-import PageIllustration from "@/components/components-landing/page-illustration";
+import PageIllustration from "@/app/(landing)/components-landing/page-illustration";
 import Search from "./search";
 
 export default function Hero() {

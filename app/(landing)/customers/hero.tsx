@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@/app/(main)/_components/Lexical/ui/Button";
-import PageIllustration from "@/components/components-landing/page-illustration";
+import PageIllustration from "@/app/(landing)/components-landing/page-illustration";
 
 export default function Hero() {
   return (

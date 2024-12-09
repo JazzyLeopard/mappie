@@ -4,7 +4,7 @@ import PageIllustration from "./page-illustration";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
-import ProductDevelopmentProcess from "../product-development-process";
+import ProductDevelopmentProcess from "@/components/product-development-process";
 import Link from "next/link";
 
 export default function HeroHome() {
