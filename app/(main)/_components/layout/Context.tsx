@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
 import { useMutation, useQuery } from 'convex/react';
-import { InfoIcon, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import Dropzone from "react-dropzone";
 import { toast } from 'sonner';
@@ -21,11 +20,11 @@ export default function Component({ projectId }: ContextProps) {
     const { getToken } = useAuth();
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
-    const [uploadedFiles, setUploadedFiles] = useState<{ name: string, size: number }[]>([])
     const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-    const document = useQuery(api.documents.getDocumentById, { projectId })
+    const documents = useQuery(api.documents.getDocuments, { projectId })
+    const [documentId, setDocumentId] = useState<Id<"documents"> | undefined>(undefined)
 
     const deleteFile = useMutation(api.documents.deleteDocument)
 
@@ -55,7 +54,12 @@ export default function Component({ projectId }: ContextProps) {
 
                 setUploadProgress(45)
 
-                const summarizedRes = await axios.post('/api/generate/summary', { projectId, storageId, filename: file.name }, {
+                const summarizedRes = await axios.post('/api/generate/summary', {
+                    projectId,
+                    storageId,
+                    filename: file.name,
+                    size: file.size
+                }, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -66,9 +70,6 @@ export default function Component({ projectId }: ContextProps) {
                     console.log("API Response: ", summarizedRes.data);
 
                     toast.success("File uploaded successfully")
-
-                    // Update the uploaded files state
-                    setUploadedFiles(prevFiles => [...prevFiles, { name: file.name, size: file.size }]);
                 } else {
                     toast.error("File upload failed: " + summarizedRes?.data?.message || "Unknown error");
                 }
@@ -81,8 +82,9 @@ export default function Component({ projectId }: ContextProps) {
         });
     };
 
-    const handleDeleteFile = () => {
+    const handleDeleteFile = (documentId: Id<"documents"> | undefined) => {
         setIsConfirmModalOpen(true)
+        setDocumentId(documentId)
     };
 
     const confirmDelete = async (documentId: Id<"documents"> | undefined) => {
@@ -95,14 +97,21 @@ export default function Component({ projectId }: ContextProps) {
         setIsConfirmModalOpen(false);
         try {
             await deleteFile({ documentId });
-            //Set the upload files here write the code for updating the state to remove file or hide it
-            setUploadedFiles(prevFiles => prevFiles.filter(file => file.name !== document?.filename));
-
             toast.success("File deleted successfully");
         } catch (error) {
             console.error("Error deleting file:", error);
             toast.error("Failed to delete file");
         }
+    };
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     return (
@@ -156,31 +165,33 @@ export default function Component({ projectId }: ContextProps) {
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
-                        <Button onClick={() => confirmDelete(document?._id)}>
+                        <Button onClick={() => confirmDelete(documentId)}>
                             Confirm
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
             <div className="space-y-2">
-                {uploadedFiles.map((file, index) => (
-                    <FileItem
-                        key={index}
-                        filename={file.name}
-                        filesize={(file.size / (1024 * 1024)).toFixed(2) + " MB"}
-                        onDelete={handleDeleteFile}
-                    />
-                ))}
+                {documents && documents.length > 0 &&
+                    documents?.map((document: any) => (
+                        <FileItem
+                            key={document._id}
+                            filename={document.filename}
+                            filesize={document.size ? formatFileSize(document.size) : undefined}
+                            onDelete={() => handleDeleteFile(document._id)}
+                        />
+                    ))
+                }
             </div>
         </div>
     )
 }
 
-function FileItem({ filename, filesize, onDelete }: { filename: string, filesize: string, onDelete: () => void }) {
+function FileItem({ filename, filesize, onDelete }: { filename: string, filesize: string | undefined, onDelete: () => void }) {
     return (
         <div className="flex items-center justify-between rounded-md border bg-background p-1.5 text-xs">
-            <div className="flex items-center gap-1.5">
-                <FileIcon className="h-3 w-3 text-primary" />
+            <div className="flex items-center gap-4">
+                <FileIcon className="h-4 w-4 ml-1 text-primary" />
                 <div>
                     <p className="font-medium">{filename}</p>
                     <p className="text-xs text-muted-foreground">{filesize}</p>
