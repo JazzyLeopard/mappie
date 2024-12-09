@@ -494,7 +494,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             <div className="shadow-sm bg-white rounded-xl h-full">
                                 {selectedItems.fr && (
                                     <AIStoryCreator
-                                        key={`fr-${selectedItems.fr}`}
+                                        key={`fr-${selectedFR?.title}`}
                                         onInsertMarkdown={handleInsertMarkdown}
                                         selectedItemContent={selectedFR?.description || ''}
                                         selectedItemType="functionalRequirement"
@@ -503,6 +503,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                         selectedItemId={selectedItems.fr as Id<'functionalRequirements'>}
                                         isCollapsed={isAIChatCollapsed}
                                         toggleCollapse={toggleAIChat}
+                                        selectedItemTitle={selectedFR?.title || ''}
                                     />
                                 )}
                             </div>
