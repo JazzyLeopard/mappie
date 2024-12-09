@@ -54,8 +54,9 @@ export default defineSchema({
   documents: defineTable({
     projectId: v.id("projects"), // Associate the document with a project
     storageId: v.id("_storage"),
+    summaryId: v.id("_storage"),
     filename: v.string(), // Store the file name
-    summarizedContent: v.string(), // Store the summarized content
+    size: v.number(),
     createdAt: v.int64(), // Storing timestamp as bigint
     updatedAt: v.int64(), // Storing timestamp as bigint
   })
@@ -66,8 +67,8 @@ export default defineSchema({
     itemId: v.string(),
     itemType: v.string(),
     messages: v.array(v.object({
-      role: v.union(v.literal('system'), v.literal('user'), v.literal('assistant'), 
-                   v.literal('function'), v.literal('data'), v.literal('tool')),
+      role: v.union(v.literal('system'), v.literal('user'), v.literal('assistant'),
+        v.literal('function'), v.literal('data'), v.literal('tool')),
       content: v.string(),
       id: v.string(),
       toolInvocations: v.optional(v.array(v.object({
@@ -96,7 +97,7 @@ export default defineSchema({
   })
     .index("by_itemId_and_type_and_created", [
       "itemId",
-      "itemType", 
+      "itemType",
       "projectId",
       "createdAt"
     ])
