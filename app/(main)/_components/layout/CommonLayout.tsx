@@ -18,7 +18,6 @@ import { toast } from 'react-hot-toast';
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
 import LabelToInput from "../LabelToInput";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TemplateGuideDialog } from "../TemplateGuideDialog";
 
 interface CommonLayoutProps {
