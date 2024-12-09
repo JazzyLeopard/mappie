@@ -323,7 +323,7 @@ const EpicLayout = ({
       </div>
     )
   },
-    [expandedEpics, selectedItems.epic, selectedItems.story]
+    [expandedEpics, selectedItems.epic, selectedItems.story, allUserStories]
   )
 
   // Render user stories
@@ -862,9 +862,9 @@ const EpicLayout = ({
         {epics && epics.length > 0 ? (
           <>
             <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-4 bg-white rounded-xl">
-              {selectedItems.story ? (
+              {selectedItems.story && selectedUserStory ? (
                 UserStoryEditor
-              ) : selectedItems.epic ? (
+              ) : selectedItems.epic && selectedEpic ? (
                 EpicEditor
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -878,9 +878,9 @@ const EpicLayout = ({
               isResetting && "transition-all ease-in-out duration-300"
             )}>
               <div className="shadow-sm bg-white rounded-xl h-full">
-                {selectedItems.story ? (
+                {selectedItems.story && selectedUserStory ? (
                   <AIStoryCreator
-                    key={`story-${selectedItems.story}`}
+                    key={`story-${selectedUserStory?.title}`}
                     onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedUserStory?.description || ''}
                     selectedItemType="userStory"
@@ -888,15 +888,18 @@ const EpicLayout = ({
                       name: selectedEpic.name,
                       description: selectedEpic.description
                     } : null}
-                    selectedUserStory={selectedUserStory}
+                    selectedUserStory={selectedUserStory ? {
+                      title: selectedUserStory.title,
+                      description: selectedUserStory.description
+                    } : null}
                     selectedItemId={selectedItems.story}
                     projectId={stableProjectId}
                     isCollapsed={isCollapsed}
                     toggleCollapse={toggleCollapse}
                   />
-                ) : selectedItems.epic ? (
+                ) : selectedItems.epic && selectedEpic ? (
                   <AIStoryCreator
-                    key={`epic-${selectedItems.epic}`}
+                    key={`epic-${selectedEpic?.name}`}
                     onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedEpic?.description || ''}
                     selectedItemType="epic"

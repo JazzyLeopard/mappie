@@ -179,6 +179,7 @@ export default function Component({ projectId }: ContextProps) {
                             filename={document.filename}
                             filesize={document.size ? formatFileSize(document.size) : undefined}
                             onDelete={() => handleDeleteFile(document._id)}
+                            fileUrl={document.url}
                         />
                     ))
                 }
@@ -187,9 +188,21 @@ export default function Component({ projectId }: ContextProps) {
     )
 }
 
-function FileItem({ filename, filesize, onDelete }: { filename: string, filesize: string | undefined, onDelete: () => void }) {
+function FileItem({ filename, filesize, onDelete, fileUrl }: { filename: string, filesize: string | undefined, onDelete: () => void, fileUrl: string }) {
+    const handleDownload = () => {
+        try {
+            window.open(fileUrl, '_blank');
+        } catch (error) {
+            console.error("Error downloading file:", error);
+            toast.error("Failed to download file");
+        }
+    };
+
     return (
-        <div className="flex items-center justify-between rounded-md border bg-background p-1.5 text-xs">
+        <div
+            className="flex items-center justify-between rounded-md border bg-background p-1.5 text-xs hover:bg-gray-100 cursor-pointer"
+            onClick={handleDownload}
+        >
             <div className="flex items-center gap-4">
                 <FileIcon className="h-4 w-4 ml-1 text-primary" />
                 <div>
@@ -200,7 +213,10 @@ function FileItem({ filename, filesize, onDelete }: { filename: string, filesize
             <button
                 type="button"
                 className="text-muted-foreground hover:text-destructive"
-                onClick={onDelete}
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent download on delete click
+                    onDelete();
+                }}
             >
                 <XIcon className="h-3 w-3" />
             </button>
