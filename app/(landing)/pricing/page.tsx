@@ -3,11 +3,11 @@ export const metadata = {
   description: "Page description",
 };
 
-import PricingTables from "@/components/components-landing/pricing-tables";
-import ComparePlans from "@/components/components-landing/compare-plans";
-import TestimonialsGrid from "@/components/components-landing/testimonials-grid";
-import Faqs from "@/components/components-landing/faqs";
-import Cta from "@/components/components-landing/cta-alternative";
+import PricingTables from "@/app/(landing)/components-landing/pricing-tables";
+import ComparePlans from "@/app/(landing)/components-landing/compare-plans";
+import TestimonialsGrid from "@/app/(landing)/components-landing/testimonials-grid";
+import Faqs from "@/app/(landing)/components-landing/faqs";
+import Cta from "@/app/(landing)/components-landing/cta-alternative";
 
 export default function Pricing() {
   return (

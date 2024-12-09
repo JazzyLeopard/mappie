@@ -88,26 +88,26 @@ function TableOfContentsList({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <nav className="bg-white shadow-lg rounded-lg px-2 py-4 min-w-[20rem]">
+          <nav className="bg-slate-50 shadow-lg rounded-lg px-2 py-4 min-w-[20rem]">
             <div className="text-lg font-semibold mb-3 px-2 flex items-center">
               Table of Contents
             </div>
             <div className="px-2">
               <Separator className="my-2" />
             </div>
-            <ScrollArea className="space-y-1 h-full overflow-y-auto overflow-x-hidden bg-slate-100">
+            <ScrollArea className="space-y-1 h-full overflow-y-auto overflow-x-hidden">
               {tableOfContents.map(([key, text, tag], index) => (
                 <button
                   key={key}
                   onClick={() => scrollToNode(key, index)}
                   className={cn(
-                    'transition-colors duration-150 text-left ease-in-out p-2 w-fit grid grid-cols-1 rounded-lg hover:rounded-md hover:bg-gray-100', // Custom button styles with hover effect
+                    'transition-colors duration-150 text-left ease-in-out p-2 w-fit grid grid-cols-1 rounded-lg hover:rounded-md hover:bg-slate-200 hover:border hover:border-gray-100', // Custom button styles with hover effect
                     tag === 'h1' && 'text-lg',
                     tag === 'h2' && 'ml-5 text-md', // Distinct style for h2
                     tag === 'h3' && 'ml-10 text-sm', // Distinct style for h3
                     tag === 'h4' && 'ml-14 text-xs uppercase', // Distinct style for h4
                     tag === 'h5' && 'ml-18 text-xs', // Distinct style for h5
-                    selectedKey === key && 'bg-gray-100 font-semibold'
+                    selectedKey === key && 'bg-white/50 font-semibold'
                   )}
                   title={text}
                 >

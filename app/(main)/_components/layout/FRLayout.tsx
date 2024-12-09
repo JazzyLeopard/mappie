@@ -128,7 +128,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             selectItem(frId);
 
             const token = await getToken();
-            const response = await fetch('/api/functional-requirements/single', {
+            const response = await fetch('/api/functional-requirements-simple/single-simple', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -228,7 +228,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
         try {
             const token = await getToken();
-            const response = await fetch('/api/functional-requirements', {
+            const response = await fetch('/api/functional-requirements-simple', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
