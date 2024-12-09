@@ -55,9 +55,6 @@ export default function ProjectIdeation({ onSubmit, isGenerating }: ProjectIdeat
   return (
     <Card className="w-full border-0 shadow-none">
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Generate Project with AI</h2>
-        </div>
         <div className="relative">
           <Textarea
             placeholder={`🚀 Describe your awesome project!
@@ -117,7 +114,7 @@ Let's bring your ideas to life!`}
         <Button
           onClick={handleGenerate}
           disabled={isGenerating || !projectDescription || !selectedLanguage}
-          className="gap-2"
+          className="bg-gradient-to-r from-pink-500 to-blue-500 text-white flex items-center gap-2"
         >
           {isGenerating ? (
             "Generating..."

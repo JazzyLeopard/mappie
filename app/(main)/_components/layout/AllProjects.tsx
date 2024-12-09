@@ -160,6 +160,7 @@ export default function Component() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
+                <DialogTitle>Generate Project with AI</DialogTitle>
                 <ProjectIdeation 
                   onSubmit={handleGenerateProject}
                   isGenerating={isGenerating}
