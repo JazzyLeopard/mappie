@@ -25,6 +25,7 @@ interface AIStoryCreatorProps {
   selectedEpic: any;
   selectedUserStory?: any;
   selectedItemId: string;
+  selectedItemTitle?: string;
   isCollapsed?: boolean;
   toggleCollapse?: () => void;
   projectId: string | null;
@@ -195,6 +196,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
   selectedEpic,
   selectedUserStory,
   selectedItemId,
+  selectedItemTitle,
   isCollapsed = false,
   toggleCollapse,
   projectId
@@ -492,12 +494,17 @@ const AIStoryCreator = memo(function AIStoryCreator({
                         type: selectedItemType === 'userStory' ? 'User Story' :
                           selectedItemType === 'epic' ? 'Epic' :
                             selectedItemType === 'useCase' ? 'Use Case' :
-                              selectedItemType,
+                              selectedItemType === 'functionalRequirement' ? 'Functional Requirement' :
+                                selectedItemType,
                         name: (() => {
                           if (selectedItemType === 'epic') {
                             return selectedEpic?.name || 'Untitled Epic';
-                          } else if (selectedItemType === 'userStory' || selectedItemType === 'useCase') {
+                          } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
                             return selectedUserStory?.title || 'Untitled';
+                          } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
+                            return selectedItemTitle;
+                          } else if (selectedItemType === 'Project') {
+                            return 'Overview';
                           }
                           return 'Untitled';
                         })()
