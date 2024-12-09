@@ -402,7 +402,7 @@ export default function UseCasesLayout({
               <div className="shadow-sm bg-white rounded-xl h-full">
                 {selectedItems.useCase && (
                   <AIStoryCreator
-                    key={`usecase-${selectedItems.useCase}`}
+                    key={`usecase-${selectedUseCase?.title}`}
                     onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedUseCase?.description || ''}
                     selectedItemType="useCase"
@@ -411,6 +411,7 @@ export default function UseCasesLayout({
                     selectedItemId={selectedItems.useCase as Id<'useCases'>}
                     isCollapsed={isAIChatCollapsed}
                     toggleCollapse={toggleAIChat}
+                    selectedItemTitle={selectedUseCase?.title || ''}
                   />
                 )}
               </div>
