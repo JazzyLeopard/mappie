@@ -27,11 +27,11 @@ export default async function handler(
     Important: Ensure both sections maintain proper markdown formatting with correct headings, lists, and emphasis.`;
 
     const completion = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       messages: [
-        { 
-          role: "system", 
-          content: "You are a markdown formatting expert. Return only a clean JSON object without any code block syntax or additional formatting." 
+        {
+          role: "system",
+          content: "You are a markdown formatting expert. Return only a clean JSON object without any code block syntax or additional formatting."
         },
         { role: "user", content: sectionPrompt }
       ],
@@ -51,7 +51,7 @@ export default async function handler(
     ${result.newSection}`;
 
     const formattingCompletion = await generateText({
-      model: openai("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       messages: [
         {
           role: "system",
