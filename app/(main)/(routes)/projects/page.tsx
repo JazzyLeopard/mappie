@@ -144,6 +144,7 @@ const ProjectsPage = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="min-w-96">
+                    <h2 className="text-lg font-semibold mb-4 ml-4">Generate Project with AI</h2>
                     <div className="space-y-4">
                       <ProjectIdeation 
                         onSubmit={handleGenerateProject}
