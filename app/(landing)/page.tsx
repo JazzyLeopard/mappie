@@ -1,24 +1,26 @@
 export const metadata = {
-  title: "Home - Mappie",
-  description: "Page description",
+  title: "Mappie Beta - AI-Powered Project Planning",
+  description: "Join 100 users getting early access to the future of project planning. Transform messy requirements into precise, dev-ready stories.",
 };
 
-import Hero from "@/components/components-landing/hero-home";
-import BusinessCategories from "@/components/components-landing/business-categories";
-import LargeTestimonial from "@/components/components-landing/large-testimonial";
-import Features from "@/components/components-landing/features-home";
-import TestimonialsCarousel from "@/components/components-landing/testimonials-carousel";
-import Cta from "@/components/components-landing/cta";
+import Hero from "@/app/(landing)/beta/hero-home";
+import BetaFeatures from "@/app/(landing)/beta/features";
+import VideoDemo from "@/app/(landing)/components-landing/video-demo";
+import ContactSection from "@/app/(landing)/beta/contact";
+// import BetaTestimonial from "@/app/(landing)/beta/testimonials";
+// import BetaWaitlist from "@/app/(landing)/beta/waitlist";
+// import BetaFaq from "@/app/(landing)/beta/faq";
 
 export default function Home() {
   return (
     <div className="overflow-x-hidden">
       <Hero />
-      <BusinessCategories />
-      <LargeTestimonial />
-      <Features />
-      <TestimonialsCarousel />
-      <Cta />
+      <VideoDemo />
+      <BetaFeatures />
+      <ContactSection />
+      {/* <BetaTestimonial /> */}
+      {/* <BetaWaitlist /> */}
+      {/* <BetaFaq /> */}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import Logo from "@/components/components-landing/ui/logo";
-import Dropdown from "@/components/components-landing/dropdown";
-import MobileMenu from "@/components/components-landing/ui/mobile-menu";
+import Logo from "@/app/(landing)/components-landing/ui/logo";
+import Dropdown from "@/app/(landing)/components-landing/dropdown";
+import MobileMenu from "@/app/(landing)/components-landing/ui/mobile-menu";
 import {
   SignInButton,
   SignUpButton,

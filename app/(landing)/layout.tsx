@@ -1,5 +1,5 @@
-import Header from '@/components/components-landing/ui/header'
-import Footer from '@/components/components-landing/ui/footer'
+import Header from '@/app/(landing)/components-landing/ui/header'
+import Footer from '@/app/(landing)/components-landing/ui/footer'
 
 import "@/app/globals.css";
 

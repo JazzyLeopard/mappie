@@ -1,7 +1,7 @@
 "use client";
 
 import useMasonry from "@/app/(landing)/utils/useMasonry";
-import Testimonial from "@/components/components-landing/testimonial";
+import Testimonial from "@/app/(landing)/components-landing/testimonial";
 import TestimonialImg01 from "@/public/images-landing/testimonial-01.jpg";
 import TestimonialImg02 from "@/public/images-landing/testimonial-02.jpg";
 import TestimonialImg03 from "@/public/images-landing/testimonial-03.jpg";

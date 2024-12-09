@@ -4,8 +4,8 @@ export const metadata = {
 };
 
 import Hero from "./hero";
-import WallOfLove from "@/components/components-landing/wall-of-love";
-import Cta from "@/components/components-landing/cta-alternative";
+import WallOfLove from "@/app/(landing)/components-landing/wall-of-love";
+import Cta from "@/app/(landing)/components-landing/cta-alternative";
 
 export default function Customers() {
   return (
