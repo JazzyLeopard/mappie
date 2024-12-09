@@ -376,14 +376,8 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
                     <Image src={Empty} alt="No functional requirements" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
                     <h2 className="text-xl font-semibold text-center">
-                        Please complete all mandatory fields in the Project Overview:
+                        Please fill in the project details first.
                     </h2>
-                    <ul className="list-disc text-gray-600">
-                        <li>Overview</li>
-                        <li>Problem Statement</li>
-                        <li>User Personas</li>
-                        <li>Features In/Out</li>
-                    </ul>
                     <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                         onClick={() => router.push(`/projects/${projectId}`)}
                         variant="default"
