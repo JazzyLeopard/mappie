@@ -139,16 +139,11 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 },
                 body: JSON.stringify({
                     projectId,
-                    frId
                 }),
             });
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
-            let currentTable = {
-                title: '',
-                rows: []
-            };
 
             if (!reader) {
                 throw new Error('No reader available');
@@ -174,7 +169,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 setGenerationStatus(data.status);
                             }
 
-                            if (data.content && data?.content && 'title' in data.content) {
+                            if (data.done && data?.content && 'title' in data.content) {
                                 // Create new FR
                                 const newFR = await onCreateFR({
                                     projectId,
@@ -193,9 +188,31 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                     'description',
                                     data.content.description
                                 );
+
+                                // Update progress and status
+                                if (progressInterval.current) {
+                                    clearInterval(progressInterval.current);
+                                }
+                                setIsGenerating(false);
+                                setGenerationProgress(100);
+                                setGenerationStatus('Complete!');
+                                toast.success("Requirements generated successfully");
+
+                                // Refresh the FR list if needed
+                                if (onManualAddFR) {
+                                    await onManualAddFR();
+                                }
+
+                                // Clean up
+                                setTimeout(() => {
+                                    setIsGenerating(false);
+                                }, 1000);
+
+                                return;
                             }
                         } catch (e) {
-                            console.error('Error parsing stream data:', e);
+                            console.error('Error parsing SSE data:', e);
+                            toast.error("Error processing requirements data");
                         }
                     }
                 }
@@ -210,8 +227,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 clearInterval(progressInterval.current);
             }
             setIsGenerating(false);
-            setGenerationProgress(0);
-            setGenerationStatus('');
         }
     };
 
@@ -239,7 +254,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 },
                 body: JSON.stringify({
                     projectId,
-                    singleFR: false
                 }),
             });
 

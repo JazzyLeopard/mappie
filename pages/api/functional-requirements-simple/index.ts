@@ -26,7 +26,7 @@ const convertBigIntToNumber = (obj: any): any => {
 
 // Add debug logging to see what we're receiving
 const validateRequirements = (content: string): boolean => {
-  console.log('Validating content:', content.substring(0, 500) + '...'); 
+  console.log('Validating content:', content.substring(0, 500) + '...');
 
   // Check if we have multiple # headers
   const mainRequirements = content.match(/^# [^\n]+$/gm);
@@ -43,16 +43,16 @@ const validateRequirements = (content: string): boolean => {
 
   for (const section of sections) {
     if (!section.trim()) continue;
-    
-    console.log('Validating section:', section.substring(0, 200) + '...'); 
-    
+
+    console.log('Validating section:', section.substring(0, 200) + '...');
+
     // Update regex patterns for the new format
     const hasTitle = /^# [^\n]+/m.test(section.trim());
     const hasDescription = /^## Description\s+[^\n]+/m.test(section);
     const hasSubRequirements = /^### Sub-requirements/m.test(section);
     const hasPriorities = /Priority: (Must Have|Should Have|Could Have)/m.test(section);
     const hasMinimumSubReqs = (section.match(/- .+Priority: (Must Have|Should Have|Could Have)/g) || []).length >= 4;
-    
+
     console.log('Section validation results:', {
       hasTitle,
       hasDescription,
@@ -74,7 +74,7 @@ const validateRequirements = (content: string): boolean => {
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -114,7 +114,7 @@ export default async function handler(
     // Setup Convex client
     sendEvent({ progress: 15, status: 'Setting up connection...' });
     convex.setAuth(token);
-    const { projectId, singleFR } = req.body;
+    const { projectId } = req.body;
 
     // Fetch project
     sendEvent({ progress: 25, status: 'Loading project...' });
@@ -136,9 +136,7 @@ export default async function handler(
     const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
-    const prompt = singleFR
-      ? `${context}\n\nPlease write a single functional requirement based on the following project details:\n\n${projectDetails}`
-      : `${context}\n\nCreate an adequate number of SEPARATE functional requirements based on the following project details to cover the project. Each requirement MUST follow this EXACT format with no deviations:
+    const prompt = `${context}\n\nCreate an adequate number of SEPARATE functional requirements based on the following project details to cover the project. Each requirement MUST follow this EXACT format with no deviations:
 
 # [Requirement Title]
 
@@ -181,11 +179,6 @@ ${projectDetails}`;
     console.log('Processing AI response...');
     sendEvent({ progress: 75, status: 'Processing AI response...' });
 
-    // Handle 'NULL' response
-    if (content.trim() === 'NULL') {
-      console.log('AI determined that no new requirements are needed.');
-      return res.status(200).json({ message: 'NULL' });
-    }
 
     // Validate the response
     if (!validateRequirements(content)) {
@@ -199,14 +192,14 @@ ${projectDetails}`;
       .map(req => req.trim())
       .filter(req => req.match(/^# [^\n]+/m));
 
-    if (!singleFR && requirements.length < 2) {
+    if (requirements.length < 2) {
       throw new Error('Not enough separate requirements generated. Please try again.');
     }
 
     const formattedRequirements = requirements.map(req => {
       const titleMatch = req.match(/^# ([^\n]+)/m);
       const title = titleMatch ? titleMatch[1].trim() : 'Untitled Requirement';
-      
+
       return {
         title,
         description: req
