@@ -61,7 +61,7 @@ export default function VideoDemo() {
   };
 
   return (
-    <section id="video-demos" className="relative overflow-hidden min-h-[80vh]">
+    <section id="video-demos" className="relative overflow-hidden min-h-[85vh]">
       {/* Enhanced gradient effects */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2">
