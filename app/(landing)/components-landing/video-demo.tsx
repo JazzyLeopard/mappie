@@ -45,18 +45,18 @@ export default function VideoDemo() {
   const getVisibleVideos = () => {
     const result = [];
     const totalVideos = videos.length;
-    
+
     // Add previous video (or last video if we're at the start)
     const prevIndex = (activeVideo - 1 + totalVideos) % totalVideos;
     result.push({ ...videos[prevIndex], position: 'prev' });
-    
+
     // Add current video
     result.push({ ...videos[activeVideo], position: 'current' });
-    
+
     // Add next video (or first video if we're at the end)
     const nextIndex = (activeVideo + 1) % totalVideos;
     result.push({ ...videos[nextIndex], position: 'next' });
-    
+
     return result;
   };
 
@@ -73,10 +73,10 @@ export default function VideoDemo() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="py-4 md:py-8">
+        <div className="py-4 md:py-20">
           {/* Section header */}
           <div className="mx-auto max-w-3xl shadow-xl shadow-gray-500/10 px-4 py-8 mb-12 bg-white/50 backdrop-blur-sm rounded-2xl text-center md:px-4 md:py-8">
-            <h2 
+            <h2
               className="text-3xl bg-gradient-to-r from-pink-400 to-blue-400 bg-clip-text text-transparent font-bold md:text-4xl"
               data-aos="zoom-y-out"
             >
@@ -118,7 +118,7 @@ export default function VideoDemo() {
                       transition={{ duration: 0.4, ease: "easeInOut" }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] opacity-10" />
-                      
+
                       {/* Feature Label */}
                       <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-sm font-medium backdrop-blur-sm">
                         <span>{video.emoji}</span>

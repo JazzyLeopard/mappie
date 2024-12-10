@@ -14,60 +14,72 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Spinner } from "@nextui-org/react";
+import ProjectIdeation from "@/components/project-ideation";
+import { SpokenLanguage } from "@/types";
 
 const ProjectsPage = () => {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const router = useRouter();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-
   if (!isSignedIn) {
     return <>Not signed in..</>;
   }
+
   const projects = useQuery(api.projects.getProjects);
 
   const createProject = useMutation(api.projects.createProject);
 
-  const handleGenerateProject = async () => {
-    if (!aiPrompt.trim()) {
+  const handleGenerateProject = async (description: string, language: SpokenLanguage) => {
+    if (!description.trim()) {
       toast.error("Please enter a project description.");
       return;
     }
 
     setIsGenerating(true);
+
     try {
-      // Phase 1: Create the project with only a title
       const projectId = await createProject({
-        title: "New AI Generated Project",
+        title: "Generating Project...",
       });
+
+      if (!projectId) {
+        throw new Error("Failed to create project");
+      }
 
       toast.success("Project created. Generating details...");
 
-      // Navigate to the new project
-      router.push(`/projects/${projectId}`);
-
-      // Phase 2: Generate and populate project details
       const response = await fetch('/api/ideate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: aiPrompt, projectId }),
+        body: JSON.stringify({
+          prompt: description,
+          projectId,
+          language
+        }),
       });
 
-
       if (!response.ok) {
-        throw new Error('Failed to generate project details');
-      }
-      else {
-        console.log("Ideate response:", response);
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate project details');
       }
 
+      await response.json(); // Wait for the response
+
+      // Success handling
       toast.success("Project details generated successfully!");
-    } catch (error) {
+      setAiPrompt(""); // Reset the prompt
+
+      // Navigate to the new project
+      router.push(`/projects/${projectId}`);
+
+    } catch (error: any) {
       console.error('Error generating project:', error);
-      toast.error("Failed to generate project. Please try again.");
+      toast.error(error.message || "Failed to generate project. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -84,6 +96,16 @@ const ProjectsPage = () => {
       error: "Failed to create project",
     });
   };
+
+  if (projects === undefined) {
+    return (
+      <div className="pt-4 pr-4 pb-4 w-full h-screen">
+        <div className="bg-white h-full rounded-xl flex items-center justify-center">
+          <Spinner size={"lg"} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -122,16 +144,12 @@ const ProjectsPage = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="min-w-96">
+                    <h2 className="text-lg font-semibold mb-4 ml-4">Generate Project with AI</h2>
                     <div className="space-y-4">
-                      <Textarea
-                        placeholder="Describe the type of project/product/app/feature you want to create. Projeqtly will generate a project with populated fields as a starting point for you to build upon."
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        rows={4}
+                      <ProjectIdeation 
+                        onSubmit={handleGenerateProject}
+                        isGenerating={isGenerating}
                       />
-                      <Button onClick={handleGenerateProject} className="w-full" disabled={isGenerating}>
-                        {isGenerating ? "Generating..." : "Generate"}
-                      </Button>
                     </div>
                   </PopoverContent>
                 </Popover>

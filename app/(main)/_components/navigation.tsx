@@ -224,35 +224,35 @@ export const Navigation = () => {
             </div>
 
             {projects && projects?.length > 0 && (
-              <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+              <ScrollArea className="flex-grow-0 flex-shrink-0">
                 {selectedProject && projects && (
                   <>
-                  {navItems.map((item) => (
-                    <NavItem
-                      key={item.label}
-                      label={item.label}
-                      icon={item.icon}
-                      onClick={() => handleNavItemClick(item.path)}
-                      active={isActive(item.path)}
-                    />
-                  ))}
+                    {navItems.map((item) => (
+                      <NavItem
+                        key={item.label}
+                        label={item.label}
+                        icon={item.icon}
+                        onClick={() => handleNavItemClick(item.path)}
+                        active={isActive(item.path)}
+                      />
+                    ))}
 
-                  <div className="flex-col items-center px-4 py-4">
-                    <div className="flex items-center">
-                      <span className="text-sm font-semibold">Context</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <InfoIcon className="h-3 w-3 ml-2 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Add documents to provide more context for the AI when generating content for any section.
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="mt-2">
-                      <FileUpload projectId={selectedProject as Id<"projects">} />
+                    <div className="flex-col items-center px-4 py-4">
+                      <div className="flex items-center">
+                        <span className="text-sm font-semibold">Context</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <InfoIcon className="h-3 w-3 ml-2 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Add documents to provide more context for the AI when generating content for any section.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="mt-2">
+                        <FileUpload projectId={selectedProject as Id<"projects">} />
                       </div>
                     </div>
                   </>
@@ -340,7 +340,7 @@ export const Navigation = () => {
             <div className="px-2 mb-2">
               <Separator className="bg-slate-300" />
             </div>
-            <ScrollArea className="flex-grow-0 flex-shrink-0 pb-10">
+            <ScrollArea className="flex-grow-0 flex-shrink-0">
               {selectedProject && projects && (
                 <>
                   {navItems.map((item) => (

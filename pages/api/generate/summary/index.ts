@@ -10,6 +10,33 @@ import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+async function uploadSummaryToConvex(content: string) {
+
+    // Get upload URL from Convex
+    const uploadUrl = await convex.mutation(api.documents.generateUploadUrl);
+
+    // Create blob with markdown content
+    const summaryBlob = new Blob([content], { type: 'text/markdown' });
+
+    // Upload to Convex storage
+    const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/markdown",
+        },
+        body: summaryBlob,
+    });
+
+    console.log("Upload response", uploadResponse)
+
+    if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload summary file: ${uploadResponse.statusText}`);
+    }
+
+    const { storageId } = await uploadResponse.json();
+    return { storageId };
+}
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
@@ -28,16 +55,12 @@ export default async function handler(
     try {
         convex.setAuth(authToken)
 
-        const { projectId, storageId, filename } = req.body;
+        const { projectId, storageId, filename, size } = req.body;
         const convexProjectId = projectId as Id<"projects">
 
-        // metadata API getStorageById(storageId) -> File
+        // Get original file
         const getFileById = await convex.query(api.documents.getStorageById, { storageId })
-        console.log("Get file by storage Id", getFileById)
-
-        // serve API getStorageURL(storageId) -> FilePath 
         const getStorageURL = await convex.query(api.documents.getStorageURL, { storageId })
-        console.log("Get file by storage url", getStorageURL)
 
         if (getStorageURL && getFileById) {
             const fileResponse = await axios.get(getStorageURL, {
@@ -48,11 +71,14 @@ export default async function handler(
 
             let extractedText = '';
 
+            // Extract text based on file type
             if (getFileById.contentType === "application/pdf") {
                 // Extract text from PDF
                 const pdfData = await pdfParse(fileContent);
                 extractedText = pdfData.text;
-            } else if (getFileById.contentType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+            } else if (getFileById.contentType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                getFileById.contentType === "text/plain" ||
+                getFileById.contentType === "text/markdown") {
                 // Extract text from DOCX
                 const wordData = await mammoth.extractRawText({ buffer: fileContent });
                 extractedText = wordData.value;
@@ -65,7 +91,7 @@ export default async function handler(
             console.log("Calling OpenAI Api...")
             const response = await generateText({
                 model: openai("gpt-4o-mini"),
-                messages: [{ role: "user", content: `Please summarize the following content: ${extractedText}` }],
+                messages: [{ role: "user", content: `Act as a professional document summarizer. Summarize the following document in markdown format, highlighting key points and main ideas: ${extractedText}` }],
                 temperature: 0.7,
             })
 
@@ -76,18 +102,28 @@ export default async function handler(
                 throw new Error("No content generated from OpenAI")
             }
 
+            // Upload summary file to Convex
+            console.log("Uploading summary to Convex...");
+            const { storageId: summaryId } = await uploadSummaryToConvex(
+                summarizedContent,
+            );
+            console.log("Summary file uploaded with ID:", summaryId);
+
+            // Save document record
             let document = await convex.mutation(api.documents.saveDocument, {
                 projectId: convexProjectId,
                 storageId: storageId,
-                summarizedContent: summarizedContent,
-                filename: filename
+                summaryId: summaryId,
+                filename: filename,
+                size: size
             })
 
             console.log("document saved", document)
 
             return res.status(200).json({
                 message: "File processed successfully",
-                summarizedContent: summarizedContent
+                summaryId: summaryId,
+                document: document
             });
         }
     } catch (error) {
@@ -96,6 +132,9 @@ export default async function handler(
             console.error('Error message:', error.message);
             console.error('Error stack:', error.stack);
         }
-        return res.status(500).json({ message: "File processing failed", error: error instanceof Error ? error.message : String(error) });
+        return res.status(500).json({
+            message: "File processing failed",
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 }
