@@ -11,12 +11,13 @@ import { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useMutation, useQuery } from 'convex/react';
 import { debounce } from 'lodash-es';
-import { Loader2, PanelLeftOpen, AlertTriangle } from 'lucide-react';
+import { Loader2, PanelLeftOpen, AlertTriangle, User } from 'lucide-react';
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -84,14 +85,25 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
   }, [onInsertMarkdown]);
 
   return (
-    <div className="flex w-full">
-      {/* Icon Column - make it flex-shrink-0 to prevent shrinking */}
-      <div className="flex-shrink-0">
+    <div className={cn(
+      "flex w-full",
+      message.role !== "assistant" && "flex-row-reverse"
+    )}>
+      {/* Icon Column */}
+      <div className="flex-shrink-0 mx-2">
         {message.role === "assistant" ? (
-          <div className="w-8 h-8 items-start">
-            <AiGenerationIcon className="h-5 w-5 text-primary" />
-          </div>
-        ) : null}
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>
+              <AiGenerationIcon className="h-5 w-5 text-primary" />
+            </AvatarFallback>
+          </Avatar>
+        ) : (
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>
+              <User className="h-5 w-5 text-gray-500" />
+            </AvatarFallback>
+          </Avatar>
+        )}
       </div>
 
       {/* Message Content Column - add max-width and overflow handling */}
