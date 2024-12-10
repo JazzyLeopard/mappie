@@ -45,7 +45,7 @@ export default function UseCasesLayout({
   const { getToken } = useAuth();
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<"useCases" | "singleUseCase" | null>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize selected items with the first use case if available, otherwise null
@@ -120,7 +120,7 @@ export default function UseCasesLayout({
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating("useCases");
     setGenerationProgress(0);
     setGenerationStatus('Initializing use case generation...');
     progressInterval.current = setInterval(simulateProgress, 300);
@@ -170,7 +170,7 @@ export default function UseCasesLayout({
                 setGenerationStatus('Complete!');
                 toast.success("Use cases generated successfully");
                 setTimeout(() => {
-                  setIsGenerating(false);
+                  setIsGenerating(null);
                 }, 1000);
                 if (onAddUseCase) {
                   await onAddUseCase();
@@ -194,7 +194,7 @@ export default function UseCasesLayout({
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
-      setIsGenerating(false);
+      setIsGenerating(null);
     }
   };
 
@@ -205,7 +205,7 @@ export default function UseCasesLayout({
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating("singleUseCase");
     setGenerationProgress(0);
     setGenerationStatus('Initializing use case generation...');
     progressInterval.current = setInterval(simulateProgress, 300);
@@ -255,7 +255,7 @@ export default function UseCasesLayout({
                 setGenerationStatus('Complete!');
                 toast.success("Use cases generated successfully");
                 setTimeout(() => {
-                  setIsGenerating(false);
+                  setIsGenerating(null);
                 }, 1000);
                 if (onAddUseCase) {
                   await onAddUseCase();
@@ -279,7 +279,7 @@ export default function UseCasesLayout({
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
-      setIsGenerating(false);
+      setIsGenerating(null);
     }
   };
 
@@ -452,7 +452,7 @@ export default function UseCasesLayout({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">Generating Use Cases</h3>
+              <h3 className="text-lg font-semibold">{isGenerating === "useCases" ? "Generating Use Cases..." : "Generating Use Case..."}</h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>
             </div>
