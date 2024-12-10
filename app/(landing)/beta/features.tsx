@@ -107,7 +107,7 @@ export default function BetaFeatures() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-12 md:py-20">
+        <div className="py-12 md:py-12">
           {/* Section header */}
           <div className="mx-auto max-w-3xl mb-16 pb-16 text-center md:pb-16">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl" data-aos="zoom-y-out">
@@ -120,7 +120,7 @@ export default function BetaFeatures() {
           </div>
 
           {/* Feature Carousel */}
-          <div className="relative mx-auto max-w-[900px] min-h-[80vh]">
+          <div className="relative mx-auto justify-center max-w-[900px] min-h-[80vh]">
             {/* Features Container */}
             <div className="relative flex h-[400px] items-center justify-center">
               <AnimatePresence mode="popLayout">

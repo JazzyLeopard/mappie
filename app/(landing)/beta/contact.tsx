@@ -9,14 +9,14 @@ export default function ContactSection() {
   const [open, setOpen] = useState(false); // Added state for modal visibility
 
   return (
-    <section className="relative">
+    <section className="relative min-h-[60vh]">
       {/* Background gradient */}
       <div className="absolute left-1/2 top-0 -z-10 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
         <div className="h-80 w-80 rounded-full bg-gradient-to-tr from-pink-400 to-blue-400 opacity-40 blur-[160px] will-change-[filter]" />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-12 md:py-20">
+        <div className="py-12 md:py-12">
           <motion.div 
             className="mx-auto max-w-3xl text-center"
             initial={{ opacity: 0, y: 20 }}
