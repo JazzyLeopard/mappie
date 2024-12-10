@@ -18,7 +18,6 @@ import { toast } from 'react-hot-toast';
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
 import LabelToInput from "../LabelToInput";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TemplateGuideDialog } from "../TemplateGuideDialog";
 
 interface CommonLayoutProps {
@@ -120,42 +119,41 @@ const CommonLayout = ({
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
                 <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%] relative">
-                    <div className="flex items-center justify-between px-2 pb-3 w-full overflow-x-auto sm:mr-2">
+                    <div className="overflow-x-auto pb-3 px-2 sm:mr-2">
                         <div className="pl-10 mt-2 mr-2 flex flex-row gap-2">
                             <LabelToInput
                                 value={data.title}
                                 setValue={(newTitle) => handleEditorChange('title', newTitle)}
                                 onBlur={onEditorBlur}
                             />
-                            <Button 
-                                variant="outline" 
-                                className="ml-2"
-                                onClick={() => setIsTemplateGuideOpen(true)}
-                            >
-                                <BookTemplateIcon className="w-4 h-4 mr-2" />
-                                Use Project Template
-                            </Button>
-                        </div>
-                        <div className="mr-8 mt-2">
-                            <Button
-                                onClick={handleGenerateFR}
-                                className="bg-white text-black border border-gray-300 hover:bg-gray-200 ml-auto"
-                                disabled={isFrGenerated || isGenerating}
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        <span>Generating FR...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <AiGenerationIcon />
-                                        <span className="ml-2 font-semibold">
-                                            {isFrGenerated ? "FR Generated" : "Generate FR"}
-                                        </span>
-                                    </>
-                                )}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsTemplateGuideOpen(true)}
+                                >
+                                    <BookTemplateIcon className="w-4 h-4 mr-2" />
+                                    Use Project Template
+                                </Button>
+                                <Button
+                                    onClick={handleGenerateFR}
+                                    className="bg-white text-black border border-gray-300 hover:bg-gray-200"
+                                    disabled={isFrGenerated || isGenerating}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <span>Generating FR...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <AiGenerationIcon />
+                                            <span className="ml-2 font-semibold">
+                                                {isFrGenerated ? "FR Generated" : "Generate FR"}
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <ScrollArea className="flex-1 min-h-0 relative" withShadow={true}>
@@ -183,7 +181,7 @@ const CommonLayout = ({
                             key={`section-overview`}
                             onInsertMarkdown={handleInsertMarkdown}
                             selectedItemContent={data.overview || ''}
-                            selectedItemType="overview"
+                            selectedItemType="Project"
                             selectedEpic={null}
                             selectedItemId={data._id}
                             projectId={projectId}
@@ -211,7 +209,7 @@ const CommonLayout = ({
                 </DialogContent>
             </Dialog>
 
-            <TemplateGuideDialog 
+            <TemplateGuideDialog
                 isOpen={isTemplateGuideOpen}
                 onClose={() => setIsTemplateGuideOpen(false)}
                 onUseTemplate={handleUseTemplate}

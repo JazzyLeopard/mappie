@@ -176,7 +176,7 @@ const EpicLayout = ({
 
         // Find the index of the deleted story
         const deletedIndex = epicStories.findIndex((story: any) => story._id === id);
-        
+
         // Try to select the next story, or the previous one if we're at the end
         const siblingStory = epicStories[deletedIndex + 1] || epicStories[deletedIndex - 1];
 
@@ -185,7 +185,7 @@ const EpicLayout = ({
           story: siblingStory ? siblingStory._id : null
         }));
       }
-      
+
       toast.success("User story deleted successfully");
     } catch (error) {
       console.error("Error deleting user story:", error);
@@ -248,13 +248,12 @@ const EpicLayout = ({
     const truncatedEpicName = epic.name.length > 20
       ? epic.name.substring(0, 20) + '...'
       : epic.name;
-    
+
     return (
       <div key={epic._id} className={`mb-1 rounded-lg ${isExpanded ? 'bg-white' : ''}`}>
         <div
-          className={`flex items-center px-4 py-1 hover:bg-slate-200 transition-colors ${
-            isSelected ? 'bg-slate-200 font-semibold' : ''
-          } cursor-pointer group ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
+          className={`flex items-center px-4 py-1 hover:bg-slate-200 transition-colors ${isSelected ? 'bg-slate-200 font-semibold' : ''
+            } cursor-pointer group ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
           onClick={() => {
             selectItem('epic', epic._id)
             setSelectedItems({ epic: epic._id, story: null })
@@ -323,7 +322,7 @@ const EpicLayout = ({
       </div>
     )
   },
-    [expandedEpics, selectedItems.epic, selectedItems.story]
+    [expandedEpics, selectedItems.epic, selectedItems.story, allUserStories]
   )
 
   // Render user stories
@@ -333,9 +332,8 @@ const EpicLayout = ({
         {stories.map(story => (
           <div
             key={story._id}
-            className={`pl-8 hover:bg-slate-50 transition-colors cursor-pointer ${
-              selectedItems.story === story._id ? 'bg-slate-50 font-semibold' : ''
-            } group flex items-center justify-between`}
+            className={`pl-8 hover:bg-slate-50 transition-colors cursor-pointer ${selectedItems.story === story._id ? 'bg-slate-50 font-semibold' : ''
+              } group flex items-center justify-between`}
             onClick={(e) => {
               e.stopPropagation()
               selectItem('story', story._id)
@@ -512,7 +510,7 @@ const EpicLayout = ({
   }, [selectedUserStory, handleUserStoryChange, handleEditorUSChange]);
 
   // Add these state variables at the top of the component
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState<"epics" | "userStories" | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
 
@@ -555,7 +553,7 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating("epics");
     setGenerationProgress(0);
     setGenerationStatus('Initializing...');
 
@@ -607,7 +605,7 @@ const EpicLayout = ({
                 setGenerationStatus('Complete!');
                 toast.success("Epics generated successfully");
                 setTimeout(() => {
-                  setIsGenerating(false);
+                  setIsGenerating(null);
                 }, 1000);
                 if (onAddEpics) {
                   await onAddEpics();
@@ -633,7 +631,7 @@ const EpicLayout = ({
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
-      setIsGenerating(false);
+      setIsGenerating(null);
     }
   };
 
@@ -644,7 +642,7 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating("epics");
     setGenerationProgress(0);
     setGenerationStatus('Generating a new epic...');
     progressInterval.current = setInterval(simulateProgress, 300);
@@ -694,7 +692,7 @@ const EpicLayout = ({
                 setGenerationStatus('Complete!');
                 toast.success("New epic generated successfully");
                 setTimeout(() => {
-                  setIsGenerating(false);
+                  setIsGenerating(null);
                 }, 1000);
                 if (onAddEpics) {
                   await onAddEpics();
@@ -719,7 +717,7 @@ const EpicLayout = ({
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
-      setIsGenerating(false);
+      setIsGenerating(null);
     }
   };
 
@@ -730,7 +728,7 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating(true);
+    setIsGenerating("userStories");
     setGenerationProgress(0);
     setGenerationStatus('Initializing...');
 
@@ -797,7 +795,7 @@ const EpicLayout = ({
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
-      setIsGenerating(false);
+      setIsGenerating(null);
     }
   };
 
@@ -862,9 +860,9 @@ const EpicLayout = ({
         {epics && epics.length > 0 ? (
           <>
             <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-4 bg-white rounded-xl">
-              {selectedItems.story ? (
+              {selectedItems.story && selectedUserStory ? (
                 UserStoryEditor
-              ) : selectedItems.epic ? (
+              ) : selectedItems.epic && selectedEpic ? (
                 EpicEditor
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -878,9 +876,9 @@ const EpicLayout = ({
               isResetting && "transition-all ease-in-out duration-300"
             )}>
               <div className="shadow-sm bg-white rounded-xl h-full">
-                {selectedItems.story ? (
+                {selectedItems.story && selectedUserStory ? (
                   <AIStoryCreator
-                    key={`story-${selectedItems.story}`}
+                    key={`story-${selectedUserStory?.title}`}
                     onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedUserStory?.description || ''}
                     selectedItemType="userStory"
@@ -888,15 +886,18 @@ const EpicLayout = ({
                       name: selectedEpic.name,
                       description: selectedEpic.description
                     } : null}
-                    selectedUserStory={selectedUserStory}
+                    selectedUserStory={selectedUserStory ? {
+                      title: selectedUserStory.title,
+                      description: selectedUserStory.description
+                    } : null}
                     selectedItemId={selectedItems.story}
                     projectId={stableProjectId}
                     isCollapsed={isCollapsed}
                     toggleCollapse={toggleCollapse}
                   />
-                ) : selectedItems.epic ? (
+                ) : selectedItems.epic && selectedEpic ? (
                   <AIStoryCreator
-                    key={`epic-${selectedItems.epic}`}
+                    key={`epic-${selectedEpic?.name}`}
                     onInsertMarkdown={handleInsertMarkdown}
                     selectedItemContent={selectedEpic?.description || ''}
                     selectedItemType="epic"
@@ -949,7 +950,7 @@ const EpicLayout = ({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">Generating Epics</h3>
+              <h3 className="text-lg font-semibold">{isGenerating === "epics" ? "Generating Epics..." : "Generating User Stories..."}</h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>
             </div>
