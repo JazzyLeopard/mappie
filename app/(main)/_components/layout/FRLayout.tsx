@@ -42,7 +42,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
     const router = useRouter();
     const [generationProgress, setGenerationProgress] = useState(0);
     const [generationStatus, setGenerationStatus] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [isGenerating, setIsGenerating] = useState<"functionalRequirements" | "singleFunctionalRequirement" | null>(null);
     const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
     const [selectedItems, setSelectedItems] = useState<SelectedItems>({
@@ -111,7 +111,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             return;
         }
 
-        setIsGenerating(true);
+        setIsGenerating("singleFunctionalRequirement");
         setGenerationProgress(0);
         setGenerationStatus('Initializing functional requirement generation...');
         progressInterval.current = setInterval(simulateProgress, 300);
@@ -193,7 +193,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
                                 }
-                                setIsGenerating(false);
+                                setIsGenerating(null);
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
                                 toast.success("Requirements generated successfully");
@@ -205,7 +205,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
                                 // Clean up
                                 setTimeout(() => {
-                                    setIsGenerating(false);
+                                    setIsGenerating(null);
                                 }, 1000);
 
                                 return;
@@ -226,7 +226,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             if (progressInterval.current) {
                 clearInterval(progressInterval.current);
             }
-            setIsGenerating(false);
+            setIsGenerating(null);
         }
     };
 
@@ -236,7 +236,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             return;
         }
 
-        setIsGenerating(true);
+        setIsGenerating("functionalRequirements");
         setGenerationProgress(0);
         setGenerationStatus('Initializing functional requirement generation...');
         progressInterval.current = setInterval(simulateProgress, 300);
@@ -319,7 +319,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
                                 }
-                                setIsGenerating(false);
+                                setIsGenerating(null);
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
                                 toast.success("Requirements generated successfully");
@@ -331,7 +331,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
                                 // Clean up
                                 setTimeout(() => {
-                                    setIsGenerating(false);
+                                    setIsGenerating(null);
                                 }, 1000);
 
                                 return;
@@ -352,7 +352,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
             if (progressInterval.current) {
                 clearInterval(progressInterval.current);
             }
-            setIsGenerating(false);
+            setIsGenerating(null);
         }
     };
 
@@ -569,7 +569,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
                     <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
                         <div className="flex flex-col space-y-4">
-                            <h3 className="text-lg font-semibold">Generating Functional requirements</h3>
+                            <h3 className="text-lg font-semibold">{isGenerating === "functionalRequirements" ? "Generating Functional Requirements..." : "Generating Functional Requirement..."}</h3>
                             <Progress value={generationProgress} className="w-full" />
                             <p className="text-sm text-muted-foreground">{generationStatus}</p>
                         </div>
