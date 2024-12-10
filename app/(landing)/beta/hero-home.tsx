@@ -89,7 +89,7 @@ export default function BetaHero() {
                 {/* Additional Stats */}
                 <div className="flex items-center justify-center space-x-8 text-sm text-gray-600">
                   <div>⭐️ Free for the first 100 users</div>
-                  <div>🔥 1hr response time</div>
+                  <div>🔥 Direct access to the founders</div>
                 </div>
               </div>
 
