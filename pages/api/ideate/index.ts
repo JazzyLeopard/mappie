@@ -1,9 +1,10 @@
-import { ideatePrompts, placeholderOverview } from "@/app/(main)/_components/constants";
+import { placeholderOverview } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
+import { useContextChecker } from "@/utils/useContextChecker";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -14,12 +15,16 @@ export default async function handler(
   if (req.method === 'POST') {
     const { prompt, projectId, language } = req.body;
 
+    const context = await useContextChecker({ projectId });
+
     if (!prompt || !projectId || !language) {
       return res.status(400).json({ error: 'Prompt, projectId, and language are required' });
     }
 
     try {
-      const promptWithPropertyInstructions = `Generate a comprehensive project overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
+      let promptWithPropertyInstructions = context
+
+      promptWithPropertyInstructions += `Generate a comprehensive project overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
 
 Use this exact template structure for the overview, replacing the placeholders with relevant content in ${language}:
 
