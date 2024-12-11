@@ -1,7 +1,9 @@
 'use client';
 
 import { MarkdownCard } from '@/app/(main)/_components/layout/markdown-card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from '@/convex/_generated/api';
@@ -11,13 +13,11 @@ import { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useMutation, useQuery } from 'convex/react';
 import { debounce } from 'lodash-es';
-import { Loader2, PanelLeftOpen, AlertTriangle, User } from 'lucide-react';
+import { AlertTriangle, Loader2, PanelLeftOpen, User } from 'lucide-react';
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -36,29 +36,6 @@ interface StreamStatus {
   status: 'started' | 'generating' | 'completed' | 'error';
   tool?: string;
   error?: string;
-}
-
-interface MessageAnnotation {
-  // Add other annotation properties as needed
-}
-
-interface DisplayMarkdownTool {
-  name: 'displayMarkdown';
-  parameters: {
-    content: string;
-    metadata?: {
-      title?: string;
-      type?: string;
-    };
-  };
-}
-
-interface ToolResult {
-  content: string;
-  metadata?: {
-    title?: string;
-    type?: string;
-  };
 }
 
 const MemoizedMarkdownCard = memo(MarkdownCard, (prev, next) => {
@@ -87,7 +64,7 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
   return (
     <div className={cn(
       "flex w-full",
-      message.role !== "assistant" && "flex-row-reverse"
+      message.role !== "assistant" && "flex-row-reverse items-center"
     )}>
       {/* Icon Column */}
       <div className="flex-shrink-0 mx-2">
@@ -223,7 +200,6 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-
   const storeChatHistory = useMutation(api.messages.storeChatHistory);
   const chatHistory = useQuery(api.messages.getChatHistory,
     selectedItemId && parsedContent?.projectId ? {
@@ -298,17 +274,16 @@ const AIStoryCreator = memo(function AIStoryCreator({
     isInitialized.current = false;
   }, [selectedItemId]);
 
-  // Add a scroll handler
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, []);
 
-  // Scroll to bottom when new messages arrive
+  // Update the effect to use the scrollToBottom function
   useEffect(() => {
     scrollToBottom();
-  }, [chat.messages.length]);
+  }, [chat.messages, streamState.isGenerating]);
 
   // Track the last saved message ID
   const lastSavedMessageIdRef = useRef<string | null>(null);
@@ -451,11 +426,13 @@ const AIStoryCreator = memo(function AIStoryCreator({
         <>
           <Separator />
           <ScrollArea
-            ref={scrollRef}
-            className="flex-1"
             withShadow={true}
+            className="flex-1 overflow-y-auto"
           >
-            <div className="space-y-6 p-4 pb-8 max-w-full"> {/* added max-w-full */}
+            <div
+              className="space-y-6 p-4 pb-8 max-w-full"
+              ref={scrollRef}
+            >
               {chat.messages.map((message) => (
                 <ChatMessage
                   key={message.id}
@@ -490,9 +467,14 @@ const AIStoryCreator = memo(function AIStoryCreator({
                       chat.handleInputChange(e)
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                        e.preventDefault()
-                        handleSubmit(e as any)
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(e as any);
+                      }
+                      // Check if Ctrl+Enter (Windows) or Cmd+Enter (Mac) is pressed
+                      else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        handleSubmit(e as any);
                       }
                     }}
                     placeholder="Ask me to improve or generate content..."

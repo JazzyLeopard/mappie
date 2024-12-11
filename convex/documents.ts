@@ -38,7 +38,6 @@ export const getDocumentById = query({
 export const deleteDocument = mutation({
     args: {
         documentId: v.id("documents"),
-        summaryId: v.id("_storage"),
     },
     handler: async (ctx: any, args: any) => {
         const identity = await ctx.auth.getUserIdentity();
@@ -48,21 +47,18 @@ export const deleteDocument = mutation({
         }
 
         const document = await ctx.db.get(args.documentId);
-        const summary = await ctx.db.get(args.summaryId);
 
         if (!document) {
             throw new Error("Document not found");
         }
-
         await ctx.db.delete(args.documentId);
-        await ctx.db.delete(args.summaryId);
 
         if (document.storageId) {
             await ctx.storage.delete(document.storageId);
         }
 
-        if (summary.storageId) {
-            await ctx.storage.delete(summary.storageId);
+        if (document.summaryId) {
+            await ctx.storage.delete(document.summaryId);
         }
     },
 });
@@ -111,5 +107,27 @@ export const getDocuments = query({
                 // summaryUrl: document.summaryId ? await ctx.storage.getUrl(document.summaryId) : undefined
             }))
         );
+    },
+});
+
+export const getSummaryByProjectId = query({
+    args: {
+        projectId: v.id("projects"),
+    },
+    handler: async (ctx, args) => {
+        const documents = await ctx.db
+            .query("documents")
+            .filter((q) => q.eq(q.field("projectId"), args.projectId))
+            .collect();
+
+        return Promise.all(
+            documents.map(async (document) => {
+                return {
+                    ...document,
+                    url: document.summaryId ? await ctx.storage.getUrl(document.summaryId) : undefined
+                }
+            })
+        );
+
     },
 });

@@ -96,50 +96,47 @@ function convertDescriptionToMarkdown(description: any): string {
 const formatFunctionalRequirements = (requirements: any[]) => {
   return requirements.map(req => {
     try {
-      let description;
+      // For simple FR format, just return the description directly since it's markdown
+      if (req.description.startsWith('#')) {
+        return req.description;
+      }
+
+      // For legacy table format, try parsing JSON
       try {
-        description = JSON.parse(req.description);
-      } catch (parseError) {
-        console.error('Error parsing requirement description:', parseError);
-        return ''; // Skip this requirement if parsing fails
-      }
+        const description = JSON.parse(req.description);
 
-      // Check if description and root exist
-      if (!description?.root?.children) {
-        console.warn('Invalid description structure:', description);
-        return '';
-      }
-
-      const table = description.root.children.find((child: any) => child.type === 'table');
-      if (!table?.children) {
-        console.warn('No table found in requirement:', req.title);
-        return req.title || '';
-      }
-
-      return table.children
-        .slice(1) // Skip header row
-        .map((row: any) => {
-          try {
-            const cells = row.children;
-            if (!cells?.[0]?.children?.[0]?.text || !cells?.[2]?.children?.[0]?.text) {
-              return '';
-            }
-            return `${cells[0].children[0].text}: ${cells[2].children[0].text}`;
-          } catch (rowError) {
-            console.error('Error processing table row:', rowError);
-            return '';
+        // Handle table format
+        if (description?.root?.children) {
+          const table = description.root.children.find((child: any) => child.type === 'table');
+          if (table?.children) {
+            return table.children
+              .slice(1)
+              .map((row: any) => {
+                const cells = row.children;
+                if (cells?.[0]?.children?.[0]?.text && cells?.[2]?.children?.[0]?.text) {
+                  return `${cells[0].children[0].text}: ${cells[2].children[0].text}`;
+                }
+                return '';
+              })
+              .filter(Boolean)
+              .join('\n');
           }
-        })
-        .filter(Boolean) // Remove empty strings
-        .join('\n');
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, return the raw description
+        return req.description;
+      }
+
+      return req.title || '';
     } catch (error) {
       console.error('Error processing requirement:', error);
       return '';
     }
   })
-  .filter(Boolean) // Remove empty strings
-  .join('\n\n');
+    .filter(Boolean)
+    .join('\n\n');
 };
+
 
 const extractJsonFromResponse = (content: string): any => {
   try {
@@ -156,7 +153,7 @@ const extractJsonFromResponse = (content: string): any => {
         throw new Error('Invalid JSON format in the response');
       }
     }
-    
+
     // If no JSON block is found, try to find an array in the content
     const arrayMatch = content.match(/\[\s*{[\s\S]*}\s*\]/);
     if (arrayMatch) {
@@ -167,7 +164,7 @@ const extractJsonFromResponse = (content: string): any => {
         throw new Error('Invalid JSON array format in the response');
       }
     }
-    
+
     throw new Error('No valid JSON found in the response');
   }
 };
@@ -223,6 +220,8 @@ export default async function handler(
       throw new Error('Unauthorized access to project');
     }
 
+    const context = await useContextChecker({ projectId });
+
     // Fetch functional requirements
     const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
       projectId: projectId as Id<"projects">
@@ -234,6 +233,9 @@ export default async function handler(
 
     let prompt = `Based on the following project details and functional requirements, generate comprehensive use cases that align with the system's requirements and functionality. Each use case should detail the interaction between users and the system.
 
+Project Context:
+${context}
+    
 Project Details:
 ${projectDetails}
 
@@ -339,9 +341,9 @@ Generate use cases that specifically address the functional requirements listed 
     console.log('Use cases created successfully');
 
     sendEvent({ progress: 100, status: 'Complete!' });
-    res.status(200).json({ 
-      useCases: serializeBigInt(generatedUseCases), 
-      markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {}) 
+    res.status(200).json({
+      useCases: serializeBigInt(generatedUseCases),
+      markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {})
     });
   } catch (error) {
     console.error('API Error:', error);
