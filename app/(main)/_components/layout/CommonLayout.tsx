@@ -120,7 +120,7 @@ const CommonLayout = ({
             <div className="flex flex-1 gap-2">
                 <div className="flex-1 shadow-[0_0_2px_rgba(0,0,0,0.1)] pt-4 px-2 bg-white rounded-xl flex flex-col min-w-[50%] relative">
                     <div className="overflow-x-auto pb-3 px-2 sm:mr-2">
-                        <div className="pl-10 mt-2 mr-2 flex flex-row gap-2">
+                        <div className="pl-10 mt-2 mr-2 flex flex-row gap-4">
                             <LabelToInput
                                 value={data.title}
                                 setValue={(newTitle) => handleEditorChange('title', newTitle)}

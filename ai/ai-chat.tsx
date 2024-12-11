@@ -274,17 +274,16 @@ const AIStoryCreator = memo(function AIStoryCreator({
     isInitialized.current = false;
   }, [selectedItemId]);
 
-  // Function to scroll to the bottom
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, []);
 
-  // Use useEffect to scroll when messages change
+  // Update the effect to use the scrollToBottom function
   useEffect(() => {
     scrollToBottom();
-  }, [chat.messages.length]);
+  }, [chat.messages, streamState.isGenerating]);
 
   // Track the last saved message ID
   const lastSavedMessageIdRef = useRef<string | null>(null);
@@ -427,11 +426,13 @@ const AIStoryCreator = memo(function AIStoryCreator({
         <>
           <Separator />
           <ScrollArea
-            ref={scrollRef}
             withShadow={true}
             className="flex-1 overflow-y-auto"
           >
-            <div className="space-y-6 p-4 pb-8 max-w-full"> {/* added max-w-full */}
+            <div
+              className="space-y-6 p-4 pb-8 max-w-full"
+              ref={scrollRef}
+            >
               {chat.messages.map((message) => (
                 <ChatMessage
                   key={message.id}
