@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
+import { useContextChecker } from "@/utils/useContextChecker";
 import { getAuth } from "@clerk/nextjs/server";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
@@ -94,48 +95,44 @@ function convertDescriptionToMarkdown(description: any): string {
 const formatFunctionalRequirements = (requirements: any[]) => {
   return requirements.map(req => {
     try {
-      let description;
+      // For simple FR format, just return the description directly since it's markdown
+      if (req.description.startsWith('#')) {
+        return req.description;
+      }
+
+      // For legacy table format, try parsing JSON
       try {
-        description = JSON.parse(req.description);
-      } catch (parseError) {
-        console.error('Error parsing requirement description:', parseError);
-        return ''; // Skip this requirement if parsing fails
-      }
+        const description = JSON.parse(req.description);
 
-      // Check if description and root exist
-      if (!description?.root?.children) {
-        console.warn('Invalid description structure:', description);
-        return '';
-      }
-
-      const table = description.root.children.find((child: any) => child.type === 'table');
-      if (!table?.children) {
-        console.warn('No table found in requirement:', req.title);
-        return req.title || '';
-      }
-
-      return table.children
-        .slice(1) // Skip header row
-        .map((row: any) => {
-          try {
-            const cells = row.children;
-            if (!cells?.[0]?.children?.[0]?.text || !cells?.[2]?.children?.[0]?.text) {
-              return '';
-            }
-            return `${cells[0].children[0].text}: ${cells[2].children[0].text}`;
-          } catch (rowError) {
-            console.error('Error processing table row:', rowError);
-            return '';
+        // Handle table format
+        if (description?.root?.children) {
+          const table = description.root.children.find((child: any) => child.type === 'table');
+          if (table?.children) {
+            return table.children
+              .slice(1)
+              .map((row: any) => {
+                const cells = row.children;
+                if (cells?.[0]?.children?.[0]?.text && cells?.[2]?.children?.[0]?.text) {
+                  return `${cells[0].children[0].text}: ${cells[2].children[0].text}`;
+                }
+                return '';
+              })
+              .filter(Boolean)
+              .join('\n');
           }
-        })
-        .filter(Boolean) // Remove empty strings
-        .join('\n');
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, return the raw description
+        return req.description;
+      }
+
+      return req.title || '';
     } catch (error) {
       console.error('Error processing requirement:', error);
       return '';
     }
   })
-    .filter(Boolean) // Remove empty strings
+    .filter(Boolean)
     .join('\n\n');
 };
 
@@ -177,6 +174,9 @@ export default async function handler(
     convex.setAuth(token);
     const { projectId } = req.body;
 
+    const context = await useContextChecker({ projectId })
+    console.log("context", context);
+
     // Fetch project
     sendEvent({ progress: 25, status: 'Loading project...' });
     const project = await convex.query(api.projects.getProjectById, {
@@ -208,7 +208,9 @@ export default async function handler(
 
     const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
 
-    let basePrompt = `As an expert use case analyst, generate one unique additional use case for the following project. The use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
+    let basePrompt = context;
+
+    basePrompt += `As an expert use case analyst, generate one unique additional use case for the following project. The use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
 
 {
   "title": "Use Case Title",
