@@ -22,12 +22,8 @@ import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAN_USE_DOM } from './shared/canUseDOM';
-import PasteLogPlugin from './plugins/PasteLogPlugin';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $createParagraphNode, $createTextNode, $getRoot, createCommand, LexicalCommand } from 'lexical';
 import { useSettings } from './context/SettingsContext';
 import { useSharedHistoryContext } from './context/SharedHistoryContext';
-import AIEditPlugin from './plugins/AiEditPlugin';
 import AutocompletePlugin from './plugins/AutocompletePlugin';
 import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
 import CodeActionMenuPlugin from './plugins/CodeActionMenuPlugin';
@@ -48,11 +44,8 @@ import InlineImagePlugin from './plugins/InlineImagePlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
-import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
-import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
 import PageBreakPlugin from './plugins/PageBreakPlugin';
 import PollPlugin from './plugins/PollPlugin';
-import ReplacementPlugin from './plugins/ReplacementPlugin/index';
 import TabFocusPlugin from './plugins/TabFocusPlugin';
 import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
 import TableCellResizer from './plugins/TableCellResizer';
@@ -62,6 +55,13 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
+import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { PASTE_COMMAND } from 'lexical';
+import AIEditPlugin from './plugins/AiEditPlugin';
+import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
+import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
+
 
 type EditorProps = {
   attribute: string;
@@ -239,7 +239,29 @@ export default function Editor({
     }
   }, [editor]);
 
-
+  useEffect(() => {
+    // Register paste handler
+    return editor.registerCommand(
+      PASTE_COMMAND,
+      (event: ClipboardEvent) => {
+        const pastedText = event.clipboardData?.getData('text/plain');
+        if (pastedText?.trim()) {
+          // Check for markdown content
+          if (pastedText.match(/[#\-*`>]|\d+\./)) {
+            event.preventDefault();
+            
+            editor.update(() => {
+              $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
+            });
+            
+            return true;
+          }
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [editor]);
 
   return (
     <>
@@ -248,16 +270,12 @@ export default function Editor({
         <DragDropPaste />
         <AutoFocusPlugin />
         <HistoryPlugin externalHistoryState={isCollab ? historyState : undefined} />
-        <PasteLogPlugin />
         <ClearEditorPlugin />
         <ComponentPickerPlugin />
         <EmojiPickerPlugin />
         <AutoEmbedPlugin />
         <EditorOnChangePlugin onChange={handleChange} />
-        <MarkdownInsertionPlugin
-          onInsertMarkdown={insertMarkdown}
-        />
-        <ReplacementPlugin />
+        <MarkdownInsertionPlugin onInsertMarkdown={insertMarkdown} />
         <RichTextPlugin
           contentEditable={
             <div className="h-full w-full overflow-auto scrollbar-thin">
@@ -362,12 +380,4 @@ function MarkdownInsertionPlugin({
   }, [editor, onInsertMarkdown]);
 
   return null;
-}
-
-// Update the window type declaration
-declare global {
-  interface Window {
-    __lexicalEditor: any;
-    __insertMarkdown: (markdown: string) => void;
-  }
 }
