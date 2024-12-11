@@ -381,3 +381,12 @@ function MarkdownInsertionPlugin({
 
   return null;
 }
+
+// Update the window type declaration
+declare global {
+  interface Window {
+    __lexicalEditor: any;
+    __insertMarkdown: (markdown: string) => void;
+    __replaceMarkdown: (markdown: string) => void;
+  }
+}
