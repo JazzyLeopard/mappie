@@ -30,7 +30,7 @@ export const getEpicById = query({
     }
 
     if (!epicId) {
-      throw new Error("Epic ID is required");
+      return null;
     }
 
     const epic = await ctx.db
@@ -39,12 +39,12 @@ export const getEpicById = query({
       .first();
 
     if (!epic) {
-      throw new Error("Epic not found");
+      return null;
     }
 
     return {
       ...epic,
-      projectId: epic.projectId // Ensure projectId is included in the response
+      projectId: epic.projectId
     };
   },
 });
