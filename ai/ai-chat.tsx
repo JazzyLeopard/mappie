@@ -47,16 +47,35 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
   onInsertMarkdown: (markdown: string) => void
 }) => {
   const handleReplace = useCallback(async (newContent: string) => {
+    console.log('handleReplace called with content:', newContent);
+    
     try {
+      // Check if global replace function exists
       if ((window as any).__replaceMarkdown) {
-        await (window as any).__replaceMarkdown(newContent);
-        return Promise.resolve();
+        console.log('Found global __replaceMarkdown function, attempting to use it');
+        
+        try {
+          await (window as any).__replaceMarkdown(newContent);
+          console.log('Successfully replaced content using __replaceMarkdown');
+          return Promise.resolve();
+        } catch (replaceError) {
+          console.error('Error in __replaceMarkdown:', replaceError);
+          throw replaceError;
+        }
       }
-      // Fallback to insert if replace isn't available
+      
+      // Log fallback scenario
+      console.log('No __replaceMarkdown found, falling back to insert');
       onInsertMarkdown(newContent);
+      console.log('Successfully inserted content using fallback');
       return Promise.resolve();
+      
     } catch (error) {
-      console.error('Replace error:', error);
+      console.error('Replace error:', {
+        error,
+        contentLength: newContent?.length,
+        hasReplaceFunction: Boolean((window as any).__replaceMarkdown),
+      });
       return Promise.reject(error);
     }
   }, [onInsertMarkdown]);
