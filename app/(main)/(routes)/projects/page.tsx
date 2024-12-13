@@ -2,7 +2,7 @@
 
 import AllProjects from "@/app/(main)/_components/layout/AllProjects";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { api } from "@/convex/_generated/api";
 import Empty from "@/public/empty.png";
 import { useUser } from "@clerk/clerk-react";
@@ -136,23 +136,25 @@ const ProjectsPage = () => {
                   <PlusIcon className="w-4 h-4 mr-2" />
                   Create New
                 </Button>
-                <Popover>
-                  <PopoverTrigger asChild>
+                <Dialog>
+                  <DialogTrigger asChild>
                     <Button variant="default" className="bg-gradient-to-r from-pink-500 to-blue-500 text-white flex items-center">
                       <Wand2 className="mr-2 w-4 h-4" />
                       Ideate with AI
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="min-w-96">
-                    <h2 className="text-lg font-semibold mb-4 ml-4">Generate Project with AI</h2>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Generate Project with AI</DialogTitle>
+                    </DialogHeader>
                     <div className="space-y-4">
                       <ProjectIdeation 
                         onSubmit={handleGenerateProject}
                         isGenerating={isGenerating}
                       />
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
               </div>
             </>
           )}
