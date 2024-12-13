@@ -52,7 +52,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Comming soon...</p>
+                        <p>Coming soon...</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -64,7 +64,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Comming soon...</p>
+                        <p>Coming soon...</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
