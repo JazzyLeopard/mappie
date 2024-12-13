@@ -12,6 +12,7 @@ import { CharacterLimitPlugin } from '@lexical/react/LexicalCharacterLimitPlugin
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { ClearEditorPlugin } from '@lexical/react/LexicalClearEditorPlugin';
 import { ClickableLinkPlugin } from '@lexical/react/LexicalClickableLinkPlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
@@ -19,11 +20,12 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+import { $createParagraphNode, $createTextNode, $getRoot, createCommand, LexicalCommand } from 'lexical';
 import { debounce } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CAN_USE_DOM } from './shared/canUseDOM';
 import { useSettings } from './context/SettingsContext';
 import { useSharedHistoryContext } from './context/SharedHistoryContext';
+import AIEditPlugin from './plugins/AiEditPlugin';
 import AutocompletePlugin from './plugins/AutocompletePlugin';
 import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
 import CodeActionMenuPlugin from './plugins/CodeActionMenuPlugin';
@@ -44,6 +46,8 @@ import InlineImagePlugin from './plugins/InlineImagePlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
+import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
+import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
 import PageBreakPlugin from './plugins/PageBreakPlugin';
 import PollPlugin from './plugins/PollPlugin';
 import TabFocusPlugin from './plugins/TabFocusPlugin';
@@ -54,14 +58,8 @@ import TableOfContentsPlugin from './plugins/TableOfContentsPlugin';
 import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
+import { CAN_USE_DOM } from './shared/canUseDOM';
 import ContentEditable from './ui/ContentEditable';
-import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { PASTE_COMMAND } from 'lexical';
-import AIEditPlugin from './plugins/AiEditPlugin';
-import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
-import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
-
 
 type EditorProps = {
   attribute: string;
@@ -237,30 +235,6 @@ export default function Editor({
         1
       );
     }
-  }, [editor]);
-
-  useEffect(() => {
-    // Register paste handler
-    return editor.registerCommand(
-      PASTE_COMMAND,
-      (event: ClipboardEvent) => {
-        const pastedText = event.clipboardData?.getData('text/plain');
-        if (pastedText?.trim()) {
-          // Check for markdown content
-          if (pastedText.match(/[#\-*`>]|\d+\./)) {
-            event.preventDefault();
-            
-            editor.update(() => {
-              $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
-            });
-            
-            return true;
-          }
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
   }, [editor]);
 
   return (
