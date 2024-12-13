@@ -2,184 +2,183 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
+import { useContextChecker } from "@/utils/useContextChecker";
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import { getAuth } from "@clerk/nextjs/server";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-function convertUsDescriptionToMarkdown(description: any): string {
-    let markdown = '';
+function convertUsDescriptionToMarkdown(story: any): string {
+  let markdown = '';
 
-    if (typeof description === 'string') {
-        return description;
-    }
+  // Split the description into parts
+  const descriptionParts = story.description.split('\n\n');
+  const userStoryFormat = descriptionParts[0]; // "As a..., I want..., so that..."
+  const explanation = descriptionParts[1]; // Additional explanation
 
-    if (description.Description) {
-        markdown += `## Description\n${description.Description}\n\n`;
-    }
+  // Add user story format with proper styling
+  const [asA, iWant, soThat] = userStoryFormat.split(', ');
+  markdown += `${asA},\n\n`;
+  markdown += `${iWant},\n\n`;
+  markdown += `${soThat}\n\n`;
+  
+  if (explanation) {
+    markdown += `${explanation}\n\n`;
+  }
 
-    if (description.acceptance_criteria) {
-        markdown += `## Acceptance Criteria\n${description.acceptance_criteria}\n\n`;
-    }
+  // Acceptance Criteria with proper formatting
+  if (story.acceptance_criteria && Array.isArray(story.acceptance_criteria)) {
+    markdown += `# Acceptance Criteria\n\n`;
+    story.acceptance_criteria.forEach((criteria: string) => {
+      const parts = criteria.match(/Scenario \d+: \*\*Given\*\* (.*?), \*\*when\*\* (.*?), \*\*then\*\* (.*)/);
+      if (parts) {
+        markdown += `## ${parts[0].split(':')[0]}\n\n`; // Scenario X
+        markdown += `**Given** ${parts[1]},\n\n`;
+        markdown += `**when** ${parts[2]},\n\n`;
+        markdown += `**then** ${parts[3]}\n\n`;
+      }
+    });
+  }
 
-    if (description.interface_elements) {
-        markdown += `## Interface Elements\n${description.interface_elements}\n\n`;
-    }
+  // Additional Considerations
+  if (story.additional_considerations && Array.isArray(story.additional_considerations)) {
+    markdown += `# Additional Considerations\n\n`;
+    story.additional_considerations.forEach((consideration: string) => {
+      markdown += `- ${consideration}\n`;
+    });
+    markdown += '\n';
+  }
 
-    if (description.functional_flow) {
-        markdown += `## Functional Flow\n${description.functional_flow}\n\n`;
-    }
-
-    if (description.states_and_emptyStates) {
-        markdown += `## States and Empty States\n${description.states_and_emptyStates}\n\n`;
-    }
-
-    if (description.errorMessages_and_validation) {
-        markdown += `## Error Messages and Validation\n${description.errorMessages_and_validation}\n\n`;
-    }
-
-    return markdown;
+  return markdown;
 }
 
 export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
+  req: NextApiRequest,
+  res: NextApiResponse
 ) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  const { projectId, epicId } = req.body;
+
+  try {
+    // Authentication
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+
+    if (!token || !userId) {
+      return res.status(401).json({ message: 'Authentication failed' });
     }
 
-    const { projectId, epicId } = req.body;
+    convex.setAuth(token);
+    const convexEpicId = epicId as Id<"epics">;
 
-    const authHeader = req.headers.authorization;
-    const authToken = authHeader && authHeader.split(' ')[1];
+    const context = await useContextChecker({ projectId })
+    console.log("context", context);
 
-    if (!authToken) {
-        return res.status(401).json({ message: 'No authentication token provided' });
+    const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
+
+    if (!epic) {
+      return res.status(400).json({ message: "Epic not found" });
     }
 
+    const epicText = epic.description;
+
+    // Fetch existing user stories to provide as context
+    const existingUserStories = await convex.query(api.userstories.getUserStories, { projectId });
+    const existingStoriesText = existingUserStories
+      .filter((story: any) => story.epicId === epicId)
+      .map((story: any) => story.description)
+      .join('\n\n');
+
+    let userStoryBasePrompt = `As an expert user stories analyst, generate one additional user story that complements the existing user stories and implements functionality described in this epic. The user story should be detailed and comprehensive, following this exact structure:
+    {
+      "title": "User Story Title",
+      "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].\n\nThis user story focuses on [detailed explanation of the functionality and its importance in the context of the epic].",
+      
+      "acceptance_criteria": [
+        "Scenario 1: **Given** I am on the registration page, **when** I enter valid personal details and click Submit, **then** I should receive a confirmation email with an activation link",
+        "Scenario 2: **Given** I am on the registration page, **when** I submit the form with an already registered email, **then** I should see an error message saying Email is already registered. Please log in.",
+        "Scenario 3: **Given** I have received a confirmation email, **when** I click the activation link, **then** my account should be activated and I should be able to log in"
+      ],
+
+      "additional_considerations": [
+        "Security requirements for password strength",
+        "Email validation format",
+        "Rate limiting for registration attempts",
+        "Data privacy compliance",
+        "Accessibility standards"
+      ]
+    }`
+
+    let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
+    userStoryPrompt += `For this specific epic:\n${epicText}\n\n`;
+    userStoryPrompt += `Existing user stories:\n${existingStoriesText}\n\n`;
+    userStoryPrompt += `Generate one additional user story that complements the existing ones. The story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
+    userStoryPrompt += `Important guidelines:
+    - Generate only ONE high-quality, comprehensive user story
+    - The story must directly contribute to implementing the epic's functionality
+    - The story should complement existing stories but be independent
+    - Description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
+    - Include a detailed explanation after the user story format
+    - Include detailed acceptance criteria with clear given/when/then scenarios
+    - Focus on delivering complete, testable functionality
+    - Consider edge cases and error states
+    - Include relevant technical and non-functional requirements
+    - Format the output as a JSON object (not an array)
+
+    Generate the user story now.`;
+
+    console.log("Calling OpenAI Api...");
+    const response = await generateText({
+      model: openai("gpt-4o-mini"),
+      messages: [{ role: "user", content: userStoryPrompt }],
+      temperature: 0.7,
+    });
+    console.log('OpenAI API response received');
+
+    const userStoryContent = response.text;
+    if (!userStoryContent) {
+      throw new Error('No content generated from OpenAI');
+    }
+
+    console.log('Parsing OpenAI response...');
+
+    // Extract JSON from Markdown code block
+    const jsonMatch = userStoryContent.match(/```json\s*([\s\S]*?)\s*```/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in the response');
+    }
+    const jsonContent = jsonMatch[1];
+
+    let generatedUserStory;
     try {
-        convex.setAuth(authToken);
-        const convexEpicId = epicId as Id<"epics">;
-
-        //Fetch the epics
-        const epics = await convex.query(api.epics.getEpics, { projectId });
-
-        if (!epics) {
-            return res.status(400).json({ message: "No epics found for the project" });
-        }
-
-        const epicsText = epics.map((epic: any) => epic?.description).join('\n');
-
-        //Fetch the existing user stories
-        const userStories = await convex.query(api.userstories.getUserStories, { projectId })
-
-        if (!userStories) {
-            return res.status(400).json({ message: "No userStories found for the project" });
-        }
-
-        const userStoriesText = userStories.map((uc: any) => uc?.description).join('\n');
-
-        let userStoryBasePrompt = `As an expert user stories analyst, generate a comprehensive list of user stories for the following project. Each user stories should be detailed and specific to the project's need following this exact structure and level of detail, and should not use Heading 1 and 2.
-        {
-          "title": "User Registration"
-    
-          "description": "Create a detailed description of the user story that addresses the business need it fulfills, including the following elements:
-    
-            - **Description**: This user story focuses on a new user creating an account to access personalized features. The goal is to streamline the registration process, ensuring a smooth onboarding experience. Simplifying the sign-up reduces barriers, improves accessibility, and boosts user retention and engagement, supporting the platform's growth in active users.
-    
-            - **Acceptance Criteria**: 
-              - **Scenario 1**: Given I am on the registration page, when I enter valid personal details and click Submit, then I should receive a confirmation email with an activation link.
-              - **Scenario 2**: Given I am on the registration page, when I submit the form with an already registered email, then I should see an error message saying Email is already registered. Please log in.
-              - **Scenario 3**: Given I have received a confirmation email, when I click the activation link, then my account should be activated, and I should be able to log in.
-    
-            - **Interface Elements**: Registration Form, including fields for First Name, Last Name, Email, Password, and Confirm Password.
-    
-            - **Functional Flow**:
-              - **Flow 1**: 
-                Action: User enters valid personal details and clicks Submit. 
-                Response: The system validates the input, sends a confirmation email with an activation link, and displays a success message on the registration page.
-              - **Flow 2**:
-                Action: User enters an email that is already registered.  
-                Response: The system displays an error message indicating the email is already registered and suggests logging in.
-              - **Flow 3**:
-                Action: User clicks the activation link in the confirmation email. 
-                Response: The system activates the user's account, and the user is redirected to the login page.
-    
-            - **States and Empty states**:
-              - **Initial State**: The registration form is displayed with all fields empty, and the Submit button is disabled until all required fields are filled.
-              - **EmptyState**: If the user tries to submit the form without completing all fields, the system displays a message: Please fill out all required fields before submitting.
-    
-            - **Error messages and Validation: 
-              - **Condition**: User submits the form without filling out all required fields.
-              - **Message**: Please fill out all required fields.
-          
-              Present the description as a single cohesive string, combining all these elements in a clear and engaging manner.Each element starting on a new line" 
-        }`
-
-        // Update the prompt to request a JSON response
-        const singleUserStoryPrompt = `Based on the following epics- ${epicsText} and existing user stories- ${userStoriesText}. Generate one more user story using this format- ${userStoryBasePrompt}.Be creative and consider edge cases that might not be immediately obvious. If no additional user story is needed and the existing user story suffice the requirements, return 'NULL'.Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading 1 and Heading 2 in Markdown.
-    `;
-
-        console.log("Calling OpenAI Api...");
-        const response = await generateText({
-            model: openai("gpt-4o-mini"),
-            messages: [{ role: "user", content: singleUserStoryPrompt }],
-            temperature: 0.7,
-        });
-        console.log('OpenAI API response received');
-
-        const userStoryContent = response.text;
-        if (!userStoryContent) {
-            throw new Error('No content generated from OpenAI');
-        }
-
-        console.log('Parsing OpenAI response...');
-
-        // Handle 'NULL' response
-        if (userStoryContent.trim() === 'NULL') {
-            console.log('AI determined that no new use case is needed.');
-            return res.status(200).json({ message: 'NULL' });  // Send 'NULL' to the UI
-        }
-
-        // Utility function to handle BigInt serialization
-        const serializeBigInt = (obj: any) => {
-            return JSON.parse(JSON.stringify(obj, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-            ));
-        };
-
-        let generatedUserStory;
-        const jsonMatch = userStoryContent.match(/```json\n([\s\S]*?)\n```/);
-        if (jsonMatch) {
-            const jsonContent = jsonMatch[1];
-            generatedUserStory = JSON.parse(jsonContent);
-
-            console.log('Parsed userStory', JSON.stringify(generatedUserStory, null, 2));
-
-            if (generatedUserStory && generatedUserStory[0]?.description) {
-                const formattedDescription = convertUsDescriptionToMarkdown
-                    (generatedUserStory[0]?.description);
-
-                let userStoryId = await convex.mutation(api.userstories.createUserStory, {
-                    epicId: convexEpicId,
-                    title: generatedUserStory[0]?.title || 'Untitled Epic',
-                    description: formattedDescription,
-                });
-                generatedUserStory[0]['id'] = userStoryId
-            }
-        } else {
-            console.warn('Skipping invalid user story:', generatedUserStory)
-        }
-        console.log("User story created successfully");
-
-        res.status(200).json({ userStory: serializeBigInt(generatedUserStory), markdown: convertUsDescriptionToMarkdown(generatedUserStory[0]?.description || {}) });
-    } catch (error) {
-        console.error('Error generating user story:', error);
-        if (error instanceof Error) {
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
-        }
-        res.status(500).json({ message: 'Error generating user story', error: error instanceof Error ? error.message : String(error) });
+      generatedUserStory = JSON.parse(jsonContent);
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response for user story:', parseError);
+      console.log('Raw OpenAI response', userStoryContent);
+      return res.status(500).json({ message: 'Invalid JSON response from OpenAI for user story', parseError })
     }
+
+    if (generatedUserStory && generatedUserStory?.description) {
+      const formattedUserStory = {
+        title: generatedUserStory?.title || 'Untitled User Story',
+        description: convertUsDescriptionToMarkdown(generatedUserStory)
+      };
+
+      console.log("User story created successfully");
+      res.status(200).json({ userStory: formattedUserStory, type: 'userstory' });
+    } else {
+      throw new Error('Invalid user story format received from OpenAI');
+    }
+  } catch (error) {
+    console.error('Error generating user story:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    res.status(500).json({ message: 'Error generating user story', error: error instanceof Error ? error.message : String(error) });
+  }
 }
