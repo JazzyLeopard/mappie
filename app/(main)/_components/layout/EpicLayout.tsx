@@ -408,7 +408,7 @@ const EpicLayout = ({
 
     return (
       <div className='flex flex-col h-full'>
-        <header className="flex flex-col gap-2 pt-4 px-4 pb-4 w-full">
+        <header className="flex flex-col gap-2 pt-4 px-8 pb-4 w-full">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -435,7 +435,7 @@ const EpicLayout = ({
             onBlur={() => { }}
           />
         </header>
-        <ScrollArea className='flex-1 overflow-y-auto flex h-full'>
+        <ScrollArea className='flex-1 overflow-y-auto flex h-full px-4'>
           <div className='flex-1 px-0 h-[500px]'>
             <LexicalEditor
               key={selectedItems.story as string}
