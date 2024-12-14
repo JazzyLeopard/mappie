@@ -82,13 +82,13 @@ const EpicLayout = ({
   // Select an item (epic or story)
   const selectItem = useCallback((type: 'epic' | 'story', id: string, epicId?: string) => {
     if (!id) return; // Don't select if no id is provided
-    
+
     setSelectedItems(prev => {
       if (type === 'epic') {
         // Verify the epic exists in the epics array
         const epicExists = epics?.some(epic => epic._id === id);
         if (!epicExists) return prev;
-        
+
         return { epic: id, story: null };
       } else {
         return { epic: epicId || prev.epic, story: id };
@@ -340,9 +340,8 @@ const EpicLayout = ({
     return stories.map(story => (
       <div
         key={story._id}
-        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${
-          selectedItems.story === story._id ? 'bg-white font-semibold' : ''
-        } cursor-pointer group rounded-lg`}
+        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${selectedItems.story === story._id ? 'bg-white font-semibold' : ''
+          } cursor-pointer group rounded-lg`}
         onClick={() => selectItem('story', story._id)}
       >
         <BookOpen className="h-3 w-3 mr-2" />
@@ -514,7 +513,7 @@ const EpicLayout = ({
   }, [selectedUserStory, handleUserStoryChange, handleEditorUSChange]);
 
   // Add these state variables at the top of the component
-  const [isGenerating, setIsGenerating] = useState<"epics" | "userStories" | null>(null);
+  const [isGenerating, setIsGenerating] = useState<GenerationType | null>(null);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
 
@@ -550,6 +549,11 @@ const EpicLayout = ({
     console.log('Selected epic data:', selectedEpic);
   }, [selectedItems.epic, selectedEpic]);
 
+  type GenerationType = {
+    type: "epics" | "userStories";
+    mode: "single" | "multiple";
+  };
+
   // Update the handleGenerateEpics function
   const handleGenerateEpics = async () => {
     if (!params.projectId) {
@@ -557,7 +561,7 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating("epics");
+    setIsGenerating({ type: "epics", mode: "multiple" });
     setGenerationProgress(0);
     setGenerationStatus('Initializing...');
 
@@ -646,9 +650,9 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating("epics");
+    setIsGenerating({ type: "epics", mode: "single" });
     setGenerationProgress(0);
-    setGenerationStatus('Generating a new epic...');
+    setGenerationStatus('Initializing...');
     progressInterval.current = setInterval(simulateProgress, 300);
 
     try {
@@ -732,7 +736,7 @@ const EpicLayout = ({
       return;
     }
 
-    setIsGenerating("userStories");
+    setIsGenerating({ type: "userStories", mode: "multiple" });
     setGenerationProgress(0);
     setGenerationStatus('Initializing...');
 
@@ -848,8 +852,8 @@ const EpicLayout = ({
             </div>
 
             {/* Epic Selector */}
-            <Select 
-              onValueChange={(epicId) => selectItem('epic', epicId)} 
+            <Select
+              onValueChange={(epicId) => selectItem('epic', epicId)}
               value={selectedItems.epic || undefined}
             >
               <SelectTrigger className="w-full mb-2">
@@ -861,121 +865,124 @@ const EpicLayout = ({
                   )}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="w-[400px] max-h-[500px]">
-                {epics?.map((epic) => (
-                  <div key={epic._id} className="relative">
-                    <div 
-                      className="flex items-center justify-between w-full px-4 py-3 hover:bg-white hover:text-accent-foreground cursor-pointer"
-                      onClick={(e) => {
-                        if (editingEpicId === epic._id) {
-                          e.stopPropagation();
-                          return;
-                        }
-                        selectItem('epic', epic._id);
-                      }}
-                    >
-                      {editingEpicId === epic._id ? (
-                        <div onClick={(e) => e.stopPropagation()} className="flex-grow">
-                          <Input
-                            className="h-8 w-[250px] mr-2"
-                            defaultValue={epic.name}
-                            onKeyDown={(e) => {
-                              e.stopPropagation();
-                              if (e.key === 'Enter') {
+              {epics?.length > 0 && (
+                <SelectContent className="w-[400px] max-h-[500px]">
+                  {epics?.map((epic) => (
+                    <div key={epic._id} className="relative">
+                      <div
+                        className="flex items-center justify-between w-full px-4 py-3 hover:bg-white hover:text-accent-foreground cursor-pointer"
+                        onClick={(e) => {
+                          if (editingEpicId === epic._id) {
+                            e.stopPropagation();
+                            return;
+                          }
+                          selectItem('epic', epic._id);
+                        }}
+                      >
+                        {editingEpicId === epic._id ? (
+                          <div onClick={(e) => e.stopPropagation()} className="flex-grow">
+                            <Input
+                              className="h-8 w-[250px] mr-2"
+                              defaultValue={epic.name}
+                              onKeyDown={(e) => {
+                                e.stopPropagation();
+                                if (e.key === 'Enter') {
+                                  handleEpicChange(epic._id, 'name', e.currentTarget.value);
+                                  setEditingEpicId(null);
+                                }
+                                if (e.key === 'Escape') {
+                                  setEditingEpicId(null);
+                                }
+                              }}
+                              onBlur={(e) => {
                                 handleEpicChange(epic._id, 'name', e.currentTarget.value);
                                 setEditingEpicId(null);
-                              }
-                              if (e.key === 'Escape') {
-                                setEditingEpicId(null);
-                              }
-                            }}
-                            onBlur={(e) => {
-                              handleEpicChange(epic._id, 'name', e.currentTarget.value);
-                              setEditingEpicId(null);
-                            }}
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <span className="truncate block flex-grow">{epic.name}</span>
-                      )}
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs px-1.5 py-0.5 bg-slate-200 rounded-full text-slate-600">
-                          {allUserStories?.filter((story: any) => story.epicId === epic._id).length || 0}
-                        </span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 hover:bg-white"
+                              }}
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          <span className="truncate block flex-grow">{epic.name}</span>
+                        )}
+
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs px-1.5 py-0.5 bg-slate-200 rounded-full text-slate-600">
+                            {allUserStories?.filter((story: any) => story.epicId === epic._id).length || 0}
+                          </span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 hover:bg-white"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              side="right"
+                              className="w-48"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="end" 
-                            side="right" 
-                            className="w-48"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenuItem
-                              onSelect={(e) => {
-                                e.preventDefault();
-                                setEditingEpicId(epic._id);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Pencil className="h-4 w-4" />
-                              Rename Epic
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={(e) => {
-                                e.preventDefault();
-                                handleGenerateUserStories(epic._id);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <AiGenerationIcon />
-                              Generate User Stories
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={(e) => {
-                                e.preventDefault();
-                                onDeleteEpic(epic._id);
-                              }}
-                              className="flex items-center gap-2 text-red-600"
-                            >
-                              <Trash className="h-4 w-4" />
-                              Delete Epic
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setEditingEpicId(epic._id);
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Rename Epic
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  handleGenerateUserStories(epic._id);
+                                }}
+                                className="flex items-center gap-2"
+                              >
+                                <AiGenerationIcon />
+                                Generate User Stories
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  onDeleteEpic(epic._id);
+                                }}
+                                className="flex items-center gap-2 text-red-600"
+                              >
+                                <Trash className="h-4 w-4" />
+                                Delete Epic
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
+                      <SelectItem
+                        value={epic._id}
+                        className="hidden"
+                      />
                     </div>
-                    <SelectItem 
-                      value={epic._id} 
-                      className="hidden"
-                    />
-                  </div>
-                ))}
-              </SelectContent>
+                  ))}
+                </SelectContent>
+              )}
             </Select>
 
             {/* Epic Actions */}
             <div className="flex flex-col gap-2">
-              <Button 
-                onClick={handleAddEpic} 
-                variant='ghost' 
+              <Button
+                onClick={handleAddEpic}
+                variant='ghost'
                 className="w-full text-sm justify-start hover:bg-white pl-2"
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Epic
               </Button>
-              
-              <Button 
-                onClick={handleGenerateSingleEpic} 
-                variant='ghost' 
+
+              <Button
+                onClick={handleGenerateSingleEpic}
+                variant='ghost'
                 className="w-full text-sm justify-start hover:bg-white pl-2"
               >
                 <AiGenerationIcon className="mr-2" />
@@ -1039,7 +1046,7 @@ const EpicLayout = ({
                   <Plus className="mr-2 h-4 w-4" />
                   Add User Story
                 </Button>
-                
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1056,7 +1063,7 @@ const EpicLayout = ({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length 
+                      {allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length
                         ? "The AI will generate a complementary User Story to the existing ones"
                         : "You can't generate complementary user stories without existing ones"}
                     </TooltipContent>
@@ -1162,7 +1169,15 @@ const EpicLayout = ({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">{isGenerating === "epics" ? "Generating Epics..." : "Generating User Stories..."}</h3>
+              <h3 className="text-lg font-semibold">
+                {isGenerating.type === "epics"
+                  ? (isGenerating.mode === "single"
+                    ? "Generating an additional Epic"
+                    : "Generating Initial Epics based on project details...")
+                  : (isGenerating.mode === "single"
+                    ? "Generating an additional User Story"
+                    : "Generating User Stories based on Epic")}
+              </h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>
             </div>
