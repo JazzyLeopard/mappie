@@ -38,19 +38,49 @@ function PromptPopup({
   position: { x: number; y: number } | null;
 }) {
   const [prompt, setPrompt] = useState('');
-  console.log('PromptPopup render:', { position }); // Debug log
+  const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-  if (!position) {
-    console.log('PromptPopup: No position provided'); // Debug log
-    return null;
-  }
+  useEffect(() => {
+    if (!position) return;
+
+    const POPUP_WIDTH = 400;
+    const POPUP_HEIGHT = 200; // Approximate height of the popup
+    const MARGIN = 16; // Minimum margin from viewport edges
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let adjustedX = position.x;
+    let adjustedY = position.y;
+
+    // Adjust horizontal position if needed
+    if (position.x + POPUP_WIDTH + MARGIN > viewportWidth) {
+      adjustedX = viewportWidth - POPUP_WIDTH - MARGIN;
+    }
+    if (position.x < MARGIN) {
+      adjustedX = MARGIN;
+    }
+
+    // Adjust vertical position if needed
+    if (position.y + POPUP_HEIGHT + MARGIN > viewportHeight) {
+      // Position above the selection if it would overflow bottom
+      adjustedY = position.y - POPUP_HEIGHT - MARGIN;
+    }
+    if (adjustedY < MARGIN) {
+      adjustedY = MARGIN;
+    }
+
+    setAdjustedPosition({ x: adjustedX, y: adjustedY });
+  }, [position]);
+
+  if (!adjustedPosition) return null;
 
   return createPortal(
     <div 
       className="fixed z-[9999] bg-white rounded-lg shadow-xl border border-gray-200"
       style={{
-        top: `${position.y}px`,
-        left: `${position.x}px`,
+        top: `${adjustedPosition.y}px`,
+        left: `${adjustedPosition.x}px`,
         maxWidth: '400px',
         width: '100%',
       }}
