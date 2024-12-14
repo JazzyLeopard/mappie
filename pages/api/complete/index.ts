@@ -2,62 +2,64 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { openai } from "@ai-sdk/openai"
 import { generateText } from "ai"
-
-
-// const openaiModel = openai("gpt-4o-mini")
+import { useContextChecker } from "@/utils/useContextChecker";
+import { Id } from '@/convex/_generated/dataModel';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Check if the request method is POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { preFilled, required } = req.body;
+  const { prompt, projectId, selectedText } = req.body;
+  const convexProjectId = projectId as Id<"projects">;
 
-  // Validate the request body contains all required fields
-  if (!preFilled || !required) {
+  if (!prompt || !projectId) {
     return res.status(400).json({
-      error: 'The request is missing required fields: preFilled or required.',
+      error: 'Missing required fields: prompt or projectId',
     });
   }
 
-  // Construct the prompt
-  const prompt = `
-    You're an experienced project manager and scrum master with over 10 years of hands-on experience in managing diverse teams and delivering successful projects using Agile methodologies.
-   
-    You're provided with the below details / fields of Project filled by the user:
-    ${preFilled.map((field: { key: any; value: any; }) => `${field.key}: ${field.value}`).join('\n')}
-    
-    Based on the fields I have shared, Help me generate the below fields / details:
-
-    ${required.join(', ')}
-
-    Return ONLY the json response as below without any explanations or other details:
-    [{"key": "value"}]
-
-    The keys in the JSON response should match the keys provided in the required fields, and the value should be the generated content for each field.
-  `;
-
   try {
-    // const completions = await openai.chat.completions.create({
-    //   model: "gpt-4o-mini",
-    //   messages: [{ role: "user", content: prompt }],
-    // });
+    // Get project context
+    const context = await useContextChecker({ projectId: convexProjectId });
+
+    const aiPrompt = `${context}
+
+You are an experienced technical writer and business analyst. Based on the following context and user request, generate content in markdown format.
+
+${selectedText ? `Selected text for context:\n${selectedText}\n` : ''}
+
+User request: ${prompt}
+
+Important Guidelines:
+- Provide the response in proper markdown format
+- Use appropriate headings, lists, and emphasis
+- Be comprehensive yet concise
+- Consider the project context in your response
+- Maintain professional technical writing standards`;
 
     const completions = await generateText({
       model: openai("gpt-4o-mini"),
-      messages: [{ role: "user", content: prompt }],
-    })
+      messages: [
+        { 
+          role: "system", 
+          content: "You are an experienced technical writer and business analyst specializing in software documentation." 
+        },
+        { role: "user", content: aiPrompt }
+      ],
+      temperature: 0.7,
+    });
 
-    const aiResponse = completions.text;
+    // Clean up the response
+    const cleanResponse = completions.text
+      .replace(/```markdown\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
 
-    // Parse the AI response to ensure it is in the expected format
-    // const parsedResponse = JSON.parse(aiResponse);
-
-    return res.status(200).json({ response: aiResponse });
+    return res.status(200).json({ response: cleanResponse });
   } catch (error) {
     console.error('Error processing AI request:', error);
     return res.status(500).json({ error: 'Internal server error' });

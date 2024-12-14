@@ -346,8 +346,8 @@ const EpicLayout = ({
     const epicUserStories = allUserStories?.filter((story: any) => story.epicId === selectedEpic._id) || []
 
     return (
-      <div className="flex flex-col h-full">
-        <header className="flex items-center justify-between gap-6 pt-4 px-8 pb-2 w-full">
+      <div className="flex flex-col h-full bg-white rounded-xl">
+        <header className="flex items-center justify-between gap-6 pt-4 px-8 pb-4 w-full">
           <LabelToInput
             key={`${selectedEpic._id}-${selectedEpic.name}`}
             value={selectedEpic.name}
@@ -384,7 +384,7 @@ const EpicLayout = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <ScrollArea className="flex-1 min-h-0 pr-2 px-4" withShadow={true}>
+        <ScrollArea className="flex-1 min-h-0 pr-2 px-4 rounded-b-xl" withShadow={true}>
           <LexicalEditor
             key={selectedItems.epic as string}
             itemId={selectedItems.epic as Id<"epics">}
@@ -407,7 +407,7 @@ const EpicLayout = ({
     if (!selectedUserStory) return null;
 
     return (
-      <div className='flex flex-col h-full'>
+      <div className='flex flex-col h-full bg-white rounded-xl'>
         <header className="flex flex-col gap-2 pt-4 px-8 pb-4 w-full">
           <Breadcrumb>
             <BreadcrumbList>
@@ -435,7 +435,7 @@ const EpicLayout = ({
             onBlur={() => { }}
           />
         </header>
-        <ScrollArea className='flex-1 overflow-y-auto flex h-full px-4'>
+        <ScrollArea className='flex-1 overflow-y-auto flex h-full px-4 rounded-b-xl' withShadow={true}>
           <div className='flex-1 px-0 h-[500px]'>
             <LexicalEditor
               key={selectedItems.story as string}
@@ -1136,7 +1136,7 @@ const EpicLayout = ({
                 !selectedItems.story ? (
                   EpicEditor
                 ) : (
-                  <div className="flex flex-col h-full pt-4">
+                  <div className="flex flex-col h-full ml-8 pt-4 bg-white rounded-xl">
                     <Skeleton className="h-8 w-48 mb-8" />
                     <Skeleton className="h-4 w-3/4 mb-4" />
                     <Skeleton className="h-4 w-1/2 mb-4" />

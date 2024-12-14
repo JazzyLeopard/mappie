@@ -55,12 +55,16 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import YouTubePlugin from './plugins/YouTubePlugin';
 import ContentEditable from './ui/ContentEditable';
-import { $createParagraphNode, $createTextNode, $getRoot, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand } from 'lexical';
+import { $createParagraphNode, $createTextNode, $getRoot, $isRangeSelection, $getSelection, COMMAND_PRIORITY_LOW, createCommand, LexicalCommand, LexicalNode, $insertNodes } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { PASTE_COMMAND } from 'lexical';
 import AIEditPlugin from './plugins/AiEditPlugin';
 import MarkdownPlugin from './plugins/MarkdownShortcutPlugin';
 import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
+import { IS_APPLE } from './shared/environment';
+import { Command } from 'lucide-react';
+import AiGenerationIcon from '@/icons/AI-Generation';
+import AIWriterPlugin from './plugins/AIWriterPlugin';
 
 
 type EditorProps = {
@@ -124,6 +128,12 @@ function EditorOnChangePlugin({ onChange }: { onChange: (markdown: string) => vo
 
 // Define the custom command
 const UPDATE_EDITOR_COMMAND: LexicalCommand<void> = createCommand('UPDATE_EDITOR');
+
+const KeyboardShortcut = ({ children }: { children: React.ReactNode }) => (
+  <span className="inline-flex items-center gap-1 bg-slate-200 px-1.5 py-0.5 rounded-md text-slate-600 text-xs">
+    {children}
+  </span>
+);
 
 export default function Editor({
   setProjectDetails,
@@ -203,10 +213,24 @@ export default function Editor({
 
   const placeholder = useMemo(() => {
     if (isCollab) {
-      return 'Enter some collaborative rich text...';
+      return (
+        <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl"></div>
+      );
     }
-
-    return 'Enter your text here...';
+    return (
+      <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
+        <div className="text-sm text-muted-foreground text-left space-y-2">
+          <p>Start inserting elements by typing the <KeyboardShortcut>/</KeyboardShortcut> key! 📝 </p>
+          <p>
+            Use{' '}
+            <KeyboardShortcut>
+              {IS_APPLE ? <Command className="h-3 w-3" /> : <span>CTRL</span>}
+              + E
+            </KeyboardShortcut>
+            {' '}to access the AI Editor ✨</p>
+        </div>
+      </div>
+    );
   }, [isCollab, context]);
 
   // Modify the insertMarkdown function to handle immediate updates
@@ -245,18 +269,38 @@ export default function Editor({
       PASTE_COMMAND,
       (event: ClipboardEvent) => {
         const pastedText = event.clipboardData?.getData('text/plain');
-        if (pastedText?.trim()) {
-          // Check for markdown content
-          if (pastedText.match(/[#\-*`>]|\d+\./)) {
-            event.preventDefault();
-            
-            editor.update(() => {
-              $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
-            });
-            
-            return true;
-          }
+        if (!pastedText?.trim()) return false;
+
+        // More comprehensive markdown detection regex
+        const hasMarkdown = /^(#{1,6} |\* |- |\d+\. |> |`{1,3}|---|===|\[.*?\]\(.*?\)|<.*?>)|\n(#{1,6} |\* |- |\d+\. |> |`{1,3})/.test(pastedText);
+        
+        if (hasMarkdown) {
+          event.preventDefault();
+          
+          editor.update(() => {
+            const selection = $getSelection();
+            if (!selection || !$isRangeSelection(selection)) return false;
+
+            try {
+              // First try to convert the markdown to nodes
+              const nodes = $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
+              
+              if (nodes as unknown as LexicalNode[]) {
+                // Insert at current selection
+                selection.insertNodes(nodes as unknown as LexicalNode[]);
+                return true;
+              }
+            } catch (error) {
+              console.error('Error converting markdown:', error);
+              // Fallback to inserting as plain text
+              selection.insertText(pastedText);
+            }
+          });
+          
+          return true;
         }
+        
+        // Let the default paste handler handle non-markdown text
         return false;
       },
       COMMAND_PRIORITY_LOW,
@@ -266,7 +310,7 @@ export default function Editor({
   return (
     <>
       {isRichText && <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />}
-      <div className="w-full">
+      <div className="w-full pb-8 pt-2 ">
         <DragDropPaste />
         <AutoFocusPlugin />
         <HistoryPlugin externalHistoryState={isCollab ? historyState : undefined} />
@@ -282,6 +326,7 @@ export default function Editor({
               <div className="w-full min-h-[800px] relative" ref={onRef}>
                 <ContentEditable
                   className="min-h-[800px] w-full pl-6 outline-none"
+                  // @ts-ignore
                   placeholder={placeholder}
                 />
               </div>
@@ -320,6 +365,7 @@ export default function Editor({
           <>
             <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
             <AIEditPlugin anchorElem={floatingAnchorElem} />
+            <AIWriterPlugin anchorElem={floatingAnchorElem} />
             <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             <FloatingLinkEditorPlugin
               anchorElem={floatingAnchorElem}
@@ -369,12 +415,53 @@ function MarkdownInsertionPlugin({
           editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
         });
       };
+
+      // Modified replace function
+      (window as any).__replaceMarkdown = (markdown: string) => {
+        editor.update(() => {
+          const root = $getRoot();
+          root.clear();
+
+          try {
+            // Convert markdown to nodes
+            const nodes = $convertFromMarkdownString(
+              markdown,
+              ENHANCED_TRANSFORMERS
+            );
+
+            if (Array.isArray(nodes)) {
+              // Use $insertNodes instead of direct append
+              $insertNodes(nodes);
+              
+              // Ensure proper selection
+              const selection = $getSelection();
+              if ($isRangeSelection(selection)) {
+                selection.anchor.set(root.getFirstChild()?.getKey() ?? '', 0, 'text');
+                selection.focus.set(root.getFirstChild()?.getKey() ?? '', 0, 'text');
+              }
+            }
+          } catch (error) {
+            console.error('Error converting markdown during replace:', error);
+            // Fallback with proper node insertion
+            const paragraph = $createParagraphNode();
+            const text = $createTextNode(markdown);
+            paragraph.append(text);
+            $insertNodes([paragraph]);
+          }
+        });
+
+        // Force a reconciliation
+        editor.update(() => {
+          editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
+        });
+      };
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         delete (window as any).__lexicalEditor;
         delete (window as any).__insertMarkdown;
+        delete (window as any).__replaceMarkdown;
       }
     };
   }, [editor, onInsertMarkdown]);

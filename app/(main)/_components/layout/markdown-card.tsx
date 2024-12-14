@@ -7,11 +7,11 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { toast } from 'sonner'
 import { Skeleton } from "@/components/ui/skeleton"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $convertToMarkdownString, $convertFromMarkdownString } from '@lexical/markdown';
 import { ENHANCED_TRANSFORMERS } from '../Lexical/plugins/MarkdownTransformers';
-import { $getRoot } from 'lexical';
+import { $getRoot, LexicalNode } from 'lexical';
 import { createEditor } from 'lexical';
 import { createHeadlessEditor } from '@lexical/headless';
 
@@ -59,6 +59,35 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
     }
   }, [content]);
 
+  const handleCopy = useCallback(async () => {
+    try {
+      // Create a temporary headless editor
+      const tempEditor = createHeadlessEditor({
+        nodes: [],
+        onError: console.error,
+      });
+
+      // Normalize the markdown through Lexical's conversion cycle
+      let normalizedMarkdown = content;
+      
+      tempEditor.update(() => {
+        const nodes = $convertFromMarkdownString(content || '', ENHANCED_TRANSFORMERS);
+        if (nodes as unknown as LexicalNode[]) {
+          normalizedMarkdown = $convertToMarkdownString(ENHANCED_TRANSFORMERS);
+        }
+      });
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(normalizedMarkdown || '');
+      toast.success('Copied to clipboard');
+    } catch (error) {
+      console.error('Copy failed:', error);
+      // Fallback to basic copy
+      navigator.clipboard.writeText(content || '');
+      toast.success('Copied to clipboard (basic format)');
+    }
+  }, [content]);
+
   // Show skeleton while streaming or loading
   if (isLoading || isStreaming) {
     return (
@@ -88,11 +117,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
             variant="ghost"
             size="sm"
             className="h-7"
-            onClick={() => {
-              // Simply copy the raw markdown content
-              navigator.clipboard.writeText(content || '');
-              toast.success('Copied to clipboard');
-            }}
+            onClick={handleCopy}
           >
             <Copy className="h-4 w-4 mr-2" />
             Copy
@@ -113,7 +138,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
             }}
           >
             <Replace className="h-4 w-4 mr-2" />
-            Replace in-text
+            Replace full text
           </Button>
         </div>
       </div>
