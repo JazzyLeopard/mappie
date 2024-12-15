@@ -1,14 +1,12 @@
-// app/api/webhooks/clerk/route.ts
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { sendOnboardingEmail } from '@/actions/send-onboarding'
- 
+
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
  
   if (!WEBHOOK_SECRET) {
-    throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
+    throw new Error('Missing CLERK_WEBHOOK_SECRET')
   }
  
   const headerPayload = headers();
@@ -17,9 +15,7 @@ export async function POST(req: Request) {
   const svix_signature = headerPayload.get("svix-signature");
  
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response('Error occured -- no svix headers', {
-      status: 400
-    })
+    return new Response('Missing svix headers', { status: 400 })
   }
  
   const payload = await req.json()
@@ -35,19 +31,25 @@ export async function POST(req: Request) {
     }) as WebhookEvent
  
     if (evt.type === 'user.created') {
-      await sendOnboardingEmail(
-        evt.data.email_addresses[0].email_address,
-        evt.data.first_name || evt.data.username || 'there'
-      )
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/send-onboarding`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: evt.data.email_addresses[0].email_address,
+          username: evt.data.first_name || evt.data.username || 'there'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send onboarding email');
+      }
     }
  
-    return new Response('Webhook received', {
-      status: 200
-    })
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return new Response('Error occured', {
-      status: 400
-    })
+    return new Response('Webhook received', { status: 200 })
+  } catch (error) {
+    console.error('Error:', error);
+    return new Response('Error occurred', { status: 400 })
   }
 }
