@@ -40,7 +40,7 @@ import EquationsPlugin from './plugins/EquationsPlugin';
 import ExcalidrawPlugin from './plugins/ExcalidrawPlugin';
 import FigmaPlugin from './plugins/FigmaPlugin';
 import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
-import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
+import { FloatingTextFormatToolbarPlugin } from './plugins/FloatingTextFormatToolbarPlugin';
 import ImagesPlugin from './plugins/ImagesPlugin';
 import InlineImagePlugin from './plugins/InlineImagePlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
@@ -226,9 +226,9 @@ export default function Editor({
             Use{' '}
             <KeyboardShortcut>
               {IS_APPLE ? <Command className="h-3 w-3" /> : <span>CTRL</span>}
-              + E
+              + K
             </KeyboardShortcut>
-            {' '}to access the AI Editor ✨</p>
+            {' '}to access the AI Writer ✨</p>
         </div>
       </div>
     );

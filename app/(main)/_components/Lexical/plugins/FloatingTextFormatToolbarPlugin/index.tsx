@@ -1,179 +1,39 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
+import * as React from 'react'
+import { createPortal } from 'react-dom'
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND } from 'lexical'
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
+import { $patchStyleText } from '@lexical/selection'
+import { mergeRegister } from '@lexical/utils'
 
-import './index.css';
-import '../../index.css';
-import {
-  $getSelectionStyleValueForProperty,
-  $isParentElementRTL,
-  $patchStyleText,
-  $setBlocksType,
-} from '@lexical/selection';
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { Icons } from '@/icons/icons'
+import { getDOMRangeRect } from '../../utils/getDOMRangeRect'
+import { setFloatingElemPosition } from '../../utils/setFloatingElemPosition'
+import { getSelectedNode } from '../../utils/getSelectedNode'
+import { AI_EDIT_COMMAND } from '../AiEditPlugin'
+import { IS_APPLE } from '../../shared/environment'
+import AiGenerationIcon from '@/icons/AI-Generation'
 
-import {$isCodeHighlightNode} from '@lexical/code';
-import {$isLinkNode, TOGGLE_LINK_COMMAND} from '@lexical/link';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {mergeRegister} from '@lexical/utils';
-import {
-  $getSelection,
-  $isParagraphNode,
-  $isRangeSelection,
-  $isTextNode,
-  COMMAND_PRIORITY_LOW,
-  FORMAT_TEXT_COMMAND,
-  LexicalEditor,
-  SELECTION_CHANGE_COMMAND,
-  INDENT_CONTENT_COMMAND,
-  OUTDENT_CONTENT_COMMAND,
-  KEY_MODIFIER_COMMAND,
-  createCommand,
-} from 'lexical';
-import {Dispatch, useCallback, useEffect, useRef, useState} from 'react';
-import * as React from 'react';
-import {createPortal} from 'react-dom';
+const TOP_OFFSET = 50; // Increased to give more space at the top
 
-import {getDOMRangeRect} from '../../utils/getDOMRangeRect';
-import {getSelectedNode} from '../../utils/getSelectedNode';
-import {setFloatingElemPosition} from '../../utils/setFloatingElemPosition';
-import {INSERT_INLINE_COMMAND} from '../CommentPlugin';
-import DropdownColorPicker from '../../ui/DropdownColorPicker';
-import { AI_EDIT_COMMAND } from '../AiEditPlugin';
-import AiGenerationIcon from '@/icons/AI-Generation';
+function FloatingToolbar({ editor, anchorElem, isLink, setIsLinkEditMode }: { editor: any, anchorElem: any, isLink: any, setIsLinkEditMode: any } ) {
+  const popupCharStylesEditorRef = React.useRef<HTMLDivElement | null>(null)
 
-const KEYBOARD_SHORTCUT = {
-  AI_EDIT: 'mod+e',
-};
-
-function TextFormatFloatingToolbar({
-  editor,
-  anchorElem,
-  isLink,
-  isBold,
-  isItalic,
-  isUnderline,
-  isCode,
-  isStrikethrough,
-  isSubscript,
-  isSuperscript,
-  setIsLinkEditMode,
-  fontColor,
-  bgColor,
-}: {
-  editor: LexicalEditor;
-  anchorElem: HTMLElement;
-  isBold: boolean;
-  isCode: boolean;
-  isItalic: boolean;
-  isLink: boolean;
-  isStrikethrough: boolean;
-  isSubscript: boolean;
-  isSuperscript: boolean;
-  isUnderline: boolean;
-  setIsLinkEditMode: Dispatch<boolean>;
-  fontColor: string;
-  bgColor: string;
-}): JSX.Element {
-  const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-
-  const [activeEditor, setActiveEditor] = useState(editor);
-  const [isRTL, setIsRTL] = useState(false);
-
-  const insertLink = useCallback(() => {
-    if (!isLink) {
-      setIsLinkEditMode(true);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://');
-    } else {
-      setIsLinkEditMode(false);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-    }
-  }, [editor, isLink, setIsLinkEditMode]);
-
-  const insertComment = () => {
-    editor.dispatchCommand(INSERT_INLINE_COMMAND, undefined);
-  };
-
-  const applyStyleText = useCallback(
-    (styles: Record<string, string>, skipHistoryStack?: boolean) => {
-      activeEditor.update(
-        () => {
-          const selection = $getSelection();
-          if (selection !== null) {
-            $patchStyleText(selection, styles);
-          }
-        },
-        skipHistoryStack ? {tag: 'historic'} : {},
-      );
-    },
-    [activeEditor],
-  );
-
-  const onFontColorSelect = useCallback(
-    (value: string, skipHistoryStack: boolean) => {
-      applyStyleText({color: value}, skipHistoryStack);
-    },
-    [applyStyleText],
-  );
-
-  const onBgColorSelect = useCallback(
-    (value: string, skipHistoryStack: boolean) => {
-      applyStyleText({'background-color': value}, skipHistoryStack);
-    },
-    [applyStyleText],
-  );
-
-  function mouseMoveListener(e: MouseEvent) {
-    if (
-      popupCharStylesEditorRef?.current &&
-      (e.buttons === 1 || e.buttons === 3)
-    ) {
-      if (popupCharStylesEditorRef.current.style.pointerEvents !== 'none') {
-        const x = e.clientX;
-        const y = e.clientY;
-        const elementUnderMouse = document.elementFromPoint(x, y);
-
-        if (!popupCharStylesEditorRef.current.contains(elementUnderMouse)) {
-          // Mouse is not over the target element => not a normal click, but probably a drag
-          popupCharStylesEditorRef.current.style.pointerEvents = 'none';
-        }
-      }
-    }
-  }
-  function mouseUpListener(e: MouseEvent) {
-    if (popupCharStylesEditorRef?.current) {
-      if (popupCharStylesEditorRef.current.style.pointerEvents !== 'auto') {
-        popupCharStylesEditorRef.current.style.pointerEvents = 'auto';
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (popupCharStylesEditorRef?.current) {
-      document.addEventListener('mousemove', mouseMoveListener);
-      document.addEventListener('mouseup', mouseUpListener);
-
-      return () => {
-        document.removeEventListener('mousemove', mouseMoveListener);
-        document.removeEventListener('mouseup', mouseUpListener);
-      };
-    }
-  }, [popupCharStylesEditorRef]);
-
-  const $updateTextFormatFloatingToolbar = useCallback(() => {
-    const selection = $getSelection();
-
-    const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
-    const nativeSelection = window.getSelection();
+  const updateTextFormatFloatingToolbar = React.useCallback(() => {
+    const selection = $getSelection()
+    const popupCharStylesEditorElem = popupCharStylesEditorRef.current
+    const nativeSelection = window.getSelection()
 
     if (popupCharStylesEditorElem === null) {
-      return;
+      return
     }
 
-    const rootElement = editor.getRootElement();
+    const rootElement = editor.getRootElement()
     if (
       selection !== null &&
       nativeSelection !== null &&
@@ -181,281 +41,241 @@ function TextFormatFloatingToolbar({
       rootElement !== null &&
       rootElement.contains(nativeSelection.anchorNode)
     ) {
-      const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-
+      const rangeRect = getDOMRangeRect(nativeSelection, rootElement)
+      const viewportHeight = window.innerHeight
+      
+      // Check if selection is too close to the top
+      const isNearTop = rangeRect.top < TOP_OFFSET
+      
+      // Position the toolbar
       setFloatingElemPosition(
-        rangeRect,
-        popupCharStylesEditorElem,
+        rangeRect, 
+        popupCharStylesEditorElem, 
         anchorElem,
-        isLink,
-      );
+        isNearTop
+      )
     }
-  }, [editor, anchorElem, isLink]);
+  }, [editor, anchorElem, isLink])
 
-  useEffect(() => {
-    const scrollerElem = anchorElem.parentElement;
+  React.useEffect(() => {
+    const scrollerElem = anchorElem.parentElement
 
     const update = () => {
       editor.getEditorState().read(() => {
-        $updateTextFormatFloatingToolbar();
-      });
-    };
+        updateTextFormatFloatingToolbar()
+      })
+    }
 
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', update)
     if (scrollerElem) {
-      scrollerElem.addEventListener('scroll', update);
+      scrollerElem.addEventListener('scroll', update)
     }
 
     return () => {
-      window.removeEventListener('resize', update);
+      window.removeEventListener('resize', update)
       if (scrollerElem) {
-        scrollerElem.removeEventListener('scroll', update);
+        scrollerElem.removeEventListener('scroll', update)
       }
-    };
-  }, [editor, $updateTextFormatFloatingToolbar, anchorElem]);
+    }
+  }, [editor, updateTextFormatFloatingToolbar, anchorElem])
 
-  useEffect(() => {
+  React.useEffect(() => {
     editor.getEditorState().read(() => {
-      $updateTextFormatFloatingToolbar();
-    });
+      updateTextFormatFloatingToolbar()
+    })
     return mergeRegister(
-      editor.registerUpdateListener(({editorState}) => {
-        editorState.read(() => {
-          $updateTextFormatFloatingToolbar();
-        });
+      editor.registerUpdateListener(() => {
+        editor.getEditorState().read(() => {
+          updateTextFormatFloatingToolbar()
+        })
       }),
-
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         () => {
-          $updateTextFormatFloatingToolbar();
-          return false;
+          updateTextFormatFloatingToolbar()
+          return false
         },
-        COMMAND_PRIORITY_LOW,
-      ),
-    );
-  }, [editor, $updateTextFormatFloatingToolbar]);
+        1
+      )
+    )
+  }, [editor, updateTextFormatFloatingToolbar])
 
-  useEffect(() => {
-    return editor.registerCommand(
-      KEY_MODIFIER_COMMAND,
-      (payload) => {
-        const event: KeyboardEvent = payload;
-        const {keyCode, metaKey, ctrlKey, shiftKey} = event;
+  const insertLink = React.useCallback(() => {
+    if (!isLink) {
+      setIsLinkEditMode(true)
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://')
+    } else {
+      setIsLinkEditMode(false)
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
+    }
+  }, [editor, isLink, setIsLinkEditMode])
 
-        // Handle link shortcut (Cmd/Ctrl + Shift + K)
-        if ((metaKey || ctrlKey) && shiftKey && keyCode === 75) {
-          event.preventDefault();
-          insertLink();
-          return true;
+  const applyStyleText = React.useCallback(
+    (styles: Record<string, string>) => {
+      editor.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          $patchStyleText(selection, styles)
         }
+      })
+    },
+    [editor]
+  )
 
-        // Handle AI edit shortcut (Cmd/Ctrl + E)
-        if ((metaKey || ctrlKey) && keyCode === 69) {
-          event.preventDefault();
-          editor.update(() => {
-            const selection = $getSelection();
-            if ($isRangeSelection(selection)) {
-              const selectedText = selection.getTextContent();
-              if (selectedText) {
-                editor.dispatchCommand(AI_EDIT_COMMAND, {
-                  prompt: '',
-                  selectedText,
-                });
-              }
-            }
-          });
-          return true;
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_LOW,
-    );
-  }, [editor, insertLink]);
+  const onFontColorSelect = React.useCallback(
+    (value: string) => {
+      applyStyleText({ color: value })
+    },
+    [applyStyleText]
+  )
+
+  const onBgColorSelect = React.useCallback(
+    (value: string) => {
+      applyStyleText({ 'background-color': value })
+    },
+    [applyStyleText]
+  )
 
   return (
-    <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
-      {editor.isEditable() && (
-        <>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-            }}
-            className={'popup-item spaced ' + (isBold ? 'active' : '')}
-            aria-label="Format text as bold">
-            <i className="format bold" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-            }}
-            className={'popup-item spaced ' + (isItalic ? 'active' : '')}
-            aria-label="Format text as italics">
-            <i className="format italic" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-            }}
-            className={'popup-item spaced ' + (isUnderline ? 'active' : '')}
-            aria-label="Format text to underlined">
-            <i className="format underline" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
-            }}
-            className={'popup-item spaced ' + (isStrikethrough ? 'active' : '')}
-            aria-label="Format text with a strikethrough">
-            <i className="format strikethrough" />
-          </button>
-          {/* <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
-            }}
-            className={'popup-item spaced ' + (isSubscript ? 'active' : '')}
-            title="Subscript"
-            aria-label="Format Subscript">
-            <i className="format subscript" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
-            }}
-            className={'popup-item spaced ' + (isSuperscript ? 'active' : '')}
-            title="Superscript"
-            aria-label="Format Superscript">
-            <i className="format superscript" />
-          </button> */}
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
-            }}
-            className={'popup-item spaced ' + (isCode ? 'active' : '')}
-            aria-label="Insert code block">
-            <i className="format code" />
-          </button>
-          <button
-            type="button"
-            onClick={insertLink}
-            className={'popup-item spaced ' + (isLink ? 'active' : '')}
-            aria-label="Insert link (⌘⇧K)"
-            title="Insert link (⌘⇧K)">
-            <i className="format link" />
-          </button>
-          <DropdownColorPicker
-            disabled={!editor.isEditable()}
-            buttonClassName="toolbar-item color-picker"
-            buttonAriaLabel="Formatting text color"
-            buttonIconClassName="icon font-color"
-            color={fontColor}
-            onChange={onFontColorSelect}
-            title="text color"
-            />
-          <DropdownColorPicker
-            disabled={!editor.isEditable()}
-            buttonClassName="toolbar-item color-picker"
-            buttonAriaLabel="Formatting background color"
-            buttonIconClassName="icon bg-color"
-            color={bgColor}
-            onChange={onBgColorSelect}
-            title="bg color"
-            />
-
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
-            }}
-            className="popup-item spaced"
-            aria-label="Indent">
-            <i className={'icon ' + (isRTL ? 'outdent' : 'indent')} />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-            }}
-            className="popup-item spaced"
-            aria-label="Outdent">
-            <i className={'icon ' + (isRTL ? 'indent' : 'outdent')} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              editor.update(() => {
-                const selection = $getSelection();
-                if ($isRangeSelection(selection)) {
-                  const selectedText = selection.getTextContent();
-                  console.log('Selected text in toolbar:', selectedText);
-                  if (selectedText) {
-                    console.log('Dispatching AI_EDIT_COMMAND with payload:', {
-                      prompt: '',
-                      selectedText,
-                    });
-                    editor.dispatchCommand(AI_EDIT_COMMAND, {
-                      prompt: '',
-                      selectedText,
-                    });
-                  }
-                }
-              });
-            }}
-            className="popup-item spaced"
-            aria-label="AI Edit (⌘E)"
-            title="AI Edit (⌘E)">
-            <i className="format magic-wand">
-              <span className="sr-only">CMD+E</span>
-              <AiGenerationIcon />
-            </i>
-          </button>
-        </>
-      )}
-      {/* <button
-        type="button"
-        onClick={insertComment}
-        className={'popup-item spaced insert-comment'}
-        aria-label="Insert comment">
-        <i className="format add-comment" />
-      </button> */}
+    <div
+      ref={popupCharStylesEditorRef}
+      className="fixed z-[9999] flex items-center justify-center gap-1 rounded-md border bg-popover p-1 text-popover-foreground shadow-md transition-opacity duration-300"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 500,
+        transform: 'translate3d(0, 0, 0)',
+        willChange: 'transform',
+        zIndex: 2147483647
+      }}
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          editor.dispatchCommand(AI_EDIT_COMMAND, undefined)
+        }}
+        className="flex items-center gap-2"
+        aria-label="AI Edit"
+      >
+        <AiGenerationIcon className="h-4 w-4" />
+        <span>AI Edit</span>
+        <span className="bg-muted px-2 py-1 rounded text-xs font-mono">
+          {IS_APPLE ? '⌘' : 'Ctrl'} + E
+        </span>
+      </Button>
+      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')
+        }}
+        aria-label="Format text as bold"
+      >
+        <Icons.bold className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')
+        }}
+        aria-label="Format text as italics"
+      >
+        <Icons.italic className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')
+        }}
+        aria-label="Format text to underlined"
+      >
+        <Icons.underline className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')
+        }}
+        aria-label="Format text with a strikethrough"
+      >
+        <Icons.strikethrough className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code')
+        }}
+        aria-label="Insert code block"
+      >
+        <Icons.code className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={insertLink}
+        aria-label="Insert link"
+      >
+        <Icons.link className="h-4 w-4" />
+      </Button>
+      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Set text color">
+            <Icons.palette className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-fit">
+          <ColorPicker onColorChange={onFontColorSelect} />
+        </PopoverContent>
+      </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Set background color">
+            <Icons.bgColor className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-fit">
+          <ColorPicker onColorChange={onBgColorSelect} />
+        </PopoverContent>
+      </Popover>
     </div>
-  );
+  )
 }
 
-function useFloatingTextFormatToolbar(
-  editor: LexicalEditor,
-  anchorElem: HTMLElement,
-  setIsLinkEditMode: Dispatch<boolean>,
-): JSX.Element | null {
-  const [isText, setIsText] = useState(false);
-  const [isLink, setIsLink] = useState(false);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
-  const [isStrikethrough, setIsStrikethrough] = useState(false);
-  const [isSubscript, setIsSubscript] = useState(false);
-  const [isSuperscript, setIsSuperscript] = useState(false);
-  const [isCode, setIsCode] = useState(false);
-  const [fontColor, setFontColor] = useState<string>('#000');
-  const [bgColor, setBgColor] = useState<string>('#fff');
+export function FloatingTextFormatToolbarPlugin({
+  anchorElem = document.body,
+  setIsLinkEditMode,
+}: {
+  anchorElem?: HTMLElement
+  setIsLinkEditMode: React.Dispatch<React.SetStateAction<boolean>>
+}): JSX.Element | null {
+  const [editor] = useLexicalComposerContext()
+  const [isText, setIsText] = React.useState(false)
+  const [isLink, setIsLink] = React.useState(false)
 
-  const updatePopup = useCallback(() => {
+  const updatePopup = React.useCallback(() => {
+    console.log('updatePopup called')
     editor.getEditorState().read(() => {
-      // Should not to pop up the floating toolbar when using IME input
       if (editor.isComposing()) {
-        return;
+        return
       }
-      const selection = $getSelection();
-      const nativeSelection = window.getSelection();
-      const rootElement = editor.getRootElement();
+      const selection = $getSelection()
+      const nativeSelection = window.getSelection()
+      const rootElement = editor.getRootElement()
+
+      console.log({
+        selection,
+        nativeSelection,
+        rootElement,
+        isRangeSelection: $isRangeSelection(selection),
+        hasContent: selection?.getTextContent()
+      })
 
       if (
         nativeSelection !== null &&
@@ -463,101 +283,63 @@ function useFloatingTextFormatToolbar(
           rootElement === null ||
           !rootElement.contains(nativeSelection.anchorNode))
       ) {
-        setIsText(false);
-        return;
+        setIsText(false)
+        return
       }
 
       if (!$isRangeSelection(selection)) {
-        return;
+        return
       }
 
-      const node = getSelectedNode(selection);
-
-      // Update text format
-      setIsBold(selection.hasFormat('bold'));
-      setIsItalic(selection.hasFormat('italic'));
-      setIsUnderline(selection.hasFormat('underline'));
-      setIsStrikethrough(selection.hasFormat('strikethrough'));
-      setIsSubscript(selection.hasFormat('subscript'));
-      setIsSuperscript(selection.hasFormat('superscript'));
-      setIsCode(selection.hasFormat('code'));
-
-      // Update links
-      const parent = node.getParent();
+      const node = getSelectedNode(selection)
+      const parent = node.getParent()
       if ($isLinkNode(parent) || $isLinkNode(node)) {
-        setIsLink(true);
+        setIsLink(true)
       } else {
-        setIsLink(false);
+        setIsLink(false)
       }
 
-      if (
-        !$isCodeHighlightNode(selection.anchor.getNode()) &&
-        selection.getTextContent() !== ''
-      ) {
-        setIsText($isTextNode(node) || $isParagraphNode(node));
+      if (selection.getTextContent() !== '') {
+        console.log('Setting isText to true')
+        setIsText(true)
       } else {
-        setIsText(false);
+        setIsText(false)
       }
+    })
+  }, [editor])
 
-      const rawTextContent = selection.getTextContent().replace(/\n/g, '');
-      if (!selection.isCollapsed() && rawTextContent === '') {
-        setIsText(false);
-        return;
-      }
-    });
-  }, [editor]);
-
-  useEffect(() => {
-    document.addEventListener('selectionchange', updatePopup);
+  React.useEffect(() => {
+    document.addEventListener('selectionchange', updatePopup)
     return () => {
-      document.removeEventListener('selectionchange', updatePopup);
-    };
-  }, [updatePopup]);
+      document.removeEventListener('selectionchange', updatePopup)
+    }
+  }, [updatePopup])
 
-  useEffect(() => {
+  React.useEffect(() => {
     return mergeRegister(
       editor.registerUpdateListener(() => {
-        updatePopup();
+        updatePopup()
       }),
       editor.registerRootListener(() => {
         if (editor.getRootElement() === null) {
-          setIsText(false);
+          setIsText(false)
         }
-      }),
-    );
-  }, [editor, updatePopup]);
+      })
+    )
+  }, [editor, updatePopup])
 
   if (!isText) {
-    return null;
+    return null
   }
 
   return createPortal(
-    <TextFormatFloatingToolbar
+    <FloatingToolbar
       editor={editor}
       anchorElem={anchorElem}
       isLink={isLink}
-      isBold={isBold}
-      isItalic={isItalic}
-      isStrikethrough={isStrikethrough}
-      isSubscript={isSubscript}
-      isSuperscript={isSuperscript}
-      isUnderline={isUnderline}
-      isCode={isCode}
       setIsLinkEditMode={setIsLinkEditMode}
-      fontColor={fontColor}
-      bgColor={bgColor}
     />,
-    anchorElem,
-  );
+    anchorElem
+  )
 }
 
-export default function FloatingTextFormatToolbarPlugin({
-  anchorElem = document.body,
-  setIsLinkEditMode,
-}: {
-  anchorElem?: HTMLElement;
-  setIsLinkEditMode: Dispatch<boolean>;
-}): JSX.Element | null {
-  const [editor] = useLexicalComposerContext();
-  return useFloatingTextFormatToolbar(editor, anchorElem, setIsLinkEditMode);
-}

@@ -15,6 +15,9 @@
     width: calc(100% - 20px);
     white-space: pre-wrap;
     word-break: break-word;
+    display: inline-block;
+    position: relative;
+    cursor: default;
   }
   
   .InlineImageNode__placeholder {
@@ -82,4 +85,21 @@
     opacity: 1;
     -webkit-transform: scale(1);
     transform: scale(1);
+  }
+  
+  .InlineImageNode__image {
+    max-width: 100%;
+    cursor: default;
+    display: inline-block;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    margin: 4px 0;
+    vertical-align: middle;
+  }
+  
+  .InlineImageNode__caption {
+    display: block;
+    text-align: center;
+    color: #666;
+    margin-top: 0.5em;
   }

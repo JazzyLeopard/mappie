@@ -7,6 +7,8 @@ import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown';
 import { useParams } from 'next/navigation';
 import { Progress } from '@/components/ui/progress';
 import { createPortal } from 'react-dom';
+import { COMMAND_PRIORITY_NORMAL, KEY_MODIFIER_COMMAND } from 'lexical';
+import { selectNode } from '@excalidraw/excalidraw/types/utils';
 
 
 export const AI_WRITER_COMMAND: LexicalCommand<void> = createCommand('AI_WRITER_COMMAND');
@@ -87,10 +89,10 @@ export default function AIWriterPlugin({
       });
 
       const data = await response.json();
-      if (data.response) {
+      if (data.content) {
         setProgress(100);
         setTimeout(() => {
-          setSuggestion(data.response);
+          setSuggestion(data.content);
           clearInterval(progressInterval);
         }, 500);
       }
@@ -156,11 +158,53 @@ export default function AIWriterPlugin({
     );
   }, [editor, handleButtonClick]);
 
+  useEffect(() => {
+    return editor.registerCommand(
+      KEY_MODIFIER_COMMAND,
+      (k: KeyboardEvent) => {
+        if ((k.ctrlKey || k.metaKey) && k.key === 'k') {
+          k.preventDefault();
+          
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if ($isRangeSelection(selection)) {
+              const domSelection = window.getSelection();
+              if (domSelection && domSelection.rangeCount > 0) {
+                const range = domSelection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                if (rect.width === 0) {
+                  // No selection or cursor is at start - use the parent element's position
+                  const parentElement = range.startContainer.parentElement;
+                  if (parentElement) {
+                    const parentRect = parentElement.getBoundingClientRect();
+                    setPromptPosition({
+                      x: parentRect.left,
+                      y: parentRect.bottom + window.scrollY,
+                    });
+                  }
+                } else {
+                  // Normal selection
+                  setPromptPosition({
+                    x: rect.left,
+                    y: rect.bottom + window.scrollY + 10,
+                  });
+                }
+                setShowPrompt(true);
+              }
+            }
+          });
+          return true;
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_NORMAL
+    );
+  }, [editor]);
+
+  
+
   return createPortal(
-    <div 
-      className="fixed bottom-4 right-4 z-[9999] max-w-2xl w-full"
-      data-test-id="ai-writer-plugin"
-    >
+    <>
       {showPrompt && promptPosition && (
         <PromptPopup
           onSubmit={handleGenerateAI}
@@ -171,23 +215,25 @@ export default function AIWriterPlugin({
           position={promptPosition}
         />
       )}
-      {isLoading && (
-        <div className="bg-white p-4 rounded-lg shadow-xl border border-gray-200">
-          <div className="mb-4">Generating content...</div>
-          <Progress value={progress} className="w-full" />
-        </div>
-      )}
-      {!isLoading && suggestion && (
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200">
-          <SuggestionCard
-            content={suggestion}
-            onAccept={handleAccept}
-            onTryAgain={() => handleGenerateAI(lastPrompt)}
-            onDiscard={() => setSuggestion(null)}
-          />
-        </div>
-      )}
-    </div>,
-    document.body
+      <div className="fixed bottom-4 right-4 z-[9999] max-w-2xl w-full">
+        {isLoading && (
+          <div className="bg-white p-4 rounded-lg shadow-xl border border-gray-200">
+            <div className="mb-4">Generating content...</div>
+            <Progress value={progress} className="w-full" />
+          </div>
+        )}
+        {!isLoading && suggestion && (
+          <div className="bg-white rounded-lg shadow-xl border border-gray-200">
+            <SuggestionCard
+              content={suggestion}
+              onAccept={handleAccept}
+              onTryAgain={() => handleGenerateAI(lastPrompt)}
+              onDiscard={() => setSuggestion(null)}
+            />
+          </div>
+        )}
+      </div>
+    </>,
+    anchorElem
   );
 } 

@@ -101,7 +101,7 @@ function PromptPopup({
                 }
               }
             }}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-600 focus:border-gradient-to-tr from-pink-400 to-blue-400"
+            className="w-full p-2 border rounded-md focus:ring-black"
             placeholder="e.g., Make it more formal, Summarize it, etc."
             rows={3}
             autoFocus

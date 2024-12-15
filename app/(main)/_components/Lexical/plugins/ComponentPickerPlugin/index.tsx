@@ -50,6 +50,31 @@ import {InsertTableDialog} from '../TablePlugin';
 import {AI_EDIT_COMMAND} from '../AiEditPlugin';
 import { AI_WRITER_COMMAND } from '../AIWriterPlugin';
 import AiGenerationIcon from '@/icons/AI-Generation';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { 
+  Type, 
+  Heading1, 
+  Heading2, 
+  Heading3,
+  Table, 
+  ListOrdered,
+  List,
+  CheckSquare,
+  Quote,
+  Code,
+  Minus,
+  SeparatorHorizontal,
+  Columns,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  ChevronRight,
+  Wand2,
+  Image,
+} from 'lucide-react';
 
 class ComponentPickerOption extends MenuOption {
   // What shows up in the editor
@@ -94,24 +119,31 @@ function ComponentPickerMenuItem({
   onMouseEnter: () => void;
   option: ComponentPickerOption;
 }) {
-  let className = 'item';
-  if (isSelected) {
-    className += ' selected';
-  }
   return (
-    <li
+    <div
       key={option.key}
       tabIndex={-1}
-      className={className}
+      className={cn(
+        "flex items-center px-3 py-1.5 text-sm cursor-pointer select-none rounded-sm outline-none",
+        "hover:bg-accent hover:text-accent-foreground",
+        isSelected && "bg-accent text-accent-foreground"
+      )}
       ref={option.setRefElement}
       role="option"
       aria-selected={isSelected}
       id={'typeahead-item-' + index}
       onMouseEnter={onMouseEnter}
       onClick={onClick}>
-      {option.icon}
-      <span className="text">{option.title}</span>
-    </li>
+      <span className="flex items-center gap-2 flex-grow">
+        {option.icon}
+        <span>{option.title}</span>
+      </span>
+      {option.keyboardShortcut && (
+        <span className="text-xs text-muted-foreground ml-auto">
+          {option.keyboardShortcut}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -151,18 +183,14 @@ type ShowModal = ReturnType<typeof useModal>[1];
 function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
   return [
     new ComponentPickerOption('AI Writer', {
-      icon: (
-        <span className="icon-wrapper">
-          <AiGenerationIcon className="w-4 h-4 mr-1" />
-        </span>
-      ),
+      icon: <Wand2 className="h-4 w-4" />,
       keywords: ['ai', 'write', 'generate', 'content', 'text'],
       onSelect: () => {
         editor.dispatchCommand(AI_WRITER_COMMAND, undefined);
       },
     }),
     new ComponentPickerOption('Paragraph', {
-      icon: <i className="icon paragraph" />,
+      icon: <Type className="h-4 w-4" />,
       keywords: ['normal', 'paragraph', 'p', 'text'],
       onSelect: () =>
         editor.update(() => {
@@ -172,22 +200,41 @@ function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
           }
         }),
     }),
-    ...([1, 2, 3] as const).map(
-      (n) =>
-        new ComponentPickerOption(`Heading ${n}`, {
-          icon: <i className={`icon h${n}`} />,
-          keywords: ['heading', 'header', `h${n}`],
-          onSelect: () =>
-            editor.update(() => {
-              const selection = $getSelection();
-              if ($isRangeSelection(selection)) {
-                $setBlocksType(selection, () => $createHeadingNode(`h${n}`));
-              }
-            }),
+    new ComponentPickerOption('Heading 1', {
+      icon: <Heading1 className="h-4 w-4" />,
+      keywords: ['1', 'heading', 'header', 'h1'],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode('h1'));
+          }
         }),
-    ),
+    }),
+    new ComponentPickerOption('Heading 2', {
+      icon: <Heading2 className="h-4 w-4" />,
+      keywords: ['heading', 'header', 'h2', '2'],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode('h2'));
+          }
+        }),
+    }),
+    new ComponentPickerOption('Heading 3', {
+      icon: <Heading3 className="h-4 w-4" />,
+      keywords: ['heading', 'header', 'h3', '3'],
+      onSelect: () =>
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isRangeSelection(selection)) {
+            $setBlocksType(selection, () => $createHeadingNode('h3'));
+          }
+        }),
+    }),
     new ComponentPickerOption('Table', {
-      icon: <i className="icon table" />,
+      icon: <Table className="h-4 w-4" />,
       keywords: ['table', 'grid', 'spreadsheet', 'rows', 'columns'],
       onSelect: () =>
         showModal('Insert Table', (onClose) => (
@@ -195,25 +242,25 @@ function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
         )),
     }),
     new ComponentPickerOption('Numbered List', {
-      icon: <i className="icon number" />,
+      icon: <ListOrdered className="h-4 w-4" />,
       keywords: ['numbered list', 'ordered list', 'ol'],
       onSelect: () =>
         editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined),
     }),
     new ComponentPickerOption('Bulleted List', {
-      icon: <i className="icon bullet" />,
+      icon: <List className="h-4 w-4" />,
       keywords: ['bulleted list', 'unordered list', 'ul'],
       onSelect: () =>
         editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined),
     }),
     new ComponentPickerOption('Check List', {
-      icon: <i className="icon check" />,
+      icon: <CheckSquare className="h-4 w-4" />,
       keywords: ['check list', 'todo list'],
       onSelect: () =>
         editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined),
     }),
     new ComponentPickerOption('Quote', {
-      icon: <i className="icon quote" />,
+      icon: <Quote className="h-4 w-4" />,
       keywords: ['block quote'],
       onSelect: () =>
         editor.update(() => {
@@ -223,8 +270,16 @@ function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
           }
         }),
     }),
+    new ComponentPickerOption('Image', {
+      icon: <Image className="h-4 w-4" />,
+      keywords: ['image', 'photo', 'picture', 'file'],
+      onSelect: () =>
+        showModal('Insert Image', (onClose) => (
+          <InsertImageDialog activeEditor={editor} onClose={onClose} />
+        )),
+    }),
     new ComponentPickerOption('Code', {
-      icon: <i className="icon code" />,
+      icon: <Code className="h-4 w-4" />,
       keywords: ['javascript', 'python', 'js', 'codeblock'],
       onSelect: () =>
         editor.update(() => {
@@ -244,13 +299,13 @@ function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
         }),
     }),
     new ComponentPickerOption('Divider', {
-      icon: <i className="icon horizontal-rule" />,
+      icon: <Minus className="h-4 w-4" />,
       keywords: ['horizontal rule', 'divider', 'hr'],
       onSelect: () =>
         editor.dispatchCommand(INSERT_HORIZONTAL_RULE_COMMAND, undefined),
     }),
     new ComponentPickerOption('Page Break', {
-      icon: <i className="icon page-break" />,
+      icon: <SeparatorHorizontal className="h-4 w-4" />,
       keywords: ['page break', 'divider'],
       onSelect: () => editor.dispatchCommand(INSERT_PAGE_BREAK, undefined),
     }),
@@ -294,37 +349,40 @@ function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
     //       src: catTypingGif.src,
     //     }),
     // }),
-    // new ComponentPickerOption('Image', {
-    //   icon: <i className="icon image" />,
-    //   keywords: ['image', 'photo', 'picture', 'file'],
-    //   onSelect: () =>
-    //     showModal('Insert Image', (onClose) => (
-    //       <InsertImageDialog activeEditor={editor} onClose={onClose} />
-    //     )),
-    // }),
     new ComponentPickerOption('Collapsible', {
-      icon: <i className="icon caret-right" />,
+      icon: <ChevronRight className="h-4 w-4" />,
       keywords: ['collapse', 'collapsible', 'toggle'],
       onSelect: () =>
         editor.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined),
     }),
     new ComponentPickerOption('Columns Layout', {
-      icon: <i className="icon columns" />,
+      icon: <Columns className="h-4 w-4" />,
       keywords: ['columns', 'layout', 'grid'],
       onSelect: () =>
         showModal('Insert Columns Layout', (onClose) => (
           <InsertLayoutDialog activeEditor={editor} onClose={onClose} />
         )),
     }),
-    ...(['left', 'center', 'right', 'justify'] as const).map(
-      (alignment) =>
-        new ComponentPickerOption(`Align ${alignment}`, {
-          icon: <i className={`icon ${alignment}-align`} />,
-          keywords: ['align', 'justify', alignment],
-          onSelect: () =>
-            editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, alignment),
-        }),
-    ),
+    new ComponentPickerOption('Align Left', {
+      icon: <AlignLeft className="h-4 w-4" />,
+      keywords: ['align', 'left'],
+      onSelect: () => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left'),
+    }),
+    new ComponentPickerOption('Align Center', {
+      icon: <AlignCenter className="h-4 w-4" />,
+      keywords: ['align', 'center'],
+      onSelect: () => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center'),
+    }),
+    new ComponentPickerOption('Align Right', {
+      icon: <AlignRight className="h-4 w-4" />,
+      keywords: ['align', 'right'],
+      onSelect: () => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right'),
+    }),
+    new ComponentPickerOption('Align Justify', {
+      icon: <AlignJustify className="h-4 w-4" />,
+      keywords: ['align', 'justify'],
+      onSelect: () => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify'),
+    }),
   ];
 }
 
@@ -332,21 +390,6 @@ export default function ComponentPickerMenuPlugin(): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const [modal, showModal] = useModal();
   const [queryString, setQueryString] = useState<string | null>(null);
-
-  useEffect(() => {
-    return editor.registerCommand(
-      KEY_MODIFIER_COMMAND,
-      (e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-          e.preventDefault();
-          editor.dispatchCommand(AI_WRITER_COMMAND, undefined);
-          return true;
-        }
-        return false;
-      },
-      COMMAND_PRIORITY_NORMAL
-    );
-  }, [editor]);
 
   const checkForTriggerMatch = useBasicTypeaheadTriggerMatch('/', {
     minLength: 0,
@@ -401,25 +444,27 @@ export default function ComponentPickerMenuPlugin(): JSX.Element {
         ) =>
           anchorElementRef.current && options.length
             ? ReactDOM.createPortal(
-                <div className="typeahead-popover component-picker-menu">
-                  <ul>
-                    {options.map((option, i: number) => (
-                      <ComponentPickerMenuItem
-                        index={i}
-                        isSelected={selectedIndex === i}
-                        onClick={() => {
-                          setHighlightedIndex(i);
-                          selectOptionAndCleanUp(option);
-                        }}
-                        onMouseEnter={() => {
-                          setHighlightedIndex(i);
-                        }}
-                        key={option.key}
-                        option={option}
-                      />
-                    ))}
-                  </ul>
-                </div>,
+                <Card className="w-64 shadow-md">
+                  <ScrollArea className="h-[300px]">
+                    <div className="p-1 space-y-0.5">
+                      {options.map((option, i: number) => (
+                        <ComponentPickerMenuItem
+                          index={i}
+                          isSelected={selectedIndex === i}
+                          onClick={() => {
+                            setHighlightedIndex(i);
+                            selectOptionAndCleanUp(option);
+                          }}
+                          onMouseEnter={() => {
+                            setHighlightedIndex(i);
+                          }}
+                          key={option.key}
+                          option={option}
+                        />
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </Card>,
                 anchorElementRef.current,
               )
             : null
