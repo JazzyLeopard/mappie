@@ -80,13 +80,12 @@ export function MessageModal({ open, onOpenChange }: { open: boolean, onOpenChan
             <Label htmlFor="email">Your Email</Label>
             <Input id="email" type="email" {...register('email', { required: true })} />
           </div>
-          <div className="space-y-2">
-            <Label>Attachments</Label>
+          <div className="gap-1">
             <Input
               type="file"
               onChange={handleAttachment}
               ref={fileInputRef}
-              className="hidden"
+              className="hidden ml-2"
               multiple
             />
             <Button
