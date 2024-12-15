@@ -9,10 +9,9 @@ import Hero from "@/app/(landing)/beta/hero-home";
 import BetaFeatures from "@/app/(landing)/beta/features";
 import VideoDemo from "@/app/(landing)/components-landing/video-demo";
 import ContactSection from "@/app/(landing)/beta/contact";
-import { useUser } from "@clerk/nextjs";
 
 export default function Home() {
-  const { user, isLoaded } = useUser();
+  
 
   return (
     <div className="overflow-x-hidden">
@@ -21,5 +20,6 @@ export default function Home() {
       <BetaFeatures />
       <ContactSection />
     </div>
+
   );
 }
