@@ -105,7 +105,41 @@ import { InsertPollDialog } from '../PollPlugin';
 import { InsertTableDialog } from '../TablePlugin';
 import { AI_EDIT_COMMAND } from '../AiEditPlugin';
 import DropDown, { DropDownItem } from '../../ui/DropDown';
-import { Undo2, Redo2 } from "lucide-react";
+import {
+  Undo2,
+  Redo2,
+  Type,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
+  List,
+  ListOrdered,
+  CheckSquare,
+  Quote,
+  Code,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Link2,
+  Link2Off,
+  Bold,
+  Italic,
+  Underline,
+  Table,
+  Image,
+  SeparatorHorizontal,
+  ChevronRight,
+  Columns,
+  Wand2,
+  IndentIcon,
+  OutdentIcon,
+  Plus,
+  Table2,
+} from 'lucide-react';
 
 const blockTypeToBlockName = {
   bullet: 'Bulleted List',
@@ -141,42 +175,44 @@ function getCodeLanguageOptions(): [string, string][] {
 
 const CODE_LANGUAGE_OPTIONS = getCodeLanguageOptions();
 
+interface ElementFormatOption {
+  icon: JSX.Element;
+  iconRTL: JSX.Element;
+  name: string;
+}
+
 const ELEMENT_FORMAT_OPTIONS: {
-  [key in Exclude<ElementFormatType, ''>]: {
-    icon: string;
-    iconRTL: string;
-    name: string;
-  };
+  [key in Exclude<ElementFormatType, ''>]: ElementFormatOption;
 } = {
-  center: {
-    icon: 'center-align',
-    iconRTL: 'center-align',
-    name: 'Center Align',
-  },
-  end: {
-    icon: 'right-align',
-    iconRTL: 'left-align',
-    name: 'End Align',
-  },
-  justify: {
-    icon: 'justify-align',
-    iconRTL: 'justify-align',
-    name: 'Justify Align',
-  },
   left: {
-    icon: 'left-align',
-    iconRTL: 'left-align',
+    icon: <AlignLeft className="h-4 w-4" />,
+    iconRTL: <AlignLeft className="h-4 w-4" />,
     name: 'Left Align',
   },
+  center: {
+    icon: <AlignCenter className="h-4 w-4" />,
+    iconRTL: <AlignCenter className="h-4 w-4" />,
+    name: 'Center Align',
+  },
   right: {
-    icon: 'right-align',
-    iconRTL: 'right-align',
+    icon: <AlignRight className="h-4 w-4" />,
+    iconRTL: <AlignRight className="h-4 w-4" />,
     name: 'Right Align',
   },
+  justify: {
+    icon: <AlignJustify className="h-4 w-4" />,
+    iconRTL: <AlignJustify className="h-4 w-4" />,
+    name: 'Justify Align',
+  },
   start: {
-    icon: 'left-align',
-    iconRTL: 'right-align',
+    icon: <AlignLeft className="h-4 w-4" />,
+    iconRTL: <AlignRight className="h-4 w-4" />,
     name: 'Start Align',
+  },
+  end: {
+    icon: <AlignRight className="h-4 w-4" />,
+    iconRTL: <AlignLeft className="h-4 w-4" />,
+    name: 'End Align',
   },
 };
 
@@ -651,44 +687,52 @@ export default function ToolbarPlugin({
         <>
           <MenubarMenu>
             <MenubarTrigger disabled={!isEditable} className="gap-2 hover:bg-slate-100">
-              <i className={'icon block-type ' + blockType} />
+              {blockType === 'paragraph' && <Type className="h-4 w-4" />}
+              {blockType === 'h1' && <Heading1 className="h-4 w-4" />}
+              {blockType === 'h2' && <Heading2 className="h-4 w-4" />}
+              {blockType === 'h3' && <Heading3 className="h-4 w-4" />}
+              {blockType === 'bullet' && <List className="h-4 w-4" />}
+              {blockType === 'number' && <ListOrdered className="h-4 w-4" />}
+              {blockType === 'check' && <CheckSquare className="h-4 w-4" />}
+              {blockType === 'quote' && <Quote className="h-4 w-4" />}
+              {blockType === 'code' && <Code className="h-4 w-4" />}
               {blockTypeToBlockName[blockType]}
             </MenubarTrigger>
             <MenubarContent>
               <MenubarItem onClick={formatParagraph}>
-                <i className="icon paragraph mr-2" />
+                <Type className="h-4 w-4 mr-2" />
                 Normal
               </MenubarItem>
               <MenubarItem onClick={() => formatHeading('h1')}>
-                <i className="icon h1 mr-2" />
+                <Heading1 className="h-4 w-4 mr-2" />
                 Heading 1
               </MenubarItem>
               <MenubarItem onClick={() => formatHeading('h2')}>
-                <i className="icon h2 mr-2" />
+                <Heading2 className="h-4 w-4 mr-2" />
                 Heading 2
               </MenubarItem>
               <MenubarItem onClick={() => formatHeading('h3')}>
-                <i className="icon h3 mr-2" />
+                <Heading3 className="h-4 w-4 mr-2" />
                 Heading 3
               </MenubarItem>
               <MenubarItem onClick={formatBulletList}>
-                <i className="icon bullet-list mr-2" />
+                <List className="h-4 w-4 mr-2" />
                 Bullet List
               </MenubarItem>
               <MenubarItem onClick={formatNumberedList}>
-                <i className="icon numbered-list mr-2" />
+                <ListOrdered className="h-4 w-4 mr-2" />
                 Numbered List
               </MenubarItem>
               <MenubarItem onClick={formatCheckList}>
-                <i className="icon check-list mr-2" />
+                <CheckSquare className="h-4 w-4 mr-2" />
                 Check List
               </MenubarItem>
               <MenubarItem onClick={formatQuote}>
-                <i className="icon quote mr-2" />
+                <Quote className="h-4 w-4 mr-2" />
                 Quote
               </MenubarItem>
               <MenubarItem onClick={formatCode}>
-                <i className="icon code mr-2" />
+                <Code className="h-4 w-4 mr-2" />
                 Code Block
               </MenubarItem>
             </MenubarContent>
@@ -718,8 +762,11 @@ export default function ToolbarPlugin({
           {/* Insert Dropdown */}
           {canViewerSeeInsertDropdown && (
             <MenubarMenu>
-              <MenubarTrigger disabled={!isEditable} className="gap-2 hover:bg-slate-100">
-                <i className="icon plus" />
+              <MenubarTrigger 
+                disabled={!isEditable} 
+                className="flex items-center gap-2 hover:bg-slate-100"
+              >
+                <Plus className="h-4 w-4" />
                 Insert
               </MenubarTrigger>
               <MenubarContent>
@@ -730,7 +777,7 @@ export default function ToolbarPlugin({
                       undefined,
                     );
                   }}>
-                  <i className="icon horizontal-rule mr-2" />
+                  <SeparatorHorizontal className="h-4 w-4 mr-2" />
                   Horizontal Rule
                 </MenubarItem>
                 <MenubarItem
@@ -742,34 +789,33 @@ export default function ToolbarPlugin({
                       />
                     ));
                   }}>
-                  <i className="icon table mr-2" />
+                  <Table2 className="h-4 w-4 mr-2" />
                   Table
                 </MenubarItem>
                 <MenubarItem
                   onClick={() => {
-                    showModal('Insert Equation', (onClose) => (
-                      <InsertEquationDialog
+                    showModal('Insert Image', (onClose) => (
+                      <InsertImageDialog
                         activeEditor={activeEditor}
                         onClose={onClose}
                       />
                     ));
                   }}>
-                  <i className="icon equation mr-2" />
-                  Equation
+                  <Image className="h-4 w-4 mr-2" />
+                  Image
                 </MenubarItem>
-                {EmbedConfigs.map((embedConfig) => (
-                  <MenubarItem
-                    key={embedConfig.type}
-                    onClick={() => {
-                      activeEditor.dispatchCommand(
-                        INSERT_EMBED_COMMAND,
-                        embedConfig.type,
-                      );
-                    }}>
-                    {embedConfig.icon}
-                    <span className="ml-2">{embedConfig.contentName}</span>
-                  </MenubarItem>
-                ))}
+                <MenubarItem
+                  onClick={() => {
+                    showModal('Insert Columns Layout', (onClose) => (
+                      <InsertLayoutDialog
+                        activeEditor={activeEditor}
+                        onClose={onClose}
+                      />
+                    ));
+                  }}>
+                  <Columns className="h-4 w-4 mr-2" />
+                  Columns Layout
+                </MenubarItem>
               </MenubarContent>
             </MenubarMenu>
           )}
@@ -783,33 +829,41 @@ export default function ToolbarPlugin({
         <MenubarTrigger
           disabled={!isEditable}
           className="gap-2 hover:bg-slate-100">
-          <i className={`icon ${isRTL ? getFormatOption().iconRTL : getFormatOption().icon}`} />
+          {isRTL ? getFormatOption().iconRTL : getFormatOption().icon}
           {getFormatOption().name}
         </MenubarTrigger>
         <MenubarContent>
           <MenubarItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'left')}>
-            <i className="icon left-align mr-2" />
+            <AlignLeft className="h-4 w-4 mr-2" />
             Left Align
           </MenubarItem>
           <MenubarItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'center')}>
-            <i className="icon center-align mr-2" />
+            <AlignCenter className="h-4 w-4 mr-2" />
             Center Align
           </MenubarItem>
           <MenubarItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'right')}>
-            <i className="icon right-align mr-2" />
+            <AlignRight className="h-4 w-4 mr-2" />
             Right Align
           </MenubarItem>
           <MenubarItem onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, 'justify')}>
-            <i className="icon justify-align mr-2" />
+            <AlignJustify className="h-4 w-4 mr-2" />
             Justify Align
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem onClick={() => editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined)}>
-            <i className={'icon ' + (isRTL ? 'indent' : 'outdent') + ' mr-2'} />
+            {isRTL ? (
+              <IndentIcon className="h-4 w-4 mr-2" />
+            ) : (
+              <OutdentIcon className="h-4 w-4 mr-2" />
+            )}
             Outdent
           </MenubarItem>
           <MenubarItem onClick={() => editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined)}>
-            <i className={'icon ' + (isRTL ? 'outdent' : 'indent') + ' mr-2'} />
+            {isRTL ? (
+              <OutdentIcon className="h-4 w-4 mr-2" />
+            ) : (
+              <IndentIcon className="h-4 w-4 mr-2" />
+            )}
             Indent
           </MenubarItem>
         </MenubarContent>

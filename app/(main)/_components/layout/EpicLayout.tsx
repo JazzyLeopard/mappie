@@ -263,18 +263,19 @@ const EpicLayout = ({
     return stories.map(story => (
       <div
         key={story._id}
-        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${selectedItems.story === story._id ? 'bg-white font-semibold' : ''
-          } cursor-pointer group rounded-lg`}
+        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${
+          selectedItems.story === story._id ? 'bg-white font-semibold' : ''
+        } cursor-pointer group rounded-lg`}
         onClick={() => selectItem('story', story._id)}
       >
-        <BookOpen className="h-3 w-3 mr-2" />
-        <span className="text-sm flex-grow">
-          {story.title.length > 30 ? story.title.substring(0, 30) + '...' : story.title}
+        <BookOpen className="h-3 w-3 mr-2 flex-shrink-0" />
+        <span className="text-sm flex-grow truncate overflow-hidden">
+          {story.title.length > 20 ? story.title.substring(0, 20) + '...' : story.title}
         </span>
         <Button
           variant="ghost"
           size="icon"
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation()
             handleDeleteUserStory(story._id)
