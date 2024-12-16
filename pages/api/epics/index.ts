@@ -100,17 +100,17 @@ Based on the above project context and functional requirements, please generate 
 **Business Value**: [Clear statement of the business value this epic delivers]
 
 **Acceptance Criteria**:
-- Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
-- Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
-- Criterion 3: [Address edge cases, error scenarios, or quality requirements]
+• Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
+• Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
+• Criterion 3: [Address edge cases, error scenarios, or quality requirements]
 
 **Dependencies**:
-- Dependency 1: [Technical or system dependency that is critical to success]
-- Dependency 2: [External factor or prerequisite that must be in place]
+• Dependency 1: [Technical or system dependency that is critical to success]
+• Dependency 2: [External factor or prerequisite that must be in place]
 
 **Risks**:
-- Risk 1: [Technical, business, or operational risk that could impact delivery]
-- Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+• Risk 1: [Technical, business, or operational risk that could impact delivery]
+• Risk 2: [Timeline, resource, or quality risk that needs mitigation]
 
 IMPORTANT:
 - Each epic MUST have EXACTLY 3 acceptance criteria
@@ -150,42 +150,41 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
         const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Acceptance Criteria|$)/m);
 
         // Updated regex patterns to better capture multiple bullet points
-        const acceptanceCriteriaMatch = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\s*\*\*Dependencies\*\*|$)/m);
-        const dependenciesMatch = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\s*\*\*Risks\*\*|$)/m);
-        const risksMatch = section.match(/\*\*Risks\*\*:\s*([^]*?)(?=(\s*---|$))/m);
+        const acceptanceCriteriaSection = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
+        const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
+        const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
-        // Improved formatList function to handle multiple bullet points
-        const formatList = (match: RegExpMatchArray | null): string[] => {
-          if (!match?.[1]) return [];
-
-          return match[1]
-            .split('\n')
+        const extractBulletPoints = (sectionText: string, prefix: string) => {
+          return sectionText
+            ?.split('\n')
             .map(line => line.trim())
-            .filter(line => line.startsWith('-'))
+            .filter(line =>
+              line.startsWith('•') &&
+              line.includes(`${prefix}`)
+            )
             .map(line => {
-              // Remove the bullet point and trim
-              const content = line.substring(1).trim();
-              // Remove any trailing periods if they exist
-              return content.endsWith('.') ? content.slice(0, -1) : content;
-            })
-            .filter(Boolean);
+              const indentation = line.match(/^\s*/)?.[0] || '';
+              const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
+              const number = numberMatch ? numberMatch[1] : '';
+              const content = line.split(':')[1]?.trim() || '';
+              return `${indentation}• **${prefix} ${number}:** ${content}`;
+            }) || [];
         };
 
-        // Debug logging
-        console.log('Raw section matches:', {
-          acceptanceCriteria: acceptanceCriteriaMatch?.[1],
-          dependencies: dependenciesMatch?.[1],
-          risks: risksMatch?.[1]
-        });
+        // Process each section
+        const acceptanceCriteria = extractBulletPoints(acceptanceCriteriaSection ?? "", 'Criterion');
+        const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
+        const risks = extractBulletPoints(risksSection ?? "", 'Risk');
+
 
         const processedData = {
           name: nameMatch?.[1]?.trim() || 'Untitled Epic',
           description: {
             Description: descriptionMatch?.[1]?.trim() || '',
             "Business Value": businessValueMatch?.[1]?.trim() || '',
-            "Acceptance Criteria": formatList(acceptanceCriteriaMatch),
-            Dependencies: formatList(dependenciesMatch),
-            Risks: formatList(risksMatch)
+            "Acceptance Criteria": acceptanceCriteria,
+            Dependencies: dependencies,
+            Risks: risks
           }
         };
 
@@ -197,6 +196,7 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
 
     // Create epics in database
     sendEvent({ progress: 85, status: 'Saving epics...' });
+
     const createdEpics = await Promise.all(epics.map(async (epic) => {
       const markdownDescription = `# ${epic.name}
 
@@ -208,18 +208,18 @@ ${epic.description["Business Value"]}
 
 ## Acceptance Criteria
 ${epic.description["Acceptance Criteria"].length > 0
-          ? epic.description["Acceptance Criteria"].map(criterion => `- ${criterion}`).join('\n')
-          : '- No acceptance criteria specified'}
+          ? epic.description["Acceptance Criteria"].map(criterion => `${criterion}`).join('\n')
+          : '• No acceptance criteria specified'}
 
 ## Dependencies
 ${epic.description.Dependencies.length > 0
-          ? epic.description.Dependencies.map(dep => `- ${dep}`).join('\n')
-          : '- No dependencies specified'}
+          ? epic.description.Dependencies.map(dep => `${dep}`).join('\n')
+          : '• No dependencies specified'}
 
 ## Risks
 ${epic.description.Risks.length > 0
-          ? epic.description.Risks.map(risk => `- ${risk}`).join('\n')
-          : '- No risks specified'}`;
+          ? epic.description.Risks.map(risk => `${risk}`).join('\n')
+          : '• No risks specified'}`;
 
       return await convex.mutation(api.epics.createEpics, {
         projectId: convexProjectId,

@@ -19,7 +19,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     const { projectId, epicId } = params  // Destructure both IDs
     const [content, setContent] = useState<any>([])
     const epics = useQuery(api.epics.getEpics, { projectId });
-    const createEpic = useMutation(api.epics.createEpics);
     const updateEpic = useMutation(api.epics.updateEpic)
     const deleteEpic = useMutation(api.epics.deleteEpic)
 
@@ -28,14 +27,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
             setContent(epics);
         }
     }, [epics])
-
-    const handleCreateEpic = useCallback(async () => {
-        await createEpic({
-            projectId,
-            name: `New Epic ${epics?.length ?? 0 + 1}`,
-            description: ''
-        })
-    }, [createEpic, epics, projectId])
 
     const handleEditorChange = useCallback(async (_id: Id<"epics">, field: string, value: any) => {
         console.log('Editor change:', { _id, field, value });
@@ -69,7 +60,6 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
                 epicId
             }}
             handleEditorChange={handleEditorChange}
-            onAddEpics={handleCreateEpic}
             onDeleteEpic={handleDeleteEpic}
             epics={content || []}
         />

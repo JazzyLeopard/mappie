@@ -83,19 +83,26 @@ export default async function handler(
         }
 
         //Fetch the existing epics
-        const epics = await convex.query(api.epics.getEpics, { projectId: convexProjectId });
+        const existingEpics = await convex.query(api.epics.getEpics, { projectId: convexProjectId });
 
-        if (!epics) {
+        if (!existingEpics) {
             return res.status(400).json({ message: "No Use cases found for the project" });
         }
 
-        const existingEpicNames = epics.map((epic: any) => epic?.name);
-        const epicsText = epics.map((epic: any) => epic?.description).join('\n');
+        const existingEpicNames = existingEpics.map((epic: any) => epic?.name);
+        const epicsText = existingEpics.map((epic: any) => epic?.description).join('\n');
 
-        let basePrompt = `As an expert Epic analyst, generate one unique additional epic for the following project. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail. Ensure the epic name is different and unique from these: [${existingEpicNames.join(', ')}].
-
+        let prompt = `
         Project Context:
         ${context}
+
+        Functional Requirements:
+        ${functionalRequirementsText}
+
+        Existing Epics:
+        ${epicsText}
+
+        Based on the above project context, functional requirements, existing epics, and use cases, generate one unique additional epic for the following project. Ensure the epic name is different and unique from these: [${existingEpicNames.join(', ')}]. The epic should be detailed and specific to the project's needs, following this exact structure and level of detail. 
 
 ### Epic: [Epic Name]
 
@@ -104,17 +111,17 @@ export default async function handler(
 **Business Value**: [Clear statement of the business value this epic delivers]
 
 **Acceptance Criteria**:
-- Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
-- Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
-- Criterion 3: [Address edge cases, error scenarios, or quality requirements]
+• Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
+• Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
+• Criterion 3: [Address edge cases, error scenarios, or quality requirements]
 
 **Dependencies**:
-- Dependency 1: [Technical or system dependency that is critical to success]
-- Dependency 2: [External factor or prerequisite that must be in place]
+• Dependency 1: [Technical or system dependency that is critical to success]
+• Dependency 2: [External factor or prerequisite that must be in place]
 
 **Risks**:
-- Risk 1: [Technical, business, or operational risk that could impact delivery]
-- Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+• Risk 1: [Technical, business, or operational risk that could impact delivery]
+• Risk 2: [Timeline, resource, or quality risk that needs mitigation]
 
 IMPORTANT:
 - Each epic MUST have EXACTLY 3 acceptance criteria
@@ -125,22 +132,20 @@ IMPORTANT:
 - Include measurable outcomes where possible
 - Consider both technical and business aspects
 
+
 Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.
 `;
 
         if (useCases?.length > 0) {
             const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
-            basePrompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
+            prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
         }
-
-        const singleEpicPrompt = `Based on the following functional requirements- ${functionalRequirementsText} and existing epics- ${epicsText} generate one more epic using this format- ${basePrompt}.Be creative and consider edge cases that might not be immediately obvious. If no additional epic is needed and the existing epic suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading 1 and Heading 2 in Markdown.
-    `;
 
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
         const completion = await generateText({
             model: openai("gpt-4o-mini"),
-            messages: [{ role: "user", content: singleEpicPrompt }],
+            messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         });
 
@@ -149,76 +154,101 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
 
         if (!epicContent) throw new Error('No content generated from OpenAI');
 
-        // Handle 'NULL' response
-        if (epicContent.trim() === 'NULL') {
-            return res.status(200).json({ message: 'NULL' });
-        }
+        // Create epics in database
+        sendEvent({ progress: 75, status: 'Processing epics...' });
+        const epics = epicContent
+            .split(/(?=###\s*Epic:\s*)/g)
+            .filter(section => section.trim())
+            .map(section => {
+                const nameMatch = section.match(/Epic:\s*(.+?)(?=\n|$)/);
+                const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
+                const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Acceptance Criteria|$)/m);
 
-        // Try to parse as JSON first
-        try {
-            // Remove markdown code block syntax if present
-            const jsonContent = epicContent.replace(/```json\n|\n```/g, '');
-            const parsedEpics = JSON.parse(jsonContent);
+                // Updated regex patterns to better capture multiple bullet points
+                const acceptanceCriteriaSection = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
+                const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
+                const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
-            // Transform JSON format to our expected format
-            const transformedEpics = parsedEpics.map((epic: any) => ({
-                name: epic["Epic Name"] || epic.name,
-                description: {
-                    Description: epic.Description || '',
-                    "Business Value": epic["Business Value"] || '',
-                    "Acceptance Criteria": Array.isArray(epic["Acceptance Criteria"])
-                        ? epic["Acceptance Criteria"]
-                        : [],
-                    Dependencies: Array.isArray(epic.Dependencies)
-                        ? epic.Dependencies
-                        : [],
-                    Risks: Array.isArray(epic.Risks)
-                        ? epic.Risks
-                        : []
-                }
-            }));
+                console.log('Raw risks section:', risksSection);
 
-            // Process epics
-            sendEvent({ progress: 75, status: 'Processing epics...' });
+                const extractBulletPoints = (sectionText: string, prefix: string) => {
+                    return sectionText
+                        ?.split('\n')
+                        .map(line => line.trim())
+                        .filter(line =>
+                            (line.startsWith('•') || line.startsWith('-')) &&
+                            line.includes(`${prefix}`)
+                        )
+                        .map(line => {
+                            const indentation = line.match(/^\s*/)?.[0] || '';
+                            const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
+                            const number = numberMatch ? numberMatch[1] : '';
+                            const content = line.split(':')[1]?.trim() || '';
+                            return `${indentation}• **${prefix} ${number}:** ${content}`;
+                        }) || [];
+                };
 
-            // Create epics in database
-            const createdEpics = await Promise.all(transformedEpics.map(async (epic: any) => {
-                const markdownDescription = `# ${epic.name}
+                // Process each section
+                const acceptanceCriteria = extractBulletPoints(acceptanceCriteriaSection ?? "", 'Criterion');
+                const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
+                const risks = extractBulletPoints(risksSection ?? "", 'Risk');
 
-            ## Description
-            ${epic.description.Description}
 
-            ## Business Value
-            ${epic.description["Business Value"]}
+                const processedData = {
+                    name: nameMatch?.[1]?.trim() || 'Untitled Epic',
+                    description: {
+                        Description: descriptionMatch?.[1]?.trim() || '',
+                        "Business Value": businessValueMatch?.[1]?.trim() || '',
+                        "Acceptance Criteria": acceptanceCriteria,
+                        Dependencies: dependencies,
+                        Risks: risks
+                    }
+                };
 
-            ## Acceptance Criteria
-            ${epic.description["Acceptance Criteria"].map((criterion: any) => `- ${criterion}`).join('\n')}
+                // Debug logging for processed data
+                console.log('Processed data:', JSON.stringify(processedData, null, 2));
 
-            ## Dependencies
-            ${epic.description.Dependencies.map((dep: any) => `- ${dep}`).join('\n')}
+                return processedData;
+            });
 
-            ## Risks
-            ${epic.description.Risks.map((risk: any) => `- ${risk}`).join('\n')}`;
+        // Create epics in database
+        sendEvent({ progress: 85, status: 'Saving epics...' });
 
-                sendEvent({ progress: 85, status: 'Saving epics...' });
-                return await convex.mutation(api.epics.createEpics, {
-                    projectId: convexProjectId,
-                    name: epic.name,
-                    description: markdownDescription
-                });
-            }));
+        const createdEpics = await Promise.all(epics.map(async (epic) => {
+            const markdownDescription = `# ${epic.name}
 
-            // Send final response
-            const serializedEpics = convertBigIntToNumber(createdEpics);
-            sendEvent({ progress: 95, status: 'Finalizing...' });
-            sendEvent({ progress: 100, status: 'Complete!' });
-            sendEvent({ done: true, content: serializedEpics });
+## Description
+${epic.description.Description}
 
-        } catch (jsonError) {
-            // If JSON parsing fails, fall back to markdown parsing
-            console.log('JSON parsing failed, falling back to markdown parsing');
-            // ... your existing markdown parsing code ...
-        }
+## Business Value
+${epic.description["Business Value"]}
+
+## Acceptance Criteria
+${epic.description["Acceptance Criteria"].length > 0
+                    ? epic.description["Acceptance Criteria"].map(criterion => `${criterion}`).join('\n')
+                    : '• No acceptance criteria specified'}
+
+## Dependencies
+${epic.description.Dependencies.length > 0
+                    ? epic.description.Dependencies.map(dep => `${dep}`).join('\n')
+                    : '• No dependencies specified'}
+
+## Risks
+${epic.description.Risks.length > 0
+                    ? epic.description.Risks.map(risk => `${risk}`).join('\n')
+                    : '• No risks specified'}`;
+
+            return await convex.mutation(api.epics.createEpics, {
+                projectId: convexProjectId,
+                name: epic.name,
+                description: markdownDescription
+            });
+        }));
+
+        // Send final response
+        const serializedEpics = convertBigIntToNumber(createdEpics);
+        sendEvent({ progress: 100, status: 'Complete!' });
+        sendEvent({ done: true, content: serializedEpics });
 
     } catch (error) {
         console.error('Error generating Epic:', error);
