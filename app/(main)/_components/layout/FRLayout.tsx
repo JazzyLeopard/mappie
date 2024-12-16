@@ -196,13 +196,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 setIsGenerating(null);
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
-                                toast.success("Requirements generated successfully");
-
-                                // Refresh the FR list if needed
-                                if (onManualAddFR) {
-                                    await onManualAddFR();
-                                }
-
+                                toast.success("Additional functional requirement generated successfully");
                                 // Clean up
                                 setTimeout(() => {
                                     setIsGenerating(null);
@@ -323,12 +317,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                 setGenerationProgress(100);
                                 setGenerationStatus('Complete!');
                                 toast.success("Requirements generated successfully");
-
-                                // Refresh the FR list if needed
-                                if (onManualAddFR) {
-                                    await onManualAddFR();
-                                }
-
                                 // Clean up
                                 setTimeout(() => {
                                     setIsGenerating(null);
@@ -569,7 +557,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
                     <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
                         <div className="flex flex-col space-y-4">
-                            <h3 className="text-lg font-semibold">{isGenerating === "functionalRequirements" ? "Generating Functional Requirements..." : "Generating Functional Requirement..."}</h3>
+                            <h3 className="text-lg font-semibold">{isGenerating === "functionalRequirements" ? "Generating Initial Functional Requirements based on project details..." : "Generating an additional Functional Requirement..."}</h3>
                             <Progress value={generationProgress} className="w-full" />
                             <p className="text-sm text-muted-foreground">{generationStatus}</p>
                         </div>
