@@ -18,7 +18,7 @@ import { GitPullRequest, Plus, Trash } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 type SelectedItems = {
   useCase: string | null;
@@ -253,7 +253,7 @@ export default function UseCasesLayout({
                 }
                 setGenerationProgress(100);
                 setGenerationStatus('Complete!');
-                toast.success("Use cases generated successfully");
+                toast.success("Additional use case generated successfully");
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
@@ -452,7 +452,7 @@ export default function UseCasesLayout({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">{isGenerating === "useCases" ? "Generating Use Cases..." : "Generating Use Case..."}</h3>
+              <h3 className="text-lg font-semibold">{isGenerating === "useCases" ? "Generating Initial Use Cases based on project details..." : "Generating an additional Use Case..."}</h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>
             </div>
