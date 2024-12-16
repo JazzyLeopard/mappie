@@ -46,14 +46,12 @@ interface EpicLayoutProps {
     epicId?: Id<"epics">;
   },
   handleEditorChange: (epicId: Id<"epics">, field: string, value: any) => Promise<void>;
-  onAddEpics: () => Promise<void>;
   onDeleteEpic: (epicId: Id<"epics">) => Promise<void>;
   epics: any[];
 }
 const EpicLayout = ({
   params,
   handleEditorChange,
-  onAddEpics,
   onDeleteEpic,
   epics
 }: EpicLayoutProps) => {
@@ -263,9 +261,8 @@ const EpicLayout = ({
     return stories.map(story => (
       <div
         key={story._id}
-        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${
-          selectedItems.story === story._id ? 'bg-white font-semibold' : ''
-        } cursor-pointer group rounded-lg`}
+        className={`flex items-center px-3 py-1 hover:bg-white transition-colors ${selectedItems.story === story._id ? 'bg-white font-semibold' : ''
+          } cursor-pointer group rounded-lg`}
         onClick={() => selectItem('story', story._id)}
       >
         <BookOpen className="h-3 w-3 mr-2 flex-shrink-0" />
@@ -558,9 +555,6 @@ const EpicLayout = ({
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
-                if (onAddEpics) {
-                  await onAddEpics();
-                }
                 return;
               }
 
@@ -645,9 +639,6 @@ const EpicLayout = ({
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
-                if (onAddEpics) {
-                  await onAddEpics();
-                }
                 return;
               }
 
