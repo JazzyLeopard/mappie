@@ -222,6 +222,7 @@ export default async function handler(
 
     const context = await useContextChecker({ projectId });
 
+    sendEvent({ progress: 35, status: 'Loading functional requirements...' });
     // Fetch functional requirements
     const functionalRequirements = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
       projectId: projectId as Id<"projects">
@@ -231,6 +232,7 @@ export default async function handler(
 
     const formattedRequirements = formatFunctionalRequirements(functionalRequirements);
 
+    sendEvent({ progress: 45, status: 'Generating use case...' });
     let prompt = `Based on the following project details and functional requirements, generate comprehensive use cases that align with the system's requirements and functionality. Each use case should detail the interaction between users and the system.
 
 Project Context:
@@ -292,6 +294,7 @@ Generate detailed use cases following this exact structure:
 
 Generate use cases that specifically address the functional requirements listed above. Ensure each use case describes a complete interaction flow that fulfills one or more of the specified requirements. Format the output as a JSON array of use case objects.`;
 
+    sendEvent({ progress: 55, status: 'Calling OpenAI API...' });
     console.log('Calling OpenAI API...');
     const response = await generateText({
       model: openai("gpt-4o-mini"),
@@ -314,6 +317,7 @@ Generate use cases that specifically address the functional requirements listed 
       ));
     };
 
+    sendEvent({ progress: 65, status: 'Parsing use cases...' });
     let generatedUseCases;
     try {
       generatedUseCases = extractJsonFromResponse(content);
@@ -324,6 +328,7 @@ Generate use cases that specifically address the functional requirements listed 
       throw new Error('Invalid JSON response from OpenAI');
     }
 
+    sendEvent({ progress: 75, status: 'Creating use cases...' });
     console.log('Creating use cases...');
     for (const useCase of generatedUseCases) {
       if (useCase && useCase.description) {
@@ -338,8 +343,9 @@ Generate use cases that specifically address the functional requirements listed 
         console.warn('Skipping invalid use case:', useCase);
       }
     }
+    sendEvent({ progress: 85, status: 'Use cases created successfully' });
     console.log('Use cases created successfully');
-
+    sendEvent({ progress: 95, status: 'Finalizing...' });
     sendEvent({ progress: 100, status: 'Complete!' });
     res.status(200).json({
       useCases: serializeBigInt(generatedUseCases),

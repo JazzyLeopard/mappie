@@ -136,6 +136,37 @@ const formatFunctionalRequirements = (requirements: any[]) => {
     .join('\n\n');
 };
 
+const extractJsonFromResponse = (content: string): any => {
+  try {
+    // First, try to parse the content directly as JSON
+    return JSON.parse(content);
+  } catch (e) {
+    // If direct parsing fails, try to extract JSON from markdown code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1].trim());
+      } catch (e) {
+        console.error('Failed to parse extracted JSON:', e);
+        throw new Error('Invalid JSON format in the response');
+      }
+    }
+
+    // If no JSON block is found, try to find an array in the content
+    const arrayMatch = content.match(/\[\s*{[\s\S]*}\s*\]/);
+    if (arrayMatch) {
+      try {
+        return JSON.parse(arrayMatch[0]);
+      } catch (e) {
+        console.error('Failed to parse array from content:', e);
+        throw new Error('Invalid JSON array format in the response');
+      }
+    }
+
+    throw new Error('No valid JSON found in the response');
+  }
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -197,6 +228,7 @@ export default async function handler(
 
     const projectDetails = `Overview: ${project.overview}`;
 
+    sendEvent({ progress: 35, status: 'Loading functional requirements...' });
     const formattedRequirements = formatFunctionalRequirements(functionalRequirements);
 
     // Fetch the exsisting use cases
@@ -208,6 +240,7 @@ export default async function handler(
 
     const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
 
+    sendEvent({ progress: 45, status: 'Generating use case...' });
     let basePrompt = context;
 
     basePrompt += `As an expert use case analyst, generate one unique additional use case for the following project. The use case should be detailed and specific to the project's needs, following this exact structure and level of detail, don't use Heading 1 and 2:
@@ -263,6 +296,7 @@ export default async function handler(
     const singleUseCasePrompt = `Based on the following project details-${projectDetails},functional requirements-${formattedRequirements} and existing usecases-${useCasesText} generate one more use case using this format- ${basePrompt}. If no additional use case is needed and the existing use cases suffice the requirements, return 'NULL'. Follow this exact structure and level of detail, Format the output as a JSON array of objects. Wrap the entire JSON output in a Markdown code block, don't use Heading h1 and h2 in the Markdown.
     `;
 
+    sendEvent({ progress: 55, status: 'Calling OpenAI API...' });
     console.log('Calling OpenAI API...');
     const response = await generateText({
       model: openai("gpt-4o-mini"),
@@ -278,12 +312,6 @@ export default async function handler(
 
     console.log('Parsing OpenAI response...');
 
-    // Handle 'NULL' response
-    if (content.trim() === 'NULL') {
-      console.log('AI determined that no new use case is needed.');
-      return res.status(200).json({ message: 'NULL' });  // Send 'NULL' to the UI
-    }
-
     // Utility function to handle BigInt serialization
     const serializeBigInt = (obj: any) => {
       return JSON.parse(JSON.stringify(obj, (key, value) =>
@@ -291,42 +319,49 @@ export default async function handler(
       ));
     };
 
+    sendEvent({ progress: 65, status: 'Parsing use cases...' });
     let generatedUseCase;
-    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-    if (jsonMatch) {
-      const jsonContent = jsonMatch[1];
-      generatedUseCase = JSON.parse(jsonContent);
-
+    try {
+      generatedUseCase = extractJsonFromResponse(content);
       console.log('Parsed use cases:', JSON.stringify(generatedUseCase, null, 2));
-
-      if (generatedUseCase && generatedUseCase[0]?.description) {
-        const formattedDescription = convertDescriptionToMarkdown
-          (generatedUseCase[0]?.description)
-
-        let useCaseId = await convex.mutation(api.useCases.createUseCase, {
-          projectId: projectId,
-          title: generatedUseCase[0]?.title || "Untitled Use Case",
-          description: formattedDescription
-        })
-        generatedUseCase[0]['id'] = useCaseId
-
-        const serializedUseCase = serializeBigInt(useCaseId);
-        console.log("use case id", serializedUseCase);
-      }
-    } else {
-      console.warn('Skipping invalid use case:', generatedUseCase);
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      console.error('Raw OpenAI response:', content);
+      throw new Error('Invalid JSON response from OpenAI');
     }
-    console.log('Use cases created successfully');
+    console.log('Parsed use cases:', JSON.stringify(generatedUseCase, null, 2));
 
+    sendEvent({ progress: 75, status: 'Creating use case...' });
+    if (generatedUseCase && generatedUseCase[0]?.description) {
+      const formattedDescription = convertDescriptionToMarkdown
+        (generatedUseCase[0]?.description)
+
+      let useCaseId = await convex.mutation(api.useCases.createUseCase, {
+        projectId: projectId,
+        title: generatedUseCase[0]?.title || "Untitled Use Case",
+        description: formattedDescription
+      })
+      generatedUseCase[0]['id'] = useCaseId
+
+      const serializedUseCase = serializeBigInt(useCaseId);
+      console.log("use case id", serializedUseCase);
+    }
+
+    sendEvent({ progress: 85, status: 'Use cases created successfully' });
+    console.log('Use cases created successfully');
+    sendEvent({ progress: 95, status: 'Finalizing...' });
+    sendEvent({ progress: 100, status: 'Complete!' });
     res.status(200).json({ useCases: serializeBigInt(generatedUseCase), markdown: convertDescriptionToMarkdown(generatedUseCase[0]?.description || {}) });
   }
   catch (error) {
-    console.error('Detailed error:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({ message: 'Error generating use cases', error: error instanceof Error ? error.message : String(error) });
+    console.error('API Error:', error);
+    sendEvent({
+      error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      progress: 100,
+      status: 'Error'
+    });
+  } finally {
+    res.end();
   }
 }
 
