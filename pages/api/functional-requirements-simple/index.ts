@@ -3,8 +3,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { anthropic } from '@ai-sdk/anthropic';
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 
 // Initialize clients
@@ -136,18 +136,18 @@ export default async function handler(
     const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt
     sendEvent({ progress: 45, status: 'Preparing AI prompt...' });
-    const prompt = `${context}\n\nCreate an adequate number of SEPARATE functional requirements based on the following project details to cover the project. Each requirement MUST follow this EXACT format with no deviations:
+    const prompt = `${context}\n\nGenerate an adequate number of focused, non-overlapping functional requirements that directly contribute to the project's core functionality. Each requirement MUST follow this EXACT format with no deviations:
 
 # [Requirement Title]
 
 ## Description
-[One paragraph description]
+[Write a concise one paragraph description explaining the requirement's purpose, its main functionality, and its value to the project. Focus on what the requirement achieves rather than how it will be implemented.]
 
 ### Sub-requirements
-- [Specific requirement] - **Priority: Must Have**
-- [Specific requirement] - **Priority: Should Have**
-- [Specific requirement] - **Priority: Could Have**
-- [Specific requirement] - **Priority: Must Have**
+- [Specific, measurable action or capability that directly supports the main requirement] - **Priority: Must Have**
+- [Technical or functional capability needed to achieve the requirement] - **Priority: Should Have**
+- [Enhancement or additional feature that improves the requirement] - **Priority: Could Have**
+- [Core functionality or critical aspect of the requirement] - **Priority: Must Have**
 [continue with more requirements, each with an inline priority]
 
 ---
@@ -155,10 +155,16 @@ export default async function handler(
 [Repeat format for next requirement]
 
 IMPORTANT: 
-- Title should be short and concise
-- Each sub-requirement MUST end with "Priority: [level]"
-- Priority levels MUST be one of: Must Have, Should Have, or Could Have
-- Each requirement must have at least 4 sub-requirements
+- Ensure not to generate any introductory text or comments, start with the first requirement immediately
+- Title must be clear, specific, and concise
+- Description should focus on business value and purpose
+- Each sub-requirement must:
+  * Be specific and measurable
+  * Directly contribute to the main requirement
+  * End with "Priority: [level]" (Must Have, Should Have, or Could Have)
+  * Be technically feasible and clear
+- Include at least 4 sub-requirements per main requirement
+- Ensure each requirement is distinct and avoids overlap with others
 
 Project details:
 ${projectDetails}`;
@@ -167,7 +173,7 @@ ${projectDetails}`;
     console.log("Calling OpenAI Api...");
     sendEvent({ progress: 55, status: 'Generating requirements...' });
     const completion = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });

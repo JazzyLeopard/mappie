@@ -2,8 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
+import { anthropic } from '@ai-sdk/anthropic';
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { useContextChecker } from "@/utils/useContextChecker";
 
@@ -175,7 +175,7 @@ Remember: The generated requirement must provide NEW functionality not already c
     console.log("Calling OpenAI Api...");
     sendEvent({ progress: 55, status: 'Generating requirement...' });
     const completion = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
