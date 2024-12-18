@@ -140,7 +140,7 @@ export default async function handler(
     Project Context:
     ${context}
     
-    Generate a single detailed functional requirement that adds onto the existing requirements. Here are the existing requirements:
+    Generate a single detailed functional requirement that adds onto the existing requirements. The new requirement MUST be unique and different from these existing requirements:
         
 ${existingFRs.length > 0 ? `${existingFRs.map((fr: any) => `${fr.title}: ${fr.description}`).join('\n')}
 
@@ -161,12 +161,15 @@ Format the requirement exactly like this:
 [continue with more requirements, each with an inline priority]
 
 IMPORTANT: 
+- Title should be short and concise
 - Each sub-requirement MUST end with "Priority: [level]"
 - Priority levels MUST be one of: Must Have, Should Have, or Could Have
 - The requirement must have at least 4 sub-requirements
 
 Project details:
-${projectDetails}`;
+${projectDetails}
+
+Remember: The generated requirement must provide NEW functionality not already covered by existing requirements.`;
 
 
     console.log("Calling OpenAI Api...");
@@ -196,7 +199,12 @@ ${projectDetails}`;
     const requirements = content
       .split('---')
       .map(req => req.trim())
-      .filter(req => req.match(/^# [^\n]+/m));
+      .filter(req => {
+        // Add additional validation to ensure we don't process empty requirements
+        const hasContent = req.length > 0;
+        const hasTitle = req.match(/^# [^\n]+/m);
+        return hasContent && hasTitle;
+      });
 
     const formattedRequirements = requirements.map(req => {
       const titleMatch = req.match(/^# ([^\n]+)/m);
@@ -206,7 +214,8 @@ ${projectDetails}`;
         title,
         description: req
       };
-    });
+    })
+      .filter(req => req !== null);
 
     sendEvent({ progress: 95, status: 'Finalizing...' });
     sendEvent({ progress: 100, status: 'Complete!' });

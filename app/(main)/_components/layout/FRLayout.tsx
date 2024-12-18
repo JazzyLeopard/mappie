@@ -117,16 +117,6 @@ const FRLayout: React.FC<FRLayoutProps> = ({
         progressInterval.current = setInterval(simulateProgress, 300);
 
         try {
-            // Create empty FR first
-            const newFR = await onCreateFR({
-                projectId,
-                title: 'New Functional Requirement',
-                description: ''
-            });
-
-            const frId = newFR?._id as Id<'functionalRequirements'>;
-            selectItem(frId);
-
             const token = await getToken();
             const response = await fetch('/api/functional-requirements-simple/single-simple', {
                 method: 'POST',
@@ -281,6 +271,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
                             // Handle parsed requirements data
                             if (data.type === 'requirements' && Array.isArray(data.content)) {
+                                console.log('Received requirements data:', data.content);
                                 // Process each requirement
                                 for (const requirement of data.content) {
                                     try {

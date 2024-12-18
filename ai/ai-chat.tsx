@@ -48,12 +48,12 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
 }) => {
   const handleReplace = useCallback(async (newContent: string) => {
     console.log('handleReplace called with content:', newContent);
-    
+
     try {
       // Check if global replace function exists
       if ((window as any).__replaceMarkdown) {
         console.log('Found global __replaceMarkdown function, attempting to use it');
-        
+
         try {
           await (window as any).__replaceMarkdown(newContent);
           console.log('Successfully replaced content using __replaceMarkdown');
@@ -63,13 +63,13 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
           throw replaceError;
         }
       }
-      
+
       // Log fallback scenario
       console.log('No __replaceMarkdown found, falling back to insert');
       onInsertMarkdown(newContent);
       console.log('Successfully inserted content using fallback');
       return Promise.resolve();
-      
+
     } catch (error) {
       console.error('Replace error:', {
         error,
@@ -507,7 +507,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                         type: selectedItemType === 'userStory' ? 'User Story' :
                           selectedItemType === 'epic' ? 'Epic' :
                             selectedItemType === 'useCase' ? 'Use Case' :
-                              selectedItemType === 'functionalRequirement' ? 'Functional Requirement' :
+                              selectedItemType === 'functionalRequirement' ? 'FR' :
                                 selectedItemType,
                         name: (() => {
                           if (selectedItemType === 'epic') {
