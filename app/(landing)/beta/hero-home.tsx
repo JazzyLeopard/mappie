@@ -52,14 +52,21 @@ export default function BetaHero() {
                 data-aos="zoom-y-out"
                 data-aos-delay={450}
               >
-                <Button className="group text-white shadow hover:bg-[length:100%_150%]">
-                  <span className="relative inline-flex items-center">
-                    Join Beta Users{" "}
-                    <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
-                      →
+                <Link 
+                  href={isSignedIn ? "/epics" : "/sign-up"}
+                  className="block"
+                  data-aos="zoom-y-out"
+                  data-aos-delay={450}
+                >
+                  <Button className="group text-white shadow hover:bg-[length:100%_150%]">
+                    <span className="relative inline-flex items-center">
+                      {isSignedIn ? "Go to Dashboard" : "Join Beta Users"}{" "}
+                      <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
+                        →
+                      </span>
                     </span>
-                  </span>
-                </Button>
+                  </Button>
+                </Link>
               </div>
 
               {/* Beta Stats */}

@@ -80,7 +80,7 @@ const CommonLayout = ({
         setIsGenerating(true);
 
         try {
-            await router.push(`/projects/${data._id}/functional-requirements?generate=true`);
+            await router.push(`/epics/${data._id}/functional-requirements?generate=true`);
         } catch (error) {
             console.error('Error generating FR:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to generate functional requirements');
@@ -132,7 +132,7 @@ const CommonLayout = ({
                                     onClick={() => setIsTemplateGuideOpen(true)}
                                 >
                                     <BookTemplateIcon className="w-4 h-4 mr-2" />
-                                    Use Project Template
+                                    Use Epic Template
                                 </Button>
                                 <Button
                                     onClick={handleGenerateFR}
@@ -197,7 +197,7 @@ const CommonLayout = ({
                     <DialogHeader>
                         <DialogTitle className="pb-2">Generate Functional Requirements</DialogTitle>
                         <DialogDescription className="pb-2">
-                            Are you confident that you've provided enough information about the project to generate comprehensive Functional Requirements?
+                            Are you confident that you've provided enough information about the epic to generate comprehensive Functional Requirements?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

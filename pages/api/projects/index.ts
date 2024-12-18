@@ -54,7 +54,7 @@ export default async function handler(
   try {
     let prompt = context;
     if (data) {
-      prompt = `You're an experienced project manager and scrum master. You're working on a project with the following details:
+      prompt = `You're an experienced product owner and scrum master. You're working on an epic with the following details:
 
       ${JSON.stringify(projectDetails, jsonReplacer, 2)}
 

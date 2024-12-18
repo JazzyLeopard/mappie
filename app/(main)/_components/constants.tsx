@@ -5,33 +5,33 @@ import { MenuItemType } from "@/lib/types";
 
 export const steps = [
     {
-        title: 'What is the name of your project?',
+        title: 'What is the name of your epic?',
         key: 'title',
-        placeholder: 'Project Name',
+        placeholder: 'Epic Name',
         stepNumber: 1
     },
     {
-        title: 'Can you describe your project in a few sentences?',
+        title: 'Can you describe your epic in a few sentences?',
         key: 'description',
-        placeholder: 'Describe the specific, measurable objectives of your project. Make sure they align with the goals of the larger project, if applicable.',
+        placeholder: 'Describe the specific, measurable objectives of your epic. Make sure they align with the goals of the larger project, if applicable.',
         stepNumber: 2
     },
     {
-        title: 'What are the main objectives of this project?',
+        title: 'What are the main objectives of this epic?',
         key: "objectives",
-        placeholder: 'Describe the specific, measurable objectives of your project. Make sure they align with the goals of the larger project, if applicable.',
+        placeholder: 'Describe the specific, measurable objectives of your epic. Make sure they align with the goals of the larger project, if applicable.',
         stepNumber: 3
     },
     {
-        title: 'What are the core functional and non-functional requirements for your project?',
+        title: 'What are the core functional and non-functional requirements for your epic?',
         key: "requirements",
-        placeholder: 'List the core functional requirements for your project. Include any specific user interactions and non-functional requirements such as performance, security, or usability standards',
+        placeholder: 'List the core functional requirements for your epic. Include any specific user interactions and non-functional requirements such as performance, security, or usability standards',
         stepNumber: 4
     },
     {
-        title: 'Who are the main stakeholders? Who is involved in this project?',
+        title: 'Who are the main stakeholders? Who is involved in this epic?',
         key: "stakeholders",
-        placeholder: 'Identify the primary stakeholders for this project, including their roles and main concerns. Also, describe the target audience, including their key characteristics, needs, and pain points',
+        placeholder: 'Identify the primary stakeholders for this epic, including their roles and main concerns. Also, describe the target audience, including their key characteristics, needs, and pain points',
         stepNumber: 5
     },
     {
@@ -44,7 +44,7 @@ export const menuItems: MenuItemType[] = [
     {
         key: "overview",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: true,
         required: true
     }
@@ -54,34 +54,34 @@ export const epicMenuItems: MenuItemType[] = [
     {
         key: "description",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: true,
         required: true
     },
     {
         key: "acceptanceCriteria",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: true,
         required: true
     },
     {
         key: "businessValue",
         icon: <PeopleIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: true,
         required: true
     },
     {
         key: "dependencies",
         icon: <DependenciesIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: false,
     },
     {
         key: "risks",
         icon: <RisksIcon />,
-        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your project.",
+        description: "Add regular paragraphs to convey your main content. This will enhance the scope of your epic.",
         active: false,
     },
 ]
@@ -92,7 +92,7 @@ export const functionalRequirementsItems: MenuItemType[] = [
         icon: <PeopleIcon />,
         description: "The title of the functional requirement",
         active: true,
-        required: true
+        required: true  
     },
     {
         key: "description",
@@ -226,30 +226,21 @@ Finally, ensure that this section provides a balanced view that acknowledges cha
 
     useCases: "Enhance the provided use case by following industry-standard practices. Structure the use case as follows: Title A clear, concise title for the use case. ### Actors Identify the primary and secondary actors involved. ### Preconditions List any conditions that must be true before the use case begins. ### Main Success Scenario Describe the step-by-step flow of events for the successful path. ### Alternative Scenarios Include any alternative paths or variations from the main scenario. For each, specify: - Name - Start point (step number in the main scenario) - Steps - Return point (step number in the main scenario or 'end') ### Error Scenarios Describe potential error conditions and how they are handled. For each, specify: - Name - Start point (step number in the main scenario) - Steps ### Postconditions State the system's condition after the use case is completed. ### UI Requirements List any specific user interface requirements for this use case. Ensure the use case is detailed, specific, and provides clear value to the development team. Use simple, easy-to-understand language. Maintain the language and language style of the input data. Don't give any explanations. Use H3 for subheadings.Remove the top headings if any",
     functionalRequirements: "Enhance the provided functional requirements based on the following project details. Each requirement should include: Requirement ID: A unique identifier for the requirement.Title: A brief, descriptive title summarizing the requirement. Requirement: A detailed description of the functionalities that the system should provide. Create a list of sub-requirements that each start with The system shall ... Ensure the sub-requirements are clear, concise, and free of ambiguity. Priority: Indicate the importance of this requirement (e.g., Must have, Should have, Could have). Traceability: Link the requirement to a specific business goal or objective that it supports. Make sure all of these properties are written on separate lines. Use the language of the project details to write the functional requirements. Order them from most important to least important. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete list. If the requirements can be made more granular by splitting them up, please do so. Use plain language that anyone can understand. Format the output as a complete MARKDOWN format. Use only H3 for subheadings. Use the project language.Remove the top headings if any",
-    epics: "Enhance the provided epic based on the following project details. Each epic should include: Epic ID: A unique identifier for the epic. Title: A brief, descriptive title summarizing the epic. Description: A detailed description of the epic. Use the language of the project details to enhance the epic. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete epic description. If the epics can be made more granular by splitting them up, please do so. Use plain language that anyone can understand.Format the output as a complete MARKDOWN format, with each epic as a separate item. Maintain the structure and format of the inputted data.Remove the top headings if any",
+    epics: "Enhance the provided feature based on the following epic details. Each epic should include: Epic ID: A unique identifier for the epic. Title: A brief, descriptive title summarizing the epic. Description: A detailed description of the epic. Use the language of the project details to enhance the epic. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete epic description. If the epics can be made more granular by splitting them up, please do so. Use plain language that anyone can understand.Format the output as a complete MARKDOWN format, with each epic as a separate item. Maintain the structure and format of the inputted data.Remove the top headings if any",
     userStories: "Enhance the provided userStory based on the following project details. Each userStory should include: userStoryId: A unique identifier for the userStory. Title: A brief, descriptive title summarizing the uerStory. Description: A detailed description of the epic. Use the language of the project details to enhance the userStory. Make sure they are detailed and clear. If the input is too short or missing key points, add suggestions to make a complete userStory description. If the userStory can be made more granular by splitting them up, please do so. Use plain language that anyone can understand.Format the output as a complete MARKDOWN format, with each epic as a separate item. Maintain the structure and format of the inputted data.Remove the top headings if any",
 };
 
 export const placeholderOverview = `
 
-## Project Template 🎯
-### Overview 🚀
-- For [Who's your target audience?]
-- Who [What problem do they have?]
-- The [Your project's name]
-- Is [What type of solution is it?]
-- That [What are the main benefits?]
-- Unlike [Who/what are you competing with?]
-- Our Solution [What makes you special:]
-
-#### Example:
-- **For** product manager and analysts
-- **Who** struggle with documenting their product requirements and stories
-- **The** Mappie AI app
-- **Is** a comprehensive product requirements and user stories documentation tool
-- **That** helps them save time and get back to shipping
-- **Unlike** other tools that require a lot of manual work
-- **Our Solution** provides a seamless way to document, track, and ship products faster
+## Epic Template 🎯
+### Epic Summary 🌟
+- Target Audience: [Project Managers and Development Teams]
+- Problem Statement: [The current project lacks a clear direction and defined goals.]
+- Epic Name: [User Authentication Revamp]
+- Type of Epic: [Feature Enhancement]
+- Key Benefits: [Improved user experience, increased security, and streamlined onboarding process.]
+- Competitive Edge: [Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.]
+- Unique Value Proposition: [This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.]
 
 ### Problem 💭
 [Describe the current situation and why it needs fixing]
@@ -272,9 +263,9 @@ export const placeholderOverview = `
 1. [Second user type]
 2. [Third user type]
 
-### Use Cases 📱
-1. [First detailed usage scenario]
-2. [Second usage scenario]
+### User Scenarios 📱
+1. [First detailed user scenario]
+2. [Second user scenario]
 3. [Optional third scenario]
 
 ### Features In ✅
@@ -297,26 +288,17 @@ export const placeholderOverview = `
 `;
 
 export const ideatePrompts: { [key: string]: string } = {
-    overview: `Create a comprehensive project overview following this exact template structure:
+    overview: `Create a comprehensive epic overview following this exact template structure:
 
-## Project Template 🎯
-### Overview 🚀
-- For [Who's your target audience?]
-- Who [What problem do they have?]
-- The [Your project's name]
-- Is [What type of solution is it?]
-- That [What are the main benefits?]
-- Unlike [Who/what are you competing with?]
-- Our Solution [What makes you special:]
-
-#### Example:
-- **For** product manager and analysts
-- **Who** struggle with documenting their product requirements and stories
-- **The** Mappie AI app
-- **Is** a comprehensive product requirements and user stories documentation tool
-- **That** helps them save time and get back to shipping
-- **Unlike** other tools that require a lot of manual work
-- **Our Solution** provides a seamless way to document, track, and ship products faster
+## Epic Template 🎯
+### Epic Summary 🌟
+- Target Audience: [Project Managers and Development Teams]
+- Problem Statement: [The current project lacks a clear direction and defined goals.]
+- Epic Name: [User Authentication Revamp]
+- Type of Epic: [Feature Enhancement]
+- Key Benefits: [Improved user experience, increased security, and streamlined onboarding process.]
+- Competitive Edge: [Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.]
+- Unique Value Proposition: [This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.]
 
 ### Problem 💭
 [Describe the current situation and why it needs fixing]
@@ -339,9 +321,9 @@ export const ideatePrompts: { [key: string]: string } = {
 1. [Second user type]
 2. [Third user type]
 
-### Use Cases 📱
-1. [First detailed usage scenario]
-2. [Second usage scenario]
+### User Scenarios 📱
+1. [First detailed user scenario]
+2. [Second user scenario]
 3. [Optional third scenario]
 
 ### Features In ✅

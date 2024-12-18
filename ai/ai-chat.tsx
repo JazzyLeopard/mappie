@@ -505,13 +505,14 @@ const AIStoryCreator = memo(function AIStoryCreator({
                     contextLabels={[
                       {
                         type: selectedItemType === 'userStory' ? 'User Story' :
-                          selectedItemType === 'epic' ? 'Epic' :
+                          selectedItemType === 'epic' ? 'Feature' :
                             selectedItemType === 'useCase' ? 'Use Case' :
                               selectedItemType === 'functionalRequirement' ? 'FR' :
-                                selectedItemType,
+                                selectedItemType === 'Project' ? 'Epic' :
+                                  selectedItemType,
                         name: (() => {
                           if (selectedItemType === 'epic') {
-                            return selectedEpic?.name || 'Untitled Epic';
+                            return selectedEpic?.name || 'Untitled Feature';
                           } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
                             return selectedUserStory?.title || 'Untitled';
                           } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
