@@ -162,19 +162,17 @@ export default function UseCasesLayout({
                 throw new Error(data.error);
               }
 
-              if (data.done) {
+              if (data.done && data.useCases) {
                 if (progressInterval.current) {
                   clearInterval(progressInterval.current);
                 }
                 setGenerationProgress(100);
                 setGenerationStatus('Complete!');
                 toast.success("Use cases generated successfully");
+
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
-                if (onAddUseCase) {
-                  await onAddUseCase();
-                }
                 return;
               }
 
@@ -257,9 +255,6 @@ export default function UseCasesLayout({
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
-                if (onAddUseCase) {
-                  await onAddUseCase();
-                }
                 return;
               }
 

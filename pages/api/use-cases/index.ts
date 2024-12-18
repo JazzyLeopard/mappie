@@ -330,6 +330,7 @@ Generate use cases that specifically address the functional requirements listed 
 
     sendEvent({ progress: 75, status: 'Creating use cases...' });
     console.log('Creating use cases...');
+
     for (const useCase of generatedUseCases) {
       if (useCase && useCase.description) {
         const formattedDescription = convertDescriptionToMarkdown(useCase.description);
@@ -347,14 +348,17 @@ Generate use cases that specifically address the functional requirements listed 
     console.log('Use cases created successfully');
     sendEvent({ progress: 95, status: 'Finalizing...' });
     sendEvent({ progress: 100, status: 'Complete!' });
-    res.status(200).json({
-      useCases: serializeBigInt(generatedUseCases),
-      markdown: convertDescriptionToMarkdown(generatedUseCases[0]?.description || {})
+    sendEvent({
+      done: true,
+      type: 'complete',
+      useCases: serializeBigInt(generatedUseCases)
     });
+
   } catch (error) {
     console.error('API Error:', error);
     sendEvent({
       error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      type: 'error',
       progress: 100,
       status: 'Error'
     });

@@ -351,7 +351,11 @@ export default async function handler(
     console.log('Use cases created successfully');
     sendEvent({ progress: 95, status: 'Finalizing...' });
     sendEvent({ progress: 100, status: 'Complete!' });
-    res.status(200).json({ useCases: serializeBigInt(generatedUseCase), markdown: convertDescriptionToMarkdown(generatedUseCase[0]?.description || {}) });
+    sendEvent({
+      done: true,
+      type: 'complete',
+      useCases: serializeBigInt(generatedUseCase)
+    });
   }
   catch (error) {
     console.error('API Error:', error);
