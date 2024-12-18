@@ -155,6 +155,7 @@ export default async function handler(
 [Repeat format for next requirement]
 
 IMPORTANT: 
+- Title should be short and concise
 - Each sub-requirement MUST end with "Priority: [level]"
 - Priority levels MUST be one of: Must Have, Should Have, or Could Have
 - Each requirement must have at least 4 sub-requirements
@@ -190,21 +191,33 @@ ${projectDetails}`;
     const requirements = content
       .split('---')
       .map(req => req.trim())
-      .filter(req => req.match(/^# [^\n]+/m));
+      .filter(req => {
+        // Add additional validation to ensure we don't process empty requirements
+        const hasContent = req.length > 0;
+        const hasTitle = req.match(/^# [^\n]+/m);
+        return hasContent && hasTitle;
+      });
 
     if (requirements.length < 2) {
       throw new Error('Not enough separate requirements generated. Please try again.');
     }
 
-    const formattedRequirements = requirements.map(req => {
-      const titleMatch = req.match(/^# ([^\n]+)/m);
-      const title = titleMatch ? titleMatch[1].trim() : 'Untitled Requirement';
+    const formattedRequirements = requirements
+      .map(req => {
+        const titleMatch = req.match(/^# ([^\n]+)/m);
+        const title = titleMatch ? titleMatch[1].trim() : null;
 
-      return {
-        title,
-        description: req
-      };
-    });
+        return {
+          title: title,
+          description: req
+        };
+      })
+      .filter(req => req !== null); // Remove any null entries
+
+    // Validate we have requirements after filtering
+    if (formattedRequirements.length === 0) {
+      throw new Error('No valid requirements were generated. Please try again.');
+    }
 
     sendEvent({ progress: 95, status: 'Finalizing...' });
     sendEvent({ progress: 100, status: 'Complete!' });
@@ -226,3 +239,4 @@ ${projectDetails}`;
     res.end();
   }
 }
+
