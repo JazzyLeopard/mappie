@@ -65,7 +65,7 @@ function TableOfContentsList({
   };
 
   return (
-    <div className="absolute left-0 top-0 h-full" style={{ transform: 'translateX(-3rem)' }}>
+    <div className="absolute top-0 h-full" style={{ transform: 'translateX(-3rem)' }}>
       <div className="sticky top-1/2 -translate-y-1/2">
         <button
           className={cn(
