@@ -1,19 +1,13 @@
-'use client'
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Copy, FileDown, Grid, Replace } from "lucide-react"
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
-import { toast } from 'sonner'
-import { Skeleton } from "@/components/ui/skeleton"
-import { useState, useEffect, useCallback } from 'react';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $convertToMarkdownString, $convertFromMarkdownString } from '@lexical/markdown';
-import { ENHANCED_TRANSFORMERS } from '../Lexical/plugins/MarkdownTransformers';
-import { $getRoot, LexicalNode } from 'lexical';
-import { createEditor } from 'lexical';
-import { createHeadlessEditor } from '@lexical/headless';
+import { Button } from "@/components/ui/button";
+import { Copy, Replace } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { toast } from 'sonner';
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface MarkdownCardProps {
   content?: string;
@@ -26,30 +20,10 @@ interface MarkdownCardProps {
   isLoading?: boolean;
 }
 
-// Add this CSS animation at the top of your file, after the imports
-const loadingAnimation = {
-  '@keyframes typing': {
-    '0%': { width: '0%' },
-    '20%': { width: '20%' },
-    '40%': { width: '40%' },
-    '60%': { width: '60%' },
-    '80%': { width: '80%' },
-    '100%': { width: '100%' }
-  }
-};
-
-// Add this type declaration for the window object
-declare global {
-  interface Window {
-    __lexicalEditor: any;
-    __insertMarkdown: (markdown: string) => void;
-  }
-}
-
 export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading }: MarkdownCardProps) {
-  // Add state to track if content is still streaming
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamedContent, setStreamedContent] = useState('');
+  const markdownRef = useRef<HTMLDivElement | null>(null); // Ref for the rendered markdown content
 
   // Update streamed content when content prop changes
   useEffect(() => {
@@ -59,36 +33,38 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
     }
   }, [content]);
 
-  const handleCopy = useCallback(async () => {
+  // Handle copying the content
+  const handleCopy = useCallback(() => {
     try {
-      // Create a temporary headless editor
-      const tempEditor = createHeadlessEditor({
-        nodes: [],
-        onError: console.error,
-      });
+      const markdownElement = markdownRef.current;
+      if (!markdownElement) {
+        toast.error('Content not found for copying');
+        return;
+      }
 
-      // Normalize the markdown through Lexical's conversion cycle
-      let normalizedMarkdown = content;
-      
-      tempEditor.update(() => {
-        const nodes = $convertFromMarkdownString(content || '', ENHANCED_TRANSFORMERS);
-        if (nodes as unknown as LexicalNode[]) {
-          normalizedMarkdown = $convertToMarkdownString(ENHANCED_TRANSFORMERS);
-        }
-      });
+      // Create a selection range and copy content
+      const range = document.createRange();
+      range.selectNodeContents(markdownElement);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
 
-      // Copy to clipboard
-      await navigator.clipboard.writeText(normalizedMarkdown || '');
-      toast.success('Copied to clipboard');
+      const successful = document.execCommand('copy'); // Copy selected content to clipboard
+      if (successful) {
+        toast.success('Copied to clipboard');
+      } else {
+        toast.error('Copy to clipboard failed');
+      }
+
+      // Cleanup selection
+      selection?.removeAllRanges();
     } catch (error) {
       console.error('Copy failed:', error);
-      // Fallback to basic copy
-      navigator.clipboard.writeText(content || '');
-      toast.success('Copied to clipboard (basic format)');
+      toast.error('Copy to clipboard failed');
     }
-  }, [content]);
+  }, []);
 
-  // Show skeleton while streaming or loading
+  // Skeleton loading while streaming or loading
   if (isLoading || isStreaming) {
     return (
       <div className="rounded-lg border border-neutral-200 overflow-hidden bg-white">
@@ -113,6 +89,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
     <div className="w-full mb-4 rounded-lg border border-neutral-200 overflow-hidden bg-white">
       <div className="h-10 overflow-hidden border-b bg-neutral-50 px-3 flex items-center justify-end gap-2">
         <div className="relative group flex items-center justify-between gap-2 w-full">
+          {/* Copy Button */}
           <Button
             variant="ghost"
             size="sm"
@@ -123,13 +100,14 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
             Copy
           </Button>
 
+          {/* Replace Button */}
           <Button
             variant="ghost"
             size="sm"
             className="h-7"
             onClick={async () => {
               try {
-                await onReplace(content || '');
+                await onReplace(streamedContent || '');
                 toast.success('Text replaced successfully');
               } catch (error) {
                 console.error('Replace error:', error);
@@ -143,7 +121,11 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
         </div>
       </div>
 
-      <div className="overflow-x-auto max-w-full p-4 px-6 min-w-[300px]">
+      {/* Markdown Content */}
+      <div
+        ref={markdownRef} // Reference for the copy functionality
+        className="overflow-x-auto max-w-full p-4 px-6 min-w-[300px]"
+      >
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
@@ -184,5 +166,5 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
         </ReactMarkdown>
       </div>
     </div>
-  )
+  );
 }
