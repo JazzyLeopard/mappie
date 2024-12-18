@@ -107,7 +107,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     const handleGenerateSingleFR = async () => {
         if (!projectId) {
-            toast.error("Please select a project first");
+            toast.error("Please select an epic first");
             return;
         }
 
@@ -216,7 +216,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
 
     const handleGenerateMultipleFRs = async () => {
         if (!projectId) {
-            toast.error("Please select a project first");
+            toast.error("Please select an epic first");
             return;
         }
 
@@ -369,13 +369,13 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
                     <Image src={Empty} alt="No functional requirements" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
                     <h2 className="text-xl font-semibold text-center">
-                        Please fill in the project details first.
+                        Please fill in the epic details first.
                     </h2>
                     <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
                         onClick={() => router.push(`/projects/${projectId}`)}
                         variant="default"
                     >
-                        Go to Project Overview
+                        Go to Epic Overview
                     </Button>
                 </div>
             </div>
@@ -514,10 +514,10 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                             />
                             <h2 className="text-lg sm:text-xl font-semibold text-center px-2">
                                 <span className="block sm:inline">You haven't created any functional requirements </span>
-                                <span className="block sm:inline">for this project yet.</span>
+                                <span className="block sm:inline">for this epic yet.</span>
                             </h2>
                             <p className="text-center text-gray-600 max-w-md text-sm sm:text-base px-4">
-                                Based on the project details, the AI can generate
+                                Based on the epic details, the AI can generate
                                 streamlined functional requirements that detail the actions of
                                 the user and the system. Try it!
                             </p>
@@ -548,7 +548,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
                     <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
                         <div className="flex flex-col space-y-4">
-                            <h3 className="text-lg font-semibold">{isGenerating === "functionalRequirements" ? "Generating Initial Functional Requirements based on project details..." : "Generating an additional Functional Requirement..."}</h3>
+                            <h3 className="text-lg font-semibold">{isGenerating === "functionalRequirements" ? "Generating Initial Functional Requirements based on epic details..." : "Generating an additional Functional Requirement..."}</h3>
                             <Progress value={generationProgress} className="w-full" />
                             <p className="text-sm text-muted-foreground">{generationStatus}</p>
                         </div>

@@ -33,19 +33,19 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         try {
             await updateEpic({ _id, [field]: value })
         } catch (error) {
-            console.error("Error updating epic:", error);
+            console.error("Error updating feature:", error);
         }
     }, [updateEpic]);
 
     const handleDeleteEpic = useCallback(async (_id: Id<"epics">) => {
         try {
             await deleteEpic({ _id });
-            console.log('Epic deleted:', _id);
+            console.log('Feature deleted:', _id);
             setContent((prevEpics: any) => prevEpics.filter((epic: any) => epic._id !== _id));
-            toast.success("Epic deleted successfully");
+            toast.success("Feature deleted successfully");
         } catch (error) {
-            console.error("Error deleting epic:", error);
-            toast.error("Failed to delete epic");
+            console.error("Error deleting feature:", error);
+            toast.error("Failed to delete feature");
         }
     }, [deleteEpic]);
 
