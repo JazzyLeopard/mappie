@@ -139,17 +139,18 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
     if (!content) throw new Error('No content generated from OpenAI');
 
     // Process AI response
-    sendEvent({ progress: 75, status: 'Processing epics...' });
+    sendEvent({ progress: 75, status: 'Processing features...' });
     const epics = content
-      .split(/(?=###\s*Epic:\s*)/g)
+      .split(/(?=###\s*Feature:\s*)/g)
       .filter(section => section.trim())
       .map(section => {
-        const nameMatch = section.match(/Epic:\s*(.+?)(?=\n|$)/);
+        const nameMatch = section.match(/Feature:\s*(.+?)(?=\n|$)/);
         const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
-        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Acceptance Criteria|$)/m);
+        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
+        const functionalityMatch = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies|$)/m);
 
         // Updated regex patterns to better capture multiple bullet points
-        const acceptanceCriteriaSection = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
+        const functionalitySection = functionalityMatch?.[1];
         const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
         const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
@@ -158,11 +159,15 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
             ?.split('\n')
             .map(line => line.trim())
             .filter(line =>
-              line.startsWith('•') &&
-              line.includes(`${prefix}`)
+              line.startsWith('•') ||
+              line.startsWith('Functionality')
             )
             .map(line => {
               const indentation = line.match(/^\s*/)?.[0] || '';
+              if (line.startsWith('Functionality')) {
+                const content = line.split(':')[1]?.trim() || '';
+                return `${indentation}• **${line.split(':')[0].trim()}:** ${content}`;
+              }
               const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
               const number = numberMatch ? numberMatch[1] : '';
               const content = line.split(':')[1]?.trim() || '';
@@ -171,30 +176,32 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
         };
 
         // Process each section
-        const acceptanceCriteria = extractBulletPoints(acceptanceCriteriaSection ?? "", 'Criterion');
+        const functionality = functionalitySection?.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.startsWith('Functionality'))
+          .map(line => {
+            const [title, ...rest] = line.split(':');
+            return `• **${title.trim()}:** ${rest.join(':').trim()}`;
+          }) || [];
         const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
         const risks = extractBulletPoints(risksSection ?? "", 'Risk');
 
-
         const processedData = {
-          name: nameMatch?.[1]?.trim() || 'Untitled Epic',
+          name: nameMatch?.[1]?.trim() || 'Untitled Feature',
           description: {
             Description: descriptionMatch?.[1]?.trim() || '',
             "Business Value": businessValueMatch?.[1]?.trim() || '',
-            "Acceptance Criteria": acceptanceCriteria,
+            "Functionality": functionality,
             Dependencies: dependencies,
             Risks: risks
           }
         };
 
-        // Debug logging for processed data
-        console.log('Processed data:', JSON.stringify(processedData, null, 2));
-
         return processedData;
       });
 
     // Create epics in database
-    sendEvent({ progress: 85, status: 'Saving epics...' });
+    sendEvent({ progress: 85, status: 'Saving features...' });
 
     const createdEpics = await Promise.all(epics.map(async (epic) => {
       const markdownDescription = `# ${epic.name}
@@ -205,10 +212,10 @@ ${epic.description.Description}
 ## Business Value
 ${epic.description["Business Value"]}
 
-## Acceptance Criteria
-${epic.description["Acceptance Criteria"].length > 0
-          ? epic.description["Acceptance Criteria"].map(criterion => `${criterion}`).join('\n')
-          : '• No acceptance criteria specified'}
+## Functionality
+${epic.description.Functionality.length > 0
+          ? epic.description.Functionality.join('\n')
+          : '• No functionality specified'}
 
 ## Dependencies
 ${epic.description.Dependencies.length > 0
