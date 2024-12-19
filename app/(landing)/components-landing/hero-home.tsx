@@ -47,7 +47,7 @@ export default function HeroHome() {
                   {isSignedIn ? (
                     <Button className="group mb-4 w-full text-white shadow hover:bg-[length:100%_150%] sm:mb-0 sm:w-auto">
                       <span className="relative inline-flex items-center">
-                        <Link href="/projects">Enter Mappie</Link> {" "}
+                        <Link href="/epics">Enter Mappie</Link> {" "}
                         <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
                           →
                         </span>

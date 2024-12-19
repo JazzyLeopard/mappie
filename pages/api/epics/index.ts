@@ -56,11 +56,11 @@ export default async function handler(
     const convexProjectId = projectId as Id<"projects">;
 
     // Fetch project and context
-    sendEvent({ progress: 25, status: 'Loading project...' });
+    sendEvent({ progress: 25, status: 'Loading epic...' });
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
-    if (!project) throw new Error('Project not found');
-    if (project.userId !== userId) throw new Error('Unauthorized access to project');
+    if (!project) throw new Error('Epic not found');
+    if (project.userId !== userId) throw new Error('Unauthorized access to epic');
 
     // Get functional requirements
     sendEvent({ progress: 35, status: 'Loading requirements...' });
@@ -79,30 +79,30 @@ export default async function handler(
     const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
 
     if (!useCases) {
-      return res.status(400).json({ message: "No Use cases found for the project" });
+      return res.status(400).json({ message: "No Use cases found for the epic" });
     }
 
     // Generate epics with OpenAI
-    sendEvent({ progress: 55, status: 'Generating epics...' });
+    sendEvent({ progress: 55, status: 'Generating features...' });
     let prompt = `
-Project Context:
+Epic Context:
 ${context}
 
 Functional Requirements:
 ${functionalRequirementsText}
 
-Based on the above project context and functional requirements, please generate a reasonable number of high-level epics. Each epic name should be kept short and unique. Each epic should follow this format:
+Based on the above epic context and functional requirements, please generate a reasonable number of high-level features. Each feature name should be kept short and unique. Each feature should follow this format:
 
-### Epic: [Epic Name]
+### Feature: [Feature Name]
 
-**Description**: [Detailed description of what this epic entails]
+**Description**: Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.
 
-**Business Value**: [Clear statement of the business value this epic delivers]
+**Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
 
-**Acceptance Criteria**:
-• Criterion 1: [Start with an action verb (Implement/Develop/Create) and be specific about what needs to be achieved]
-• Criterion 2: [Include measurable outcomes with specific metrics (e.g., response times, success rates)]
-• Criterion 3: [Address edge cases, error scenarios, or quality requirements]
+**Functionality**:
+Functionality 1: [Detailed explanation of the core functionality]
+Functionality 2: [Detailed explanation of another key capability]
+... and so on
 
 **Dependencies**:
 • Dependency 1: [Technical or system dependency that is critical to success]
@@ -113,15 +113,14 @@ Based on the above project context and functional requirements, please generate 
 • Risk 2: [Timeline, resource, or quality risk that needs mitigation]
 
 IMPORTANT:
-- Each epic MUST have EXACTLY 3 acceptance criteria
-- Each epic MUST have EXACTLY 2 dependencies
-- Each epic MUST have EXACTLY 2 risks
+- Each feature MUST have an adequate number of functional criteria
+- Each feature MUST have EXACTLY 2 dependencies
+- Each feature MUST have EXACTLY 2 risks
 - Each point should be detailed and specific
-- Start acceptance criteria with action verbs
 - Include measurable outcomes where possible
 - Consider both technical and business aspects
 
-Please ensure each epic is well-defined, practical, and aligns with the project goals and requirements.`;
+Please ensure each feature is well-defined, practical, and aligns with the epic goals and requirements.`;
 
     if (useCases?.length > 0) {
       const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
@@ -140,17 +139,18 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
     if (!content) throw new Error('No content generated from OpenAI');
 
     // Process AI response
-    sendEvent({ progress: 75, status: 'Processing epics...' });
+    sendEvent({ progress: 75, status: 'Processing features...' });
     const epics = content
-      .split(/(?=###\s*Epic:\s*)/g)
+      .split(/(?=###\s*Feature:\s*)/g)
       .filter(section => section.trim())
       .map(section => {
-        const nameMatch = section.match(/Epic:\s*(.+?)(?=\n|$)/);
+        const nameMatch = section.match(/Feature:\s*(.+?)(?=\n|$)/);
         const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
-        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Acceptance Criteria|$)/m);
+        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
+        const functionalityMatch = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies|$)/m);
 
         // Updated regex patterns to better capture multiple bullet points
-        const acceptanceCriteriaSection = section.match(/\*\*Acceptance Criteria\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
+        const functionalitySection = functionalityMatch?.[1];
         const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
         const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
@@ -159,11 +159,15 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
             ?.split('\n')
             .map(line => line.trim())
             .filter(line =>
-              line.startsWith('•') &&
-              line.includes(`${prefix}`)
+              line.startsWith('•') ||
+              line.startsWith('Functionality')
             )
             .map(line => {
               const indentation = line.match(/^\s*/)?.[0] || '';
+              if (line.startsWith('Functionality')) {
+                const content = line.split(':')[1]?.trim() || '';
+                return `${indentation}• **${line.split(':')[0].trim()}:** ${content}`;
+              }
               const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
               const number = numberMatch ? numberMatch[1] : '';
               const content = line.split(':')[1]?.trim() || '';
@@ -172,30 +176,32 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
         };
 
         // Process each section
-        const acceptanceCriteria = extractBulletPoints(acceptanceCriteriaSection ?? "", 'Criterion');
+        const functionality = functionalitySection?.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.startsWith('Functionality'))
+          .map(line => {
+            const [title, ...rest] = line.split(':');
+            return `• **${title.trim()}:** ${rest.join(':').trim()}`;
+          }) || [];
         const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
         const risks = extractBulletPoints(risksSection ?? "", 'Risk');
 
-
         const processedData = {
-          name: nameMatch?.[1]?.trim() || 'Untitled Epic',
+          name: nameMatch?.[1]?.trim() || 'Untitled Feature',
           description: {
             Description: descriptionMatch?.[1]?.trim() || '',
             "Business Value": businessValueMatch?.[1]?.trim() || '',
-            "Acceptance Criteria": acceptanceCriteria,
+            "Functionality": functionality,
             Dependencies: dependencies,
             Risks: risks
           }
         };
 
-        // Debug logging for processed data
-        console.log('Processed data:', JSON.stringify(processedData, null, 2));
-
         return processedData;
       });
 
     // Create epics in database
-    sendEvent({ progress: 85, status: 'Saving epics...' });
+    sendEvent({ progress: 85, status: 'Saving features...' });
 
     const createdEpics = await Promise.all(epics.map(async (epic) => {
       const markdownDescription = `# ${epic.name}
@@ -206,10 +212,10 @@ ${epic.description.Description}
 ## Business Value
 ${epic.description["Business Value"]}
 
-## Acceptance Criteria
-${epic.description["Acceptance Criteria"].length > 0
-          ? epic.description["Acceptance Criteria"].map(criterion => `${criterion}`).join('\n')
-          : '• No acceptance criteria specified'}
+## Functionality
+${epic.description.Functionality.length > 0
+          ? epic.description.Functionality.join('\n')
+          : '• No functionality specified'}
 
 ## Dependencies
 ${epic.description.Dependencies.length > 0

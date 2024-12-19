@@ -26,8 +26,8 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
         [attribute]: value
       });
     } catch (error) {
-      console.error('Error updating project:', error);
-      toast.error('Failed to update project section');
+      console.error('Error updating epic:', error);
+      toast.error('Failed to update epic');
     }
   }, [updateProjectMutation, id]);
 

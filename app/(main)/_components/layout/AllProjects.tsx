@@ -61,23 +61,23 @@ export default function Component() {
   const onCreate = async () => {
     try {
       const newProject = await createProject({
-        title: "Untitled Project",
+        title: "Untitled Epic",
       });
 
-      toast.success("New project created");
+      toast.success("New epic created");
 
       if (newProject) {
         setSelectedProject(newProject);
-        router.push(`/projects/${newProject}`);
+        router.push(`/epics/${newProject}`);
       }
     } catch (error) {
-      toast.error("Failed to create project");
+      toast.error("Failed to create epic");
     }
   };
 
   const handleGenerateProject = async (description: string, language: SpokenLanguage) => {
     if (!description.trim()) {
-      toast.error("Please enter a project description.");
+      toast.error("Please enter an epic description.");
       return;
     }
 
@@ -85,14 +85,14 @@ export default function Component() {
 
     try {
       const projectId = await createProject({
-        title: "Generating Project...",
+        title: "Generating Epic...",
       });
 
       if (!projectId) {
-        throw new Error("Failed to create project");
+        throw new Error("Failed to create epic");
       }
 
-      toast.success("Project created. Generating details...");
+      toast.success("Epic created. Generating details...");
 
       const response = await fetch('/api/ideate', {
         method: 'POST',
@@ -108,22 +108,22 @@ export default function Component() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate project details');
+        throw new Error(errorData.error || 'Failed to generate epic details');
       }
 
       await response.json(); // Wait for the response
 
       // Success handling
-      toast.success("Project details generated successfully!");
+      toast.success("Epic details generated successfully!");
       setOpenPopover(null); // Close the popover
       setAiPrompt(""); // Reset the prompt
 
       // Navigate to the new project
-      router.push(`/projects/${projectId}`);
+      router.push(`/epics/${projectId}`);
 
     } catch (error: any) {
-      console.error('Error generating project:', error);
-      toast.error(error.message || "Failed to generate project. Please try again.");
+      console.error('Error generating epic:', error);
+      toast.error(error.message || "Failed to generate epic. Please try again.");
     } finally {
       setIsGenerating(false);
       setOpenIdeateDialog(false);
@@ -133,7 +133,7 @@ export default function Component() {
   const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
     await archiveProject({ _id: id, isArchived: !isArchived });
     setOpenArchiveDialog(false);
-    router.push(`/projects`);
+    router.push(`/epics`);
   };
 
   return (
@@ -141,7 +141,7 @@ export default function Component() {
       <div className="bg-white rounded-lg w-full h-full overflow-y-auto">
         <div className="p-6 pt-16">
           <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-semibold">Projects</h1>
+            <h1 className="text-2xl font-semibold">Epics</h1>
 
           </div>
           <div className="flex items-center space-x-2 mb-6 overflow-x-auto">
@@ -160,7 +160,7 @@ export default function Component() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
-                <DialogTitle>Generate Project with AI</DialogTitle>
+                <DialogTitle>Generate Epic with AI</DialogTitle>
                 <ProjectIdeation 
                   onSubmit={handleGenerateProject}
                   isGenerating={isGenerating}
@@ -190,7 +190,7 @@ export default function Component() {
             {projects?.map((proj: any) => (
               <Card
                 key={proj._id}
-                onClick={() => router.push(`/projects/${proj._id}`)}
+                onClick={() => router.push(`/epics/${proj._id}`)}
                 className="cursor-pointer w-[20rem] max-w-full overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
                 <CardContent className="flex items-center justify-start p-4 space-x-2 pr-16">
@@ -252,9 +252,9 @@ export default function Component() {
                   >
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Archive Project?</DialogTitle>
+                        <DialogTitle>Archive Epic?</DialogTitle>
                         <DialogDescription>
-                          Are you sure, you want to Archive this Project:{" "}
+                          Are you sure, you want to Archive this Epic:{" "}
                           <b>{proj.title}</b>
                         </DialogDescription>
                       </DialogHeader>

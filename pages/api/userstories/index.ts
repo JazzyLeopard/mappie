@@ -86,25 +86,33 @@ export default async function handler(
 
     const epicText = epic.description;
 
-    let userStoryBasePrompt = `As an expert user stories analyst, generate a focused set of 3-5 high-quality user stories that specifically implement the functionality described in this epic. Each user story should be detailed and comprehensive, following this exact structure:
-    {
-      "title": "User Story Title",
-      "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].\n\nThis user story focuses on [detailed explanation of the functionality and its importance in the context of the epic].",
-      
-      "acceptance_criteria": [
-        "Scenario 1: **Given** I am on the registration page, **when** I enter valid personal details and click Submit, **then** I should receive a confirmation email with an activation link",
-        "Scenario 2: **Given** I am on the registration page, **when** I submit the form with an already registered email, **then** I should see an error message saying Email is already registered. Please log in.",
-        "Scenario 3: **Given** I have received a confirmation email, **when** I click the activation link, **then** my account should be activated and I should be able to log in"
-      ],
+    let userStoryBasePrompt = `You are an expert product owner responsible for creating high-quality, well-scoped user stories from a given epic and its related feature. Your goal is to ensure that each user story delivers tangible value, adheres to agile best practices, and is implementable within a sprint.
 
-      "additional_considerations": [
-        "Security requirements for password strength",
-        "Email validation format",
-        "Rate limiting for registration attempts",
-        "Data privacy compliance",
-        "Accessibility standards"
-      ]
-    }`
+          ### Instructions:
+          1. **Adhere to the INVEST Principles**:
+            - Independent, Negotiable, Valuable, Estimable, Small, and Testable.
+
+          2. **Story Format**:
+            Write each user story in the following JSON structure:
+
+          {
+            "title": "User Story Title",
+            "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].",
+            
+            "acceptance_criteria": [
+              "Scenario 1: **Given** [precondition], **when** [action], **then** [expected outcome].",
+              "Scenario 2: **Given** [precondition], **when** [action], **then** [expected outcome].",
+              [More if necessary]"
+            ],
+
+            "additional_considerations": [
+              "Security requirements for [specific functionality]",
+              "Performance considerations for [specific aspect]",
+              "Dependencies on [other system/module]",
+              "Compliance with [specific standards or policies]",
+              "Error handling for [specific failure cases]"
+            ]
+          }`
 
     let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
     userStoryPrompt += `For this specific epic:\n${epicText}\n\n`;
