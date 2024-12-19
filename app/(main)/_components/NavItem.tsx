@@ -11,6 +11,7 @@ interface NavItemProps {
 	active?: boolean;
 	badge?: string;
 	collapsed?: boolean;
+	customElement?: React.ReactNode;
 }
 
 const NavItem: React.FC<NavItemProps> = ({
@@ -20,9 +21,14 @@ const NavItem: React.FC<NavItemProps> = ({
 	active,
 	badge,
 	collapsed,
+	customElement
 }) => {
+	if (customElement) {
+		return customElement;
+	}
+
 	const button = (
-		<button
+		<div
 			onClick={onClick}
 			className={cn(
 				"flex items-center w-full px-4 py-3 text-sm cursor-pointer",
@@ -30,6 +36,7 @@ const NavItem: React.FC<NavItemProps> = ({
 				active && "font-semibold relative before:absolute before:left-1 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-full before:bg-gradient-to-b from-blue-400 to-pink-400 text-primary",
 				collapsed && "justify-center px-0"
 			)}
+			role="button"
 		>
 			<Icon 
 				className={cn(
@@ -55,7 +62,7 @@ const NavItem: React.FC<NavItemProps> = ({
 					)}
 				</>
 			)}
-		</button>
+		</div>
 	);
 
 	if (collapsed) {

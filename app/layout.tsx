@@ -6,6 +6,7 @@ import { OpenPanelComponent } from '@openpanel/nextjs';
 import { Toaster } from 'sonner';
 
 import "@/app/globals.css";
+import { CannySso } from '@/components/CannySso'
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -36,8 +37,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+      </head>
       <body className={inter.className}>
         <ConvexClientProvider>
+          <CannySso />
           <OpenPanelComponent
             clientId="388813f4-70f3-47cf-901d-1db7c4825cf3"
             trackScreenViews={true}
