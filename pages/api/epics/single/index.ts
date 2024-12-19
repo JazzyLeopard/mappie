@@ -1,11 +1,11 @@
-import { NextApiRequest, NextApiResponse } from "next";
 import { api } from "@/convex/_generated/api";
-import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
-import { getAuth } from "@clerk/nextjs/server";
-import { anthropic } from "@ai-sdk/anthropic";
-import { generateText } from 'ai';
 import { useContextChecker } from "@/utils/useContextChecker";
+import { openai } from "@ai-sdk/openai";
+import { getAuth } from "@clerk/nextjs/server";
+import { generateText } from 'ai';
+import { ConvexHttpClient } from "convex/browser";
+import { NextApiRequest, NextApiResponse } from "next";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -90,7 +90,7 @@ export default async function handler(
         }
 
         const existingEpicNames = existingEpics.map((epic: any) => epic?.name);
-        const epicsText = existingEpics.map((epic: any) => epic?.description).join('\n');
+        const featuresText = existingEpics.map((epic: any) => epic?.description).join('\n');
 
         let prompt = `
         Epic Context:
@@ -100,20 +100,20 @@ export default async function handler(
         ${functionalRequirementsText}
 
         Existing Features:
-        ${epicsText}
+        ${featuresText}
 
-        Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following project. Ensure the feature name is different and unique from these: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the project's needs, following this exact structure and level of detail. 
+        Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following project. Ensure that the feature is not one of the existing features and the names are not similar to the existing features: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the project's needs, following this exact structure and level of detail:- 
 
 ### Feature: [Feature Name]
 
-**Description**: Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.
+**Description**: [Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
 
 **Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
 
 **Functionality**:
-Functionality 1: [Detailed explanation of the core functionality]
-Functionality 2: [Detailed explanation of another key capability]
-... and so on
+ Functionality 1: [Explain core system capability or feature]
+ Functionality 2: [Explain user interaction or process flow]
+ Functionality 3: [Explain output or result delivery]
 
 **Dependencies**:
 • Dependency 1: [Technical or system dependency that is critical to success]
@@ -124,14 +124,15 @@ Functionality 2: [Detailed explanation of another key capability]
 • Risk 2: [Timeline, resource, or quality risk that needs mitigation]
 
 IMPORTANT:
-- Each feature MUST have an adequate number of functional criteria
+- Keep consistent formatting throughout the document
+- Each feature MUST have EXACTLY 3 functionality
 - Each feature MUST have EXACTLY 2 dependencies
 - Each feature MUST have EXACTLY 2 risks
 - Each point should be detailed and specific
 - Include measurable outcomes where possible
 - Consider both technical and business aspects
 
-Please ensure the feature is well-defined, practical, and aligns with the epic goals and requirements.`;
+Please ensure each feature is well-defined, practical, and aligns with the epic goals and requirements. `;
 
         if (useCases?.length > 0) {
             const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
@@ -141,7 +142,7 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
         const completion = await generateText({
-            model: anthropic('claude-3-5-sonnet-20241022'),
+            model: openai('gpt-4o-mini'),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         });
@@ -155,42 +156,61 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
         sendEvent({ progress: 75, status: 'Processing features...' });
         const epics = epicContent
             .split(/(?=###\s*Feature:\s*)/g)
-            .filter(section => section.trim())
+            .filter(section => section.trim().startsWith('### Feature:'))
             .map(section => {
-                const nameMatch = section.match(/Feature:\s*(.+?)(?=\n|$)/);
+                const nameMatch = section.match(/(?:###|##)\s*Feature:\s*(.+?)(?=\n|$)/);
                 const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
                 const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
-                const functionalityMatch = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies|$)/m);
 
-                const functionalitySection = functionalityMatch?.[1];
+                // Updated regex patterns to better capture multiple bullet points
+                const functionalitySection = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
                 const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
                 const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
                 const extractBulletPoints = (sectionText: string, prefix: string) => {
+                    if (!sectionText) return [];
                     return sectionText
-                        ?.split('\n')
+                        .split('\n')
                         .map(line => line.trim())
-                        .filter(line =>
-                            (line.startsWith('•') || line.startsWith('-') || line.startsWith('Functionality')) &&
-                            (prefix === 'Functionality' ? line.startsWith('Functionality') : line.includes(prefix))
-                        )
+                        .filter(line => {
+                            const hasBulletPoint =
+                                line.startsWith('•') ||
+                                line.startsWith('-') ||
+                                line.startsWith('* ');
+
+                            const hasContent =
+                                line.includes(`${prefix}`) ||
+                                (line.includes('**') && line.includes(':')) ||
+                                hasBulletPoint;
+
+                            return line.length > 0 && (hasBulletPoint || hasContent);
+                        })
                         .map(line => {
-                            const indentation = line.match(/^\s*/)?.[0] || '';
-                            if (prefix === 'Functionality' && line.startsWith('Functionality')) {
-                                const content = line.split(':')[1]?.trim() || '';
-                                return `${indentation}• **${line.split(':')[0].trim()}:** ${content}`;
+                            let cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
+                            cleanLine = cleanLine.replace(/\*\*/g, '');
+
+                            const numberMatch = cleanLine.match(new RegExp(`${prefix}\\s*(\\d+)`));
+                            const number = numberMatch ? ` ${numberMatch[1]}` : '';
+
+                            let content = '';
+                            if (cleanLine.includes(':')) {
+                                content = cleanLine.split(':').slice(1).join(':').trim();
+                            } else {
+                                content = cleanLine;
                             }
-                            const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
-                            const number = numberMatch ? numberMatch[1] : '';
-                            const content = line.split(':')[1]?.trim() || '';
-                            return `${indentation}• **${prefix} ${number}:** ${content}`;
-                        }) || [];
+
+                            // Clean up any extra whitespace in content
+                            content = content.replace(/\s+/g, ' ').trim();
+
+                            return `  • **${prefix}${number}:** ${content}`;
+                        });
                 };
-                    
+
                 // Process each section
                 const functionality = extractBulletPoints(functionalitySection ?? "", 'Functionality');
                 const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
                 const risks = extractBulletPoints(risksSection ?? "", 'Risk');
+
 
                 const processedData = {
                     name: nameMatch?.[1]?.trim() || 'Untitled Feature',
@@ -203,32 +223,35 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
                     }
                 };
 
+                // Debug logging for processed data
+                console.log('Processed data:', JSON.stringify(processedData, null, 2));
+
                 return processedData;
             });
 
         // Create epics in database
-        sendEvent({ progress: 85, status: 'Saving features...' });
+        sendEvent({ progress: 85, status: 'Saving epics...' });
 
         const createdEpics = await Promise.all(epics.map(async (epic) => {
-            const markdownDescription = `# ${epic.name}
+            const markdownDescription = `### ${epic.name}
 
-## Description
+### Description
 ${epic.description.Description}
 
-## Business Value
+### Business Value
 ${epic.description["Business Value"]}
 
-## Functionality
-${epic.description.Functionality.length > 0
-    ? epic.description.Functionality.join('\n')
-    : '• No functionality specified'}
+### Functionality
+${epic.description["Functionality"].length > 0
+                    ? epic.description["Functionality"].map(functionality => `${functionality}`).join('\n')
+                    : '• No functionality specified'}
 
-## Dependencies
+### Dependencies
 ${epic.description.Dependencies.length > 0
                     ? epic.description.Dependencies.map(dep => `${dep}`).join('\n')
                     : '• No dependencies specified'}
 
-## Risks
+### Risks
 ${epic.description.Risks.length > 0
                     ? epic.description.Risks.map(risk => `${risk}`).join('\n')
                     : '• No risks specified'}`;
