@@ -36,7 +36,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
         } catch (error) {
           console.error('Error fetching project details:', error);
           // In case of error, redirect to a safe page
-          return NextResponse.redirect(new URL(`/projects`, req.url));
+          return NextResponse.redirect(new URL(`/epics`, req.url));
         }
       }
     }

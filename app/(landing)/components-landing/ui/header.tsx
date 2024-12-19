@@ -58,14 +58,14 @@ export default function Header() {
           {isSignedIn ? (
             <div className="w-32 flex items-center justify-end gap-x-6">
               <Button variant="default" className="h-7 md:h-7 lg:h-9" asChild>
-                <Link href="/projects">Enter Mappie</Link>
+                <Link href="/epics">Enter Mappie</Link>
               </Button>
               <UserButton afterSignOutUrl="/" />
             </div>
           ) : (
             <ul className="w-32 flex items-center justify-end gap-3">
               <li>
-                <SignInButton mode="modal" forceRedirectUrl={"/projects"}>
+                <SignInButton mode="modal" forceRedirectUrl={"/epics"}>
                   <Button 
                     variant="ghost" 
                     className="bg-white text-gray-800 shadow hover:bg-gray-50"
@@ -75,7 +75,7 @@ export default function Header() {
                 </SignInButton>
               </li>
               <li>
-                <SignUpButton mode="modal" forceRedirectUrl={"/projects"}>
+                <SignUpButton mode="modal" forceRedirectUrl={"/epics"}>
                   <Button 
                     className="bg-gray-800 text-gray-200 shadow hover:bg-gray-900"
                   >
