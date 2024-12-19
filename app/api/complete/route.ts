@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 import { useContextChecker } from '@/utils/useContextChecker';
 import { Id } from '@/convex/_generated/dataModel';
 import { NextResponse } from 'next/server';
@@ -70,12 +70,12 @@ export async function POST(request: Request) {
     };
 
     const result = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [systemPrompt as any, userMessage as any],
       temperature: 0.7,
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       content: result.text,
       usage: result.usage
     });

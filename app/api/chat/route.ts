@@ -1,6 +1,6 @@
 import { streamText } from 'ai';
 import { tools } from '@/ai/tools';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 
 export async function POST(request: Request) {
   try {
@@ -16,8 +16,8 @@ export async function POST(request: Request) {
         role: msg.role,
         content: msg.content || '',
         // Only include valid tool calls
-        ...(msg.toolInvocations?.some((tool: any) => 
-          tool.state === 'result' && 
+        ...(msg.toolInvocations?.some((tool: any) =>
+          tool.state === 'result' &&
           tool.result?.content
         ) ? {
           tool_calls: msg.toolInvocations
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     };
 
     const result = await streamText({
-      model: openai('gpt-4o-mini'),  // Fixed model name
+      model: anthropic('claude-3-5-sonnet-20241022'),  // Fixed model name
       messages: [systemPrompt, ...validatedMessages],  // Use validated messages
       tools,
       experimental_toolCallStreaming: true,
@@ -89,21 +89,21 @@ export async function POST(request: Request) {
       onFinish: ({ usage }) => {
         const { promptTokens, completionTokens, totalTokens } = usage;
         console.log('Prompt tokens:', promptTokens);
-        console.log('Completion tokens:', completionTokens); 
+        console.log('Completion tokens:', completionTokens);
         console.log('Total tokens:', totalTokens);
       }
     });
 
     return result.toDataStreamResponse({
       headers: {
-        'Connection': 'keep-alive', 
+        'Connection': 'keep-alive',
         'Cache-Control': 'no-cache',
         'Content-Type': 'text/event-stream',
       }
     });
   } catch (error) {
     console.error('Error in POST route:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: error instanceof Error ? error.message : 'Internal Server Error'
     }), {
       status: 500,

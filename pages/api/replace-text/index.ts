@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 
 export default async function handler(
@@ -27,7 +27,7 @@ export default async function handler(
     Important: Ensure both sections maintain proper markdown formatting with correct headings, lists, and emphasis.`;
 
     const completion = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         {
           role: "system",
@@ -51,7 +51,7 @@ export default async function handler(
     ${result.newSection}`;
 
     const formattingCompletion = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         {
           role: "system",

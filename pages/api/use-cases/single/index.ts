@@ -4,7 +4,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -299,7 +299,7 @@ export default async function handler(
     sendEvent({ progress: 55, status: 'Calling OpenAI API...' });
     console.log('Calling OpenAI API...');
     const response = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: singleUseCasePrompt }],
       temperature: 0.7,
     });
