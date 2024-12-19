@@ -17,7 +17,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle, InfoIcon, MessageCircle } from "lucide-react";
+import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle, InfoIcon, MessageCircle, Lightbulb } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
@@ -275,6 +275,37 @@ export const Navigation = () => {
                 active={false}
                 collapsed={false}
               />
+              <NavItem
+                label="Feature Requests"
+                icon={Lightbulb}
+                onClick={() => {}}
+                active={false}
+                collapsed={false}
+                customElement={
+                  <a 
+                    data-canny-link 
+                    href="https://mappie.canny.io"
+                    className={cn(
+                      "flex items-center w-full px-4 py-3 text-sm cursor-pointer",
+                      "w-full py-3 hover:relative hover:before:absolute hover:before:left-1 hover:before:top-1/2 hover:before:-translate-y-1/2 hover:before:h-6 hover:before:w-1 hover:before:rounded-full hover:before:bg-gradient-to-b hover:before:from-blue-400 hover:before:to-pink-400 hover:text-primary"
+                    )}
+                  >
+                    <Lightbulb 
+                      className={cn(
+                        "h-5 w-5 mr-2",
+                        "hover:[&>path]:stroke-[url(#blue-pink-gradient)]"
+                      )} 
+                    />
+                    <svg width="0" height="0">
+                      <linearGradient id="blue-pink-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#60A5FA" />
+                        <stop offset="100%" stopColor="#EC4899" />
+                      </linearGradient>
+                    </svg>
+                    <span className="flex-grow text-left">Feature Requests</span>
+                  </a>
+                }
+              />
             </div>
           </>
         ) : (
@@ -364,6 +395,13 @@ export const Navigation = () => {
                     label="Feedback"
                     icon={MessageCircle}
                     onClick={handleFeedbackClick}
+                    active={false}
+                    collapsed={true}
+                  />
+                  <NavItem
+                    label="Feature Requests"
+                    icon={Lightbulb}
+                    onClick={() => window.open('https://mappie.canny.io', '_blank')}
                     active={false}
                     collapsed={true}
                   />
