@@ -14,17 +14,6 @@ export default function OnboardingEmail({
   return (
     <Html>
       <Container>
-        {/* Welcome GIF */}
-        <Img
-          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmZ5ZjJxbWN4Y3d6ZDdyOWdvNWR2bXBxaWRxdWdtcXBmOWRyeXFtaiZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/5VKbvrjxpVJCM/giphy.gif"
-          alt="Excited reaction animation"
-          width={200}
-          height={150}
-          style={{ 
-            marginBottom: '20px',
-            borderRadius: '8px'
-          }}
-        />
 
         {/* Greeting */}
         <Text style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>
@@ -39,6 +28,18 @@ export default function OnboardingEmail({
         <Text style={{ fontSize: '16px', marginBottom: '16px', lineHeight: '1.5' }}>
           Quick story: As a business analyst, I discovered how AI could revolutionize requirements documentation. It was a game-changer for my workflow, and I thought: "Why isn't everyone doing this?"
         </Text>
+
+        {/* GIF */}
+        <Img
+          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmZ5ZjJxbWN4Y3d6ZDdyOWdvNWR2bXBxaWRxdWdtcXBmOWRyeXFtaiZlcD12MV9pbnRlcm5hbF9naWZzX2dpZklkJmN0PWc/5VKbvrjxpVJCM/giphy.gif"
+          alt="Excited reaction animation"
+          width={200}
+          height={150}
+          style={{ 
+            marginBottom: '20px',
+            borderRadius: '8px'
+          }}
+        />
 
         <Text style={{ fontSize: '16px', marginBottom: '24px', lineHeight: '1.5' }}>
           That's how Mappie was born. Built from real experience, but designed to adapt to your way of working.
@@ -86,6 +87,19 @@ export default function OnboardingEmail({
           ✉️ Or simply reply to this email - I read and respond to everything personally.
         </Text>
 
+        <Text style={{ 
+          fontSize: '16px', 
+          marginBottom: '24px', 
+          lineHeight: '1.5',
+          backgroundColor: '#f0f9ff', // Light blue background
+          padding: '15px',
+          borderRadius: '5px',
+          borderLeft: '4px solid #0070f3', // Blue accent border
+          color: '#1e40af' // Darker blue text
+        }}>
+          🎁 Beta will be free for the first 100 users and once I gather enough feedback, the beta users will get free access to Mappie for 3 months.
+        </Text>
+
         {/* Sign-off */}
         <Text style={{ 
           fontSize: '16px', 
@@ -100,19 +114,6 @@ export default function OnboardingEmail({
         <Text style={{ fontSize: '16px', color: '#666666' }}>
           Best,<br />
           <strong>Kürşad</strong>
-        </Text>
-
-        <Text style={{ 
-          fontSize: '16px', 
-          marginBottom: '24px', 
-          lineHeight: '1.5',
-          backgroundColor: '#f0f9ff', // Light blue background
-          padding: '15px',
-          borderRadius: '5px',
-          borderLeft: '4px solid #0070f3', // Blue accent border
-          color: '#1e40af' // Darker blue text
-        }}>
-          🎁 Beta will be free for the first 100 users and once I gather enough feedback, the beta users will get free access to Mappie for 3 months.
         </Text>
       </Container>
     </Html>
