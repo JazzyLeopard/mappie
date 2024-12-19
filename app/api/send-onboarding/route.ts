@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const data = await resend.emails.send({
       from: 'Kürşad from Mappie <hello@mappie.ai>',
       to: email,
-      subject: 'Welcome to Mappie! 👋',
+      subject: 'Mappie needs your help! 👋',
       react: OnboardingEmail({ username }) as React.ReactElement,
     });
 

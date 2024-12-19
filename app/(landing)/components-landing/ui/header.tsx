@@ -29,26 +29,32 @@ export default function Header() {
             <ul className="flex w-full flex-wrap items-center justify-center gap-4 text-sm lg:gap-8">
               <li className="px-3 py-1">
                 <Link
-                  href="/pricing"
+                  href="#video-demos"
                   className="flex items-center text-gray-700 transition hover:text-gray-900"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('video-demos')?.scrollIntoView({ 
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                  }}
                 >
-                  Pricing
+                  Product Walkthrough
                 </Link>
               </li>
               <li className="px-3 py-1">
                 <Link
-                  href="/customers"
+                  href="#contact"
                   className="flex items-center text-gray-700 transition hover:text-gray-900"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('contact')?.scrollIntoView({ 
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                  }}
                 >
-                  Customers
-                </Link>
-              </li>
-              <li className="px-3 py-1">
-                <Link
-                  href="/support"
-                  className="flex items-center text-gray-700 transition hover:text-gray-900"
-                >
-                  Support center
+                  Contact
                 </Link>
               </li>
             </ul>
