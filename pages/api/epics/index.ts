@@ -56,11 +56,11 @@ export default async function handler(
     const convexProjectId = projectId as Id<"projects">;
 
     // Fetch project and context
-    sendEvent({ progress: 25, status: 'Loading project...' });
+    sendEvent({ progress: 25, status: 'Loading epic...' });
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
-    if (!project) throw new Error('Project not found');
-    if (project.userId !== userId) throw new Error('Unauthorized access to project');
+    if (!project) throw new Error('Epic not found');
+    if (project.userId !== userId) throw new Error('Unauthorized access to epic');
 
     // Get functional requirements
     sendEvent({ progress: 35, status: 'Loading requirements...' });
@@ -79,7 +79,7 @@ export default async function handler(
     const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
 
     if (!useCases) {
-      return res.status(400).json({ message: "No Use cases found for the project" });
+      return res.status(400).json({ message: "No Use cases found for the epic" });
     }
 
     // Generate epics with OpenAI
