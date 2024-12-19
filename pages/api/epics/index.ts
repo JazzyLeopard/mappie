@@ -91,7 +91,7 @@ ${context}
 Functional Requirements:
 ${functionalRequirementsText}
 
-Based on the above Epic context and functional requirements, please generate a reasonable number of high-level features. Each feature name should be kept short and unique. Each feature should follow this exact level of format without any deviations:
+Based on the above Epic context and functional requirements, please generate a reasonable number of high-level features. Each feature name should be kept short. Each feature should follow this exact level of format without any deviations:
 
 ### Feature: [Feature Name]
 
