@@ -131,35 +131,63 @@ export default async function handler(
 
     Generate the user stories now.`;
 
-    console.log("Calling OpenAI Api...");
+    console.log("Calling Claude API...");
     const response = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      messages: [{ role: "user", content: userStoryPrompt }],
+      messages: [{ 
+        role: "user", 
+        content: userStoryPrompt + "\nIMPORTANT: Your response must be a valid JSON array wrapped in ```json``` code blocks." 
+      }],
       temperature: 0.7,
     });
-    console.log('OpenAI API response received');
+    console.log('Claude API response received');
 
     const userStoryContent = response.text;
     if (!userStoryContent) {
-      throw new Error('No content generated from OpenAI');
+      throw new Error('No content generated from Claude');
     }
 
-    console.log('Parsing OpenAI response...');
+    console.log('Raw Claude response:', userStoryContent);
 
-    // Extract JSON from Markdown code block
+    // Try to find JSON in different formats
+    let jsonContent;
     const jsonMatch = userStoryContent.match(/```json\s*([\s\S]*?)\s*```/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in the response');
+    if (jsonMatch) {
+      jsonContent = jsonMatch[1];
+    } else {
+      // Try to find JSON without code blocks
+      const possibleJson = userStoryContent.trim();
+      try {
+        // Validate if it's parseable JSON
+        JSON.parse(possibleJson);
+        jsonContent = possibleJson;
+      } catch {
+        // If not parseable, try to extract array portion
+        const arrayMatch = possibleJson.match(/\[\s*{[\s\S]*}\s*\]/);
+        if (arrayMatch) {
+          jsonContent = arrayMatch[0];
+        } else {
+          throw new Error('No valid JSON found in the response');
+        }
+      }
     }
-    const jsonContent = jsonMatch[1];
 
     let generatedUserStories;
     try {
       generatedUserStories = JSON.parse(jsonContent);
+      
+      // Ensure we have an array
+      if (!Array.isArray(generatedUserStories)) {
+        generatedUserStories = [generatedUserStories];
+      }
     } catch (parseError) {
-      console.error('Error parsing OpenAI response for user stories:', parseError);
-      console.log('Raw OpenAI response', userStoryContent);
-      return res.status(500).json({ message: 'Invalid JSON response from OpenAI for user stories', parseError })
+      console.error('Error parsing Claude response:', parseError);
+      console.log('Attempted to parse content:', jsonContent);
+      return res.status(500).json({ 
+        message: 'Invalid JSON response from Claude',
+        rawResponse: userStoryContent,
+        parseError 
+      });
     }
 
     console.log("Creating user stories...");
@@ -188,6 +216,9 @@ export default async function handler(
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
-    res.status(500).json({ message: 'Error generating user stories', error: error instanceof Error ? error.message : String(error) });
+    res.status(500).json({ 
+      message: 'Error generating user stories', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
 }
