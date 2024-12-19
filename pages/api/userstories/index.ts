@@ -3,7 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from 'ai';
 import { getAuth } from "@clerk/nextjs/server";
 
@@ -22,7 +22,7 @@ function convertUsDescriptionToMarkdown(story: any): string {
   markdown += `${asA},\n\n`;
   markdown += `${iWant},\n\n`;
   markdown += `${soThat}\n\n`;
-  
+
   if (explanation) {
     markdown += `${explanation}\n\n`;
   }
@@ -125,7 +125,7 @@ export default async function handler(
 
     console.log("Calling OpenAI Api...");
     const response = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: userStoryPrompt }],
       temperature: 0.7,
     });

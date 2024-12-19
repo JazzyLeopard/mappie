@@ -2,7 +2,7 @@
 import { useContextChecker } from '@/utils/useContextChecker';
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -75,7 +75,7 @@ export default async function handler(
 
 
     const completions = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         { role: "system", content: "You're an experienced product manager and business analyst." },
         { role: "user", content: prompt }

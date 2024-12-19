@@ -4,7 +4,7 @@ import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -129,7 +129,7 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
     }
 
     const completion = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });

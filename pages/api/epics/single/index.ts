@@ -3,7 +3,7 @@ import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from 'ai';
 import { useContextChecker } from "@/utils/useContextChecker";
 
@@ -144,7 +144,7 @@ Please ensure each epic is well-defined, practical, and aligns with the project 
         console.log("Calling OpenAI Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
         const completion = await generateText({
-            model: openai("gpt-4o-mini"),
+            model: anthropic('claude-3-5-sonnet-20241022'),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         });

@@ -1,7 +1,5 @@
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
-import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown';
-import { $getRoot, createEditor } from 'lexical';
 import { diffLines } from 'diff';
 
 export async function POST(req: Request) {
@@ -9,7 +7,7 @@ export async function POST(req: Request) {
     const { prompt, selectedText, fullText } = await req.json();
 
     const { text: newFullText } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       prompt: `You are an AI writing assistant. You will receive the full text and a selected portion to improve. Generate an improved version that maintains the context and formatting. Return only the complete text with the improvement integrated.
 
       Full text: "${fullText}"

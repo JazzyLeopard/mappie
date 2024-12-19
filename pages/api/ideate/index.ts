@@ -1,6 +1,6 @@
 import { placeholderOverview } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -45,7 +45,7 @@ Important:
       console.log("Calling OpenAi Api...");
 
       const completions = await generateText({
-        model: openai("gpt-4o-mini"),
+        model: anthropic('claude-3-5-sonnet-20241022'),
         messages: [
           { role: "system", content: "You are an experienced agile business analyst with senior level UX experience that generates a comprehensive project overview based on user prompts." },
           { role: "user", content: promptWithPropertyInstructions }
