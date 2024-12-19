@@ -497,7 +497,7 @@ const EpicLayout = ({
   // Update the handleGenerateEpics function
   const handleGenerateEpics = async () => {
     if (!params.projectId) {
-      toast.error("Please select an epic first");
+      toast.error("Please select a epic first");
       return;
     }
 
@@ -551,7 +551,14 @@ const EpicLayout = ({
                 }
                 setGenerationProgress(100);
                 setGenerationStatus('Complete!');
-                toast.success("Features generated successfully");
+
+                // Check if we have valid content
+                if (data.content && Array.isArray(data.content) && data.content.length > 0) {
+                  toast.success("Features generated successfully");
+                } else {
+                  toast.error("No valid features were generated");
+                }
+
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
@@ -572,7 +579,6 @@ const EpicLayout = ({
       console.error("Error generating features:", error);
       toast.error("Failed to generate features. Please try again.");
     } finally {
-      // Clean up the interval if it's still running
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
@@ -945,7 +951,7 @@ const EpicLayout = ({
                                   className="flex items-center gap-2"
                                 >
                                   <Pencil className="h-4 w-4" />
-                                  Rename Epic
+                                  Rename Feature
                                 </DropdownMenuItem>
 
                                 <TooltipProvider>
