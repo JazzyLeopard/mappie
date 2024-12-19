@@ -106,14 +106,14 @@ export default async function handler(
 
 ### Feature: [Feature Name]
 
-**Description**: [Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
+**Description**: Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.
 
-**Business Value**: [Describe in detail how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
+**Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
 
 **Functionality**:
-• Functionality 1: [Detailed explanation of the core functionality of the feature]
-• Functionality 2: [Detailed explanation of another key capability]
-• Functionality 3: [Detailed explanation of another key capability]
+Functionality 1: [Detailed explanation of the core functionality]
+Functionality 2: [Detailed explanation of another key capability]
+... and so on
 
 **Dependencies**:
 • Dependency 1: [Technical or system dependency that is critical to success]
@@ -124,7 +124,7 @@ export default async function handler(
 • Risk 2: [Timeline, resource, or quality risk that needs mitigation]
 
 IMPORTANT:
-- Each feature MUST have EXACTLY 3 functionality
+- Each feature MUST have an adequate number of functional criteria
 - Each feature MUST have EXACTLY 2 dependencies
 - Each feature MUST have EXACTLY 2 risks
 - Each point should be detailed and specific
@@ -160,9 +160,9 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
                 const nameMatch = section.match(/Feature:\s*(.+?)(?=\n|$)/);
                 const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
                 const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
+                const functionalityMatch = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies|$)/m);
 
-                // Updated regex patterns to better capture multiple bullet points
-                const functionalitySection = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
+                const functionalitySection = functionalityMatch?.[1];
                 const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
                 const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
 
@@ -171,25 +171,29 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
                         ?.split('\n')
                         .map(line => line.trim())
                         .filter(line =>
-                            line.startsWith('•') &&
-                            line.includes(`${prefix}`)
+                            (line.startsWith('•') || line.startsWith('-') || line.startsWith('Functionality')) &&
+                            (prefix === 'Functionality' ? line.startsWith('Functionality') : line.includes(prefix))
                         )
                         .map(line => {
                             const indentation = line.match(/^\s*/)?.[0] || '';
+                            if (prefix === 'Functionality' && line.startsWith('Functionality')) {
+                                const content = line.split(':')[1]?.trim() || '';
+                                return `${indentation}• **${line.split(':')[0].trim()}:** ${content}`;
+                            }
                             const numberMatch = line.match(new RegExp(`${prefix}\\s*(\\d+)`));
                             const number = numberMatch ? numberMatch[1] : '';
                             const content = line.split(':')[1]?.trim() || '';
                             return `${indentation}• **${prefix} ${number}:** ${content}`;
                         }) || [];
                 };
+                    
                 // Process each section
                 const functionality = extractBulletPoints(functionalitySection ?? "", 'Functionality');
                 const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
                 const risks = extractBulletPoints(risksSection ?? "", 'Risk');
 
-
                 const processedData = {
-                    name: nameMatch?.[1]?.trim() || 'Untitled Epic',
+                    name: nameMatch?.[1]?.trim() || 'Untitled Feature',
                     description: {
                         Description: descriptionMatch?.[1]?.trim() || '',
                         "Business Value": businessValueMatch?.[1]?.trim() || '',
@@ -198,9 +202,6 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
                         Risks: risks
                     }
                 };
-
-                // Debug logging for processed data
-                console.log('Processed data:', JSON.stringify(processedData, null, 2));
 
                 return processedData;
             });
@@ -218,9 +219,9 @@ ${epic.description.Description}
 ${epic.description["Business Value"]}
 
 ## Functionality
-${epic.description["Functionality"].length > 0
-                    ? epic.description["Functionality"].map(functionality => `${functionality}`).join('\n')
-                    : '• No functionality specified'}
+${epic.description.Functionality.length > 0
+    ? epic.description.Functionality.join('\n')
+    : '• No functionality specified'}
 
 ## Dependencies
 ${epic.description.Dependencies.length > 0
@@ -239,11 +240,8 @@ ${epic.description.Risks.length > 0
             });
         }));
 
-        // Filter out null values and serialize
-        const validEpics = createdEpics.filter(epic => epic !== null);
-        const serializedEpics = convertBigIntToNumber(validEpics);
-
         // Send final response
+        const serializedEpics = convertBigIntToNumber(createdEpics);
         sendEvent({ progress: 100, status: 'Complete!' });
         sendEvent({ done: true, content: serializedEpics });
 
