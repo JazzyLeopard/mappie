@@ -1,6 +1,6 @@
 import { placeholderOverview } from "@/app/(main)/_components/constants";
 import { api } from "@/convex/_generated/api";
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -42,26 +42,30 @@ Important:
 3. Return ONLY the JSON object without any markdown formatting or code block indicators
 4. Maintain the exact same structure and headings as the template`;
 
-      console.log("Calling OpenAi Api...");
+      console.log("Calling Anthropic Api...");
 
       const completions = await generateText({
-        model: anthropic('claude-3-5-sonnet-20241022'),
+        model: openai('gpt-4o-mini'),
         messages: [
           { role: "system", content: "You are an experienced agile business analyst with senior level UX experience that generates a comprehensive epic overview based on user prompts." },
           { role: "user", content: promptWithPropertyInstructions }
         ],
       });
-      console.log("OpenAi response received");
+      console.log("Anthropic response received");
 
       // Clean up the response text before parsing
       const cleanResponse = completions.text
         .replace(/```json\n?/g, '')  // Remove ```json
         .replace(/```\n?/g, '')      // Remove closing ```
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove all control characters
+        .replace(/\n/g, '\\n')          // Escape newlines
+        .replace(/\r/g, '\\r')          // Escape carriage returns
         .trim();                     // Remove any extra whitespace
 
       try {
         const parsedResponse = JSON.parse(cleanResponse);
         const { title, overview } = parsedResponse;
+        console.log("Parsed response:", parsedResponse);
 
         if (!title || !overview) {
           throw new Error('Invalid response format');

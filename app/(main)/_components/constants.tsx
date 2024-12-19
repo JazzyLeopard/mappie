@@ -92,7 +92,7 @@ export const functionalRequirementsItems: MenuItemType[] = [
         icon: <PeopleIcon />,
         description: "The title of the functional requirement",
         active: true,
-        required: true  
+        required: true
     },
     {
         key: "description",
@@ -234,57 +234,57 @@ export const placeholderOverview = `
 
 ## Epic Template 🎯
 ### Epic Summary 🌟
-- Target Audience: [Project Managers and Development Teams]
-- Problem Statement: [The current project lacks a clear direction and defined goals.]
-- Epic Name: [User Authentication Revamp]
-- Type of Epic: [Feature Enhancement]
-- Key Benefits: [Improved user experience, increased security, and streamlined onboarding process.]
-- Competitive Edge: [Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.]
-- Unique Value Proposition: [This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.]
+- Target Audience: Project Managers and Development Teams
+- Problem Statement: The current project lacks a clear direction and defined goals.
+- Epic Name: User Authentication Revamp
+- Type of Epic: Feature Enhancement
+- Key Benefits: Improved user experience, increased security, and streamlined onboarding process.
+- Competitive Edge: Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.
+- Unique Value Proposition: This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.
 
 ### Problem 💭
-[Describe the current situation and why it needs fixing]
+Describe the current situation and why it needs fixing
 
 ### Objectives (SMART) 🎯
-1. [First specific, measurable goal]
-2. [Second specific, measurable goal]
-3. [Third specific, measurable goal]
+1. First specific, measurable goal
+2. Second specific, measurable goal
+3. Third specific, measurable goal
 
 ### Constraints 🚧
-1. [Time/budget/technical limitation]
-2. [Resource/skill limitation]
-3. [Other key constraints]
+1. Time/budget/technical limitation
+2. Resource/skill limitation
+3. Other key constraints
 
 ### Personas 👥
 #### Key Persona:
-- [Who's your primary user?]
+- Who's your primary user?
 
 #### Secondary Personas:
-1. [Second user type]
-2. [Third user type]
+1. Second user type
+2. Third user type
 
 ### User Scenarios 📱
-1. [First detailed user scenario]
-2. [Second user scenario]
-3. [Optional third scenario]
+1. First detailed user scenario
+2. Second user scenario
+3. Optional third scenario
 
 ### Features In ✅
-1. [Must-have feature + why]
-2. [Second key feature + why]
-3. [Third key feature + why]
+1. Must-have feature + why
+2. Second key feature + why
+3. Third key feature + why
 
 ### Features Out ❌
-1. [What you won't build + why]
-2. [Second excluded feature + why]
-3. [Third excluded feature + why]
+1. What you won't build + why
+2. Second excluded feature + why
+3. Third excluded feature + why
 
 ### Technical Considerations ⚙️
-[Any technical requirements or limitations]
+Any technical requirements or limitations
 
 ### Success Metrics 📊
-1. [How will you measure success?]
-2. [Second success metric]
-3. [Third success metric]
+1. How will you measure success?
+2. Second success metric
+3. Third success metric
 `;
 
 export const ideatePrompts: { [key: string]: string } = {
