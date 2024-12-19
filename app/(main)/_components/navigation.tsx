@@ -17,7 +17,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
-import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle, InfoIcon } from "lucide-react";
+import { CreditCard, FileText, Folders, GitPullRequest, Home, Layers, PanelLeftClose, PanelLeftOpen, PlusCircle, InfoIcon, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ElementRef, useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import NavItem from "./NavItem";
 import UserItems from "./UserItems";
 import FileUpload from "./layout/Context";
+import { MessageModal } from "@/components/MessageModal";
 
 
 export const Navigation = () => {
@@ -39,6 +40,7 @@ export const Navigation = () => {
   const navbarRef = useRef<ElementRef<"div">>(null);
   const [isResetting, setIsResetting] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentProject = useQuery(api.projects.getProjectById,
     selectedProject ? { projectId: selectedProject as Id<"projects"> } : "skip"
@@ -135,6 +137,10 @@ export const Navigation = () => {
 
   const toggleCollapse = () => {
     setIsCollapsed(prev => !prev);
+  };
+
+  const handleFeedbackClick = () => {
+    setIsModalOpen(true);
   };
 
   // const handleMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -263,10 +269,11 @@ export const Navigation = () => {
             <div className="">
               <p className="text-sm font-semibold mb-2 px-4">Settings</p>
               <NavItem
-                label="Subscription"
-                icon={CreditCard}
-                onClick={() => router.push("/settings")}
-                active={pathname === "/settings"}
+                label="Feedback"
+                icon={MessageCircle}
+                onClick={handleFeedbackClick}
+                active={false}
+                collapsed={false}
               />
             </div>
           </>
@@ -353,11 +360,25 @@ export const Navigation = () => {
                       collapsed={true}
                     />
                   ))}
+                  <NavItem
+                    label="Feedback"
+                    icon={MessageCircle}
+                    onClick={handleFeedbackClick}
+                    active={false}
+                    collapsed={true}
+                  />
                 </>
               )}
             </ScrollArea>
           </>
         )}
+
+
+
+        <MessageModal 
+          open={isModalOpen} 
+          onOpenChange={setIsModalOpen}
+        />
 
         {/* {!isCollapsed && (
           <div

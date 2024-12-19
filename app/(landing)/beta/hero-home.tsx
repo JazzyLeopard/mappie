@@ -2,9 +2,10 @@
 
 import PageIllustration from "../components-landing/page-illustration";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import Link from "next/link";
 import { useUserCount } from "@/app/hooks/useUserCount";
+import { SignUpButton } from "@clerk/clerk-react";
 
 export default function BetaHero() {
   const { isSignedIn } = useUser();
@@ -52,21 +53,27 @@ export default function BetaHero() {
                 data-aos="zoom-y-out"
                 data-aos-delay={450}
               >
-                <Link 
-                  href={isSignedIn ? "/epics" : "/sign-up"}
-                  className="block"
-                  data-aos="zoom-y-out"
-                  data-aos-delay={450}
-                >
+                {isSignedIn ? (
                   <Button className="group text-white shadow hover:bg-[length:100%_150%]">
                     <span className="relative inline-flex items-center">
-                      {isSignedIn ? "Go to Dashboard" : "Join Beta Users"}{" "}
+                      <Link href="/epics">Enter Mappie</Link>{" "}
                       <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
                         →
                       </span>
                     </span>
                   </Button>
-                </Link>
+                ) : (
+                  <SignUpButton mode="modal" forceRedirectUrl={"/epics"}>
+                    <Button className="group text-white shadow hover:bg-[length:100%_150%]">
+                      <span className="relative inline-flex items-center">
+                        Join Beta Users{" "}
+                        <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
+                          →
+                        </span>
+                      </span>
+                    </Button>
+                  </SignUpButton>
+                )}
               </div>
 
               {/* Beta Stats */}
@@ -109,7 +116,7 @@ export default function BetaHero() {
                   data-aos="zoom-y-out"
                   data-aos-delay={750}
                   onClick={() => {
-                    document.getElementById('video-demos')?.scrollIntoView({ 
+                    document.getElementById('contact')?.scrollIntoView({ 
                       behavior: 'smooth',
                       block: 'start'
                     });
