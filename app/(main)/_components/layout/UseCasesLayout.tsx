@@ -116,7 +116,7 @@ export default function UseCasesLayout({
   // Add generation handler
   const handleGenerateUseCases = async () => {
     if (!projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -199,7 +199,7 @@ export default function UseCasesLayout({
   // Add generation handler
   const handleGenerateSingleUseCase = async () => {
     if (!projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -284,13 +284,13 @@ export default function UseCasesLayout({
         <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
           <Image src={empty} alt="No use cases" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
           <h2 className="text-lg md:text-xl font-semibold text-center">
-            Project Overview is empty or missing.
+            Epic Overview is empty or missing.
           </h2>
           <Button
             variant="default"
             onClick={() => router.push(`/projects/${projectId}`)}
           >
-            Go to Project Overview
+            Go to Epic Overview
           </Button>
         </div>
       </div>
@@ -417,10 +417,10 @@ export default function UseCasesLayout({
             <div className="h-full flex flex-col items-center justify-center gap-6">
               <Image src={empty} alt="No use cases" width={100} height={100} />
               <h2 className="text-xl font-semibold text-center">
-                You haven't created any use cases<br />for this project yet.
+                You haven't created any use cases<br />for this epic yet.
               </h2>
               <p className="text-center text-gray-600 max-w-md">
-                Based on the project details, the AI can generate
+                Based on the epic details, the AI can generate
                 streamlined use cases that detail the actions of
                 the user and the system. Try it!
               </p>
@@ -447,7 +447,7 @@ export default function UseCasesLayout({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
             <div className="flex flex-col space-y-4">
-              <h3 className="text-lg font-semibold">{isGenerating === "useCases" ? "Generating Initial Use Cases based on project details..." : "Generating an additional Use Case..."}</h3>
+              <h3 className="text-lg font-semibold">{isGenerating === "useCases" ? "Generating Initial Use Cases based on epic details..." : "Generating an additional Use Case..."}</h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>
             </div>

@@ -156,7 +156,7 @@ const EpicLayout = ({
 
   // Handle adding a new epic
   const handleAddEpic = async () => {
-    const newEpicId = await createEpic({ projectId, name: "New Epic", description: "" })
+    const newEpicId = await createEpic({ projectId, name: "New Feature", description: "" })
     selectItem('epic', newEpicId)
     setExpandedEpics(new Set(expandedEpics).add(newEpicId))
   }
@@ -222,7 +222,7 @@ const EpicLayout = ({
       _id: epicId,
       [field]: value
     }).catch((error: any) => {
-      console.error("Error updating epic:", error);
+      console.error("Error updating feature:", error);
     });
   }, [updateEpic]);
 
@@ -247,7 +247,7 @@ const EpicLayout = ({
     try {
       await updateUserStory({ id, [field]: value })
     } catch (error) {
-      console.error("Error updating epic:", error);
+      console.error("Error updating feature:", error);
     }
   }, [updateUserStory]);
 
@@ -485,8 +485,8 @@ const EpicLayout = ({
 
   // Add useEffect to log selection changes
   useEffect(() => {
-    console.log('Selected epic changed:', selectedItems.epic);
-    console.log('Selected epic data:', selectedEpic);
+    console.log('Selected feature changed:', selectedItems.epic);
+    console.log('Selected feature data:', selectedEpic);
   }, [selectedItems.epic, selectedEpic]);
 
   type GenerationType = {
@@ -497,7 +497,7 @@ const EpicLayout = ({
   // Update the handleGenerateEpics function
   const handleGenerateEpics = async () => {
     if (!params.projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -551,7 +551,7 @@ const EpicLayout = ({
                 }
                 setGenerationProgress(100);
                 setGenerationStatus('Complete!');
-                toast.success("Epics generated successfully");
+                toast.success("Features generated successfully");
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
@@ -569,8 +569,8 @@ const EpicLayout = ({
         }
       }
     } catch (error) {
-      console.error("Error generating epics:", error);
-      toast.error("Failed to generate epics. Please try again.");
+      console.error("Error generating features:", error);
+      toast.error("Failed to generate features. Please try again.");
     } finally {
       // Clean up the interval if it's still running
       if (progressInterval.current) {
@@ -583,7 +583,7 @@ const EpicLayout = ({
   // Add this new handler for single epic generation
   const handleGenerateSingleEpic = async () => {
     if (!params.projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -635,7 +635,7 @@ const EpicLayout = ({
                 }
                 setGenerationProgress(100);
                 setGenerationStatus('Complete!');
-                toast.success("New epic generated successfully");
+                toast.success("New feature generated successfully");
                 setTimeout(() => {
                   setIsGenerating(null);
                 }, 1000);
@@ -653,8 +653,8 @@ const EpicLayout = ({
         }
       }
     } catch (error) {
-      console.error("Error generating epic:", error);
-      toast.error("Failed to generate epic. Please try again.");
+      console.error("Error generating feature:", error);
+      toast.error("Failed to generate feature. Please try again.");
     } finally {
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
@@ -666,7 +666,7 @@ const EpicLayout = ({
   // Add this new function to handle user story generation:
   const handleGenerateUserStories = async (epicId: Id<"epics">) => {
     if (!params.projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -744,7 +744,7 @@ const EpicLayout = ({
   // Add this new function to handle single user story generation
   const handleGenerateSingleUserStory = async (epicId: Id<"epics">) => {
     if (!params.projectId) {
-      toast.error("Please select a project first");
+      toast.error("Please select an epic first");
       return;
     }
 
@@ -830,14 +830,14 @@ const EpicLayout = ({
         <div className="bg-white h-full rounded-xl flex flex-col items-center justify-center gap-4">
           <Image src={Empty} alt="No epics" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
           <h2 className="text-xl font-semibold text-center">
-            Project Overview is empty or missing.
+            Epic Overview is empty or missing.
           </h2>
           <Button
             className="bg-white text-black border border-gray-300 hover:bg-gray-200"
             onClick={() => router.push(`/projects/${projectId}`)}
             variant="default"
           >
-            Go to Project Overview
+            Go to Epic Overview
           </Button>
         </div>
       </div>
@@ -852,7 +852,7 @@ const EpicLayout = ({
           {/* Epics Section */}
           <div className="bg-slate-100 rounded-xl p-4 shadow-[0_0_2px_rgba(0,0,0,0.1)]">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-sm font-semibold">Select Epic</h2>
+              <h2 className="text-sm font-semibold">Select Feature</h2>
               <span className="text-xs px-1.5 py-0.5 bg-slate-200 rounded-full text-slate-600">
                 {epics?.length || 0}
               </span>
@@ -864,11 +864,11 @@ const EpicLayout = ({
               value={selectedItems.epic || undefined}
             >
               <SelectTrigger className="w-full mb-2">
-                <SelectValue placeholder={epics?.length === 0 ? "Add an epic" : "Select an epic"}>
+                <SelectValue placeholder={epics?.length === 0 ? "Add a feature" : "Select a feature"}>
                   {selectedEpic ? (
                     <span className="truncate block">{selectedEpic.name}</span>
                   ) : (
-                    epics?.length === 0 ? "Add an epic" : "Select an epic"
+                    epics?.length === 0 ? "Add a feature" : "Select a feature"
                   )}
                 </SelectValue>
               </SelectTrigger>
@@ -977,7 +977,7 @@ const EpicLayout = ({
                                     </TooltipTrigger>
                                     <TooltipContent side="right" className="max-w-[200px]">
                                       {epicUserStories.length === 0
-                                        ? "Generate user stories based on Epic and Project context"
+                                        ? "Generate user stories based on Feature and Epic context"
                                         : "Generate a complementary user story based on existing ones"}
                                     </TooltipContent>
                                   </Tooltip>
@@ -991,7 +991,7 @@ const EpicLayout = ({
                                   className="flex items-center gap-2 text-red-600"
                                 >
                                   <Trash className="h-4 w-4" />
-                                  Delete Epic
+                                  Delete Feature
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1015,7 +1015,7 @@ const EpicLayout = ({
                 variant='ghost'
                 className="w-full text-sm justify-start hover:bg-white pl-2"
               >
-                <Plus className="mr-2 h-4 w-4" /> Add Epic
+                <Plus className="mr-2 h-4 w-4" /> Add Feature
               </Button>
 
               <TooltipProvider>
@@ -1027,14 +1027,14 @@ const EpicLayout = ({
                       className="w-full text-sm justify-start hover:bg-white pl-2"
                     >
                       <AiGenerationIcon className="mr-2" />
-                      Generate Epic
+                      Generate Feature
                       <div className="ml-auto pl-2">
                         <InfoIcon className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>The AI will generate a complementary Epic to the existing ones</p>
+                    <p>The AI will generate a complementary Feature to the existing ones</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -1144,7 +1144,7 @@ const EpicLayout = ({
                 )
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500">Select an epic or user story to edit</p>
+                  <p className="text-gray-500">Select a feature or one of its user stories to edit</p>
                 </div>
               )}
             </div>
@@ -1197,12 +1197,12 @@ const EpicLayout = ({
             <div className="h-full flex flex-col items-center justify-center gap-4 md:gap-6 px-4 md:px-6">
               <Image src={empty} alt="No epics" width={100} height={100} className="w-16 h-16 md:w-24 md:h-24" />
               <h2 className="text-lg md:text-xl font-semibold text-center">
-                You haven't created any epics<br />for this project yet.
+                You haven't created any features<br />for this epic yet.
               </h2>
               <p className="text-center text-gray-600 max-w-md">
-                Based on the project details, the AI can generate
-                streamlined epics that outline the main features
-                and functionalities of your project. Try it!
+                Based on the epic details, the AI can generate
+                streamlined features that outline the main features
+                and functionalities of your epic. Try it!
               </p>
               <Button
                 className="gap-2 h-10"
@@ -1211,13 +1211,13 @@ const EpicLayout = ({
                 disabled={!projectId}
               >
                 <AiGenerationIconWhite />
-                Generate Initial Epics
+                Generate Initial Features
               </Button>
               <div className="text-center">
                 <span className="text-gray-500">or</span>
               </div>
               <Button variant="outline" onClick={() => { }}>
-                Add Epic manually
+                Add Feature manually
               </Button>
             </div>
           </div>
@@ -1231,11 +1231,11 @@ const EpicLayout = ({
               <h3 className="text-lg font-semibold">
                 {isGenerating.type === "epics"
                   ? (isGenerating.mode === "single"
-                    ? "Generating an additional Epic"
-                    : "Generating Initial Epics based on project details...")
+                    ? "Generating an additional Feature"
+                    : "Generating Initial Features based on epic details...")
                   : (isGenerating.mode === "single"
                     ? "Generating an additional User Story"
-                    : "Generating User Stories based on Epic")}
+                    : "Generating User Stories based on Feature")}
               </h3>
               <Progress value={generationProgress} className="w-full" />
               <p className="text-sm text-muted-foreground">{generationStatus}</p>

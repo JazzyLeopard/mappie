@@ -47,7 +47,7 @@ export const Navigation = () => {
   useEffect(() => {
     const updateSelectedProject = () => {
       const pathParts = pathname?.split('/') || [];
-      const projectIdFromUrl = pathParts[pathParts.indexOf('projects') + 1];
+      const projectIdFromUrl = pathParts[pathParts.indexOf('epics') + 1];
 
       if (projectIdFromUrl && projects) {
         const matchingProject = projects.find((project: any) => project._id === projectIdFromUrl);
@@ -67,36 +67,36 @@ export const Navigation = () => {
   }, [pathname]);
 
   const handleProjectChange = (projectId: string) => {
-    if (projectId === "all_projects") {
-      router.push("/projects");
-    } else if (projectId === "new_project") {
+    if (projectId === "all_epics") {
+      router.push("/epics");
+    } else if (projectId === "new_epic") {
       onCreate();
     } else {
       setSelectedProject(projectId);
-      router.push(`/projects/${projectId}`);
+      router.push(`/epics/${projectId}`);
     }
   };
 
   const onCreate = async () => {
     try {
       const newProject = await createProject({
-        title: "Untitled Project",
+        title: "Untitled Epic",
       });
 
       toast.success("New project created");
 
       if (newProject) {
         setSelectedProject(newProject);
-        router.push(`/projects/${newProject}`);
+        router.push(`/epics/${newProject}`);
       }
     } catch (error) {
-      toast.error("Failed to create project");
+      toast.error("Failed to create epic");
     }
   };
 
   const navItems = [
     {
-      label: "Project Overview",
+      label: "Epic Overview",
       icon: Home,
       path: "",
     },
@@ -111,27 +111,27 @@ export const Navigation = () => {
       path: "use-cases",
     },
     {
-      label: "Epics & User Stories",
+      label: "Features & User Stories",
       icon: Layers,
-      path: "epics",
+      path: "features",
     }
   ];
 
   const handleNavItemClick = (path: string) => {
     if (currentProject || path === "") {
-      router.push(`/projects/${selectedProject}/${path}`);
+      router.push(`/epics/${selectedProject}/${path}`);
     }
   };
 
   const isActive = (itemPath: string) => {
-    const projectPath = `/projects/${selectedProject}`;
+    const projectPath = `/epics/${selectedProject}`;
     const fullItemPath = itemPath ? `${projectPath}/${itemPath}` : projectPath;
     return pathname === fullItemPath;
   };
 
   const selectedProjectTitle = selectedProject && projects
     ? projects.find((project: any) => project._id === selectedProject)?.title
-    : "Select a project";
+    : "Select an epic";
 
   const toggleCollapse = () => {
     setIsCollapsed(prev => !prev);
@@ -190,20 +190,20 @@ export const Navigation = () => {
           <>
             <div className="p-4">
               <div className="flex justify-between items-center mb-2">
-                <p className="text-sm font-semibold">Projects</p>
-                <Link href="/projects">
+                <p className="text-sm font-semibold">Epics</p>
+                <Link href="/epics">
                   <button className="text-sm underline p-1">All</button>
                 </Link>
               </div>
               <Select onValueChange={handleProjectChange} value={selectedProject || undefined}>
                 <SelectTrigger className="w-full max-w-[250px]">
-                  <SelectValue placeholder="Select a project">
+                  <SelectValue placeholder="Select an epic">
                     <span className="truncate block">{selectedProjectTitle}</span>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="w-[250px]">
-                  <SelectItem value="all_projects" className="my-1">
-                    <span className="truncate block">All Projects</span>
+                  <SelectItem value="all_epics" className="my-1">
+                    <span className="truncate block">All Epics</span>
                   </SelectItem>
                   <SelectSeparator className="my-2" />
                   {projects?.map((project: any) => (
@@ -213,11 +213,11 @@ export const Navigation = () => {
                   ))}
                   <SelectSeparator className="my-2" />
                   <SelectItem
-                    value="new_project"
+                    value="new_epic"
                     className="my-1 hover:bg-primary/10 text-primary"
                   >
                     <PlusCircle className="h-4 w-4 mr-2 inline-block" />
-                    New Project
+                    New Epic
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -302,7 +302,7 @@ export const Navigation = () => {
                           className="w-full justify-start"
                           onClick={() => handleProjectChange("all_projects")}
                         >
-                          All Projects
+                          All Epics
                         </Button>
                         <Separator className="my-1" />
                         {projects?.map((project: any) => (
@@ -322,7 +322,7 @@ export const Navigation = () => {
                           onClick={() => handleProjectChange("new_project")}
                         >
                           <PlusCircle className="h-4 w-4 mr-2" />
-                          New Project
+                          New Epic
                         </Button>
                       </div>
                     </PopoverContent>
@@ -332,7 +332,7 @@ export const Navigation = () => {
                     align="center"
                     sideOffset={10}
                   >
-                    <p>Projects</p>
+                    <p>Epics</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

@@ -57,7 +57,7 @@ export default function ProjectIdeation({ onSubmit, isGenerating }: ProjectIdeat
       <CardContent className="space-y-4">
         <div className="relative">
           <Textarea
-            placeholder={`🚀 Describe your awesome project!
+            placeholder={`🚀 Describe your awesome epic!
 
 ✨ What do you want to build?
 👥 Who is it for?

@@ -24,7 +24,7 @@ export default async function handler(
     try {
       let promptWithPropertyInstructions = context
 
-      promptWithPropertyInstructions += `Generate a comprehensive project overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
+      promptWithPropertyInstructions += `Generate a comprehensive epic overview and a concise title (maximum 5 words) based on the following description: ${prompt}.
 
 Use this exact template structure for the overview, replacing the placeholders with relevant content in ${language}:
 
@@ -47,7 +47,7 @@ Important:
       const completions = await generateText({
         model: anthropic('claude-3-5-sonnet-20241022'),
         messages: [
-          { role: "system", content: "You are an experienced agile business analyst with senior level UX experience that generates a comprehensive project overview based on user prompts." },
+          { role: "system", content: "You are an experienced agile business analyst with senior level UX experience that generates a comprehensive epic overview based on user prompts." },
           { role: "user", content: promptWithPropertyInstructions }
         ],
       });
@@ -74,14 +74,14 @@ Important:
           overview: overview,
         });
 
-        return res.status(200).json({ message: 'Project overview generated and updated successfully' });
+        return res.status(200).json({ message: 'Epic overview generated and updated successfully' });
       } catch (parseError) {
         console.error('Error parsing AI response:', parseError);
         return res.status(500).json({ error: 'Failed to parse AI response' });
       }
     } catch (error) {
-      console.error('Error generating project overview:', error);
-      return res.status(500).json({ error: 'Failed to generate project overview' });
+      console.error('Error generating epic overview:', error);
+      return res.status(500).json({ error: 'Failed to generate epic overview' });
     }
   }
 

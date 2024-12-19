@@ -34,7 +34,7 @@ const ProjectsPage = () => {
 
   const handleGenerateProject = async (description: string, language: SpokenLanguage) => {
     if (!description.trim()) {
-      toast.error("Please enter a project description.");
+      toast.error("Please enter an epic description.");
       return;
     }
 
@@ -42,14 +42,14 @@ const ProjectsPage = () => {
 
     try {
       const projectId = await createProject({
-        title: "Generating Project...",
+        title: "Generating Epic...",
       });
 
       if (!projectId) {
-        throw new Error("Failed to create project");
+        throw new Error("Failed to create epic");
       }
 
-      toast.success("Project created. Generating details...");
+      toast.success("Epic created. Generating details...");
 
       const response = await fetch('/api/ideate', {
         method: 'POST',
@@ -65,21 +65,21 @@ const ProjectsPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate project details');
+        throw new Error(errorData.error || 'Failed to generate epic details');
       }
-
+      
       await response.json(); // Wait for the response
 
       // Success handling
-      toast.success("Project details generated successfully!");
+      toast.success("Epic details generated successfully!");
       setAiPrompt(""); // Reset the prompt
 
       // Navigate to the new project
-      router.push(`/projects/${projectId}`);
+      router.push(`/epics/${projectId}`);
 
     } catch (error: any) {
-      console.error('Error generating project:', error);
-      toast.error(error.message || "Failed to generate project. Please try again.");
+      console.error('Error generating epic:', error);
+      toast.error(error.message || "Failed to generate epic. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -91,9 +91,9 @@ const ProjectsPage = () => {
     });
 
     toast.promise(promise, {
-      loading: "Creating new project...",
-      success: "New project created",
-      error: "Failed to create project",
+      loading: "Creating new epic...",
+      success: "New epic created",
+      error: "Failed to create epic",
     });
   };
 
@@ -116,7 +116,7 @@ const ProjectsPage = () => {
           ) : (
             <>
               <h2 className="text-xl md:text-2xl font-semibold mb-2 md:mb-4 text-center">
-                You haven't created any projects...
+                You haven't created any epics...
               </h2>
 
               <Image 
@@ -145,7 +145,7 @@ const ProjectsPage = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Generate Project with AI</DialogTitle>
+                      <DialogTitle>Generate Epic with AI</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <ProjectIdeation 
