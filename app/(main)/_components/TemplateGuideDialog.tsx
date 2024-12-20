@@ -20,7 +20,7 @@ export function TemplateGuideDialog({ isOpen, onClose, onUseTemplate }: Template
         <div className="mb-4 border-b border-blue-100 pb-3">
           <div className="flex justify-between items-start mb-3">
             <div className="w-full">
-              <h2 className="text-xl font-semibold mb-2">Project Overview Guide 🎯</h2>
+              <h2 className="text-xl font-semibold mb-2">Epic Overview Guide 🎯</h2>
               <p className="text-sm">Click "Use Template" to add this structure to your project document.</p>
               <div className="mt-2 w-full">
                 <Alert>

@@ -372,7 +372,7 @@ const EpicLayout = ({
                 Generate Initial User Stories
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleGenerateUserStories(selectedEpic._id)}
+                onClick={() => handleGenerateSingleUserStory(selectedEpic._id)}
                 className="flex items-center gap-2 p-2"
               >
                 <Wand2 className="h-4 w-4" />
@@ -839,8 +839,7 @@ const EpicLayout = ({
             Epic Overview is empty or missing.
           </h2>
           <Button
-            className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-            onClick={() => router.push(`/projects/${projectId}`)}
+            onClick={() => router.push(`/epics/${projectId}`)}
             variant="default"
           >
             Go to Epic Overview

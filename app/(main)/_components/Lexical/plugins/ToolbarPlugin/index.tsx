@@ -141,6 +141,7 @@ import {
   Table2,
 } from 'lucide-react';
 
+
 const blockTypeToBlockName = {
   bullet: 'Bulleted List',
   check: 'Check List',
@@ -510,23 +511,15 @@ export default function ToolbarPlugin({
         const event: KeyboardEvent = payload;
         const { code, ctrlKey, metaKey } = event;
 
-        if (code === 'KeyK' && (ctrlKey || metaKey)) {
+        if (code === 'KeyE' && (ctrlKey || metaKey)) {
           event.preventDefault();
-          let url: string | null;
-          if (!isLink) {
-            setIsLinkEditMode(true);
-            url = sanitizeUrl('https://');
-          } else {
-            setIsLinkEditMode(false);
-            url = null;
-          }
-          return activeEditor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+          return activeEditor.dispatchCommand(AI_EDIT_COMMAND, undefined as any);
         }
         return false;
       },
       COMMAND_PRIORITY_NORMAL,
     );
-  }, [activeEditor, isLink, setIsLinkEditMode]);
+  }, [activeEditor]);
 
   const applyStyleText = useCallback(
     (styles: Record<string, string>, skipHistoryStack?: boolean) => {

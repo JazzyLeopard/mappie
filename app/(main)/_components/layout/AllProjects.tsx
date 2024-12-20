@@ -18,6 +18,7 @@ import { Wand2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from 'sonner';
+import { Progress } from "@/components/ui/progress";
 
 export default function Component() {
   const projects = useQuery(api.projects.getProjects);
@@ -33,6 +34,7 @@ export default function Component() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   const createProject = useMutation(api.projects.createProject);
 
@@ -82,6 +84,7 @@ export default function Component() {
     }
 
     setIsGenerating(true);
+    setGenerationProgress(0);
 
     try {
       const projectId = await createProject({
@@ -91,6 +94,10 @@ export default function Component() {
       if (!projectId) {
         throw new Error("Failed to create epic");
       }
+
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => Math.min(prev + 10, 90));
+      }, 1000);
 
       toast.success("Epic created. Generating details...");
 
@@ -105,6 +112,9 @@ export default function Component() {
           language
         }),
       });
+
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -122,23 +132,36 @@ export default function Component() {
       router.push(`/epics/${projectId}`);
 
     } catch (error: any) {
+      setGenerationProgress(0);
       console.error('Error generating epic:', error);
       toast.error(error.message || "Failed to generate epic. Please try again.");
     } finally {
       setIsGenerating(false);
       setOpenIdeateDialog(false);
+      setTimeout(() => setGenerationProgress(0), 500);
     }
   };
 
   const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
-    await archiveProject({ _id: id, isArchived: !isArchived });
-    setOpenArchiveDialog(false);
-    router.push(`/epics`);
+    try {
+      await archiveProject({ _id: id, isArchived: !isArchived });
+      setOpenArchiveDialog(false);
+      setOpenPopover(null); // Close the popover
+      router.push('/epics'); // Redirect to epics page after archiving
+      toast.success("Epic archived successfully");
+    } catch (error) {
+      toast.error("Failed to archive epic");
+    }
   };
 
   return (
     <>
       <div className="bg-white rounded-lg w-full h-full overflow-y-auto">
+        {isGenerating && (
+          <div className="fixed top-0 left-0 right-0 z-50">
+            <Progress value={generationProgress} className="h-1" />
+          </div>
+        )}
         <div className="p-6 pt-16">
           <div className="flex items-center mb-6">
             <h1 className="text-2xl font-semibold">Epics</h1>
@@ -190,7 +213,16 @@ export default function Component() {
             {projects?.map((proj: any) => (
               <Card
                 key={proj._id}
-                onClick={() => router.push(`/epics/${proj._id}`)}
+                onClick={(e) => {
+                  if (
+                    e.target instanceof Element && 
+                    (e.target.closest('[data-archive-controls]') || 
+                     openArchiveDialog)
+                  ) {
+                    return;
+                  }
+                  router.push(`/epics/${proj._id}`);
+                }}
                 className="cursor-pointer w-[20rem] max-w-full overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
                 <CardContent className="flex items-center justify-start p-4 space-x-2 pr-16">
@@ -211,6 +243,7 @@ export default function Component() {
                     </div>
                   </div>
                   <div
+                    data-archive-controls
                     className={cn(
                       openPopover === proj._id && "flex",
                     )}

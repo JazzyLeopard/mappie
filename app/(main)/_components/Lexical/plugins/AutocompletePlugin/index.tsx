@@ -235,7 +235,7 @@ export default function AutocompletePlugin(): JSX.Element | null {
  */
 class AutocompleteServer {
   DATABASE = DICTIONARY;
-  LATENCY = 200;
+  LATENCY = 100;
 
   query = (searchText: string): SearchPromise => {
     let isDismissed = false;

@@ -372,7 +372,7 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                         Please fill in the epic details first.
                     </h2>
                     <Button className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-                        onClick={() => router.push(`/projects/${projectId}`)}
+                        onClick={() => router.push(`/epics/${projectId}`)}
                         variant="default"
                     >
                         Go to Epic Overview

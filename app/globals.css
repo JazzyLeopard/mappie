@@ -110,3 +110,17 @@
   flex-direction: row-reverse !important;
 }
 
+@keyframes highlightFade {
+  0% {
+    border-color: hsl(var(--primary));
+    border-width: 2px;
+  }
+  100% {
+    border-color: transparent;
+    border-width: 2px;
+  }
+}
+
+.animate-highlight {
+  animation: highlightFade 3s ease-out forwards;
+}

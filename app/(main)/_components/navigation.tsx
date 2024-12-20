@@ -214,7 +214,9 @@ export const Navigation = () => {
                   <SelectSeparator className="my-2" />
                   {projects?.map((project: any) => (
                     <SelectItem key={project._id} value={project._id} className="my-1">
-                      <span className="truncate block">{project.title}</span>
+                      <span className="truncate block">
+                        {project.title.length > 24 ? `${project.title.slice(0, 24)}...` : project.title}
+                      </span>
                     </SelectItem>
                   ))}
                   <SelectSeparator className="my-2" />

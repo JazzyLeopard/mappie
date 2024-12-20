@@ -138,16 +138,23 @@ const formatFunctionalRequirements = (requirements: any[]) => {
 };
 
 
-const extractJsonFromResponse = (content: string): any => {
+const extractJsonFromResponse = (content: string): any[] => {
   try {
     // First, try to parse the content directly as JSON
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    // Check if the response has a use_cases array
+    if (parsed.use_cases && Array.isArray(parsed.use_cases)) {
+      return parsed.use_cases;
+    }
+    // If not, ensure we always return an array
+    return Array.isArray(parsed) ? parsed : [parsed];
   } catch (e) {
     // If direct parsing fails, try to extract JSON from markdown code blocks
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if (jsonMatch) {
       try {
-        return JSON.parse(jsonMatch[1].trim());
+        const parsed = JSON.parse(jsonMatch[1].trim());
+        return Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
         console.error('Failed to parse extracted JSON:', e);
         throw new Error('Invalid JSON format in the response');
@@ -158,7 +165,8 @@ const extractJsonFromResponse = (content: string): any => {
     const arrayMatch = content.match(/\[\s*{[\s\S]*}\s*\]/);
     if (arrayMatch) {
       try {
-        return JSON.parse(arrayMatch[0]);
+        const parsed = JSON.parse(arrayMatch[0]);
+        return Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
         console.error('Failed to parse array from content:', e);
         throw new Error('Invalid JSON array format in the response');
@@ -321,6 +329,15 @@ Generate use cases that specifically address the functional requirements listed 
     let generatedUseCases;
     try {
       generatedUseCases = extractJsonFromResponse(content);
+      // Add validation and logging
+      if (!Array.isArray(generatedUseCases)) {
+        console.error('Generated use cases is not an array:', generatedUseCases);
+        throw new Error('Invalid response format: expected an array of use cases');
+      }
+      if (generatedUseCases.length === 0) {
+        console.warn('No use cases were generated');
+        throw new Error('No use cases were generated');
+      }
       console.log('Parsed use cases:', JSON.stringify(generatedUseCases, null, 2));
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
@@ -331,7 +348,12 @@ Generate use cases that specifically address the functional requirements listed 
     sendEvent({ progress: 75, status: 'Creating use cases...' });
     console.log('Creating use cases...');
 
-    for (const useCase of generatedUseCases) {
+    // Extract use_cases array if present
+    const useCasesToCreate = Array.isArray(generatedUseCases) ? 
+      generatedUseCases : 
+      (generatedUseCases || []);
+
+    for (const useCase of useCasesToCreate) {
       if (useCase && useCase.description) {
         const formattedDescription = convertDescriptionToMarkdown(useCase.description);
         let useCaseId = await convex.mutation(api.useCases.createUseCase, {
