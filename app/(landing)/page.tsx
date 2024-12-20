@@ -6,9 +6,9 @@ export const metadata = {
 };
 
 import Hero from "@/app/(landing)/beta/hero-home";
-import BetaFeatures from "@/app/(landing)/beta/features";
 import VideoDemo from "@/app/(landing)/components-landing/video-demo";
 import ContactSection from "@/app/(landing)/beta/contact";
+import FeatureShowcaseCarousel from "@/app/(landing)/beta/feature-showcase-carousel";
 
 export default function Home() {
   
@@ -17,7 +17,7 @@ export default function Home() {
     <div className="overflow-x-hidden">
       <Hero />
       <VideoDemo />
-      <BetaFeatures />
+      <FeatureShowcaseCarousel />
       <ContactSection />
     </div>
 

@@ -116,7 +116,7 @@ export default function BetaHero() {
                   data-aos="zoom-y-out"
                   data-aos-delay={750}
                   onClick={() => {
-                    document.getElementById('contact')?.scrollIntoView({ 
+                    document.getElementById('video-demos')?.scrollIntoView({ 
                       behavior: 'smooth',
                       block: 'start'
                     });
