@@ -38,6 +38,8 @@ export default function Component() {
 
   const createProject = useMutation(api.projects.createProject);
 
+  const [projectToArchive, setProjectToArchive] = useState<any>(null);
+
   useEffect(() => {
     const updateSelectedProject = () => {
       const pathParts = pathname?.split('/') || [];
@@ -142,12 +144,13 @@ export default function Component() {
     }
   };
 
-  const onArchiveClick = async (id: Id<"projects">, isArchived: boolean) => {
+  const onArchiveClick = async (project: any) => {
     try {
-      await archiveProject({ _id: id, isArchived: !isArchived });
+      await archiveProject({ _id: project._id, isArchived: !project.isArchived });
       setOpenArchiveDialog(false);
-      setOpenPopover(null); // Close the popover
-      router.push('/epics'); // Redirect to epics page after archiving
+      setOpenPopover(null);
+      setProjectToArchive(null);
+      router.push('/epics');
       toast.success("Epic archived successfully");
     } catch (error) {
       toast.error("Failed to archive epic");
@@ -269,6 +272,7 @@ export default function Component() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
+                            setProjectToArchive(proj);
                             setOpenArchiveDialog(true);
                           }}
                           className="hover:bg-gray-100 rounded-md cursor-pointer flex flex-col p-2 w-full"
@@ -279,35 +283,36 @@ export default function Component() {
                     </Popover>
                   </div>
 
-                  <Dialog
-                    open={openArchiveDialog}
-                    onOpenChange={() => setOpenArchiveDialog(!openArchiveDialog)}
-                  >
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Archive Epic?</DialogTitle>
-                        <DialogDescription>
-                          Are you sure, you want to Archive this Epic:{" "}
-                          <b>{proj.title}</b>
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <Button
-                          variant={"default"}
-                          onClick={() =>
-                            onArchiveClick(proj._id, proj.isArchived)
-                          }
-                        >
-                          Yes, Archive
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
                 </CardFooter>
               </Card>
             ))}
           </div>
+
+          <Dialog
+            open={openArchiveDialog}
+            onOpenChange={(open) => {
+              setOpenArchiveDialog(open);
+              if (!open) setProjectToArchive(null);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Archive Epic?</DialogTitle>
+                <DialogDescription>
+                  Are you sure, you want to Archive this Epic:{" "}
+                  <b>{projectToArchive?.title}</b>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant={"default"}
+                  onClick={() => projectToArchive && onArchiveClick(projectToArchive)}
+                >
+                  Yes, Archive
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </>
