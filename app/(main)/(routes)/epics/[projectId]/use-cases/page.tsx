@@ -10,20 +10,27 @@ import { useCallback, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 
 interface UseCasesProps {
-  params: {
+  params: Promise<{
     projectId: Id<"projects">;
-  };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const UseCasesPage = ({ params }: UseCasesProps) => {
-
-
-  const projectId = params.projectId as Id<"projects">;
+export default function Page({ params, searchParams }: UseCasesProps) {
+  const [projectId, setProjectId] = useState<Id<"projects"> | null>(null);
   const [content, setContent] = useState<any>([])
   const useCases = useQuery(api.useCases.getUseCasesByProjectId, { projectId });
   const createUseCase = useMutation(api.useCases.createUseCase);
   const updateUseCase = useMutation(api.useCases.updateUseCase);
   const deleteUseCase = useMutation(api.useCases.deleteUseCase);
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setProjectId(resolvedParams.projectId);
+    };
+    resolveParams();
+  }, [params]);
 
   useEffect(() => {
     if (useCases && useCases?.length > 0) {
@@ -78,7 +85,7 @@ const UseCasesPage = ({ params }: UseCasesProps) => {
 
   return (
     <UseCasesLayout
-      projectId={projectId}
+      projectId={projectId as any}
       handleEditorChange={handleEditorChange}
       onAddUseCase={handleCreateUseCase}
       onDeleteUseCase={handleDelete}
@@ -86,6 +93,4 @@ const UseCasesPage = ({ params }: UseCasesProps) => {
       isOnboardingComplete={isOnboardingComplete}
     />
   );
-};
-
-export default UseCasesPage;
+}
