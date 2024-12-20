@@ -6,62 +6,73 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 
-type EpicsPageProps = {
-    params: {
-        projectId: Id<"projects">;
-        epicId: Id<"epics">;
-    };
+interface EpicsPageProps {
+  params: Promise<{
+    projectId: Id<"projects">;
+    epicId: Id<"epics">;
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const ProjectEpicPage = ({ params }: EpicsPageProps) => {
+export default function Page({ params, searchParams }: EpicsPageProps) {
+  const [ids, setIds] = useState<{
+    projectId: Id<"projects"> | null;
+    epicId: Id<"epics"> | null;
+  }>({ projectId: null, epicId: null });
 
-    const [epicDetails, setEpicDetails] = useState<any>()
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setIds({
+        projectId: resolvedParams.projectId,
+        epicId: resolvedParams.epicId
+      });
+    };
+    resolveParams();
+  }, [params]);
 
-    const id = params.epicId
+  const [epicDetails, setEpicDetails] = useState<any>()
 
-    const updateEpicMutation = useMutation(api.epics.updateEpic)
+  const updateEpicMutation = useMutation(api.epics.updateEpic)
 
-    const epic = useQuery(api.epics.getEpicById, {
-        epicId: id,
+  const epic = useQuery(api.epics.getEpicById, {
+    epicId: ids.epicId,
+  });
+
+  useEffect(() => {
+    if (epic)
+      setEpicDetails(epic)
+  }, [epic])
+
+  const handleEditorBlur = async () => {
+    try {
+      console.log('time for API call', epicDetails);
+      const { createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
+      await updateEpicMutation(payload)
+      console.log("epic", epicDetails);
+    } catch (error) {
+      console.log('error updating project', error);
+    }
+  };
+
+  const handleEditorChange = useCallback(async (attribute: string, value: any) => {
+    await updateEpicMutation({
+      id: ids.epicId,
+      [attribute]: value
     });
+  }, [updateEpicMutation, ids.epicId]);
 
-    useEffect(() => {
-        if (epic)
-            setEpicDetails(epic)
-    }, [epic])
+  if (epic instanceof Error) {
+    return <div>Error: {epic.message}</div>;
+  }
 
-    const handleEditorBlur = async () => {
-        try {
-            console.log('time for API call', epicDetails);
-            const { createdAt, updatedAt, userId, projectId, ...payload } = epicDetails
-            await updateEpicMutation(payload)
-            console.log("epic", epicDetails);
-        } catch (error) {
-            console.log('error updating project', error);
-        }
-    };
-
-    const handleEditorChange = useCallback(async (attribute: string, value: any) => {
-        await updateEpicMutation({
-            id: id,
-            [attribute]: value
-        });
-    }, [updateEpicMutation, id]);
-
-
-    if (epic instanceof Error) {
-        return <div>Error: {epic.message}</div>;
-    }
-
-    if (epicDetails) {
-        return <CommonLayout
-            data={epicDetails}
-            onEditorBlur={handleEditorBlur}
-            handleEditorChange={handleEditorChange}
-            projectId={params.projectId}
-            parent="epic"
-        />
-    }
+  if (epicDetails) {
+    return <CommonLayout
+      data={epicDetails}
+      onEditorBlur={handleEditorBlur}
+      handleEditorChange={handleEditorChange}
+      projectId={ids.projectId as any}
+      parent="epic"
+    />
+  }
 }
-
-export default ProjectEpicPage;
