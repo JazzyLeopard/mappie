@@ -9,17 +9,30 @@ import { toast } from "react-hot-toast";
 import { menuItems } from "@/app/(main)/_components/constants";
 
 interface ProjectIdPageProps {
-  params: {
+  params: Promise<{
     projectId: Id<"projects">;
-  };
+  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
-  const id = params.projectId;
+export default function Page({ 
+  params: paramsPromise, 
+  searchParams 
+}: ProjectIdPageProps) {
+  const [id, setId] = useState<Id<"projects"> | null>(null);
   const [projectDetails, setProjectDetails] = useState<any>();
   const updateProjectMutation = useMutation(api.projects.updateProject);
 
+  useEffect(() => {
+    const resolveParams = async () => {
+      const params = await paramsPromise;
+      setId(params.projectId);
+    };
+    resolveParams();
+  }, [paramsPromise]);
+
   const handleEditorChange = useCallback(async (attribute: string, value: any) => {
+    if (!id) return;
     try {
       await updateProjectMutation({
         _id: id,
@@ -32,7 +45,7 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
   }, [updateProjectMutation, id]);
 
   const project = useQuery(api.projects.getProjectById, {
-    projectId: id,
+    projectId: id!,
   });
 
   useEffect(() => {
@@ -50,10 +63,8 @@ const ProjectIdPage = ({ params }: ProjectIdPageProps) => {
       data={projectDetails}
       onEditorBlur={async () => {}}
       handleEditorChange={handleEditorChange}
-      projectId={params.projectId as Id<"projects">}
+      projectId={id as Id<"projects">}
       parent="project"
     />
   );
-};
-
-export default ProjectIdPage;
+}

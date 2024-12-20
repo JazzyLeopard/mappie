@@ -9,16 +9,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 interface FunctionalRequirementsProps {
-    params: {
+    params: Promise<{
         projectId: Id<"projects">;
-    };
+    }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => {
-    const projectId = params.projectId;
-    const [content, setContent] = useState<any>([])
+export default function Page({ params, searchParams }: FunctionalRequirementsProps) {
+    const [projectId, setProjectId] = useState<Id<"projects"> | null>(null);
+    const [content, setContent] = useState<any>([]);
+
+    useEffect(() => {
+        const resolveParams = async () => {
+            const resolvedParams = await params;
+            setProjectId(resolvedParams.projectId);
+        };
+        resolveParams();
+    }, [params]);
+
     const functionalRequirements = useQuery(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
-        projectId
+        projectId: projectId!
     });
     const createFR = useMutation(api.functionalRequirements.createFunctionalRequirement);
     const updateFR = useMutation(api.functionalRequirements.updateFunctionalRequirement);
@@ -80,7 +90,7 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
         }
     }, [deleteFR]);
 
-    if (functionalRequirements === undefined || project === undefined) {
+    if (!projectId || functionalRequirements === undefined || project === undefined) {
         return <Spinner size="lg" />;
     }
 
@@ -94,6 +104,4 @@ const FunctionalRequirementsPage = ({ params }: FunctionalRequirementsProps) => 
             isOnboardingComplete={isOnboardingComplete}
         />
     );
-};
-
-export default FunctionalRequirementsPage;
+}
