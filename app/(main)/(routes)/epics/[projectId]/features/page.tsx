@@ -9,16 +9,35 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 interface EpicsPageProps {
-    params: {
+    params: Promise<{
         projectId: Id<"projects">;
-        epicId?: Id<"epics">;  // Add epicId as optional parameter
-    }
+        epicId?: Id<"epics">;
+    }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const EpicsPage = ({ params }: EpicsPageProps) => {
-    const { projectId, epicId } = params  // Destructure both IDs
-    const [content, setContent] = useState<any>([])
-    const epics = useQuery(api.epics.getEpics, { projectId });
+export default function Page({ params, searchParams }: EpicsPageProps) {
+    const [ids, setIds] = useState<{
+        projectId: Id<"projects"> | null;
+        epicId?: Id<"epics">;
+    }>({ projectId: null });
+    const [content, setContent] = useState<any>([]);
+
+    useEffect(() => {
+        const resolveParams = async () => {
+            const resolvedParams = await params;
+            setIds({
+                projectId: resolvedParams.projectId,
+                epicId: resolvedParams.epicId
+            });
+        };
+        resolveParams();
+    }, [params]);
+
+    const epics = useQuery(api.epics.getEpics, { 
+        projectId: ids.projectId! 
+    });
+
     const updateEpic = useMutation(api.epics.updateEpic)
     const deleteEpic = useMutation(api.epics.deleteEpic)
 
@@ -49,15 +68,15 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
         }
     }, [deleteEpic]);
 
-    if (epics === undefined) {
+    if (!ids.projectId || epics === undefined) {
         return <Spinner size={"lg"} />;
     }
 
     return (
         <EpicLayout
             params={{
-                projectId,
-                epicId
+                projectId: ids.projectId,
+                epicId: ids.epicId
             }}
             handleEditorChange={handleEditorChange}
             onDeleteEpic={handleDeleteEpic}
@@ -66,5 +85,3 @@ const EpicsPage = ({ params }: EpicsPageProps) => {
     )
 
 }
-
-export default EpicsPage;

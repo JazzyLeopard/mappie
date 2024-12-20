@@ -3,24 +3,33 @@
 import Spinner from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { Alert, AlertTitle } from "@chakra-ui/react";
 
 interface ProjectProps {
-  params: {
+  params: Promise<{
     projectId: Id<"projects">;
-  };
-  children: ReactNode;
+  }>;
+  children: React.ReactNode;
 }
 
-const ProjectLayout = ({ params, children }: ProjectProps) => {
-  const id = params.projectId;
+export default function Layout({ params, children }: ProjectProps) {
+  const [id, setId] = useState<Id<"projects"> | null>(null);
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setId(resolvedParams.projectId);
+    };
+    resolveParams();
+  }, [params]);
+
   const projectTitle = useQuery(api.projects.getProjectNameById, {
-    projectId: id,
+    projectId: id!,
   });
 
-  if (projectTitle === undefined) {
+  if (projectTitle === undefined || !id) {
     return (
       <div className="flex justify-center items-center mx-auto">
         <Spinner size={"lg"} />
@@ -34,6 +43,4 @@ const ProjectLayout = ({ params, children }: ProjectProps) => {
       </div>
     </div>
   );
-};
-
-export default ProjectLayout;
+}
