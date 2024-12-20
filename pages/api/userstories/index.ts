@@ -81,7 +81,7 @@ export default async function handler(
     const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
     if (!epic) {
-      return res.status(400).json({ message: "Epic not found" });
+      return res.status(400).json({ message: "Feature not found" });
     }
 
     const epicText = epic.description;
@@ -114,13 +114,13 @@ export default async function handler(
             ]
           }`
 
-    let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
-    userStoryPrompt += `For this specific epic:\n${epicText}\n\n`;
-    userStoryPrompt += `Generate a focused set of user stories that directly implement this epic's functionality. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
+    let userStoryPrompt = `Given the following Epic context:\n${context}\n\n`;
+    userStoryPrompt += `For this specific feature:\n${epicText}\n\n`;
+    userStoryPrompt += `Generate a focused set of user stories that directly implement this feature's functionality. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
     userStoryPrompt += `Important guidelines:
     - Generate only 3-5 high-quality, comprehensive user stories
-    - Each story must directly contribute to implementing the epic's functionality
-    - Stories should be independent but related through the epic's goal
+    - Each story must directly contribute to implementing the feature's functionality
+    - Stories should be independent but related through the feature's goal
     - Each description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
     - Include a detailed explanation after the user story format
     - Include detailed acceptance criteria with clear given/when/then scenarios
@@ -131,23 +131,23 @@ export default async function handler(
 
     Generate the user stories now.`;
 
-    console.log("Calling Claude API...");
+    console.log("Calling Anthropic API...");
     const response = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      messages: [{ 
-        role: "user", 
-        content: userStoryPrompt + "\nIMPORTANT: Your response must be a valid JSON array wrapped in ```json``` code blocks." 
+      messages: [{
+        role: "user",
+        content: userStoryPrompt + "\nIMPORTANT: Your response must be a valid JSON array wrapped in ```json``` code blocks."
       }],
       temperature: 0.7,
     });
-    console.log('Claude API response received');
+    console.log('Anthropic API response received');
 
     const userStoryContent = response.text;
     if (!userStoryContent) {
-      throw new Error('No content generated from Claude');
+      throw new Error('No content generated from Anthropic');
     }
 
-    console.log('Raw Claude response:', userStoryContent);
+    console.log('Raw Anthropic response:', userStoryContent);
 
     // Try to find JSON in different formats
     let jsonContent;
@@ -175,7 +175,7 @@ export default async function handler(
     let generatedUserStories;
     try {
       generatedUserStories = JSON.parse(jsonContent);
-      
+
       // Ensure we have an array
       if (!Array.isArray(generatedUserStories)) {
         generatedUserStories = [generatedUserStories];
@@ -183,10 +183,10 @@ export default async function handler(
     } catch (parseError) {
       console.error('Error parsing Claude response:', parseError);
       console.log('Attempted to parse content:', jsonContent);
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: 'Invalid JSON response from Claude',
         rawResponse: userStoryContent,
-        parseError 
+        parseError
       });
     }
 
@@ -216,9 +216,9 @@ export default async function handler(
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
-    res.status(500).json({ 
-      message: 'Error generating user stories', 
-      error: error instanceof Error ? error.message : String(error) 
+    res.status(500).json({
+      message: 'Error generating user stories',
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 }

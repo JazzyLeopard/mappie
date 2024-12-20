@@ -81,7 +81,7 @@ export default async function handler(
     const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
     if (!epic) {
-      return res.status(400).json({ message: "Epic not found" });
+      return res.status(400).json({ message: "Feature not found" });
     }
 
     const epicText = epic.description;
@@ -94,32 +94,40 @@ export default async function handler(
       .join('\n\n');
 
     let userStoryBasePrompt = `As an expert user stories analyst, generate one additional user story that complements the existing user stories and implements functionality described in this epic. The user story should be detailed and comprehensive, following this exact structure:
-    {
-      "title": "User Story Title",
-      "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].\n\nThis user story focuses on [detailed explanation of the functionality and its importance in the context of the epic].",
-      
-      "acceptance_criteria": [
-        "Scenario 1: **Given** I am on the registration page, **when** I enter valid personal details and click Submit, **then** I should receive a confirmation email with an activation link",
-        "Scenario 2: **Given** I am on the registration page, **when** I submit the form with an already registered email, **then** I should see an error message saying Email is already registered. Please log in.",
-        "Scenario 3: **Given** I have received a confirmation email, **when** I click the activation link, **then** my account should be activated and I should be able to log in"
-      ],
 
-      "additional_considerations": [
-        "Security requirements for password strength",
-        "Email validation format",
-        "Rate limiting for registration attempts",
-        "Data privacy compliance",
-        "Accessibility standards"
-      ]
-    }`
+      ### Instructions:
+          1. **Adhere to the INVEST Principles**:
+            - Independent, Negotiable, Valuable, Estimable, Small, and Testable.
 
-    let userStoryPrompt = `Given the following project context:\n${context}\n\n`;
-    userStoryPrompt += `For this specific epic:\n${epicText}\n\n`;
+          2. **Story Format**:
+            Write each user story in the following JSON structure:
+
+          {
+            "title": "User Story Title",
+            "description": "As a [type of user], I want to [perform some action], so that [achieve some goal/value].",
+            
+            "acceptance_criteria": [
+              "Scenario 1: **Given** [precondition], **when** [action], **then** [expected outcome].",
+              "Scenario 2: **Given** [precondition], **when** [action], **then** [expected outcome].",
+              [More if necessary]"
+            ],
+
+            "additional_considerations": [
+              "Security requirements for [specific functionality]",
+              "Performance considerations for [specific aspect]",
+              "Dependencies on [other system/module]",
+              "Compliance with [specific standards or policies]",
+              "Error handling for [specific failure cases]"
+            ]
+          }`
+
+    let userStoryPrompt = `Given the following Epic context:\n${context}\n\n`;
+    userStoryPrompt += `For this specific feature:\n${epicText}\n\n`;
     userStoryPrompt += `Existing user stories:\n${existingStoriesText}\n\n`;
     userStoryPrompt += `Generate one additional user story that complements the existing ones. The story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
     userStoryPrompt += `Important guidelines:
     - Generate only ONE high-quality, comprehensive user story
-    - The story must directly contribute to implementing the epic's functionality
+    - The story must directly contribute to implementing the feature's functionality
     - The story should complement existing stories but be independent
     - Description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
     - Include a detailed explanation after the user story format
@@ -127,31 +135,47 @@ export default async function handler(
     - Focus on delivering complete, testable functionality
     - Consider edge cases and error states
     - Include relevant technical and non-functional requirements
-    - Format the output as a JSON object (not an array)
+    - Format the output as a JSON array of user story objects
 
     Generate the user story now.`;
 
-    console.log("Calling OpenAI Api...");
+    console.log("Calling Anthropic Api...");
     const response = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      messages: [{ role: "user", content: userStoryPrompt }],
+      messages: [{ role: "user", content: userStoryPrompt + "\nIMPORTANT: Your response must be a valid JSON array wrapped in ```json``` code blocks." }],
       temperature: 0.7,
     });
-    console.log('OpenAI API response received');
+    console.log('Anthropic API response received');
 
     const userStoryContent = response.text;
     if (!userStoryContent) {
-      throw new Error('No content generated from OpenAI');
+      throw new Error('No content generated from Anthropic');
     }
 
-    console.log('Parsing OpenAI response...');
+    console.log('Raw Anthropic response:', userStoryContent);
 
     // Extract JSON from Markdown code block
+    let jsonContent;
     const jsonMatch = userStoryContent.match(/```json\s*([\s\S]*?)\s*```/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in the response');
+    if (jsonMatch) {
+      jsonContent = jsonMatch[1];
+    } else {
+      // Try to find JSON without code blocks
+      const possibleJson = userStoryContent.trim();
+      try {
+        // Validate if it's parseable JSON
+        JSON.parse(possibleJson);
+        jsonContent = possibleJson;
+      } catch {
+        // If not parseable, try to extract array portion
+        const arrayMatch = possibleJson.match(/\[\s*{[\s\S]*}\s*\]/);
+        if (arrayMatch) {
+          jsonContent = arrayMatch[0];
+        } else {
+          throw new Error('No valid JSON found in the response');
+        }
+      }
     }
-    const jsonContent = jsonMatch[1];
 
     let generatedUserStory;
     try {
