@@ -1,7 +1,7 @@
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useContextChecker } from "@/utils/useContextChecker";
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { getAuth } from "@clerk/nextjs/server";
 import { generateText } from 'ai';
 import { ConvexHttpClient } from "convex/browser";
@@ -59,7 +59,7 @@ export default async function handler(
         sendEvent({ progress: 25, status: 'Loading epic...' });
         const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
 
-        if (!project) throw new Error('Project not found');
+        if (!project) throw new Error('Epic not found');
         if (project.userId !== userId) throw new Error('Unauthorized access to epic');
 
         // Get functional requirements
@@ -102,18 +102,18 @@ export default async function handler(
         Existing Features:
         ${featuresText}
 
-        Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following project. Ensure that the feature is not one of the existing features and the names are not similar to the existing features: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the project's needs, following this exact structure and level of detail:- 
+        Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following epic. Ensure that the feature is not one of the existing features and the names are not similar to the existing features: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the epic's needs, following this exact structure and level of detail:- 
 
 ### Feature: [Feature Name]
 
-**Description**: [Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
+**Description**: [Provide a clear and concise one paragraph description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
 
 **Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
 
 **Functionality**:
- Functionality 1: [Explain core system capability or feature]
- Functionality 2: [Explain user interaction or process flow]
- Functionality 3: [Explain output or result delivery]
+• Functionality 1: [Explain core system capability or feature]
+• Functionality 2: [Explain user interaction or process flow]
+• Functionality 3: [Explain output or result delivery]
 
 **Dependencies**:
 • Dependency 1: [Technical or system dependency that is critical to success]
@@ -139,10 +139,10 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
             prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
         }
 
-        console.log("Calling OpenAI Api...");
+        console.log("Calling Anthropic Api...");
         sendEvent({ progress: 55, status: 'Generating epic...' });
         const completion = await generateText({
-            model: openai('gpt-4o-mini'),
+            model: anthropic('claude-3-5-sonnet-20241022'),
             messages: [{ role: "user", content: prompt }],
             temperature: 0.7,
         });
@@ -150,7 +150,7 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
         const epicContent = completion.text;
         console.log('AI Response:', epicContent);
 
-        if (!epicContent) throw new Error('No content generated from OpenAI');
+        if (!epicContent) throw new Error('No content generated from Anthropic');
 
         // Create epics in database
         sendEvent({ progress: 75, status: 'Processing features...' });
@@ -217,7 +217,7 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
                     description: {
                         Description: descriptionMatch?.[1]?.trim() || '',
                         "Business Value": businessValueMatch?.[1]?.trim() || '',
-                        "Functionality": functionality,
+                        Functionality: functionality,
                         Dependencies: dependencies,
                         Risks: risks
                     }
@@ -242,8 +242,8 @@ ${epic.description.Description}
 ${epic.description["Business Value"]}
 
 ### Functionality
-${epic.description["Functionality"].length > 0
-                    ? epic.description["Functionality"].map(functionality => `${functionality}`).join('\n')
+${epic.description.Functionality.length > 0
+                    ? epic.description.Functionality.map(functionality => `${functionality}`).join('\n')
                     : '• No functionality specified'}
 
 ### Dependencies

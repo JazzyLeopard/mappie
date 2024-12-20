@@ -4,8 +4,8 @@ import { useContextChecker } from "@/utils/useContextChecker";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from "@clerk/nextjs/server";
-import { openai } from '@ai-sdk/openai';
 import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -95,14 +95,14 @@ Based on the above Epic context and functional requirements, please generate a r
 
 ### Feature: [Feature Name]
 
-**Description**: [Provide a clear and concise description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
+**Description**: [Provide a clear and concise one paragraph description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
 
 **Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
 
 **Functionality**:
- Functionality 1: [Explain core system capability or feature]
- Functionality 2: [Explain user interaction or process flow]
- Functionality 3: [Explain output or result delivery]
+• Functionality 1: [Explain core system capability or feature]
+• Functionality 2: [Explain user interaction or process flow]
+• Functionality 3: [Explain output or result delivery]
 
 **Dependencies**:
 • Dependency 1: [Technical or system dependency that is critical to success]
@@ -128,9 +128,9 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
       prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
     }
 
-    console.log("Calling OpenAI Api...");
+    console.log("Calling Anthropic Api...");
     const completion = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
@@ -138,7 +138,7 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
     const content = completion.text;
     console.log('AI Response:', content);
 
-    if (!content) throw new Error('No content generated from OpenAI');
+    if (!content) throw new Error('No content generated from Anthropic');
 
     // Process AI response
     sendEvent({ progress: 75, status: 'Processing features...' });
@@ -205,7 +205,7 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
           description: {
             Description: descriptionMatch?.[1]?.trim() || '',
             "Business Value": businessValueMatch?.[1]?.trim() || '',
-            "Functionality": functionality,
+            Functionality: functionality,
             Dependencies: dependencies,
             Risks: risks
           }
@@ -230,8 +230,8 @@ ${epic.description.Description}
 ${epic.description["Business Value"]}
 
 ### Functionality
-${epic.description["Functionality"].length > 0
-          ? epic.description["Functionality"].map(functionality => `${functionality}`).join('\n')
+${epic.description.Functionality.length > 0
+          ? epic.description.Functionality.map(functionality => `${functionality}`).join('\n')
           : '• No functionality specified'}
 
 ### Dependencies
