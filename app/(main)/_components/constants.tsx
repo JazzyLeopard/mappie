@@ -234,13 +234,13 @@ export const placeholderOverview = `
 
 ## Epic Template 🎯
 ### Epic Summary 🌟
-- Target Audience: Project Managers and Development Teams
-- Problem Statement: The current project lacks a clear direction and defined goals.
-- Epic Name: User Authentication Revamp
-- Type of Epic: Feature Enhancement
-- Key Benefits: Improved user experience, increased security, and streamlined onboarding process.
-- Competitive Edge: Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.
-- Unique Value Proposition: This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.
+- Target Audience: [Who is the target audience for this epic?]
+- Problem Statement: [What is the problem statement for this epic?]
+- Epic Name: [What is the name of the epic?]
+- Type of Epic: [What is the type of epic?]
+- Key Benefits: [What are the key benefits of this epic?]
+- Competitive Edge: [What is the competitive edge of this epic?]
+- Unique Value Proposition: [What is the unique value proposition of this epic?]
 
 ### Problem 💭
 Describe the current situation and why it needs fixing

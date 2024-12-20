@@ -79,7 +79,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                   type="submit"
                   size="icon"
                   disabled={streamState?.isGenerating || streamState?.isWaitingForTool || !props.value}
-                  className="h-8 w-8"
+                  className="h-8 w-8 mb-2"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback, useRef } from "react"
+import React, { useState, useCallback, useRef, useEffect } from "react"
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,17 +9,55 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Wand2, Paperclip } from 'lucide-react'
 import { FileAttachment } from '@/components/file-attachment'
 import { SpokenLanguage, Attachment, ProjectDetails } from "@/types"
+import { Progress } from "@/components/ui/progress"
 
 interface ProjectIdeationProps {
   onSubmit: (description: string, language: SpokenLanguage) => Promise<void>;
   isGenerating: boolean;
+  generationProgress?: number;
+  generationStatus?: string;
 }
 
-export default function ProjectIdeation({ onSubmit, isGenerating }: ProjectIdeationProps) {
+export default function ProjectIdeation({ onSubmit, isGenerating, generationProgress = 0, generationStatus = '' }: ProjectIdeationProps) {
   const [projectDescription, setProjectDescription] = useState("")
   const [selectedLanguage, setSelectedLanguage] = useState<SpokenLanguage | "">("")
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [mockProgress, setMockProgress] = useState(0);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (isGenerating) {
+      setMockProgress(0);
+      progressInterval.current = setInterval(() => {
+        setMockProgress(prev => {
+          if (prev >= 99) return prev;
+          const remaining = 99 - prev;
+          const increment = Math.max(0.5, remaining * 0.1);
+          return Math.min(99, prev + increment);
+        });
+      }, 300);
+    } else {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setMockProgress(100);
+    }
+
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, [isGenerating]);
+
+  const getStatusMessage = (progress: number) => {
+    if (progress < 25) return "Analyzing your description...";
+    if (progress < 50) return "Generating epic structure...";
+    if (progress < 75) return "Refining epic details...";
+    if (progress < 100) return "Finalizing generation...";
+    return "Complete!";
+  };
 
   const handleAttachment = useCallback((files: FileList | null) => {
     if (files) {
@@ -54,6 +92,21 @@ export default function ProjectIdeation({ onSubmit, isGenerating }: ProjectIdeat
 
   return (
     <Card className="w-full border-0 shadow-none">
+      {isGenerating && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+          <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
+            <div className="flex flex-col space-y-4">
+              <h3 className="text-lg font-semibold">
+                Generating Epic based on your description...
+              </h3>
+              <Progress value={mockProgress} className="w-full" />
+              <p className="text-sm text-muted-foreground">
+                {getStatusMessage(mockProgress)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <CardContent className="space-y-4">
         <div className="relative">
           <Textarea
