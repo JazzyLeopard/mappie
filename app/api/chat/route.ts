@@ -4,9 +4,16 @@ import { anthropic } from "@ai-sdk/anthropic";
 
 export async function POST(request: Request) {
   try {
-    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+    console.log('Received chat request:', {
+      headers: Object.fromEntries(request.headers.entries()),
+      url: request.url
+    });
+    console.log('Anthropic API Key:', process.env.ANTHROPIC_API_KEY ? 'Present' : 'Missing');
 
+    // Read the body only once and store it
     const body = await request.json();
+    console.log('Request body:', body);
+
     const { messages, selectedItemContent, selectedItemType, selectedEpic } = body;
 
     // Clean and validate messages
@@ -102,12 +109,21 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Error in POST route:', error);
+    console.error('Chat API Error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+
     return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Internal Server Error'
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
   }
 }
