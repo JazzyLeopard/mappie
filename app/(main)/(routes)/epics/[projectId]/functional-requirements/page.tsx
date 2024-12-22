@@ -41,7 +41,7 @@ export default function Page({ params, searchParams }: FunctionalRequirementsPro
     }, [functionalRequirements]);
 
     const project = useQuery(api.projects.getProjectById, {
-        projectId
+        projectId: projectId as Id<"projects">
     });
 
     const isOnboardingComplete = useMemo(() => {
@@ -96,7 +96,7 @@ export default function Page({ params, searchParams }: FunctionalRequirementsPro
 
     return (
         <FRLayout
-            projectId={projectId}
+            projectId={projectId as Id<"projects">}
             handleEditorChange={handleEditorChange}
             onManualAddFR={handleManualAddFR}
             onDeleteFR={handleDeleteFR}
