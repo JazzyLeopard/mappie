@@ -58,6 +58,12 @@ export default async function handler(
     // Fetch project and context
     sendEvent({ progress: 25, status: 'Loading epic...' });
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
+    console.log('Project data:', {
+      exists: !!project,
+      id: project?._id,
+      overview: project?.overview,  // This should contain your epic context
+      name: project?.title
+    });
 
     if (!project) throw new Error('Epic not found');
     if (project.userId !== userId) throw new Error('Unauthorized access to epic');
@@ -70,28 +76,47 @@ export default async function handler(
 
     // Prepare context
     sendEvent({ progress: 45, status: 'Preparing context...' });
-    const context = await useContextChecker({ projectId: convexProjectId });
-    const functionalRequirementsText = functionalRequirements
-      .map((fr: any) => `${fr.title}\n${fr.description}`)
-      .join('\n\n');
+    const context = await useContextChecker({ 
+        projectId: convexProjectId,
+        token  // Pass token where available
+    }).catch(error => {
+        console.error('Context checker error:', error);
+        throw new Error(`Failed to get context: ${error.message}`);
+    });
 
-    //Fetch the useCases
-    const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
-
-    if (!useCases) {
-      return res.status(400).json({ message: "No Use cases found for the epic" });
+    // Validate context with more detailed error
+    if (!context || context.trim() === '') {
+      throw new Error(`Epic context is missing. Project overview: ${project?.overview ? 'exists' : 'missing'}`);
     }
 
-    // Generate epics with OpenAI
-    sendEvent({ progress: 55, status: 'Generating features...' });
-    let prompt = `
-Epic Context:
-${context}
+    // Start building the prompt
+    let prompt = '';
 
-Functional Requirements:
-${functionalRequirementsText}
+    // Add context if available
+    if (context && context.trim()) {
+      prompt += `Epic Context:\n${context}\n\n`;
+    }
 
-Based on the above Epic context and functional requirements, please generate a reasonable number of high-level features. Each feature name should be kept short. Each feature should follow this exact level of format without any deviations:
+    // Add functional requirements if available
+    if (functionalRequirements && functionalRequirements.length > 0) {
+      const functionalRequirementsText = functionalRequirements
+        .map((fr: any) => `${fr.title}\n${fr.description}`)
+        .join('\n\n');
+      
+      prompt += `Functional Requirements:\n${functionalRequirementsText}\n\n`;
+    }
+
+    // Validate we have at least context
+    if (!context || !context.trim()) {
+      throw new Error('Epic context is required to generate features');
+    }
+
+    // Add the main instruction part
+    prompt += `Based on the ${context ? 'above Epic context' : ''}${
+      functionalRequirements?.length ? 
+        (context ? ' and functional requirements' : 'functional requirements') : 
+        ''
+    }, please generate a reasonable number of high-level features. Each feature name should be kept short. Each feature should follow this exact level of format without any deviations:
 
 ### Feature: [Feature Name]
 
@@ -123,10 +148,6 @@ IMPORTANT:
 
 Please ensure each feature is well-defined, practical, and aligns with the epic goals and requirements.`;
 
-    if (useCases?.length > 0) {
-      const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
-      prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
-    }
 
     console.log("Calling Anthropic Api...");
     const completion = await generateText({

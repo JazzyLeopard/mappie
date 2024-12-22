@@ -75,8 +75,14 @@ export default async function handler(
     convex.setAuth(token);
     const convexEpicId = epicId as Id<"epics">;
 
-    const context = await useContextChecker({ projectId })
-    console.log("context", context);
+    const context = await useContextChecker({ 
+      projectId: projectId,
+      token 
+    });
+
+    if (!context) {
+      return res.status(400).json({ message: 'Failed to get project context' });
+    }
 
     const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
@@ -118,7 +124,7 @@ export default async function handler(
     userStoryPrompt += `For this specific feature:\n${epicText}\n\n`;
     userStoryPrompt += `Generate a focused set of user stories that directly implement this feature's functionality. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
     userStoryPrompt += `Important guidelines:
-    - Generate only 3-5 high-quality, comprehensive user stories
+    - Generate as many stories as possible that are relevant to the feature and deliver end-to-end value and are easily codable and testable according to INVEST principles
     - Each story must directly contribute to implementing the feature's functionality
     - Stories should be independent but related through the feature's goal
     - Each description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
@@ -212,11 +218,7 @@ export default async function handler(
     res.status(200).json({ userStories: formattedUserStories, type: 'userstories' });
   } catch (error) {
     console.error('Error generating user stories:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({
+    res.status(error instanceof Error && error.message?.includes('Authentication') ? 401 : 500).json({
       message: 'Error generating user stories',
       error: error instanceof Error ? error.message : String(error)
     });

@@ -98,29 +98,27 @@ export const getProjects = query({
 
 export const getProjectById = query({
   args: { projectId: v.id("projects") },
-  handler: async (ctx: any, { projectId }: any) => {
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
 
     if (!identity) {
-      throw new Error("Not Authenticated");
+      throw new Error("Not authenticated");
     }
 
-    if (!projectId) {
-      throw new Error("Project ID is required");
-    }
+    const userId = identity.subject;
 
     const project = await ctx.db
       .query("projects")
-      .filter((q: any) =>
+      .filter((q) => 
         q.and(
-          q.eq(q.field("userId"), identity?.subject),
-          q.eq(q.field("_id"), projectId),
-        ),
+          q.eq(q.field("_id"), args.projectId),
+          q.eq(q.field("userId"), userId)
+        )
       )
       .first();
 
     if (!project) {
-      throw new Error("Project not found");
+      throw new Error("Project not found or access denied");
     }
 
     return project;

@@ -124,7 +124,10 @@ export default async function handler(
 
     // Prepare context and project details
     sendEvent({ progress: 35, status: 'Preparing project context...' });
-    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token 
+    });
 
     sendEvent({ progress: 45, status: 'Loading existing requirements...' });
     const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
@@ -154,17 +157,12 @@ Format the requirement exactly like this:
 [One paragraph description]
 
 ### Sub-requirements
-- [Specific requirement] - **Priority: Must Have**
-- [Specific requirement] - **Priority: Should Have**
-- [Specific requirement] - **Priority: Could Have**
-- [Specific requirement] - **Priority: Must Have**
-[continue with more requirements, each with an inline priority]
+- [Specific, measurable action or capability that directly supports the main requirement in the following format "The system should ..."]
+[continue with more requirements]
 
 IMPORTANT: 
 - Title should be short and concise
-- Each sub-requirement MUST end with "Priority: [level]"
-- Priority levels MUST be one of: Must Have, Should Have, or Could Have
-- The requirement must have at least 4 sub-requirements
+- The requirement must have at least 4-5 sub-requirements
 
 Project details:
 ${projectDetails}
