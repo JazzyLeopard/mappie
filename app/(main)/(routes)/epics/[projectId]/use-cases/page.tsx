@@ -39,7 +39,7 @@ export default function Page({ params, searchParams }: UseCasesProps) {
   }, [useCases]);
 
   const project = useQuery(api.projects.getProjectById, {
-    projectId: projectId
+    projectId: projectId as Id<"projects">
   })
 
   const handleCreateUseCase = useCallback(async () => {
