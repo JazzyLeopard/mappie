@@ -28,39 +28,31 @@ const convertBigIntToNumber = (obj: any): any => {
 const validateRequirements = (content: string): boolean => {
   console.log('Validating content:', content.substring(0, 500) + '...');
 
-  // Split into sections using double newlines instead of ---
+  // Split into sections using double newlines
   const sections = content.split(/\n\n(?=# [^\n]+)/).filter(section => section.trim());
   console.log(`Found ${sections.length} sections`);
-
-  if (sections.length < 2) {
-    console.log('Validation failed: Not enough sections found');
-    return false;
-  }
 
   for (const section of sections) {
     if (!section.trim()) continue;
 
     console.log('Validating section:', section.substring(0, 200) + '...');
 
-    // Update regex patterns to be more lenient with whitespace
     const hasTitle = /^#\s+[^\n]+/m.test(section.trim());
     const hasDescription = /##\s+Description\s+[^\n]+/m.test(section);
     const hasSubRequirements = /###\s+Sub-requirements/m.test(section);
-    const hasPriorities = /Priority:\s*(Must Have|Should Have|Could Have)/m.test(section);
-    const subReqCount = (section.match(/^-\s+.*Priority:/gm) || []).length;
-    const hasMinimumSubReqs = subReqCount >= 4;
+    const subRequirements = section.match(/^-\s+The system should/gm);
+    const hasMinimumSubReqs = subRequirements && subRequirements.length >= 4;
 
     console.log('Section validation results:', {
       hasTitle,
       hasDescription,
       hasSubRequirements,
-      hasPriorities,
-      subReqCount,
+      subReqCount: subRequirements?.length || 0,
       hasMinimumSubReqs,
       sectionStart: section.substring(0, 100)
     });
 
-    if (!hasTitle || !hasDescription || !hasSubRequirements || !hasPriorities || !hasMinimumSubReqs) {
+    if (!hasTitle || !hasDescription || !hasSubRequirements || !hasMinimumSubReqs) {
       return false;
     }
   }
