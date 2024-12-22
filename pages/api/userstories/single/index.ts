@@ -63,6 +63,21 @@ export default async function handler(
 
   const { projectId, epicId } = req.body;
 
+  // Setup SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  let sendEvent = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Add SSE validation
+  const isSSE = req.headers.accept === 'text/event-stream';
+  if (!isSSE) {
+    sendEvent = () => {};
+  }
+
   try {
     // Authentication
     const { userId, getToken } = getAuth(req);
@@ -75,8 +90,15 @@ export default async function handler(
     convex.setAuth(token);
     const convexEpicId = epicId as Id<"epics">;
 
-    const context = await useContextChecker({ projectId })
+    sendEvent({ progress: 5, status: 'Authenticating...' });
+
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token 
+    });
     console.log("context", context);
+
+    sendEvent({ progress: 15, status: 'Setting up connection...' });
 
     const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
@@ -140,6 +162,7 @@ export default async function handler(
     Generate the user story now.`;
 
     console.log("Calling Anthropic Api...");
+    sendEvent({ progress: 55, status: 'Generating user story...' });
     const response = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [{ role: "user", content: userStoryPrompt + "\nIMPORTANT: Your response must be a valid JSON array wrapped in ```json``` code blocks." }],
@@ -179,11 +202,22 @@ export default async function handler(
 
     let generatedUserStory;
     try {
-      generatedUserStory = JSON.parse(jsonContent);
+      const parsedContent = JSON.parse(jsonContent);
+      // Check if it's an array and take the first item
+      generatedUserStory = Array.isArray(parsedContent) ? parsedContent[0] : parsedContent;
+      
+      // Validate the structure
+      if (!generatedUserStory || !generatedUserStory.description || 
+          !generatedUserStory.acceptance_criteria || 
+          !generatedUserStory.additional_considerations) {
+          console.error('Invalid user story structure:', generatedUserStory);
+          throw new Error('Generated user story does not match required format');
+      }
     } catch (parseError) {
-      console.error('Error parsing OpenAI response for user story:', parseError);
-      console.log('Raw OpenAI response', userStoryContent);
-      return res.status(500).json({ message: 'Invalid JSON response from OpenAI for user story', parseError })
+      console.error('Error parsing Anthropic response:', parseError);
+      console.log('Raw content:', userStoryContent);
+      console.log('Attempted to parse:', jsonContent);
+      throw new Error('Failed to parse generated user story');
     }
 
     if (generatedUserStory && generatedUserStory?.description) {
@@ -193,6 +227,7 @@ export default async function handler(
       };
 
       console.log("User story created successfully");
+      sendEvent({ progress: 100, status: 'Complete!' });
       res.status(200).json({ userStory: formattedUserStory, type: 'userstory' });
     } else {
       throw new Error('Invalid user story format received from OpenAI');

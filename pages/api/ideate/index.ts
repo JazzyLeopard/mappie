@@ -5,6 +5,8 @@ import { generateText } from "ai";
 import { ConvexHttpClient } from "convex/browser";
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { useContextChecker } from "@/utils/useContextChecker";
+import { getAuth } from "@clerk/nextjs/server";
+import { Id } from "@/convex/_generated/dataModel";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -15,7 +17,35 @@ export default async function handler(
   if (req.method === 'POST') {
     const { prompt, projectId, language } = req.body;
 
-    const context = await useContextChecker({ projectId });
+    // Add authentication
+    const { userId, getToken } = getAuth(req);
+    const token = await getToken({ template: "convex" });
+
+    if (!token || !userId) {
+      return res.status(401).json({ error: 'Authentication failed' });
+    }
+
+    // Setup Convex client
+    convex.setAuth(token);
+
+    // Fetch project first
+    const project = await convex.query(api.projects.getProjectById, {
+      projectId: projectId as Id<"projects">
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.userId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized access to project' });
+    }
+
+    // Now pass token to useContextChecker
+    const context = await useContextChecker({ 
+      projectId: projectId as Id<"projects">,
+      token 
+    });
 
     if (!prompt || !projectId || !language) {
       return res.status(400).json({ error: 'Prompt, projectId, and language are required' });

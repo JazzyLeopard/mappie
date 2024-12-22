@@ -70,7 +70,7 @@ export default async function handler(
 
         // Prepare context
         sendEvent({ progress: 45, status: 'Preparing context...' });
-        const context = await useContextChecker({ projectId: convexProjectId });
+        const context = await useContextChecker({ projectId: convexProjectId, token: token });
         const functionalRequirementsText = functionalRequirements
             .map((fr: any) => `${fr.title}\n${fr.description}`)
             .join('\n\n');

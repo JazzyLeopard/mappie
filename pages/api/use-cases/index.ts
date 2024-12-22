@@ -228,7 +228,10 @@ export default async function handler(
       throw new Error('Unauthorized access to project');
     }
 
-    const context = await useContextChecker({ projectId });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token 
+    });
 
     sendEvent({ progress: 35, status: 'Loading functional requirements...' });
     // Fetch functional requirements

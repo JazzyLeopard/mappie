@@ -28,49 +28,39 @@ const convertBigIntToNumber = (obj: any): any => {
 const validateRequirements = (content: string): boolean => {
   console.log('Validating content:', content.substring(0, 500) + '...');
 
-  // Check if we have multiple # headers
-  const mainRequirements = content.match(/^# [^\n]+$/gm);
-  console.log('Found requirements:', mainRequirements);
+  // Split into sections using double newlines instead of ---
+  const sections = content.split(/\n\n(?=# [^\n]+)/).filter(section => section.trim());
+  console.log(`Found ${sections.length} sections`);
 
-  if (!mainRequirements || mainRequirements.length < 2) {
-    console.log('Validation failed: Not enough main requirements found');
+  if (sections.length < 2) {
+    console.log('Validation failed: Not enough sections found');
     return false;
   }
-
-  // Split into sections using --- as delimiter
-  const sections = content.split('---').filter(section => section.trim());
-  console.log(`Found ${sections.length} sections`);
 
   for (const section of sections) {
     if (!section.trim()) continue;
 
     console.log('Validating section:', section.substring(0, 200) + '...');
 
-    // Update regex patterns for the new format
-    const hasTitle = /^# [^\n]+/m.test(section.trim());
-    const hasDescription = /^## Description\s+[^\n]+/m.test(section);
-    const hasSubRequirements = /^### Sub-requirements/m.test(section);
-    const hasPriorities = /Priority: (Must Have|Should Have|Could Have)/m.test(section);
-    const hasMinimumSubReqs = (section.match(/- .+Priority: (Must Have|Should Have|Could Have)/g) || []).length >= 4;
+    // Update regex patterns to be more lenient with whitespace
+    const hasTitle = /^#\s+[^\n]+/m.test(section.trim());
+    const hasDescription = /##\s+Description\s+[^\n]+/m.test(section);
+    const hasSubRequirements = /###\s+Sub-requirements/m.test(section);
+    const hasPriorities = /Priority:\s*(Must Have|Should Have|Could Have)/m.test(section);
+    const subReqCount = (section.match(/^-\s+.*Priority:/gm) || []).length;
+    const hasMinimumSubReqs = subReqCount >= 4;
 
     console.log('Section validation results:', {
       hasTitle,
       hasDescription,
       hasSubRequirements,
       hasPriorities,
+      subReqCount,
       hasMinimumSubReqs,
       sectionStart: section.substring(0, 100)
     });
 
     if (!hasTitle || !hasDescription || !hasSubRequirements || !hasPriorities || !hasMinimumSubReqs) {
-      console.log('Section validation failed:', {
-        hasTitle,
-        hasDescription,
-        hasSubRequirements,
-        hasPriorities,
-        hasMinimumSubReqs,
-        sectionContent: section.substring(0, 200)
-      });
       return false;
     }
   }
@@ -131,7 +121,10 @@ export default async function handler(
 
     // Prepare context and project details
     sendEvent({ progress: 35, status: 'Preparing project context...' });
-    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token  // Pass the auth token
+    });
 
     const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt
@@ -144,11 +137,8 @@ export default async function handler(
 [Write a concise one paragraph description explaining the requirement's purpose, its main functionality, and its value to the project. Focus on what the requirement achieves rather than how it will be implemented.]
 
 ### Sub-requirements
-- [Specific, measurable action or capability that directly supports the main requirement] - **Priority: Must Have**
-- [Technical or functional capability needed to achieve the requirement] - **Priority: Should Have**
-- [Enhancement or additional feature that improves the requirement] - **Priority: Could Have**
-- [Core functionality or critical aspect of the requirement] - **Priority: Must Have**
-[continue with more requirements, each with an inline priority]
+- [Specific, measurable action or capability that directly supports the main requirement in the following format "The system should ..."]
+[continue with more requirements]
 
 ---
 
@@ -161,7 +151,6 @@ IMPORTANT:
 - Each sub-requirement must:
   * Be specific and measurable
   * Directly contribute to the main requirement
-  * End with "Priority: [level]" (Must Have, Should Have, or Could Have)
   * Be technically feasible and clear
 - Include at least 4 sub-requirements per main requirement
 - Ensure each requirement is distinct and avoids overlap with others
@@ -195,12 +184,11 @@ ${projectDetails}`;
 
     // Split into separate requirements using --- as delimiter
     const requirements = content
-      .split('---')
+      .split(/\n\n(?=# [^\n]+)/)
       .map(req => req.trim())
       .filter(req => {
-        // Add additional validation to ensure we don't process empty requirements
         const hasContent = req.length > 0;
-        const hasTitle = req.match(/^# [^\n]+/m);
+        const hasTitle = req.match(/^#\s+[^\n]+/m);
         return hasContent && hasTitle;
       });
 

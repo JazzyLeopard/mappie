@@ -52,6 +52,9 @@ export async function POST(request: Request) {
          - Questions to gather more information
          - Next steps or recommendations
       3. NEVER repeat the content that was shown in the displayMarkdown tool
+      4. Don't say that you will use the displayMarkdown tool, just use it
+      5. Don't provide improvements if not asked for
+      6. Always use properly formatted markdown
 
       Current ${selectedItemType} content to consider:
       ${selectedItemContent}
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
         - Ensure alignment with epic context: ${selectedEpic?.name} - ${selectedEpic?.description}
         - Include acceptance criteria that are testable and measurable
         ` : selectedItemType === 'epic' ? `
-        For epics:
+        For features:
         - Define clear business objectives and success metrics
         - Articulate value proposition and stakeholder benefits
         - Outline high-level scope and boundaries
