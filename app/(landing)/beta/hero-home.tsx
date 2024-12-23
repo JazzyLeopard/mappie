@@ -30,7 +30,7 @@ export default function BetaHero() {
             </div>
 
             <h1
-              className="mb-6 border-y text-5xl font-bold [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1] md:text-6xl"
+              className="mb-6 border-y text-3xl sm:text-4xl lg:text-6xl font-bold [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1]"
               data-aos="zoom-y-out"
               data-aos-delay={150}
             >
