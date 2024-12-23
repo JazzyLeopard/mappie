@@ -106,7 +106,7 @@ export default function FeatureShowcaseCarousel() {
   }, [currentIndex])
 
   return (
-    <div className="w-full min-h-screen py-8 px-4 md:py-16 md:px-12 overflow-hidden">
+    <div className="w-full min-h-screen py-8 pl-4 md:py-16 md:pl-4 overflow-hidden">
       <div className="h-full flex flex-col">
         <div className="text-left mb-8 md:mb-12">
           <h1 className="text-3xl md:text-5xl font-bold mb-4">Get to know our features.</h1>

@@ -10,7 +10,7 @@ import FeatureShowcaseCarousel from "@/app/(landing)/beta/feature-showcase-carou
 
 export default function Home() {
   return (
-    <div className="relative w-full max-w-[100vw] overflow-x-clip">
+    <div className="w-full px-4 md:px-0">
       <Hero />
       <VideoDemo />
       <FeatureShowcaseCarousel />
