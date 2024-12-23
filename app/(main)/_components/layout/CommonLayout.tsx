@@ -11,7 +11,7 @@ import AiGenerationIcon from "@/icons/AI-Generation";
 import type { Project } from "@/lib/types";
 import { cn } from '@/lib/utils';
 import { ReactMutation, useQuery } from 'convex/react';
-import { BookTemplateIcon, Loader2 } from "lucide-react";
+import { BookTemplateIcon, Loader2, ChevronDown } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -19,6 +19,8 @@ import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
 import LabelToInput from "../LabelToInput";
 import { TemplateGuideDialog } from "../TemplateGuideDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import AiGenerationIconWhite from '@/icons/AI-Generation-White';
 
 interface CommonLayoutProps {
     data: Project;
@@ -115,6 +117,24 @@ const CommonLayout = ({
         setIsTemplateGuideOpen(false);
     }, [handleInsertMarkdown]);
 
+    const handleGenerateUseCases = async () => {
+        try {
+            await router.push(`/epics/${data._id}/use-cases?generate=true`);
+        } catch (error) {
+            console.error('Error generating use cases:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to generate use cases');
+        }
+    };
+
+    const handleGenerateFeatures = async () => {
+        try {
+            await router.push(`/epics/${data._id}/features?generate=true`);
+        } catch (error) {
+            console.error('Error generating features:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to generate features');
+        }
+    };
+
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
@@ -134,25 +154,44 @@ const CommonLayout = ({
                                     <BookTemplateIcon className="w-4 h-4 mr-2" />
                                     Use Epic Template
                                 </Button>
-                                <Button
-                                    onClick={handleGenerateFR}
-                                    className="bg-white text-black border border-gray-300 hover:bg-gray-200"
-                                    disabled={isFrGenerated || isGenerating}
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            <span>Generating FR...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <AiGenerationIcon />
-                                            <span className="ml-2 font-semibold">
-                                                {isFrGenerated ? "FR Generated" : "Generate FR"}
-                                            </span>
-                                        </>
-                                    )}
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            className="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-blue-300 text-white font-semibold hover:shadow-lg transition-all duration-300"
+                                            disabled={isGenerating}
+                                        >
+                                            {isGenerating ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    <span>Generating...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <AiGenerationIconWhite />
+                                                    <span className="mx-2 font-semibold">Generate</span>
+                                                    <ChevronDown className="h-4 w-4" />
+                                                </>
+                                            )}
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={handleGenerateFR}
+                                            disabled={isFrGenerated}
+                                        >
+                                            <AiGenerationIcon className="mr-2" />
+                                            {isFrGenerated ? "FR Generated" : "Generate Functional Requirements"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleGenerateUseCases}>
+                                            <AiGenerationIcon className="mr-2" />
+                                            Generate Use Cases
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={handleGenerateFeatures}>
+                                            <AiGenerationIcon className="mr-2" />
+                                            Generate Features & Stories
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                     </div>

@@ -1204,10 +1204,13 @@ const EpicLayout = ({
               <h2 className="text-lg md:text-xl font-semibold text-center">
                 You haven't created any features<br />for this epic yet.
               </h2>
-              <p className="text-center text-gray-600 max-w-md">
+              <p className="text-left text-gray-600 max-w-md">
                 Based on the epic details, the AI can generate
-                streamlined features that outline the main features
-                and functionalities of your epic. Try it!
+                streamlined features.
+              </p>
+              <p className="text-left text-gray-600 max-w-md">
+                For each feature, you will be able to generate
+                dev-ready user stories. Try it!
               </p>
               <Button
                 className="gap-2 h-10"
@@ -1218,9 +1221,6 @@ const EpicLayout = ({
                 <AiGenerationIconWhite />
                 Generate Initial Features
               </Button>
-              <div className="text-center">
-                <span className="text-gray-500">or</span>
-              </div>
               <Button variant="outline" onClick={() => { }}>
                 Add Feature manually
               </Button>

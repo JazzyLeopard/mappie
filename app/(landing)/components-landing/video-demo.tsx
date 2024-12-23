@@ -60,30 +60,30 @@ export default function VideoDemo() {
   }, [currentIndex]);
 
   return (
-    <div id="video-demos" className="w-full h-screen py-16 px-12 md:px-8 overflow-hidden">
+    <div id="video-demos" className="w-full min-h-screen py-8 px-4 md:py-16 md:px-12 overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="text-left mb-12">
-          <h1 className="text-5xl font-bold mb-4">Product Demos</h1>
+        <div className="text-left mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">Product Demos</h1>
         </div>
 
         <div className="relative flex-grow">
           <div
             ref={containerRef}
-            className="flex overflow-x-auto gap-8 pb-8 h-full"
+            className="flex snap-x snap-mandatory overflow-x-auto gap-4 md:gap-8 pb-8 h-full"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {videos.map((video, idx) => (
+            {videos.map((video) => (
               <Card
                 key={video.id}
                 className={cn(
-                  "w-[800px] shrink-0", // Wider card
+                  "w-[calc(100vw-2rem)] md:w-[800px] shrink-0 snap-center",
                   "rounded-3xl overflow-hidden transition-all duration-300",
                   "border border-gray-200/50",
                   "hover:shadow-lg"
                 )}
               >
                 <div className={cn(
-                  "relative h-full w-full p-10",
+                  "relative h-[70vh] w-full p-6 md:p-10",
                   video.backgroundColor,
                   video.titleColor,
                   "flex flex-col"
@@ -120,7 +120,7 @@ export default function VideoDemo() {
           </div>
         </div>
 
-        <div className="flex justify-center mt-8 gap-4">
+        <div className="flex justify-center mt-4 md:mt-8 gap-4">
           <Button
             variant="ghost"
             size="icon"
