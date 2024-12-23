@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@nextui-org/react";
 import ProjectIdeation from "@/components/project-ideation";
@@ -23,6 +23,12 @@ const ProjectsPage = () => {
   const router = useRouter();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(true);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    setShowMobileWarning(isMobile);
+  }, []);
 
   if (!isSignedIn) {
     return <>Not signed in..</>;
@@ -109,6 +115,22 @@ const ProjectsPage = () => {
 
   return (
     <>
+      {showMobileWarning && (
+        <div className="fixed inset-0 z-50 backdrop-blur-[60px] flex items-center justify-center p-4">
+          <div className="bg-white/80 rounded-lg p-8 max-w-sm w-full space-y-6 shadow-lg">
+            <h3 className="font-semibold text-xl text-center">Mobile Device Detected</h3>
+            <p className="text-gray-600 text-center">
+              Currently, Mappie.ai is only available on desktop. If you'd still like to use it, please continue by clicking "Continue".
+            </p>
+            <Button 
+              className="w-full" 
+              onClick={() => setShowMobileWarning(false)}
+            >
+              Continue
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="pt-4 pr-4 pb-4 w-full h-screen">
         <div className={projects?.length === 0 ? "bg-white h-full rounded-xl flex flex-col items-center justify-center gap-6" : "bg-white h-full rounded-xl p-4"}>
           {(projects?.length ?? 0) > 0 ? (
