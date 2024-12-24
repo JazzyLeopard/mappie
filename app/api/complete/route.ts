@@ -6,18 +6,34 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { getAuth } from "@clerk/nextjs/server";
 import { NextRequest } from 'next/server';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, getToken } = getAuth(request);
-    const token = await getToken({ template: "convex" });
-
-    if (!token || !userId) {
+    const { userId } = getAuth(request);
+    
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 401 }
       );
     }
+
+    const headersList = await headers();
+    const authHeader = headersList.get("authorization");
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Invalid authorization header' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    convex.setAuth(token);
 
     const { 
       prompt, 
@@ -29,6 +45,24 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     const convexProjectId = projectId as Id<"projects">;
+
+    const project = await convex.query(api.projects.getProjectById, {
+      projectId: convexProjectId
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    if (project.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized access to project' },
+        { status: 403 }
+      );
+    }
 
     const context = await useContextChecker({ 
       projectId: convexProjectId, 

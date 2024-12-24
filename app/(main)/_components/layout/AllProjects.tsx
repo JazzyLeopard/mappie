@@ -120,11 +120,6 @@ export default function Component() {
         }),
       });
 
-      // Clear interval only after response is received
-      if (progressInterval) {
-        clearInterval(progressInterval);
-      }
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to generate epic details');
@@ -132,27 +127,33 @@ export default function Component() {
 
       await response.json();
       
-      // Set to 100% only after successful completion
+      // Set to 100% and wait a moment before completing
       setGenerationProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       toast.success("Epic details generated successfully!");
       setOpenPopover(null);
       setAiPrompt("");
+      setOpenIdeateDialog(false);
       
+      // Only clear the progress and generating state after navigation
       router.push(`/epics/${projectId}`);
+      setIsGenerating(false);
+      setGenerationProgress(0);
 
     } catch (error: any) {
       if (progressInterval) {
         clearInterval(progressInterval);
       }
       setGenerationProgress(0);
+      setIsGenerating(false);
       console.error('Error generating epic:', error);
       toast.error(error.message || "Failed to generate epic. Please try again.");
     } finally {
-      setIsGenerating(false);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       setOpenIdeateDialog(false);
-      // Add a delay before resetting progress to ensure the 100% state is visible
-      setTimeout(() => setGenerationProgress(0), 1000);
     }
   };
 

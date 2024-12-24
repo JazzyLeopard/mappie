@@ -26,7 +26,7 @@ export default function BetaHero() {
               data-aos="zoom-y-out"
               data-aos-delay={100}
             >
-              Beta Access Now Open • 100 Spots Available
+              Beta Access Now Open • Increased to 200 Spots
             </div>
 
             <h1
@@ -43,7 +43,7 @@ export default function BetaHero() {
 
             <div className="mx-auto max-w-3xl">
               <div className="mb-8 text-lg text-center text-gray-700">
-                <p>Join 100 pioneers 🚀 transforming project planning</p>
+                <p>Join 200 pioneers 🚀 transforming project planning</p>
                 <p>by letting Mappie turn vague ideas ✏️ into clear specs.</p>
               </div>
 
@@ -93,7 +93,7 @@ export default function BetaHero() {
                         ) : (
                           <span>{spotsClaimed}</span>
                         )}
-                        <span className="text-3xl text-gray-400">/100</span>
+                        <span className="text-3xl text-gray-400">/200</span>
                       </div>
                       <div className="mt-1 text-lg text-gray-600">spots claimed</div>
                     </div>

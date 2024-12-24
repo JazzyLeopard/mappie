@@ -232,15 +232,13 @@ Finally, ensure that this section provides a balanced view that acknowledges cha
 
 export const placeholderOverview = `
 
-## Epic Template 🎯
-### Epic Summary 🌟
-- Target Audience: [Who is the target audience for this epic?]
-- Problem Statement: [What is the problem statement for this epic?]
-- Epic Name: [What is the name of the epic?]
-- Type of Epic: [What is the type of epic?]
-- Key Benefits: [What are the key benefits of this epic?]
-- Competitive Edge: [What is the competitive edge of this epic?]
-- Unique Value Proposition: [What is the unique value proposition of this epic?]
+## Epic Summary ✨
+- Problem Statement: [The current project lacks a clear direction and defined goals.]
+- Target Audience: [Project Managers and Development Teams]
+- Type of Epic: [Feature Enhancement]
+- Key Benefits: [Improved user experience, increased security, and streamlined onboarding process.]
+- Competitive Edge: [Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.]
+- Unique Value Proposition: [This epic not only enhances security but also simplifies user access, making it easier for users to engage with our platform.]
 
 ### Problem 💭
 Describe the current situation and why it needs fixing
@@ -290,11 +288,9 @@ Any technical requirements or limitations
 export const ideatePrompts: { [key: string]: string } = {
     overview: `Create a comprehensive epic overview following this exact template structure:
 
-## Epic Template 🎯
-### Epic Summary 🌟
-- Target Audience: [Project Managers and Development Teams]
+## Epic Summary ✨
 - Problem Statement: [The current project lacks a clear direction and defined goals.]
-- Epic Name: [User Authentication Revamp]
+- Target Audience: [Project Managers and Development Teams]
 - Type of Epic: [Feature Enhancement]
 - Key Benefits: [Improved user experience, increased security, and streamlined onboarding process.]
 - Competitive Edge: [Unlike existing solutions, our approach integrates seamlessly with current systems and offers multi-factor authentication.]
