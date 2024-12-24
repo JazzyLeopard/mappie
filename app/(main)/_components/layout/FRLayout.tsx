@@ -179,6 +179,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                     data.content.description
                                 );
 
+                                // Clear selection after generation
+                                setSelectedItems({ fr: null });
+
                                 // Update progress and status
                                 if (progressInterval.current) {
                                     clearInterval(progressInterval.current);
@@ -299,6 +302,9 @@ const FRLayout: React.FC<FRLayoutProps> = ({
                                         toast.error(`Failed to process requirement: ${requirement.title}`);
                                     }
                                 }
+
+                                // Clear selection after generation
+                                setSelectedItems({ fr: null });
 
                                 // Update progress and status
                                 if (progressInterval.current) {

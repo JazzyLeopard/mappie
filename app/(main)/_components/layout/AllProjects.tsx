@@ -85,6 +85,7 @@ export default function Component() {
       return;
     }
 
+    let progressInterval: NodeJS.Timeout | undefined = undefined;
     setIsGenerating(true);
     setGenerationProgress(0);
 
@@ -97,8 +98,12 @@ export default function Component() {
         throw new Error("Failed to create epic");
       }
 
-      const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => Math.min(prev + 10, 90));
+      // Start progress animation
+      progressInterval = setInterval(() => {
+        setGenerationProgress((prev) => {
+          const increment = prev < 30 ? 15 : prev < 60 ? 8 : 3;
+          return Math.min(prev + increment, 90);
+        });
       }, 1000);
 
       toast.success("Epic created. Generating details...");
@@ -115,32 +120,39 @@ export default function Component() {
         }),
       });
 
-      clearInterval(progressInterval);
-      setGenerationProgress(100);
+      // Clear interval only after response is received
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to generate epic details');
       }
 
-      await response.json(); // Wait for the response
-
-      // Success handling
+      await response.json();
+      
+      // Set to 100% only after successful completion
+      setGenerationProgress(100);
+      
       toast.success("Epic details generated successfully!");
-      setOpenPopover(null); // Close the popover
-      setAiPrompt(""); // Reset the prompt
-
-      // Navigate to the new project
+      setOpenPopover(null);
+      setAiPrompt("");
+      
       router.push(`/epics/${projectId}`);
 
     } catch (error: any) {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       setGenerationProgress(0);
       console.error('Error generating epic:', error);
       toast.error(error.message || "Failed to generate epic. Please try again.");
     } finally {
       setIsGenerating(false);
       setOpenIdeateDialog(false);
-      setTimeout(() => setGenerationProgress(0), 500);
+      // Add a delay before resetting progress to ensure the 100% state is visible
+      setTimeout(() => setGenerationProgress(0), 1000);
     }
   };
 

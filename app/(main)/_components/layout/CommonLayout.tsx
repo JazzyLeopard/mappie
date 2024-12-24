@@ -71,24 +71,14 @@ const CommonLayout = ({
         return <PresentationMode data={data} onClose={() => setIsPresentationMode(false)} />;
     }
 
-    const handleGenerateFR = () => {
+    const handleGenerateFR = async () => {
         if (!isFrGenerated) {
-            setIsConfirmModalOpen(true);
-        }
-    };
-
-    const confirmGenerateFR = async () => {
-        setIsConfirmModalOpen(false);
-        setIsGenerating(true);
-
-        try {
-            await router.push(`/epics/${data._id}/functional-requirements?generate=true`);
-        } catch (error) {
-            console.error('Error generating FR:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to generate functional requirements');
-            setIsFrGenerated(false);
-        } finally {
-            setIsGenerating(false);
+            try {
+                await router.push(`/epics/${data._id}/functional-requirements`);
+            } catch (error) {
+                console.error('Error navigating to FR:', error);
+                toast.error('Failed to navigate to functional requirements');
+            }
         }
     };
 
@@ -230,23 +220,6 @@ const CommonLayout = ({
                     </div>
                 </div>
             </div>
-
-            <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="pb-2">Generate Functional Requirements</DialogTitle>
-                        <DialogDescription className="pb-2">
-                            Are you confident that you've provided enough information about the epic to generate comprehensive Functional Requirements?
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancel</Button>
-                        <Button onClick={confirmGenerateFR}>
-                            Confirm
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             <TemplateGuideDialog
                 isOpen={isTemplateGuideOpen}
