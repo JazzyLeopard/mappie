@@ -3,13 +3,39 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { useContextChecker } from '@/utils/useContextChecker';
 import { Id } from '@/convex/_generated/dataModel';
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { getAuth } from "@clerk/nextjs/server";
+import { NextRequest } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+    const { userId, getToken } = getAuth(request);
+    const token = await getToken({ template: "convex" });
 
-    const { prompt, projectId, selectedText, selectedItemContent, selectedItemType, selectedEpic } = await request.json();
+    if (!token || !userId) {
+      return NextResponse.json(
+        { error: 'Authentication failed' },
+        { status: 401 }
+      );
+    }
+
+    const { 
+      prompt, 
+      projectId, 
+      selectedText = '', 
+      selectedItemContent = '', 
+      selectedItemType = '', 
+      selectedEpic = null 
+    } = await request.json();
+
     const convexProjectId = projectId as Id<"projects">;
+
+    const context = await useContextChecker({ 
+      projectId: convexProjectId, 
+      token 
+    });
+
+    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
 
     if (!prompt || !projectId) {
       return NextResponse.json(
@@ -17,9 +43,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    // Get project context
-    const context = await useContextChecker({ projectId: convexProjectId });
 
     const systemPrompt = {
       role: 'system',
