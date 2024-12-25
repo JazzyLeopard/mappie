@@ -120,6 +120,8 @@ export default async function handler(
       ### Instructions:
           1. **Adhere to the INVEST Principles**:
             - Independent, Negotiable, Valuable, Estimable, Small, and Testable.
+            - If you need to split up stories into multiple stories, do so, to ensure that each story is independent and can be implemented within a sprint. They should not be complex and there should be a clear vertical slice of functionality.
+            - Too many scenarios means the user story is too complex and should be split up. The story should focus on one main flow. 
 
           2. **Story Format**:
             Write each user story in the following JSON structure:
@@ -131,7 +133,7 @@ export default async function handler(
             "acceptance_criteria": [
               "Scenario 1: **Given** [precondition], **when** [action], **then** [expected outcome].",
               "Scenario 2: **Given** [precondition], **when** [action], **then** [expected outcome].",
-              [More if necessary]"
+              [More if necessary but still focus on one main flow]"
             ],
 
             "additional_considerations": [
