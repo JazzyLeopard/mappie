@@ -885,7 +885,10 @@ const EpicLayout = ({
                     return (
                       <div key={epic._id} className="relative">
                         <div
-                          className="flex items-center justify-between w-full px-4 py-3 hover:bg-white hover:text-accent-foreground cursor-pointer"
+                          className={cn(
+                            "flex items-center justify-between w-full px-4 py-2 rounded-md cursor-pointer",
+                            selectedItems.epic === epic._id ? "bg-gray-100 border border-gray-200" : "hover:bg-slate-100"
+                          )}
                           onClick={(e) => {
                             if (editingEpicId === epic._id) {
                               e.stopPropagation();
@@ -1075,7 +1078,7 @@ const EpicLayout = ({
                     </div>
                   ) : allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length === 0 ? (
                     <div className="text-sm text-muted-foreground py-2">
-                      No user stories yet
+                      Select a feature to view its user stories
                     </div>
                   ) : (
                     renderUserStories(allUserStories?.filter((story: any) => story.epicId === selectedItems.epic) || [])

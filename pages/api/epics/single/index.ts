@@ -93,46 +93,49 @@ export default async function handler(
         const featuresText = existingEpics.map((epic: any) => epic?.description).join('\n');
 
         let prompt = `
-        Epic Context:
-        ${context}
+Epic Context:
+${context}
 
-        Functional Requirements:
-        ${functionalRequirementsText}
+Functional Requirements:
+${functionalRequirementsText}
 
-        Existing Features:
-        ${featuresText}
+Existing Features:
+${featuresText}
 
-        Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following epic. Ensure that the feature is not one of the existing features and the names are not similar to the existing features: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the epic's needs, following this exact structure and level of detail:- 
+Based on the above epic context, functional requirements, existing features, and use cases, generate one unique additional feature for the following epic. Ensure that the feature is not one of the existing features and the names are not similar to the existing features: [${existingEpicNames.join(', ')}]. The feature should be detailed and specific to the epic's needs, following this exact structure and level of detail:
 
-### Feature: [Feature Name]
+**Feature Name:**
+[A short, action-oriented title describing the feature.]
 
-**Description**: [Provide a clear and concise one paragraph description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
+**Why we are building this:**
+[Why this feature is being developed. Focus on the user need or problem it solves.]
 
-**Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
+**Description:**
+[A high-level explanation of what the feature includes, written in clear, concise terms. Mention the key actions or outcomes.]
 
-**Functionality**:
-• Functionality 1: [Explain core system capability or feature]
-• Functionality 2: [Explain user interaction or process flow]
-• Functionality 3: [Explain output or result delivery]
+**Scope:**
+[Define the specific aspects or components of the feature. Be explicit about what is included.]
 
-**Dependencies**:
-• Dependency 1: [Technical or system dependency that is critical to success]
-• Dependency 2: [External factor or prerequisite that must be in place]
+**Out of scope:**
+[List items that are explicitly not included in this feature.]
 
-**Risks**:
-• Risk 1: [Technical, business, or operational risk that could impact delivery]
-• Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+**Success Metrics:**
+[Define measurable outcomes that indicate the feature is working as intended.]
+
+**Dependencies:**
+[Mention any prerequisites, integrations, or other features required for this feature to work.]
+
+**Additional Notes:**
+[Add any extra information or context to help refine user stories.]
 
 IMPORTANT:
 - Keep consistent formatting throughout the document
-- Each feature MUST have EXACTLY 3 functionality
-- Each feature MUST have EXACTLY 2 dependencies
-- Each feature MUST have EXACTLY 2 risks
-- Each point should be detailed and specific
-- Include measurable outcomes where possible
+- Each section should be detailed and specific
+- Focus on user-centric explanations
 - Consider both technical and business aspects
+- Clearly separate in-scope and out-of-scope items
 
-Please ensure each feature is well-defined, practical, and aligns with the epic goals and requirements. `;
+Please ensure the feature is well-defined, practical, and aligns with the epic goals and requirements.`;
 
         if (useCases?.length > 0) {
             const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
@@ -155,76 +158,30 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
         // Create epics in database
         sendEvent({ progress: 75, status: 'Processing features...' });
         const epics = epicContent
-            .split(/(?=###\s*Feature:\s*)/g)
-            .filter(section => section.trim().startsWith('### Feature:'))
+            .split(/(?=\*\*Feature Name:\*\*)/g)
+            .filter(section => section.trim().startsWith('**Feature Name:**'))
             .map(section => {
-                const nameMatch = section.match(/(?:###|##)\s*Feature:\s*(.+?)(?=\n|$)/);
-                const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
-                const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
-
-                // Updated regex patterns to better capture multiple bullet points
-                const functionalitySection = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
-                const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
-                const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
-
-                const extractBulletPoints = (sectionText: string, prefix: string) => {
-                    if (!sectionText) return [];
-                    return sectionText
-                        .split('\n')
-                        .map(line => line.trim())
-                        .filter(line => {
-                            const hasBulletPoint =
-                                line.startsWith('•') ||
-                                line.startsWith('-') ||
-                                line.startsWith('* ');
-
-                            const hasContent =
-                                line.includes(`${prefix}`) ||
-                                (line.includes('**') && line.includes(':')) ||
-                                hasBulletPoint;
-
-                            return line.length > 0 && (hasBulletPoint || hasContent);
-                        })
-                        .map(line => {
-                            let cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
-                            cleanLine = cleanLine.replace(/\*\*/g, '');
-
-                            const numberMatch = cleanLine.match(new RegExp(`${prefix}\\s*(\\d+)`));
-                            const number = numberMatch ? ` ${numberMatch[1]}` : '';
-
-                            let content = '';
-                            if (cleanLine.includes(':')) {
-                                content = cleanLine.split(':').slice(1).join(':').trim();
-                            } else {
-                                content = cleanLine;
-                            }
-
-                            // Clean up any extra whitespace in content
-                            content = content.replace(/\s+/g, ' ').trim();
-
-                            return `  • **${prefix}${number}:** ${content}`;
-                        });
-                };
-
-                // Process each section
-                const functionality = extractBulletPoints(functionalitySection ?? "", 'Functionality');
-                const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
-                const risks = extractBulletPoints(risksSection ?? "", 'Risk');
-
+                const nameMatch = section.match(/\*\*Feature Name:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const whyMatch = section.match(/\*\*Why we are building this:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const descriptionMatch = section.match(/\*\*Description:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const scopeMatch = section.match(/\*\*Scope:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const outOfScopeMatch = section.match(/\*\*Out of scope:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const metricsMatch = section.match(/\*\*Success Metrics:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const dependenciesMatch = section.match(/\*\*Dependencies:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+                const notesMatch = section.match(/\*\*Additional Notes:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
 
                 const processedData = {
                     name: nameMatch?.[1]?.trim() || 'Untitled Feature',
                     description: {
+                        Why: whyMatch?.[1]?.trim() || '',
                         Description: descriptionMatch?.[1]?.trim() || '',
-                        "Business Value": businessValueMatch?.[1]?.trim() || '',
-                        Functionality: functionality,
-                        Dependencies: dependencies,
-                        Risks: risks
+                        Scope: scopeMatch?.[1]?.trim() || '',
+                        OutOfScope: outOfScopeMatch?.[1]?.trim() || '',
+                        "Success Metrics": metricsMatch?.[1]?.trim() || '',
+                        Dependencies: dependenciesMatch?.[1]?.trim() || '',
+                        "Additional Notes": notesMatch?.[1]?.trim() || ''
                     }
                 };
-
-                // Debug logging for processed data
-                console.log('Processed data:', JSON.stringify(processedData, null, 2));
 
                 return processedData;
             });
@@ -233,28 +190,21 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
         sendEvent({ progress: 85, status: 'Saving epics...' });
 
         const createdEpics = await Promise.all(epics.map(async (epic) => {
-            const markdownDescription = `### ${epic.name}
+            const markdownDescription = `## ${epic.name}
+
+### Why we are building this
+${epic.description.Why || 'No information provided'}
 
 ### Description
-${epic.description.Description}
+${epic.description.Description || 'No information provided'}
 
-### Business Value
-${epic.description["Business Value"]}
+### Scope
+${epic.description.Scope || 'No information provided'}
 
-### Functionality
-${epic.description.Functionality.length > 0
-                    ? epic.description.Functionality.map(functionality => `${functionality}`).join('\n')
-                    : '• No functionality specified'}
-
-### Dependencies
-${epic.description.Dependencies.length > 0
-                    ? epic.description.Dependencies.map(dep => `${dep}`).join('\n')
-                    : '• No dependencies specified'}
-
-### Risks
-${epic.description.Risks.length > 0
-                    ? epic.description.Risks.map(risk => `${risk}`).join('\n')
-                    : '• No risks specified'}`;
+${epic.description.OutOfScope ? `#### Out of scope\n${epic.description.OutOfScope}\n\n` : ''}
+${epic.description["Success Metrics"] ? `### Success Metrics\n${epic.description["Success Metrics"]}\n\n` : ''}
+${epic.description.Dependencies ? `### Dependencies\n${epic.description.Dependencies}\n\n` : ''}
+${epic.description["Additional Notes"] ? `### Additional Notes\n${epic.description["Additional Notes"]}` : ''}`;
 
             return await convex.mutation(api.epics.createEpics, {
                 projectId: convexProjectId,
