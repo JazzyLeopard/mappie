@@ -143,7 +143,7 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
         }
 
         console.log("Calling Anthropic Api...");
-        sendEvent({ progress: 55, status: 'Generating epic...' });
+        sendEvent({ progress: 55, status: 'Generating feature...' });
         const completion = await generateText({
             model: anthropic('claude-3-5-sonnet-20241022'),
             messages: [{ role: "user", content: prompt }],
@@ -187,7 +187,7 @@ Please ensure the feature is well-defined, practical, and aligns with the epic g
             });
 
         // Create epics in database
-        sendEvent({ progress: 85, status: 'Saving epics...' });
+        sendEvent({ progress: 85, status: 'Saving features...' });
 
         const createdEpics = await Promise.all(epics.map(async (epic) => {
             const markdownDescription = `## ${epic.name}
@@ -219,7 +219,7 @@ ${epic.description["Additional Notes"] ? `### Additional Notes\n${epic.descripti
         sendEvent({ done: true, content: serializedEpics });
 
     } catch (error) {
-        console.error('Error generating Epic:', error);
+        console.error('Error generating Feature:', error);
         if (error instanceof Error) {
             console.error('Error message:', error.message);
             console.error('Error stack:', error.stack);

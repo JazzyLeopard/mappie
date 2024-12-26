@@ -394,6 +394,11 @@ const AIStoryCreator = memo(function AIStoryCreator({
   const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Add validation
+    if (!chat.input?.trim()) {
+      return;
+    }
+
     if (streamState.isGenerating || streamState.isWaitingForTool) return;
 
     try {
@@ -406,7 +411,12 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
       await chat.handleSubmit(e);
     } catch (error) {
-      console.error('Chat submission error:', error);
+      // Add error logging
+      console.error('Chat submission error:', {
+        error,
+        input: chat.input,
+        state: streamState
+      });
       setStreamState(prev => ({
         ...prev,
         hasToolError: true

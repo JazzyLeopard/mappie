@@ -209,7 +209,7 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
       });
 
     // Create epics in database
-    sendEvent({ progress: 85, status: 'Saving epics...' });
+    sendEvent({ progress: 85, status: 'Saving features...' });
 
     const createdEpics = await Promise.all(epics.map(async (epic) => {
       const markdownDescription = `## ${epic.name}
