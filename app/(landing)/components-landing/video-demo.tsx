@@ -60,23 +60,23 @@ export default function VideoDemo() {
   }, [currentIndex]);
 
   return (
-    <div id="video-demos" className="w-full min-h-screen py-8 px-4 md:py-16 md:px-12 overflow-hidden">
+    <div id="video-demos" className="w-full min-h-screen py-8 md:py-16 md: overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="text-left mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Product Demos</h1>
+        <div className="text-left mb-8 md:mb-12"> 
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 ml-4 md:ml-12">Product Demos</h1>
         </div>
 
         <div className="relative flex-grow">
           <div
             ref={containerRef}
-            className="flex snap-x snap-mandatory overflow-x-auto gap-4 md:gap-8 pb-8 h-full"
+            className="flex snap-x snap-mandatory overflow-x-auto pb-8 h-full"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {videos.map((video) => (
               <Card
                 key={video.id}
                 className={cn(
-                  "w-[calc(100vw-2rem)] md:w-[800px] shrink-0 snap-center",
+                  "w-[calc(100vw-2rem)] ml-4 md:ml-8 md:w-[800px] shrink-0 snap-center",
                   "rounded-3xl overflow-hidden transition-all duration-300",
                   "border border-gray-200/50",
                   "hover:shadow-lg"

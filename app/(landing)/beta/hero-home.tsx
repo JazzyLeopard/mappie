@@ -93,7 +93,7 @@ export default function BetaHero() {
                         ) : (
                           <span>{spotsClaimed}</span>
                         )}
-                        <span className="text-3xl text-gray-400">/200</span>
+                        <span className="text-3xl text-gray-400">/250</span>
                       </div>
                       <div className="mt-1 text-lg text-gray-600">spots claimed</div>
                     </div>

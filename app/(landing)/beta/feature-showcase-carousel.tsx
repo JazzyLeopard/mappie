@@ -106,23 +106,23 @@ export default function FeatureShowcaseCarousel() {
   }, [currentIndex])
 
   return (
-    <div className="w-full min-h-screen py-8 pl-4 md:py-16 md:pl-4 overflow-hidden">
+    <div className="w-full min-h-screen py-8 md:py-16 overflow-hidden">
       <div className="h-full flex flex-col">
         <div className="text-left mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Get to know our features.</h1>
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 ml-4 md:ml-8">Get to know our features.</h1>
         </div>
         
         <div className="relative flex-grow">
           <div 
             ref={containerRef}
-            className="flex snap-x snap-mandatory overflow-x-auto gap-4 pb-8 h-full"
+            className="flex snap-x snap-mandatory overflow-x-auto pb-8 h-full"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {features.map((feature, idx) => (
               <Card
                 key={`${feature.title}-${idx}`}
                 className={cn(
-                  "w-[calc(100vw-2rem)] md:w-[400px] shrink-0 snap-center",
+                  "w-[calc(100vw-1.5rem)] ml-4 md:ml-8 md:w-[400px] shrink-0 snap-center",
                   "rounded-3xl overflow-hidden transition-all duration-300",
                   "border border-gray-200/50 cursor-pointer",
                   "hover:shadow-lg"
