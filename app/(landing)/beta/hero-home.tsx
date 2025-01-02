@@ -43,8 +43,8 @@ export default function BetaHero() {
 
             <div className="mx-auto max-w-3xl">
               <div className="mb-8 text-lg text-center text-gray-700">
-                <p>Join 200 pioneers 🚀 transforming project planning</p>
-                <p>by letting Mappie turn vague ideas ✏️ into clear specs.</p>
+                <p>Join our beta pioneers 🚀 transforming project planning</p>
+                <p>by letting Mappie turn vague requirements ✏️ into clear specs.</p>
               </div>
 
               {/* Centered Beta Button */}
