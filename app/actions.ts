@@ -32,7 +32,7 @@ export async function generateUserStory(
 
   (async () => {
     const { partialObjectStream } = await streamObject({
-      model: openai('gpt-4'),
+      model: openai('gpt-4o'),
       system: `You are an AI assistant specialized in creating user stories.
         ${epicContext ? `
         Context:

@@ -1229,7 +1229,7 @@ const EpicLayout = ({
                 <AiGenerationIconWhite />
                 Generate Initial Features
               </Button>
-              <Button variant="outline" onClick={() => { }}>
+              <Button variant="outline" onClick={handleAddEpic}>
                 Add Feature manually
               </Button>
             </div>
