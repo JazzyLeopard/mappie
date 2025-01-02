@@ -182,13 +182,13 @@ type ShowModal = ReturnType<typeof useModal>[1];
 
 function getBaseOptions(editor: LexicalEditor, showModal: ShowModal) {
   return [
-    new ComponentPickerOption('AI Writer', {
-      icon: <Wand2 className="h-4 w-4" />,
-      keywords: ['ai', 'write', 'generate', 'content', 'text'],
-      onSelect: () => {
-        editor.dispatchCommand(AI_WRITER_COMMAND, undefined);
-      },
-    }),
+    // new ComponentPickerOption('AI Writer', {
+    //   icon: <Wand2 className="h-4 w-4" />,
+    //   keywords: ['ai', 'write', 'generate', 'content', 'text'],
+    //   onSelect: () => {
+    //     editor.dispatchCommand(AI_WRITER_COMMAND, undefined);
+    //   },
+    // }),
     new ComponentPickerOption('Paragraph', {
       icon: <Type className="h-4 w-4" />,
       keywords: ['normal', 'paragraph', 'p', 'text'],
