@@ -20,9 +20,7 @@ const nextConfig = {
         }
         return config
     },
-    experimental: {
-        pageLoadTimeout: 60000,
-    }
+    staticPageGenerationTimeout: 60000
 }
 
 module.exports = nextConfig
