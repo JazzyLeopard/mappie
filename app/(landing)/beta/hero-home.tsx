@@ -89,7 +89,11 @@ export default function BetaHero() {
                     <div className="text-center">
                       <div className="text-5xl font-bold bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] text-transparent bg-clip-text">
                         {loading ? (
-                          <span className="animate-pulse">...</span>
+                          <span className="text-gray-400 text-2xl">
+                            <span className="animate-pulse">.</span>
+                            <span className="animate-pulse delay-200">.</span>
+                            <span className="animate-pulse delay-400">.</span>
+                          </span>
                         ) : (
                           <span>{spotsClaimed}</span>
                         )}
