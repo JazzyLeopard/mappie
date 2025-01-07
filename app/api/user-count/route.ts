@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const client = await clerkClient();
-    const users = await client.users.getUserList();
-    return NextResponse.json({ count: users.totalCount });
+    const totalCount = await client.users.getCount();
+    return NextResponse.json({ count: totalCount });
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json({ count: 0 }, { status: 500 });
