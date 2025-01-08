@@ -4,15 +4,9 @@ import { anthropic } from "@ai-sdk/anthropic";
 
 export async function POST(request: Request) {
   try {
-    console.log('Received chat request:', {
-      headers: Object.fromEntries(request.headers.entries()),
-      url: request.url
-    });
-    console.log('Anthropic API Key:', process.env.ANTHROPIC_API_KEY ? 'Present' : 'Missing');
-
+    console.log('Received chat request:');
     // Read the body only once and store it
     const body = await request.json();
-    console.log('Request body:', body);
 
     const { messages, selectedItemContent, selectedItemType, selectedEpic } = body;
 
@@ -40,7 +34,7 @@ export async function POST(request: Request) {
         } : {})
       }));
 
-    // Add system prompt based on content type
+    debugger;
     const systemPrompt = {
       role: 'system',
       content: `You are an AI assistant specialized in agile project management and content generation.

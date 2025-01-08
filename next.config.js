@@ -6,23 +6,31 @@ const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
     images: {
-        remotePatterns: [{
-            protocol: 'http',
-            hostname: 'your-image-domains.com',
-            pathname: '**',
-        }],
-    },
-    pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
-    webpack: (config, { isServer }) => {
-        config.watchOptions = {
-            aggregateTimeout: 5000,
-            poll: 1000,
-        }
-        return config
+        remotePatterns: [{ hostname: 'img.clerk.com' }],
     },
     experimental: {
-        pageLoadTimeout: 60000,
-    }
+        optimizeCss: true,
+        optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    },
+    pageExtensions: ['ts', 'tsx', 'js', 'jsx'],
+    webpack: (config, { dev, isServer }) => {
+        // Production optimizations
+        if (!dev && !isServer) {
+          // Enable tree shaking and minification
+          config.optimization = {
+            ...config.optimization,
+            usedExports: true,
+            sideEffects: true,
+            minimize: true,
+          }
+          config.watchOptions = {
+            aggregateTimeout: 5000,
+            poll: 1000,
+          }
+        }
+        return config
+      },
+    staticPageGenerationTimeout: 60000
 }
 
 module.exports = nextConfig
