@@ -69,8 +69,6 @@ export async function POST(request: NextRequest) {
       token 
     });
 
-    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-
     if (!prompt || !projectId) {
       return NextResponse.json(
         { error: 'Missing required fields: prompt or projectId' },

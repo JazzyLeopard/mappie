@@ -43,78 +43,82 @@ export const storeChatHistory = mutation({
           v.literal('tool')
         ),
         id: v.optional(v.string()),
-        toolInvocations: v.optional(
-          v.array(
-            v.object({
-              toolName: v.string(),
-              toolCallId: v.string(),
-              state: v.string(),
-              args: v.optional(v.object({
-                content: v.string(),
-                metadata: v.optional(
-                  v.object({
-                    title: v.optional(v.string()),
-                    type: v.optional(v.string())
-                  })
-                )
-              })),
-              result: v.optional(v.object({
-                content: v.string(),
-                metadata: v.optional(
-                  v.object({
-                    title: v.optional(v.string()),
-                    type: v.optional(v.string())
-                  })
-                )
-              }))
-            })
-          )
-        )
+        tokens: v.optional(v.number()),
+        toolInvocations: v.optional(v.array(v.object({
+          toolName: v.string(),
+          toolCallId: v.string(),
+          state: v.string(),
+          args: v.optional(v.object({
+            content: v.string(),
+            metadata: v.optional(
+              v.object({
+                title: v.optional(v.string()),
+                type: v.optional(v.string())
+              })
+            )
+          })),
+          result: v.optional(v.object({
+            content: v.string(),
+            metadata: v.optional(
+              v.object({
+                title: v.optional(v.string()),
+                type: v.optional(v.string())
+              })
+            )
+          }))
+        })))
       })
-    )
+    ),
+    maxTokens: v.optional(v.number()),
+    reservedTokens: v.optional(v.number())
   },
   handler: async (ctx: any, args: any) => {
     const { itemId, itemType, projectId, messages } = args;
+    const maxTokens = args.maxTokens || 15000;
+    const reservedTokens = args.reservedTokens || 1000;
 
-    // Get the latest message history for this item
+    // Add token estimates to messages
+    const messagesWithTokens = messages.map((msg: any) => ({
+      ...msg,
+      tokens: Math.ceil(msg.content.length / 4)
+    }));
+
+    // Truncate history if needed
+    let totalTokens = messagesWithTokens.reduce((sum: number, msg: any) => sum + (msg.tokens || 0), 0);
+    const availableTokens = maxTokens - reservedTokens;
+
+    let truncatedMessages = [...messagesWithTokens];
+    while (totalTokens > availableTokens && truncatedMessages.length > 2) {
+      const startIndex = truncatedMessages[0].role === 'system' ? 1 : 0;
+      const removedMessage = truncatedMessages.splice(startIndex, 1)[0];
+      totalTokens -= (removedMessage.tokens || 0);
+    }
+
+    // Get existing history and update/insert as needed
     const existingHistory = await ctx.db
       .query("messages")
       .filter((q: any) => q.eq(q.field("itemId"), itemId))
       .order("desc")
       .first();
-    if (existingHistory) {
-      console.log('existing history found');
-      const existingLastMessage = existingHistory.messages[existingHistory.messages.length - 1];
-      const newLastMessage = messages[messages.length - 1];
 
-      if (existingLastMessage.id === newLastMessage.id) {
-        console.log('last messages match, no need to save');
-        return existingHistory;
-      } else {
-        console.log('last messages do not match, saving new messages');
-        await ctx.db.patch(existingHistory._id, {
-          messages: messages,
-          updatedAt: BigInt(Date.now())
-        });
-        return existingHistory;
-      }
-    }
-    else {
-      console.log('no existing history, inserting new');
-      // Only save if we have new messages
-      const result = await ctx.db.insert("messages", {
+    if (existingHistory) {
+      await ctx.db.patch(existingHistory._id, {
+        messages: truncatedMessages.map(({tokens, ...msg}) => msg),
+        updatedAt: BigInt(Date.now())
+      });
+      return existingHistory;
+    } else {
+      return await ctx.db.insert("messages", {
         itemId,
         itemType,
         projectId,
-        messages: messages.map((msg: any) => ({
+        messages: truncatedMessages.map(({tokens, ...msg}) => ({
           ...msg,
           id: msg.id || nanoid()
         })),
         createdAt: BigInt(Date.now()),
         updatedAt: BigInt(Date.now())
       });
-
-      return result;
     }
   }
 });
