@@ -94,7 +94,10 @@ export default async function handler(
 
     // Prepare context and project details
     sendEvent({ progress: 35, status: 'Preparing project context...' });
-    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token  // Pass the auth token
+    });
 
     const projectDetails = `Overview: ${project.overview}`;
     // Prepare prompt

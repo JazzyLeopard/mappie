@@ -25,50 +25,27 @@ const convertBigIntToNumber = (obj: any): any => {
 
 // Add debug logging to see what we're receiving
 const validateRequirements = (content: string): boolean => {
-  console.log('Validating content:', content.substring(0, 500) + '...');
+  // Split content into sections
+  const sections = content.split(/(?=# )/g).filter(Boolean);
+  
+  if (sections.length === 0) return false;
 
-  // For single requirement, we only need one # header
-  const mainRequirement = content.match(/^# [^\n]+$/m);
-  console.log('Found requirement:', mainRequirement);
-
-  if (!mainRequirement) {
-    console.log('Validation failed: No main requirement found');
-    return false;
+  for (const section of sections) {
+    const hasTitle = section.match(/^# [^\n]+/m);
+    const hasDescription = section.match(/^## Description/m);
+    const hasSubRequirements = section.match(/^### Sub-requirements/m);
+    const subRequirements = section.match(/^- /gm);
+    
+    if (!hasTitle || !hasDescription || !hasSubRequirements) {
+      return false;
+    }
+    
+    // Check if there are at least 4 sub-requirements
+    if (!subRequirements || subRequirements.length < 4) {
+      return false;
+    }
   }
-
-  // No need to split into sections for single requirement
-  const section = content;
-
-  console.log('Validating section:', section.substring(0, 200) + '...');
-
-  // Update regex patterns for the new format
-  const hasTitle = /^# [^\n]+/m.test(section.trim());
-  const hasDescription = /^## Description\s+[^\n]+/m.test(section);
-  const hasSubRequirements = /^### Sub-requirements/m.test(section);
-  const hasPriorities = /Priority: (Must Have|Should Have|Could Have)/m.test(section);
-  const hasMinimumSubReqs = (section.match(/- .+Priority: (Must Have|Should Have|Could Have)/g) || []).length >= 4;
-
-  console.log('Section validation results:', {
-    hasTitle,
-    hasDescription,
-    hasSubRequirements,
-    hasPriorities,
-    hasMinimumSubReqs,
-    sectionStart: section.substring(0, 100)
-  });
-
-  if (!hasTitle || !hasDescription || !hasSubRequirements || !hasPriorities || !hasMinimumSubReqs) {
-    console.log('Section validation failed:', {
-      hasTitle,
-      hasDescription,
-      hasSubRequirements,
-      hasPriorities,
-      hasMinimumSubReqs,
-      sectionContent: section.substring(0, 200)
-    });
-    return false;
-  }
-
+  
   return true;
 };
 
@@ -124,7 +101,10 @@ export default async function handler(
 
     // Prepare context and project details
     sendEvent({ progress: 35, status: 'Preparing project context...' });
-    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token 
+    });
 
     sendEvent({ progress: 45, status: 'Loading existing requirements...' });
     const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {
@@ -146,30 +126,29 @@ ${existingFRs.length > 0 ? `${existingFRs.map((fr: any) => `${fr.title}: ${fr.de
 
 Current requirement IDs: ${existingFRNames.join(', ')}` : ''}
 
-Format the requirement exactly like this:
+Format the requirement EXACTLY like this template (keep the exact headings and structure):
 
-# [Requirement Title]
+# [Single Short Requirement Title]
 
 ## Description
-[One paragraph description]
+[One clear paragraph describing the requirement]
 
 ### Sub-requirements
-- [Specific requirement] - **Priority: Must Have**
-- [Specific requirement] - **Priority: Should Have**
-- [Specific requirement] - **Priority: Could Have**
-- [Specific requirement] - **Priority: Must Have**
-[continue with more requirements, each with an inline priority]
-
-IMPORTANT: 
-- Title should be short and concise
-- Each sub-requirement MUST end with "Priority: [level]"
-- Priority levels MUST be one of: Must Have, Should Have, or Could Have
-- The requirement must have at least 4 sub-requirements
+- The system should [specific action or capability]
+- The system should [specific action or capability]
+- The system should [specific action or capability]
+- The system should [specific action or capability]
+- The system should [specific action or capability]
 
 Project details:
 ${projectDetails}
 
-Remember: The generated requirement must provide NEW functionality not already covered by existing requirements.`;
+IMPORTANT: 
+1. Follow the exact format above with the same heading levels
+2. Include at least 4-5 sub-requirements
+3. Each sub-requirement must start with "The system should"
+4. Generate only ONE requirement
+5. Make sure it's unique from existing requirements`;
 
 
     console.log("Calling OpenAI Api...");

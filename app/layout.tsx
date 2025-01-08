@@ -4,9 +4,11 @@ import { Inter } from "next/font/google";
 import ConvexClientProvider from "./ConvexClientProvider";
 import { OpenPanelComponent } from '@openpanel/nextjs';
 import { Toaster } from 'sonner';
+import { PostHogProvider } from './context/posthog.provider';
 
 import "@/app/globals.css";
 import { CannySso } from '@/components/CannySso'
+import Script from 'next/script';
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -37,21 +39,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-      </head>
       <body className={inter.className}>
         <ConvexClientProvider>
-          <CannySso />
-          <OpenPanelComponent
-            clientId="388813f4-70f3-47cf-901d-1db7c4825cf3"
-            trackScreenViews={true}
-          // Uncomment and set these options as needed
-          // trackAttributes={true}
-          // trackOutgoingLinks={true}
-          // profileId={'123'} // If you have a user id
-          />
-          {children}
-          <Toaster />
+          <PostHogProvider>
+            <CannySso />
+            <OpenPanelComponent
+              clientId="388813f4-70f3-47cf-901d-1db7c4825cf3"
+              trackScreenViews={true}
+            // Uncomment and set these options as needed
+            // trackAttributes={true}
+            // trackOutgoingLinks={true}
+            // profileId={'123'} // If you have a user id
+            />
+            {children}
+            <Toaster />
+          </PostHogProvider>
         </ConvexClientProvider>
       </body>
     </html>

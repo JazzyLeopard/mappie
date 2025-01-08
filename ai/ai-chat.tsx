@@ -18,6 +18,8 @@ import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } fr
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import { Badge } from '@/components/ui/badge';
+import AiGenerationIconWhite from '@/icons/AI-Generation-White';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -82,96 +84,81 @@ const ChatMessage = memo(({ message, onInsertMarkdown }: {
 
   return (
     <div className={cn(
-      "flex w-full",
-      message.role !== "assistant" && "flex-row-reverse items-center"
+      "w-full overflow-hidden space-y-1",
+      message.role !== "assistant" && "flex flex-row-reverse items-center"
     )}>
-      {/* Icon Column */}
-      <div className="flex-shrink-0 mx-2">
-        {message.role === "assistant" ? (
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>
-              <AiGenerationIcon className="h-5 w-5 text-primary" />
-            </AvatarFallback>
-          </Avatar>
-        ) : (
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>
-              <User className="h-5 w-5 text-gray-500" />
-            </AvatarFallback>
-          </Avatar>
-        )}
-      </div>
-
-      {/* Message Content Column - add max-width and overflow handling */}
-      <div className="flex flex-col min-w-0 flex-1 overflow-hidden"> {/* added overflow-hidden */}
-        {/* Message Bubble */}
-        <div className={cn(
-          "text-sm w-full break-words overflow-hidden", // added overflow-hidden
-          message.role === "user"
-            ? "bg-slate-100 text-gray-900 px-2 py-4 rounded-lg mb-2 mt-2"
-            : "text-foreground"
-        )}>
-          <ReactMarkdown
-            className="text-sm px-2 leading-relaxed overflow-hidden" // ensure overflow is hidden
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              h1: ({ node, ...props }) => (
-                <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
-              ),
-              h2: ({ node, ...props }) => (
-                <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
-              ),
-              h3: ({ node, ...props }) => (
-                <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
-              ),
-              h4: ({ node, ...props }) => (
-                <h4 className="text-lg font-medium mb-2 mt-4" {...props} />
-              ),
-              p: ({ node, ...props }) => (
-                <p className="text-gray-600 leading-relaxed" {...props} />
-              ),
-              ul: ({ node, ...props }) => (
-                <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />
-              ),
-              ol: ({ node, ...props }) => (
-                <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-600" {...props} />
-              ),
-              li: ({ node, ...props }) => (
-                <li className="leading-relaxed" {...props} />
-              ),
-              code: ({ node, ...props }) => (
-                <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
-              ),
-              blockquote: ({ node, ...props }) => (
-                <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
-              ),
-              pre: ({ node, ...props }) => (
-                <pre className="overflow-x-auto max-w-full p-4 bg-gray-100 rounded-lg mb-4" {...props} />
-              ),
-              table: ({ node, ...props }) => (
-                <div className="overflow-x-auto max-w-full">
-                  <table className="min-w-full" {...props} />
-                </div>
-              ),
-            }}
-          >
-            {message.content}
-          </ReactMarkdown>
-
-          {/* Tool Invocations - ensure they stay within bounds */}
-          {message.toolInvocations?.map((tool, index) => (
-            <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0 min-w-0"> {/* added min-w-0 */}
-              <MemoizedMarkdownCard
-                content={tool.state === 'result' ? tool.result?.content : undefined}
-                metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
-                onInsert={onInsertMarkdown}
-                isLoading={tool.state === 'call'}
-                onReplace={handleReplace}
-              />
-            </div>
-          ))}
+      {message.role === "assistant" && (
+        <div className="flex flex-row items-center bg-white text-primary px-2 gap-1.5">
+          <AiGenerationIcon />
+          <span className="text-xs font-medium text-primary">AI Assistant</span>
         </div>
+      )}
+
+      <div className={cn(
+        "text-sm w-full break-words overflow-hidden",
+        message.role === "user"
+          ? "bg-slate-100 text-gray-900 px-3 py-3 rounded-lg"
+          : "bg-white px-2 py-3 rounded-lg"
+      )}>
+        <ReactMarkdown
+          className="text-sm leading-relaxed break-words overflow-hidden max-w-full"
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            h1: ({ node, ...props }) => (
+              <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
+            ),
+            h2: ({ node, ...props }) => (
+              <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
+            ),
+            h3: ({ node, ...props }) => (
+              <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
+            ),
+            h4: ({ node, ...props }) => (
+              <h4 className="text-lg font-medium mb-2 mt-4" {...props} />
+            ),
+            p: ({ node, ...props }) => (
+              <p className="text-gray-600 leading-relaxed" {...props} />
+            ),
+            ul: ({ node, ...props }) => (
+              <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+            ),
+            ol: ({ node, ...props }) => (
+              <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+            ),
+            li: ({ node, ...props }) => (
+              <li className="leading-relaxed" {...props} />
+            ),
+            code: ({ node, ...props }) => (
+              <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
+            ),
+            blockquote: ({ node, ...props }) => (
+              <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
+            ),
+            pre: ({ node, ...props }) => (
+              <pre className="overflow-x-auto max-w-full p-4 bg-gray-100 rounded-lg mb-4" {...props} />
+            ),
+            table: ({ node, ...props }) => (
+              <div className="overflow-x-auto max-w-full">
+                <table className="min-w-full" {...props} />
+              </div>
+            ),
+          }}
+        >
+          {message.content}
+        </ReactMarkdown>
+
+        {message.toolInvocations?.map((tool, index) => (
+          <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0 overflow-hidden">
+            <MemoizedMarkdownCard
+              content={tool.state === 'result' ? tool.result?.content : undefined}
+              metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
+              onInsert={onInsertMarkdown}
+              isLoading={tool.state === 'call'}
+              onReplace={handleReplace}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -394,6 +381,11 @@ const AIStoryCreator = memo(function AIStoryCreator({
   const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Add validation
+    if (!chat.input?.trim()) {
+      return;
+    }
+
     if (streamState.isGenerating || streamState.isWaitingForTool) return;
 
     try {
@@ -406,7 +398,12 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
       await chat.handleSubmit(e);
     } catch (error) {
-      console.error('Chat submission error:', error);
+      // Add error logging
+      console.error('Chat submission error:', {
+        error,
+        input: chat.input,
+        state: streamState
+      });
       setStreamState(prev => ({
         ...prev,
         hasToolError: true
@@ -421,7 +418,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
   }, [chat, streamState.isGenerating, streamState.isWaitingForTool]);
 
   return (
-    <Card className="p-0 bg-white rounded-xl h-full flex flex-col">
+    <Card className="p-0 bg-white rounded-xl h-full flex flex-col w-full overflow-hidden">
       <div className={cn("p-4 flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
         <div className="flex items-center gap-2">
           {!isCollapsed && (
@@ -446,12 +443,9 @@ const AIStoryCreator = memo(function AIStoryCreator({
           <Separator />
           <ScrollArea
             withShadow={true}
-            className="flex-1 overflow-y-auto"
+            className="flex-1 overflow-y-auto w-full"
           >
-            <div
-              className="space-y-6 p-4 pb-8 max-w-full"
-              ref={scrollRef}
-            >
+            <div className="space-y-6 p-4 pb-8 w-full">
               {chat.messages.map((message) => (
                 <ChatMessage
                   key={message.id}

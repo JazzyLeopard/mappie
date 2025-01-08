@@ -123,7 +123,7 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
 
   // Main content view
   return (
-    <div className="w-full mb-4 rounded-lg mt-2 border border-neutral-200 overflow-hidden bg-white">
+    <div className="w-full mb-4 rounded-lg mt-1 border border-neutral-200 overflow-hidden bg-white">
       {isStreaming && (
         <div className="w-full h-1">
           <Progress 

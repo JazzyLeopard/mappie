@@ -58,6 +58,12 @@ export default async function handler(
     // Fetch project and context
     sendEvent({ progress: 25, status: 'Loading epic...' });
     const project = await convex.query(api.projects.getProjectById, { projectId: convexProjectId });
+    console.log('Project data:', {
+      exists: !!project,
+      id: project?._id,
+      overview: project?.overview,  // This should contain your epic context
+      name: project?.title
+    });
 
     if (!project) throw new Error('Epic not found');
     if (project.userId !== userId) throw new Error('Unauthorized access to epic');
@@ -70,63 +76,86 @@ export default async function handler(
 
     // Prepare context
     sendEvent({ progress: 45, status: 'Preparing context...' });
-    const context = await useContextChecker({ projectId: convexProjectId });
-    const functionalRequirementsText = functionalRequirements
-      .map((fr: any) => `${fr.title}\n${fr.description}`)
-      .join('\n\n');
+    const context = await useContextChecker({ 
+        projectId: convexProjectId,
+        token  // Pass token where available
+    }).catch(error => {
+        console.error('Context checker error:', error);
+        throw new Error(`Failed to get context: ${error.message}`);
+    });
 
-    //Fetch the useCases
-    const useCases = await convex.query(api.useCases.getUseCases, { projectId: convexProjectId });
-
-    if (!useCases) {
-      return res.status(400).json({ message: "No Use cases found for the epic" });
+    // Validate context with more detailed error
+    if (!context || context.trim() === '') {
+      throw new Error(`Epic context is missing. Project overview: ${project?.overview ? 'exists' : 'missing'}`);
     }
 
-    // Generate epics with OpenAI
-    sendEvent({ progress: 55, status: 'Generating features...' });
-    let prompt = `
-Epic Context:
-${context}
+    // Start building the prompt
+    let prompt = '';
 
-Functional Requirements:
-${functionalRequirementsText}
+    // Add context if available
+    if (context && context.trim()) {
+      prompt += `Epic Context:\n${context}\n\n`;
+    }
 
-Based on the above Epic context and functional requirements, please generate a reasonable number of high-level features. Each feature name should be kept short. Each feature should follow this exact level of format without any deviations:
+    // Add functional requirements if available
+    if (functionalRequirements && functionalRequirements.length > 0) {
+      const functionalRequirementsText = functionalRequirements
+        .map((fr: any) => `${fr.title}\n${fr.description}`)
+        .join('\n\n');
+      
+      prompt += `Functional Requirements:\n${functionalRequirementsText}\n\n`;
+    }
 
-### Feature: [Feature Name]
+    // Validate we have at least context
+    if (!context || !context.trim()) {
+      throw new Error('Epic context is required to generate features');
+    }
 
-**Description**: [Provide a clear and concise one paragraph description of the feature, outlining its purpose and functionality. Ensure that the description highlights how the feature benefits users and enhances their experience, focusing on the key aspects that make it valuable and relevant to their needs.]
+    // Add the main instruction part
+    prompt += `Based on the ${context ? 'above Epic context' : ''}${
+      functionalRequirements?.length ? 
+        (context ? ' and functional requirements' : 'functional requirements') : 
+        ''
+    }, please generate a reasonable number of high-level features. Each feature should follow this exact format without any deviations:
 
-**Business Value**: [Describe how this feature directly impacts the business or user experience. Focus on measurable improvements like time savings, increased efficiency, or enhanced usability.]
+**Feature Name:**
+[A short, action-oriented title describing the feature.]
 
-**Functionality**:
-• Functionality 1: [Explain core system capability or feature]
-• Functionality 2: [Explain user interaction or process flow]
-• Functionality 3: [Explain output or result delivery]
+**Why we are building this:**
+[Why this feature is being developed. Focus on the user need or problem it solves.]
 
-**Dependencies**:
-• Dependency 1: [Technical or system dependency that is critical to success]
-• Dependency 2: [External factor or prerequisite that must be in place]
+**Description:**
+[A high-level explanation of what the feature includes, written in clear, concise terms. Mention the key actions or outcomes.]
 
-**Risks**:
-• Risk 1: [Technical, business, or operational risk that could impact delivery]
-• Risk 2: [Timeline, resource, or quality risk that needs mitigation]
+**Scope:**
+[Define what is included:]
+- Item 1
+- Item 2
+- Item 3
+
+**Out of scope:**
+- Item 1
+- Item 2
+
+**Success Metrics:**
+[Optional. Define measurable outcomes that indicate the feature is working as intended.]
+
+**Dependencies:**
+[Optional. Mention any prerequisites, integrations, or other features required for this feature to work.]
+
+**Additional Notes:**
+[Optional. Add any extra information or context to help refine user stories.]
 
 IMPORTANT:
 - Keep consistent formatting throughout the document
-- Each feature MUST have EXACTLY 3 functionality
-- Each feature MUST have EXACTLY 2 dependencies
-- Each feature MUST have EXACTLY 2 risks
-- Each point should be detailed and specific
-- Include measurable outcomes where possible
+- Each section should be detailed and specific
+- Focus on user-centric explanations
+- Optional sections can be omitted if not relevant
 - Consider both technical and business aspects
+- Always separate in-scope and out-of-scope items into different sections
 
 Please ensure each feature is well-defined, practical, and aligns with the epic goals and requirements.`;
 
-    if (useCases?.length > 0) {
-      const useCasesText = useCases.map((useCase: any) => useCase.description).join('\n');
-      prompt += `Additionally, consider the following use cases:\n${useCasesText}\n`;
-    }
 
     console.log("Calling Anthropic Api...");
     const completion = await generateText({
@@ -143,106 +172,61 @@ Please ensure each feature is well-defined, practical, and aligns with the epic 
     // Process AI response
     sendEvent({ progress: 75, status: 'Processing features...' });
     const epics = content
-      .split(/(?=###\s*Feature:\s*)/g)
-      .filter(section => section.trim().startsWith('### Feature:'))
+      .split(/(?=\*\*Feature Name:\*\*)/g)
+      .filter(section => section.trim().startsWith('**Feature Name:**'))
       .map(section => {
-        const nameMatch = section.match(/(?:###|##)\s*Feature:\s*(.+?)(?=\n|$)/);
-        const descriptionMatch = section.match(/\*\*Description\*\*:\s*([^]*?)(?=\*\*Business Value|$)/m);
-        const businessValueMatch = section.match(/\*\*Business Value\*\*:\s*([^]*?)(?=\*\*Functionality|$)/m);
+        const nameMatch = section.match(/\*\*Feature Name:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const whyMatch = section.match(/\*\*Why we are building this:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const descriptionMatch = section.match(/\*\*Description:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const scopeMatch = section.match(/\*\*Scope:\*\*\s*([\s\S]+?)(?=\s*\*\*Out of scope:|$)/);
+        const outOfScopeMatch = section.match(/\*\*Out of scope:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const metricsMatch = section.match(/\*\*Success Metrics:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const dependenciesMatch = section.match(/\*\*Dependencies:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
+        const notesMatch = section.match(/\*\*Additional Notes:\*\*\s*([\s\S]+?)(?=\s*\*\*|$)/);
 
-        // Updated regex patterns to better capture multiple bullet points
-        const functionalitySection = section.match(/\*\*Functionality\*\*:\s*([^]*?)(?=\*\*Dependencies\*\*)/m)?.[1];
-        const dependenciesSection = section.match(/\*\*Dependencies\*\*:\s*([^]*?)(?=\*\*Risks\*\*)/m)?.[1];
-        const risksSection = section.match(/\*\*Risks\*\*:\s*((?:.*\n?)*?)(?=\s*---|$)/m)?.[1];
-
-        const extractBulletPoints = (sectionText: string, prefix: string) => {
-          if (!sectionText) return [];
-          return sectionText
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => {
-              const hasBulletPoint =
-                line.startsWith('•') ||
-                line.startsWith('-') ||
-                line.startsWith('* ');
-
-              const hasContent =
-                line.includes(`${prefix}`) ||
-                (line.includes('**') && line.includes(':')) ||
-                hasBulletPoint;
-
-              return line.length > 0 && (hasBulletPoint || hasContent);
-            })
-            .map(line => {
-              let cleanLine = line.replace(/^[•\-*]\s*/, '').trim();
-              cleanLine = cleanLine.replace(/\*\*/g, '');
-
-              const numberMatch = cleanLine.match(new RegExp(`${prefix}\\s*(\\d+)`));
-              const number = numberMatch ? ` ${numberMatch[1]}` : '';
-
-              let content = '';
-              if (cleanLine.includes(':')) {
-                content = cleanLine.split(':').slice(1).join(':').trim();
-              } else {
-                content = cleanLine;
-              }
-
-              // Clean up any extra whitespace in content
-              content = content.replace(/\s+/g, ' ').trim();
-
-              return `  • **${prefix}${number}:** ${content}`;
-            });
-        };
-
-        // Process each section
-        const functionality = extractBulletPoints(functionalitySection ?? "", 'Functionality');
-        const dependencies = extractBulletPoints(dependenciesSection ?? "", 'Dependency');
-        const risks = extractBulletPoints(risksSection ?? "", 'Risk');
-
+        console.log('Raw section:', section);
+        console.log('Section parsing results:', {
+          name: nameMatch?.[1],
+          why: whyMatch?.[1],
+          scope: scopeMatch?.[1],
+          description: descriptionMatch?.[1]
+        });
 
         const processedData = {
           name: nameMatch?.[1]?.trim() || 'Untitled Feature',
           description: {
+            Why: whyMatch?.[1]?.trim() || '',
             Description: descriptionMatch?.[1]?.trim() || '',
-            "Business Value": businessValueMatch?.[1]?.trim() || '',
-            Functionality: functionality,
-            Dependencies: dependencies,
-            Risks: risks
+            Scope: scopeMatch?.[1]?.trim() || '',
+            OutOfScope: outOfScopeMatch?.[1]?.trim() || '',
+            "Success Metrics": metricsMatch?.[1]?.trim() || '',
+            Dependencies: dependenciesMatch?.[1]?.trim() || '',
+            "Additional Notes": notesMatch?.[1]?.trim() || ''
           }
         };
-
-        // Debug logging for processed data
-        console.log('Processed data:', JSON.stringify(processedData, null, 2));
 
         return processedData;
       });
 
     // Create epics in database
-    sendEvent({ progress: 85, status: 'Saving epics...' });
+    sendEvent({ progress: 85, status: 'Saving features...' });
 
     const createdEpics = await Promise.all(epics.map(async (epic) => {
-      const markdownDescription = `### ${epic.name}
+      const markdownDescription = `## ${epic.name}
+
+### Why we are building this
+${epic.description.Why || 'No information provided'}
 
 ### Description
-${epic.description.Description}
+${epic.description.Description || 'No information provided'}
 
-### Business Value
-${epic.description["Business Value"]}
+### Scope
+${epic.description.Scope || 'No information provided'}
 
-### Functionality
-${epic.description.Functionality.length > 0
-          ? epic.description.Functionality.map(functionality => `${functionality}`).join('\n')
-          : '• No functionality specified'}
-
-### Dependencies
-${epic.description.Dependencies.length > 0
-          ? epic.description.Dependencies.map(dep => `${dep}`).join('\n')
-          : '• No dependencies specified'}
-
-### Risks
-${epic.description.Risks.length > 0
-          ? epic.description.Risks.map(risk => `${risk}`).join('\n')
-          : '• No risks specified'}`;
+${epic.description.OutOfScope ? `#### Out of scope\n${epic.description.OutOfScope}\n\n` : ''}
+${epic.description["Success Metrics"] ? `### Success Metrics\n${epic.description["Success Metrics"]}\n\n` : ''}
+${epic.description.Dependencies ? `### Dependencies\n${epic.description.Dependencies}\n\n` : ''}
+${epic.description["Additional Notes"] ? `### Additional Notes\n${epic.description["Additional Notes"]}` : ''}`;
 
       return await convex.mutation(api.epics.createEpics, {
         projectId: convexProjectId,

@@ -75,8 +75,14 @@ export default async function handler(
     convex.setAuth(token);
     const convexEpicId = epicId as Id<"epics">;
 
-    const context = await useContextChecker({ projectId })
-    console.log("context", context);
+    const context = await useContextChecker({ 
+      projectId: projectId,
+      token 
+    });
+
+    if (!context) {
+      return res.status(400).json({ message: 'Failed to get project context' });
+    }
 
     const epic = await convex.query(api.epics.getEpicById, { epicId: convexEpicId });
 
@@ -86,11 +92,13 @@ export default async function handler(
 
     const epicText = epic.description;
 
-    let userStoryBasePrompt = `You are an expert product owner responsible for creating high-quality, well-scoped user stories from a given epic and its related feature. Your goal is to ensure that each user story delivers tangible value, adheres to agile best practices, and is implementable within a sprint.
+    let userStoryBasePrompt = `You are an expert product owner responsible for creating high-quality, well-scoped user stories from a given epic and its related feature. Your goal is to ensure that each user story delivers tangible value, adheres to agile INVEST best practices, and is implementable within a sprint.
 
           ### Instructions:
           1. **Adhere to the INVEST Principles**:
             - Independent, Negotiable, Valuable, Estimable, Small, and Testable.
+            - If you need to split up stories into multiple stories, do so, to ensure that each story is independent and can be implemented within a sprint. They should not be complex and there should be a clear vertical slice of functionality.
+            - Too many scenarios means the user story is too complex and should be split up. The story should focus on one main flow. 
 
           2. **Story Format**:
             Write each user story in the following JSON structure:
@@ -102,7 +110,7 @@ export default async function handler(
             "acceptance_criteria": [
               "Scenario 1: **Given** [precondition], **when** [action], **then** [expected outcome].",
               "Scenario 2: **Given** [precondition], **when** [action], **then** [expected outcome].",
-              [More if necessary]"
+              [More if necessary but still focus on one main flow]"
             ],
 
             "additional_considerations": [
@@ -118,12 +126,12 @@ export default async function handler(
     userStoryPrompt += `For this specific feature:\n${epicText}\n\n`;
     userStoryPrompt += `Generate a focused set of user stories that directly implement this feature's functionality. Each user story should follow this exact structure and format:\n${userStoryBasePrompt}\n\n`;
     userStoryPrompt += `Important guidelines:
-    - Generate only 3-5 high-quality, comprehensive user stories
+    - Generate as many stories as possible that are relevant to the feature and deliver end-to-end value and are easily codable and testable according to INVEST principles
     - Each story must directly contribute to implementing the feature's functionality
     - Stories should be independent but related through the feature's goal
     - Each description MUST follow the format: "As a [user], I want to [action], so that [benefit]"
     - Include a detailed explanation after the user story format
-    - Include detailed acceptance criteria with clear given/when/then scenarios
+    - Include detailed acceptance criteria with clear given/when/then scenarios, but ensure they are not too complex. Too many scenarios means the user story is too complex and should be split up. The story should focus on one main flow. 
     - Focus on delivering complete, testable functionality
     - Consider edge cases and error states
     - Include relevant technical and non-functional requirements
@@ -212,11 +220,7 @@ export default async function handler(
     res.status(200).json({ userStories: formattedUserStories, type: 'userstories' });
   } catch (error) {
     console.error('Error generating user stories:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    res.status(500).json({
+    res.status(error instanceof Error && error.message?.includes('Authentication') ? 401 : 500).json({
       message: 'Error generating user stories',
       error: error instanceof Error ? error.message : String(error)
     });

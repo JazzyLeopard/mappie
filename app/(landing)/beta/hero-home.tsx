@@ -26,11 +26,11 @@ export default function BetaHero() {
               data-aos="zoom-y-out"
               data-aos-delay={100}
             >
-              Beta Access Now Open • 100 Spots Available
+              Beta Access Now Open • Increased to 200 Spots
             </div>
 
             <h1
-              className="mb-6 border-y text-5xl font-bold [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1] md:text-6xl"
+              className="mb-6 border-y text-3xl sm:text-4xl lg:text-6xl font-bold [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1]"
               data-aos="zoom-y-out"
               data-aos-delay={150}
             >
@@ -43,8 +43,8 @@ export default function BetaHero() {
 
             <div className="mx-auto max-w-3xl">
               <div className="mb-8 text-lg text-center text-gray-700">
-                <p>Join 100 pioneers 🚀 transforming project planning</p>
-                <p>by letting Mappie turn vague ideas ✏️ into clear specs.</p>
+                <p>Join our beta pioneers 🚀 transforming project planning</p>
+                <p>by letting Mappie turn vague requirements ✏️ into clear specs.</p>
               </div>
 
               {/* Centered Beta Button */}
@@ -89,11 +89,15 @@ export default function BetaHero() {
                     <div className="text-center">
                       <div className="text-5xl font-bold bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] text-transparent bg-clip-text">
                         {loading ? (
-                          <span className="animate-pulse">...</span>
+                          <span className="text-gray-400 text-2xl">
+                            <span className="animate-pulse">.</span>
+                            <span className="animate-pulse delay-200">.</span>
+                            <span className="animate-pulse delay-400">.</span>
+                          </span>
                         ) : (
                           <span>{spotsClaimed}</span>
                         )}
-                        <span className="text-3xl text-gray-400">/100</span>
+                        <span className="text-3xl text-gray-400">/250</span>
                       </div>
                       <div className="mt-1 text-lg text-gray-600">spots claimed</div>
                     </div>

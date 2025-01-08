@@ -84,7 +84,10 @@ export default async function handler(
     });
 
     sendEvent({ progress: 35, status: 'Preparing project context...' });
-    const context = await useContextChecker({ projectId: projectId as Id<"projects"> });
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token  // Pass the auth token
+    });
 
     sendEvent({ progress: 45, status: 'Loading existing requirements...' });
     const existingFRs = await convex.query(api.functionalRequirements.getFunctionalRequirementsByProjectId, {

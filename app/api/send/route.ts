@@ -1,6 +1,7 @@
 // app/api/send/route.ts
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { v4 as uuidv4 } from 'uuid'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -13,7 +14,8 @@ export async function POST(req: Request) {
     const images = formData.getAll('images') as File[]
     const attachments = formData.getAll('attachments') as File[]
 
-    // Convert files to base64
+    const emailId = uuidv4()
+
     const attachmentsData = await Promise.all([...images, ...attachments].map(async (file) => ({
       filename: file.name,
       content: Buffer.from(await file.arrayBuffer()).toString('base64')
@@ -30,10 +32,20 @@ export async function POST(req: Request) {
         <p>${message}</p>
         ${attachmentsData.length ? '<p>Attachments included</p>' : ''}
       `,
-      attachments: attachmentsData
+      attachments: attachmentsData,
+      tags: [
+        {
+          name: 'email_id',
+          value: emailId
+        },
+        {
+          name: 'type',
+          value: 'contact_form'
+        }
+      ]
     })
 
-    return NextResponse.json({ success: true, message: 'Email sent successfully' })
+    return NextResponse.json({ success: true, message: 'Email sent successfully', emailId })
   } catch (error) {
     console.error('Error sending email:', error)
     return NextResponse.json(

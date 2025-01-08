@@ -106,23 +106,23 @@ export default function FeatureShowcaseCarousel() {
   }, [currentIndex])
 
   return (
-    <div className="w-full h-screen py-16 px-12 md:px-8 overflow-hidden">
+    <div className="w-full min-h-screen py-8 md:py-16 overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="text-left mb-12">
-          <h1 className="text-5xl font-bold mb-4">Get to know our features.</h1>
+        <div className="text-left mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 ml-4 md:ml-8">Get to know our features.</h1>
         </div>
         
         <div className="relative flex-grow">
           <div 
             ref={containerRef}
-            className="flex overflow-x-auto gap-4 pb-8 h-full"
+            className="flex snap-x snap-mandatory overflow-x-auto pb-8 h-full"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {features.map((feature, idx) => (
               <Card
                 key={`${feature.title}-${idx}`}
                 className={cn(
-                  "w-[400px] shrink-0",
+                  "w-[calc(100vw-1.5rem)] ml-4 md:ml-8 md:w-[400px] shrink-0 snap-center",
                   "rounded-3xl overflow-hidden transition-all duration-300",
                   "border border-gray-200/50 cursor-pointer",
                   "hover:shadow-lg"
@@ -130,7 +130,7 @@ export default function FeatureShowcaseCarousel() {
                 onClick={() => setSelectedFeature(feature)}
               >
                 <div className={cn(
-                  "relative h-full w-full p-10",
+                  "relative h-[calc(70vh)] w-full p-10",
                   feature.backgroundColor,
                   feature.titleColor,
                   "flex flex-col"
@@ -171,7 +171,7 @@ export default function FeatureShowcaseCarousel() {
           </div>
         </div>
 
-        <div className="flex justify-center mt-8 gap-4">
+        <div className="flex justify-center mt-4 md:mt-8 gap-4">
           <Button
             variant="ghost"
             size="icon"
