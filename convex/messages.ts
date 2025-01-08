@@ -10,14 +10,14 @@ export const getChatHistory = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx: any, args: any) => {
-    const { itemId, itemType, projectId} = args;
-    
+    const { itemId, itemType, projectId } = args;
+
     // Get only the most recent message history entry
     const latestMessage = await ctx.db
       .query("messages")
-      .withIndex("by_itemId_and_type_and_created", (q: any) => 
+      .withIndex("by_itemId_and_type_and_created", (q: any) =>
         q.eq("itemId", itemId)
-        .eq("itemType", itemType)
+          .eq("itemType", itemType)
       )
       .order("desc")
       .first();
@@ -82,31 +82,39 @@ export const storeChatHistory = mutation({
       .filter((q: any) => q.eq(q.field("itemId"), itemId))
       .order("desc")
       .first();
-
     if (existingHistory) {
-      // Check if the last message in existing history matches our last message
+      console.log('existing history found');
       const existingLastMessage = existingHistory.messages[existingHistory.messages.length - 1];
       const newLastMessage = messages[messages.length - 1];
-      
+
       if (existingLastMessage.id === newLastMessage.id) {
-        // If the last messages match, no need to save
+        console.log('last messages match, no need to save');
+        return existingHistory;
+      } else {
+        console.log('last messages do not match, saving new messages');
+        await ctx.db.patch(existingHistory._id, {
+          messages: messages,
+          updatedAt: BigInt(Date.now())
+        });
         return existingHistory;
       }
     }
+    else {
+      console.log('no existing history, inserting new');
+      // Only save if we have new messages
+      const result = await ctx.db.insert("messages", {
+        itemId,
+        itemType,
+        projectId,
+        messages: messages.map((msg: any) => ({
+          ...msg,
+          id: msg.id || nanoid()
+        })),
+        createdAt: BigInt(Date.now()),
+        updatedAt: BigInt(Date.now())
+      });
 
-    // Only save if we have new messages
-    const result = await ctx.db.insert("messages", {
-      itemId,
-      itemType,
-      projectId,
-      messages: messages.map((msg: any) => ({
-        ...msg,
-        id: msg.id || nanoid()
-      })),
-      createdAt: BigInt(Date.now()),
-      updatedAt: BigInt(Date.now())
-    });
-
-    return result;
+      return result;
+    }
   }
 });
