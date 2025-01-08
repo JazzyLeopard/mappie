@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB in bytes
+const MAX_TOTAL_SIZE = 40 * 1024 * 1024; // 40MB in bytes
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
@@ -15,6 +18,25 @@ export async function POST(req: Request) {
     const attachments = formData.getAll('attachments') as File[]
 
     const emailId = uuidv4()
+
+    // Validate file sizes
+    let totalSize = 0;
+    for (const file of [...images, ...attachments]) {
+      if (file.size > MAX_FILE_SIZE) {
+        return NextResponse.json(
+          { success: false, message: `File ${file.name} exceeds maximum size of 15MB` },
+          { status: 400 }
+        )
+      }
+      totalSize += file.size;
+    }
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        { success: false, message: 'Total attachments size exceeds 40MB limit' },
+        { status: 400 }
+      )
+    }
 
     const attachmentsData = await Promise.all([...images, ...attachments].map(async (file) => ({
       filename: file.name,
