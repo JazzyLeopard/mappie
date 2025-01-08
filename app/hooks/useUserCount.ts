@@ -12,6 +12,7 @@ export function useUserCount() {
         setUserCount(data.count);
       } catch (error) {
         console.error('Error fetching user count:', error);
+        setUserCount(0);
       } finally {
         setLoading(false);
       }
