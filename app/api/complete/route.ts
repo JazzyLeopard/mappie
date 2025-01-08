@@ -3,13 +3,73 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { useContextChecker } from '@/utils/useContextChecker';
 import { Id } from '@/convex/_generated/dataModel';
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { getAuth } from "@clerk/nextjs/server";
+import { NextRequest } from 'next/server';
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 
-export async function POST(request: Request) {
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+export async function POST(request: NextRequest) {
   try {
-    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+    const { userId } = getAuth(request);
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication failed' },
+        { status: 401 }
+      );
+    }
 
-    const { prompt, projectId, selectedText, selectedItemContent, selectedItemType, selectedEpic } = await request.json();
+    const headersList = await headers();
+    const authHeader = headersList.get("authorization");
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Invalid authorization header' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    convex.setAuth(token);
+
+    const { 
+      prompt, 
+      projectId, 
+      selectedText = '', 
+      selectedItemContent = '', 
+      selectedItemType = '', 
+      selectedEpic = null 
+    } = await request.json();
+
     const convexProjectId = projectId as Id<"projects">;
+
+    const project = await convex.query(api.projects.getProjectById, {
+      projectId: convexProjectId
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
+
+    if (project.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized access to project' },
+        { status: 403 }
+      );
+    }
+
+    const context = await useContextChecker({ 
+      projectId: convexProjectId, 
+      token 
+    });
+
+    console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
 
     if (!prompt || !projectId) {
       return NextResponse.json(
@@ -17,9 +77,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    // Get project context
-    const context = await useContextChecker({ projectId: convexProjectId });
 
     const systemPrompt = {
       role: 'system',

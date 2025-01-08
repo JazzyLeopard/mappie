@@ -885,7 +885,10 @@ const EpicLayout = ({
                     return (
                       <div key={epic._id} className="relative">
                         <div
-                          className="flex items-center justify-between w-full px-4 py-3 hover:bg-white hover:text-accent-foreground cursor-pointer"
+                          className={cn(
+                            "flex items-center justify-between w-full px-4 py-2 rounded-md cursor-pointer",
+                            selectedItems.epic === epic._id ? "bg-gray-100 border border-gray-200" : "hover:bg-slate-100"
+                          )}
                           onClick={(e) => {
                             if (editingEpicId === epic._id) {
                               e.stopPropagation();
@@ -1047,86 +1050,91 @@ const EpicLayout = ({
           </div>
 
           {/* User Stories Section */}
-          {selectedItems.epic && (
-            <div className="bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl p-4 flex flex-col flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold">User Stories</h3>
-                  <span className="text-xs px-1.5 py-0.5 bg-slate-200 rounded-full text-slate-600">
-                    {allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length || 0}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleCreateUserStory(selectedItems.epic as Id<"epics">)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+          <div className="bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl p-4 flex flex-col flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold">User Stories</h3>
+                <span className="text-xs px-1.5 py-0.5 bg-slate-200 rounded-full text-slate-600">
+                  {selectedItems.epic ? (allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length || 0) : 0}
+                </span>
               </div>
-
-              <div className="flex-1 flex flex-col min-h-0">
-                <ScrollArea className="flex-1">
-                  <div className="space-y-1">
-                    {allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length === 0 ? (
-                      <div className="text-sm text-muted-foreground py-2">
-                        No user stories yet
-                      </div>
-                    ) : (
-                      renderUserStories(allUserStories?.filter((story: any) => story.epicId === selectedItems.epic) || [])
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-
-              {/* User Story Actions */}
-              <div className="flex flex-col gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-sm justify-start hover:bg-white pl-2"
-                  onClick={() => handleCreateUserStory(selectedItems.epic as Id<"epics">)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add User Story
-                </Button>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-sm justify-start hover:bg-white pl-2"
-                        onClick={() => {
-                          const epicUserStories = allUserStories?.filter((story: any) => story.epicId === selectedItems.epic) || [];
-                          if (!epicUserStories.length) {
-                            handleGenerateUserStories(selectedItems.epic as Id<"epics">);
-                          } else {
-                            handleGenerateSingleUserStory(selectedItems.epic as Id<"epics">);
-                          }
-                        }}
-                      >
-                        <AiGenerationIcon className="mr-2" />
-                        {!allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length ? (
-                          "Generate Initial User Stories"
-                        ) : (
-                          "Generate User Story"
-                        )}
-                        <InfoIcon className="h-4 w-4 ml-2 text-muted-foreground" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {!allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length
-                        ? "Generate user stories based on Epic and Project context"
-                        : "Generate a complementary user story based on existing ones"}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => handleCreateUserStory(selectedItems.epic as Id<"epics">)}
+                disabled={!selectedItems.epic}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-          )}
+
+            <div className="flex-1 flex flex-col min-h-0">
+              <ScrollArea className="flex-1">
+                <div className="space-y-1">
+                  {!selectedItems.epic ? (
+                    <div className="text-sm text-muted-foreground py-2">
+                      Select a feature to view its user stories
+                    </div>
+                  ) : allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length === 0 ? (
+                    <div className="text-sm text-muted-foreground py-2">
+                      Select a feature to view its user stories
+                    </div>
+                  ) : (
+                    renderUserStories(allUserStories?.filter((story: any) => story.epicId === selectedItems.epic) || [])
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* User Story Actions */}
+            <div className="flex flex-col gap-2 mt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-sm justify-start hover:bg-white pl-2"
+                onClick={() => handleCreateUserStory(selectedItems.epic as Id<"epics">)}
+                disabled={!selectedItems.epic}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add User Story
+              </Button>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-sm justify-start hover:bg-white pl-2"
+                      onClick={() => {
+                        const epicUserStories = allUserStories?.filter((story: any) => story.epicId === selectedItems.epic) || [];
+                        if (!epicUserStories.length) {
+                          handleGenerateUserStories(selectedItems.epic as Id<"epics">);
+                        } else {
+                          handleGenerateSingleUserStory(selectedItems.epic as Id<"epics">);
+                        }
+                      }}
+                      disabled={!selectedItems.epic}
+                    >
+                      <AiGenerationIcon className="mr-2" />
+                      {!selectedItems.epic || !allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length ? (
+                        "Generate Initial User Stories"
+                      ) : (
+                        "Generate User Story"
+                      )}
+                      <InfoIcon className="h-4 w-4 ml-2 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {!selectedItems.epic || !allUserStories?.filter((story: any) => story.epicId === selectedItems.epic).length
+                      ? "Generate user stories based on Epic and Project context"
+                      : "Generate a complementary user story based on existing ones"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1204,10 +1212,13 @@ const EpicLayout = ({
               <h2 className="text-lg md:text-xl font-semibold text-center">
                 You haven't created any features<br />for this epic yet.
               </h2>
-              <p className="text-center text-gray-600 max-w-md">
+              <p className="text-left text-gray-600 max-w-md">
                 Based on the epic details, the AI can generate
-                streamlined features that outline the main features
-                and functionalities of your epic. Try it!
+                streamlined features.
+              </p>
+              <p className="text-left text-gray-600 max-w-md">
+                For each feature, you will be able to generate
+                dev-ready user stories. Try it!
               </p>
               <Button
                 className="gap-2 h-10"
@@ -1218,10 +1229,7 @@ const EpicLayout = ({
                 <AiGenerationIconWhite />
                 Generate Initial Features
               </Button>
-              <div className="text-center">
-                <span className="text-gray-500">or</span>
-              </div>
-              <Button variant="outline" onClick={() => { }}>
+              <Button variant="outline" onClick={handleAddEpic}>
                 Add Feature manually
               </Button>
             </div>

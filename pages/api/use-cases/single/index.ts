@@ -213,7 +213,10 @@ export default async function handler(
     convex.setAuth(token);
     const { projectId } = req.body;
 
-    const context = await useContextChecker({ projectId })
+    const context = await useContextChecker({ 
+        projectId: projectId as Id<"projects">,
+        token 
+    });
     console.log("context", context);
 
     // Fetch project

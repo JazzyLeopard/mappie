@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { createPortal } from 'react-dom';
 import { COMMAND_PRIORITY_NORMAL, KEY_MODIFIER_COMMAND } from 'lexical';
 import { selectNode } from '@excalidraw/excalidraw/types/utils';
+import { useAuth } from "@clerk/nextjs";
 
 
 export const AI_WRITER_COMMAND: LexicalCommand<void> = createCommand('AI_WRITER_COMMAND');
@@ -30,6 +31,7 @@ export default function AIWriterPlugin({
     focus: { offset: number; key: string };
   } | null>(null);
   const params = useParams();
+  const { getToken } = useAuth();
 
   const handleButtonClick = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -63,25 +65,14 @@ export default function AIWriterPlugin({
 
   const handleGenerateAI = useCallback(async (prompt: string) => {
     try {
-      setLastPrompt(prompt);
-      setShowPrompt(false);
-      setIsLoading(true);
-      setProgress(0);
-      
-      // Start progress animation
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 500);
+      const token = await getToken({ template: "convex" });
       
       const response = await fetch('/api/complete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           prompt,
           projectId: params?.projectId,
@@ -93,7 +84,6 @@ export default function AIWriterPlugin({
         setProgress(100);
         setTimeout(() => {
           setSuggestion(data.content);
-          clearInterval(progressInterval);
         }, 500);
       }
     } catch (error) {

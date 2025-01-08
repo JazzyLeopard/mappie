@@ -66,6 +66,7 @@ import { IS_APPLE } from './shared/environment';
 import { Command } from 'lucide-react';
 import AiGenerationIcon from '@/icons/AI-Generation';
 import AIWriterPlugin from './plugins/AIWriterPlugin';
+import { List, ListItem } from "@/components/ui/list"
 
 
 type EditorProps = {
@@ -219,16 +220,35 @@ export default function Editor({
       );
     }
     return (
-      <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
-        <div className="text-sm text-muted-foreground text-left space-y-2">
-          <p>Start inserting elements by typing the <KeyboardShortcut>/</KeyboardShortcut> key! 📝 </p>
-          <p>
-            Use{' '}
-            <KeyboardShortcut>
-              {IS_APPLE ? <Command className="h-3 w-3" /> : <span>CTRL</span>}
-              + K
-            </KeyboardShortcut>
-            {' '}to access the AI Writer ✨</p>
+      <div className="space-y-2">
+        <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
+          <div className="text-sm text-muted-foreground text-left space-y-2 w-full px-4">
+            <p className="break-words pr-4">
+                📝 Start inserting elements by typing the <KeyboardShortcut>/</KeyboardShortcut> key!
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
+            <div className="space-y-2 text-muted-foreground">
+              <h1 className="text-lg font-bold">Chatbot guidelines</h1>
+              <p className="break-words pr-4">
+                🧠 The chatbot on the right is context-aware. 
+              </p>
+              <List className="pl-8">
+                <ListItem>
+                  Ask it to help you write or edit your content. 💭
+                </ListItem>
+                <ListItem>
+                  You can refer to specific sections of your content. 📚
+                </ListItem>
+                <ListItem>
+                  Then simply click the <KeyboardShortcut>Copy</KeyboardShortcut> button and paste it into your document. 🤖
+                </ListItem>
+                <ListItem>
+                  Or use the <KeyboardShortcut>Replace</KeyboardShortcut> button to replace the content completely. 📋
+                </ListItem>
+              </List>
+            </div>
         </div>
       </div>
     );
@@ -366,7 +386,7 @@ export default function Editor({
           <>
             <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
             <AIEditPlugin anchorElem={floatingAnchorElem} />
-            <AIWriterPlugin anchorElem={floatingAnchorElem} />
+            {/* <AIWriterPlugin anchorElem={floatingAnchorElem} /> */}
             <CodeActionMenuPlugin anchorElem={floatingAnchorElem} />
             <FloatingLinkEditorPlugin
               anchorElem={floatingAnchorElem}

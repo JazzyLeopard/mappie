@@ -136,44 +136,27 @@ export const Navigation = () => {
     : "Select an epic";
 
   const toggleCollapse = () => {
-    setIsCollapsed(prev => !prev);
+    if (window.innerWidth > 768) {
+      setIsCollapsed(prev => !prev);
+    }
   };
 
   const handleFeedbackClick = () => {
     setIsModalOpen(true);
   };
 
-  // const handleMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      setIsCollapsed(isMobile);
+    };
 
-  //   if (isCollapsed) return
+    handleResize();
 
-  //   event.preventDefault()
-  //   event.stopPropagation()
+    window.addEventListener('resize', handleResize);
 
-  //   isResizingRef.current = true
-  //   document.addEventListener("mousemove", handleMouseMove);
-  //   document.addEventListener("mouseup", handleMouseUp);
-  // }
-
-  // const handleMouseMove = (event: MouseEvent) => {
-  //   if (!isResizingRef.current) return
-  //   let newWidth = event.clientX;
-
-  //   if (newWidth < 240) newWidth = 240;
-  //   if (newWidth > 480) newWidth = 480;
-
-  //   if (sidebarRef.current && navbarRef.current) {
-  //     sidebarRef.current.style.width = `${newWidth}px`
-  //     navbarRef.current.style.setProperty("left", `${newWidth}px`)
-  //     navbarRef.current.style.setProperty("width", `calc(100% - ${newWidth})px`)
-  //   }
-  // }
-
-  // const handleMouseUp = () => {
-  //   isResizingRef.current = false
-  //   document.removeEventListener("mousemove", handleMouseMove)
-  //   document.removeEventListener("mouseup", handleMouseUp)
-  // }
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <>
@@ -340,7 +323,7 @@ export const Navigation = () => {
                         <Button
                           variant="ghost"
                           className="w-full justify-start"
-                          onClick={() => handleProjectChange("all_projects")}
+                          onClick={() => handleProjectChange("all_epics")}
                         >
                           All Epics
                         </Button>
@@ -359,7 +342,7 @@ export const Navigation = () => {
                         <Button
                           variant="ghost"
                           className="w-full justify-start text-primary pt-1"
-                          onClick={() => handleProjectChange("new_project")}
+                          onClick={() => handleProjectChange("new_epic")}
                         >
                           <PlusCircle className="h-4 w-4 mr-2" />
                           New Epic
