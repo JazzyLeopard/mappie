@@ -71,3 +71,22 @@ export interface ToolInvocation {
     };
   };
 }
+
+export interface Entity {
+  id: string;
+  title: string;
+  content?: string;
+  type: 'overview' | 'section' | 'epic' | 'useCase' | 'requirement';
+  subitems?: Entity[];
+  userStories?: Array<{
+    _id: Id<"userStories">;
+    description: string;
+    epicId: Id<"epics">;
+    createdAt: bigint;
+    _creationTime: number;
+    title?: string;
+    updatedAt?: bigint;
+    type?: string;
+  }>;
+}
+

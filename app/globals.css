@@ -1,3 +1,5 @@
+@import 'github-markdown-css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -123,4 +125,29 @@
 
 .animate-highlight {
   animation: highlightFade 3s ease-out forwards;
+}
+
+
+
+/* Optional: Customize markdown styles */
+.markdown-body {
+    background-color: transparent !important;
+    font-size: 14px !important;
+}
+
+.markdown-body h2 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+.markdown-body h3 {
+    margin-top: 1.5em !important;
+}
+
+.markdown-body ul {
+    list-style: disc !important;
+}
+
+.markdown-body ol {
+    list-style: decimal !important;
 }
