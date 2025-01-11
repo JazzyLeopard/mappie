@@ -4,23 +4,23 @@ import AIStoryCreator from '@/ai/ai-chat';
 import '@/app/custom.css';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from "@/icons/AI-Generation";
+import AiGenerationIconWhite from '@/icons/AI-Generation-White';
 import type { Project } from "@/lib/types";
 import { cn } from '@/lib/utils';
-import { ReactMutation, useQuery } from 'convex/react';
-import { BookTemplateIcon, Loader2, ChevronDown } from "lucide-react";
+import { useQuery } from 'convex/react';
+import { BookTemplateIcon, ChevronDown, Loader2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
+import LabelToInput from "../LabelToInput";
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
-import LabelToInput from "../LabelToInput";
 import { TemplateGuideDialog } from "../TemplateGuideDialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import AiGenerationIconWhite from '@/icons/AI-Generation-White';
 
 interface CommonLayoutProps {
     data: Project;
@@ -125,6 +125,36 @@ const CommonLayout = ({
         }
     };
 
+    const handleShare = async () => {
+        try {
+            const response = await fetch('/api/share-link', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ projectId }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate share link');
+            }
+
+            const { shareId } = await response.json();
+            console.log(shareId)
+            // Copy to clipboard
+            await navigator.clipboard.writeText(`${window.location.origin}/share/${shareId}`);
+            toast.success("Share link copied to clipboard!");
+
+            // Close dialog first
+            setIsConfirmModalOpen(false);
+
+        } catch (error) {
+            toast.error("Failed to generate share link");
+            // Also close dialog on error
+            setIsConfirmModalOpen(false);
+        }
+    };
+
     return (
         <div className="flex h-screen gap-2 pt-4 pr-4 pb-4">
             <div className="flex flex-1 gap-2">
@@ -143,6 +173,12 @@ const CommonLayout = ({
                                 >
                                     <BookTemplateIcon className="w-4 h-4 mr-2" />
                                     Use Epic Template
+                                </Button>
+                                <Button
+                                    onClick={() => setIsConfirmModalOpen(true)}
+                                    variant="outline"
+                                >
+                                    Share
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -226,6 +262,25 @@ const CommonLayout = ({
                 onClose={() => setIsTemplateGuideOpen(false)}
                 onUseTemplate={handleUseTemplate}
             />
+
+            <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Share Project</DialogTitle>
+                        <DialogDescription>
+                            Would you like to copy the shareable link for this project?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleShare}>
+                            Copy Link
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

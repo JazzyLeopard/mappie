@@ -103,4 +103,15 @@ export default defineSchema({
     ])
     .index("by_projectId", ["projectId"])
     .index("by_createdAt", ["createdAt"]),
+
+  sharing: defineTable({
+    shareId: v.string(),
+    projectId: v.id("projects"),
+    status: v.boolean(),
+    createdBy: v.string(),
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  })
+    .index("by_shareId", ["shareId"])
+    .index("by_projectId", ["projectId"]),
 });
