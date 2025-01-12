@@ -1,4 +1,5 @@
 import { Id } from "@/convex/_generated/dataModel";
+import { LucideIcon } from "lucide-react";
 
 export type MenuItemType = {
   key: string;
@@ -77,6 +78,7 @@ export interface Entity {
   title: string;
   content?: string;
   type: 'overview' | 'section' | 'epic' | 'useCase' | 'requirement';
+  icon?: React.ElementType;
   subitems?: Entity[];
   userStories?: Array<{
     _id: Id<"userStories">;
