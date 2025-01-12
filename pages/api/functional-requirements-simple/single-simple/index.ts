@@ -25,27 +25,25 @@ const convertBigIntToNumber = (obj: any): any => {
 
 // Add debug logging to see what we're receiving
 const validateRequirements = (content: string): boolean => {
-  // Split content into sections
-  const sections = content.split(/(?=# )/g).filter(Boolean);
+  // Split into sections using double newlines
+  const sections = content.split(/\n\n(?=# [^\n]+)/).filter(section => section.trim());
   
   if (sections.length === 0) return false;
 
   for (const section of sections) {
-    const hasTitle = section.match(/^# [^\n]+/m);
-    const hasDescription = section.match(/^## Description/m);
-    const hasSubRequirements = section.match(/^### Sub-requirements/m);
-    const subRequirements = section.match(/^- /gm);
-    
-    if (!hasTitle || !hasDescription || !hasSubRequirements) {
-      return false;
-    }
-    
-    // Check if there are at least 4 sub-requirements
-    if (!subRequirements || subRequirements.length < 4) {
+    if (!section.trim()) continue;
+
+    const hasTitle = /^#\s+[^\n]+/m.test(section.trim());
+    const hasDescription = /##\s+Description\s+[^\n]+/m.test(section);
+    const hasSubRequirements = /###\s+Sub-requirements/m.test(section);
+    const subRequirements = section.match(/^-\s+The system should/gm);
+    const hasMinimumSubReqs = subRequirements && subRequirements.length >= 4;
+
+    if (!hasTitle || !hasDescription || !hasSubRequirements || !hasMinimumSubReqs) {
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -148,7 +146,8 @@ IMPORTANT:
 2. Include at least 4-5 sub-requirements
 3. Each sub-requirement must start with "The system should"
 4. Generate only ONE requirement
-5. Make sure it's unique from existing requirements`;
+5. Make sure it's unique from existing requirements
+6. Do not include any additional explanatory text after the requirement format`;
 
 
     console.log("Calling OpenAI Api...");
