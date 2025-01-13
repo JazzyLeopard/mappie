@@ -99,18 +99,33 @@ export function SharePopover({ projectId, onShare, variant }: SharePopoverProps)
             variant === 'nav' && "w-full text-sm bg-black p-4 text-white hover:bg-white hover:text-black"
           )}
         >
-          {isPublished ? (
+          {variant === 'nav' ? (
             <>
-              <Link2 className="h-4 w-4" />
-              <span className={cn(
-                "text-sm",
-                (variant === 'nav' || !variant) && "underline"
-              )}>Shared</span>
+              {isPublished ? (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  <span className="text-sm underline">Shared</span>
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  Share Epic Link
+                </>
+              )}
             </>
           ) : (
             <>
-              <Link2 className="h-4 w-4" />
-              Share Epic Link
+              {isPublished ? (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  <span className="text-sm underline">Shared</span>
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  Share
+                </>
+              )}
             </>
           )}
         </Button>
