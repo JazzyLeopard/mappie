@@ -13,7 +13,7 @@ import { useAuth } from "@clerk/nextjs"
 import { toast } from "react-hot-toast"
 
 interface SharePopoverProps {
-  projectId: Id<"projects">;
+  projectId?: Id<"projects">;
   onShare?: () => Promise<void>;
   variant?: 'default' | 'nav';
 }
@@ -21,7 +21,7 @@ interface SharePopoverProps {
 export function SharePopover({ projectId, onShare, variant }: SharePopoverProps) {
   const { userId } = useAuth();
   const createShare = useMutation(api.shareLink.create);
-  const shareData = useQuery(api.shareLink.getShareIdByProjectId, { projectId });
+  const shareData = useQuery(api.shareLink.getShareIdByProjectId, { projectId: projectId! });
   const [copied, setCopied] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [shareLink, setShareLink] = useState("");
@@ -39,7 +39,7 @@ export function SharePopover({ projectId, onShare, variant }: SharePopoverProps)
         // If we already have a shareId, reuse it
         const shareId = shareData?.shareId || Math.random().toString(36).substring(2, 15);
         await createShare({
-          projectId,
+          projectId: projectId!,
           shareId,
           status: true,
           userId,
@@ -59,7 +59,7 @@ export function SharePopover({ projectId, onShare, variant }: SharePopoverProps)
     if (userId && shareData?.shareId) {
       try {
         await createShare({
-          projectId,
+          projectId: projectId!,
           shareId: shareData.shareId,
           status: false,
           userId,
