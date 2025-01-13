@@ -19,10 +19,6 @@ export default async function handler(
     res: NextApiResponse
 ) {
     try {
-        if (req.method !== 'POST') {
-            throw new Error('Method not allowed');
-        }
-
         const { userId, getToken } = getAuth(req);
         const token = await getToken({ template: "convex" });
 
@@ -33,32 +29,56 @@ export default async function handler(
         convex.setAuth(token);
         const { projectId } = req.body;
 
-        // First check if a share id already exists for this project
-        const existingShareId = await convex.query(api.shareLink.getShareIdByProjectId, {
-            projectId
-        });
+        // Handle DELETE request
+        if (req.method === 'DELETE') {
+            const existingShare = await convex.query(api.shareLink.getShareIdByProjectId, {
+                projectId
+            });
 
-        if (existingShareId) {
-            // Return existing shareId if found
-            return res.json({ shareId: existingShareId.shareId });
+            if (!existingShare) {
+                return res.status(404).json({ error: 'Share link not found' });
+            }
+
+            // Update the share status to false
+            await convex.mutation(api.shareLink.create, {
+                projectId,
+                shareId: existingShare.shareId,
+                userId,
+                status: false
+            });
+
+            return res.json({ success: true });
         }
 
-        // If no existing share found, create new one
-        const shareId = generateRandomString();
+        // Handle POST request
+        if (req.method === 'POST') {
+            // First check if a share id already exists for this project
+            const existingShareId = await convex.query(api.shareLink.getShareIdByProjectId, {
+                projectId
+            });
 
-        // Save to Convex database
-        const shareLink = await convex.mutation(api.shareLink.create, {
-            projectId,
-            shareId,
-            userId,
-            status: true
-        });
+            if (existingShareId) {
+                // Return existing shareId if found
+                return res.json({ shareId: existingShareId.shareId });
+            }
 
-        console.log(shareLink)
+            // If no existing share found, create new one
+            const shareId = generateRandomString();
 
-        return res.json({ shareId });
+            // Save to Convex database
+            const shareLink = await convex.mutation(api.shareLink.create, {
+                projectId,
+                shareId,
+                userId,
+                status: true
+            });
+
+            return res.json({ shareId });
+        }
+
+        throw new Error('Method not allowed');
     } catch (error) {
-        console.error('Share link generation error:', error);
-        return res.status(500).json({ error: 'Failed to generate share link' });
+        console.error('Share link operation error:', error);
+        return res.status(500).json({ error: 'Failed to process share link operation' });
     }
 }
