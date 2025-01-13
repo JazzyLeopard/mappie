@@ -11,6 +11,21 @@ export const create = mutation({
     handler: async (ctx, args) => {
         const { projectId, shareId, status, userId } = args;
 
+        // Check if a share record already exists
+        const existingShare = await ctx.db
+            .query("sharing")
+            .withIndex("by_projectId", (q) => q.eq("projectId", projectId))
+            .first();
+
+        if (existingShare) {
+            // Update existing share
+            return await ctx.db.patch(existingShare._id, {
+                status,
+                updatedAt: BigInt(Date.now()),
+            });
+        }
+
+        // Create new share if none exists
         return await ctx.db.insert('sharing', {
             projectId,
             shareId,
@@ -25,20 +40,24 @@ export const create = mutation({
 export const getProjectByShareId = query({
     args: { shareId: v.string() },
     handler: async (ctx, args) => {
-        // Find the share record
         const share = await ctx.db
             .query("sharing")
             .withIndex("by_shareId", (q) => q.eq("shareId", args.shareId))
             .first();
 
-        if (!share || share.status !== true) {
-            throw new Error("Share link not found or inactive");
+        if (!share) {
+            return { status: false };
+        }
+
+        // Return early with status if inactive
+        if (!share.status) {
+            return { status: false };
         }
 
         // Get project details
         const project = await ctx.db.get(share.projectId);
         if (!project) {
-            throw new Error("Project not found");
+            return { status: false };
         }
 
         // Get all epics with their user stories

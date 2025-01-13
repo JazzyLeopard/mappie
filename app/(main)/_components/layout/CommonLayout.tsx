@@ -21,6 +21,7 @@ import LabelToInput from "../LabelToInput";
 import LexicalEditor from "../Lexical/LexicalEditor";
 import PresentationMode from '../PresentationMode';
 import { TemplateGuideDialog } from "../TemplateGuideDialog";
+import { SharePopover } from "@/components/share-popover";
 
 interface CommonLayoutProps {
     data: Project;
@@ -174,12 +175,10 @@ const CommonLayout = ({
                                     <BookTemplateIcon className="w-4 h-4 mr-2" />
                                     Use Epic Template
                                 </Button>
-                                <Button
-                                    onClick={() => setIsConfirmModalOpen(true)}
-                                    variant="outline"
-                                >
-                                    Share
-                                </Button>
+                                <SharePopover 
+                                    projectId={projectId} 
+                                    onShare={handleShare}
+                                />
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -262,25 +261,6 @@ const CommonLayout = ({
                 onClose={() => setIsTemplateGuideOpen(false)}
                 onUseTemplate={handleUseTemplate}
             />
-
-            <Dialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Share Project</DialogTitle>
-                        <DialogDescription>
-                            Would you like to copy the shareable link for this project?
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleShare}>
-                            Copy Link
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 };
