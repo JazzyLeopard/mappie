@@ -109,7 +109,7 @@ export const getProjectById = query({
 
     const project = await ctx.db
       .query("projects")
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("_id"), args.projectId),
           q.eq(q.field("userId"), userId)
@@ -208,3 +208,63 @@ export const archiveProject = mutation({
     });
   },
 });
+
+export const getProjectFullDetails = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    // Get the base project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    // Get functional requirements
+    const functionalRequirements = await ctx.db
+      .query("functionalRequirements")
+      .withIndex("by_projectId", (q) =>
+        q.eq("projectId", args.projectId)
+      )
+      .collect();
+
+    // Get use cases
+    const useCases = await ctx.db
+      .query("useCases")
+      .withIndex("by_projectId", (q) =>
+        q.eq("projectId", args.projectId)
+      )
+      .collect();
+
+    // Get epics
+    const epics = await ctx.db
+      .query("epics")
+      .withIndex("by_projectId", (q) =>
+        q.eq("projectId", args.projectId)
+      )
+      .collect();
+
+    // Get user stories for each epic
+    const epicsWithStories = await Promise.all(
+      epics.map(async (epic) => {
+        const userStories = await ctx.db
+          .query("userStories")
+          .withIndex("by_epicId", (q) =>
+            q.eq("epicId", epic._id)
+          )
+          .collect();
+
+        return {
+          ...epic,
+          userStories,
+        };
+      })
+    );
+
+    return {
+      project,
+      functionalRequirements,
+      useCases,
+      epics: epicsWithStories,
+    };
+  },
+});
+

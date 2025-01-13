@@ -20,6 +20,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { Badge } from '@/components/ui/badge';
 import AiGenerationIconWhite from '@/icons/AI-Generation-White';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -475,6 +476,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
               <form onSubmit={handleSubmit} className="relative">
                 <div className="relative">
                   <Textarea
+                    projectId={projectId as Id<"projects">}
                     value={chat.input}
                     onChange={(e) => {
                       chat.handleInputChange(e)
