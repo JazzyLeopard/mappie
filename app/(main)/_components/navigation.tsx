@@ -26,6 +26,7 @@ import NavItem from "./NavItem";
 import UserItems from "./UserItems";
 import FileUpload from "./layout/Context";
 import { MessageModal } from "@/components/MessageModal";
+import { SharePopover } from "@/components/share-popover";
 
 
 export const Navigation = () => {
@@ -227,6 +228,15 @@ export const Navigation = () => {
                         active={isActive(item.path)}
                       />
                     ))}
+
+                    <div className="flex-col items-center px-4 py-4">
+                      {selectedProject && (
+                        <SharePopover 
+                        projectId={selectedProject as Id<"projects">} 
+                        variant="nav"
+                      />
+                    )}
+                    </div>
 
                     <div className="flex-col items-center px-4 py-4">
                       <div className="flex items-center">
