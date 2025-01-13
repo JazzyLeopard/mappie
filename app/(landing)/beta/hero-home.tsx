@@ -97,7 +97,7 @@ export default function BetaHero() {
                         ) : (
                           <span>{spotsClaimed}</span>
                         )}
-                        <span className="text-3xl text-gray-400">/250</span>
+                        <span className="text-3xl text-gray-400">/500</span>
                       </div>
                       <div className="mt-1 text-lg text-gray-600">spots claimed</div>
                     </div>
@@ -106,7 +106,7 @@ export default function BetaHero() {
 
                 {/* Additional Stats */}
                 <div className="flex items-center justify-center space-x-8 text-sm text-gray-600">
-                  <div>⭐️ Free for the first 100 users</div>
+                  <div>⭐️ Free 3-month access for the first 100 users post-release</div>
                   <div>🔥 Direct access to the founders</div>
                 </div>
               </div>
