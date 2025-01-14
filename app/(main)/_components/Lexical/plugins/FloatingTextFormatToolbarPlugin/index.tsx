@@ -21,7 +21,7 @@ import AiGenerationIcon from '@/icons/AI-Generation'
 
 const TOP_OFFSET = 50; // Increased to give more space at the top
 
-function FloatingToolbar({ editor, anchorElem, isLink, setIsLinkEditMode }: { editor: any, anchorElem: any, isLink: any, setIsLinkEditMode: any } ) {
+function FloatingToolbar({ editor, anchorElem, isLink, setIsLinkEditMode }: { editor: any, anchorElem: any, isLink: any, setIsLinkEditMode: any }) {
   const popupCharStylesEditorRef = React.useRef<HTMLDivElement | null>(null)
 
   const updateTextFormatFloatingToolbar = React.useCallback(() => {
@@ -43,14 +43,14 @@ function FloatingToolbar({ editor, anchorElem, isLink, setIsLinkEditMode }: { ed
     ) {
       const rangeRect = getDOMRangeRect(nativeSelection, rootElement)
       const viewportHeight = window.innerHeight
-      
+
       // Check if selection is too close to the top
       const isNearTop = rangeRect.top < TOP_OFFSET
-      
+
       // Position the toolbar
       setFloatingElemPosition(
-        rangeRect, 
-        popupCharStylesEditorElem, 
+        rangeRect,
+        popupCharStylesEditorElem,
         anchorElem,
         isNearTop
       )
@@ -260,7 +260,6 @@ export function FloatingTextFormatToolbarPlugin({
   const [isLink, setIsLink] = React.useState(false)
 
   const updatePopup = React.useCallback(() => {
-    console.log('updatePopup called')
     editor.getEditorState().read(() => {
       if (editor.isComposing()) {
         return
@@ -268,14 +267,6 @@ export function FloatingTextFormatToolbarPlugin({
       const selection = $getSelection()
       const nativeSelection = window.getSelection()
       const rootElement = editor.getRootElement()
-
-      console.log({
-        selection,
-        nativeSelection,
-        rootElement,
-        isRangeSelection: $isRangeSelection(selection),
-        hasContent: selection?.getTextContent()
-      })
 
       if (
         nativeSelection !== null &&

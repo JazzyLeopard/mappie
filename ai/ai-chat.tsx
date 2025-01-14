@@ -1,26 +1,23 @@
 'use client';
 
 import { MarkdownCard } from '@/app/(main)/_components/layout/markdown-card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/textArea";
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import AiGenerationIcon from '@/icons/AI-Generation';
 import { cn } from '@/lib/utils';
 import { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useMutation, useQuery } from 'convex/react';
 import { debounce } from 'lodash-es';
-import { AlertTriangle, Loader2, PanelLeftOpen, User } from 'lucide-react';
+import { AlertTriangle, Loader2, PanelLeftOpen } from 'lucide-react';
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
-import { Badge } from '@/components/ui/badge';
-import AiGenerationIconWhite from '@/icons/AI-Generation-White';
-import { Id } from '@/convex/_generated/dataModel';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -216,9 +213,6 @@ const AIStoryCreator = memo(function AIStoryCreator({
     } : "skip"
   );
 
-  // Add a ref to track initialization
-  const isInitialized = useRef(false);
-
   // Modify the chat configuration
   const chat = useChat({
     initialMessages: useMemo(() => {
@@ -229,28 +223,24 @@ const AIStoryCreator = memo(function AIStoryCreator({
       const messages = chatHistory.messages as ChatHistoryMessage[] | undefined;
       if (!messages?.length) return [];
 
-      // Only set initial messages if we haven't initialized yet
-      if (!isInitialized.current) {
-        isInitialized.current = true;
-        return messages.map(msg => ({
-          id: msg.id,
-          role: msg.role as 'system' | 'user' | 'assistant' | 'data', // function | tool
-          content: msg.content,
-          toolInvocations: msg.toolInvocations?.filter(tool =>
-            tool.state === "result" && tool.result?.content
-          ).map(tool => ({
-            toolCallId: tool.toolCallId,
-            toolName: tool.toolName,
-            state: tool.state === "result" ? "result" as const : "call" as const,
-            args: tool.args || {},
-            result: tool.state === "result" ? {
-              content: tool.result?.content || '',
-              metadata: tool.result?.metadata || {}
-            } : undefined
-          }))
-        }));
-      }
-      return [];
+      // Map and return messages without the initialization check
+      return messages.map(msg => ({
+        id: msg.id,
+        role: msg.role as 'system' | 'user' | 'assistant' | 'data',
+        content: msg.content,
+        toolInvocations: msg.toolInvocations?.filter(tool =>
+          tool.state === "result" && tool.result?.content
+        ).map(tool => ({
+          toolCallId: tool.toolCallId,
+          toolName: tool.toolName,
+          state: tool.state === "result" ? "result" as const : "call" as const,
+          args: tool.args || {},
+          result: tool.state === "result" ? {
+            content: tool.result?.content || '',
+            metadata: tool.result?.metadata || {}
+          } : undefined
+        }))
+      }));
     }, [chatHistory]),
     id: selectedItemId,
     api: '/api/chat',
@@ -275,11 +265,6 @@ const AIStoryCreator = memo(function AIStoryCreator({
       }));
     }, [])
   });
-
-  // Reset initialization when itemId changes
-  useEffect(() => {
-    isInitialized.current = false;
-  }, [selectedItemId]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -492,10 +477,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
                         handleSubmit(e as any);
                       }
                     }}
-                    placeholder="Ask me to improve or generate content..."
+                    placeholder="Ask to followup, @ to mention"
                     rows={3}
                     className={cn(
-                      "resize-none pr-24 pb-12",
+                      "resize-none pr-24 pb-12 text-sm",
                     )}
                     disabled={streamState.isGenerating || streamState.isWaitingForTool}
                     contextLabels={[
