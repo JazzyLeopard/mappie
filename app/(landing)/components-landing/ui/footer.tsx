@@ -36,22 +36,6 @@ export default function Footer({ border = false }: { border?: boolean }) {
                   className="text-gray-600 transition hover:text-gray-900"
                   href="/"
                 >
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-gray-600 transition hover:text-gray-900"
-                  href="/"
-                >
-                  Customers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-gray-600 transition hover:text-gray-900"
-                  href="/"
-                >
                   Support
                 </Link>
               </li>

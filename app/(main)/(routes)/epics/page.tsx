@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Spinner } from "@nextui-org/react";
 import ProjectIdeation from "@/components/project-ideation";
 import { SpokenLanguage } from "@/types";
+import ProjectIdeationOptions from "@/app/(main)/_components/ProjectIdeationOptions";
 
 const ProjectsPage = () => {
   const { isSignedIn } = useUser();
@@ -103,6 +104,22 @@ const ProjectsPage = () => {
     });
   };
 
+  const handleOptionSelect = (option: 'paste' | 'generate' | 'blank') => {
+    switch (option) {
+      case 'generate':
+        // Open AI generation dialog
+        // You can implement this logic
+        break;
+      case 'paste':
+        // Handle paste option
+        // You can implement this logic
+        break;
+      case 'blank':
+        onCreate();
+        break;
+    }
+  };
+
   if (projects === undefined) {
     return (
       <div className="pt-4 pr-4 pb-4 w-full h-screen">
@@ -136,44 +153,7 @@ const ProjectsPage = () => {
           {(projects?.length ?? 0) > 0 ? (
             <AllProjects />
           ) : (
-            <>
-              <h2 className="text-xl md:text-2xl font-semibold mb-2 md:mb-2 text-center">
-                You haven't created any epics...
-              </h2>
-
-              <Image 
-                src={Empty} 
-                alt="documents" 
-                width={100} 
-                height={100}
-                className="w-16 h-16 md:w-24 md:h-24" 
-              />
-              <div className="flex flex-col justify-center gap-2 mb-4 md:mb-6 px-4 sm:px-0">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="default" className="bg-gradient-to-r from-pink-500 to-blue-500 text-white flex items-center min-w-[300px]">
-                      <Wand2 className="mr-2 w-4 h-4" />
-                      Create Epic
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Generate Epic with AI</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <ProjectIdeation 
-                        onSubmit={handleGenerateProject}
-                        isGenerating={isGenerating}
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button variant="ghost" className="flex items-center text-sm" onClick={onCreate}>
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Add blank
-                </Button>
-              </div>
-            </>
+            <ProjectIdeationOptions onSelectOption={handleOptionSelect} />
           )}
         </div>
       </div>

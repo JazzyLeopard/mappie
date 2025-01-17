@@ -40,6 +40,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <Script 
+          src="https://analytics.ahrefs.com/analytics.js" 
+          data-key="pvIEoJvCQ4UcZCKAfeUXEQ"
+        />
         <ConvexClientProvider>
           <PostHogProvider>
             <CannySso />

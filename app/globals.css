@@ -35,6 +35,19 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    --white-gradient: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%);
+    --dark-gradient: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 50%, rgba(0, 0, 0, 0) 100%);
+    --aurora: linear-gradient(to right, #ff1b6b, #45caff, #ff1b6b);
+
+    --white: #ffffff;
+    --black: #000000;
+    --transparent: transparent;
+    --blue-300: #93c5fd;
+    --blue-400: #60a5fa;
+    --blue-500: #3b82f6;
+    --indigo-300: #a5b4fc;
+    --violet-200: #ddd6fe;
   }
  
   .dark {
@@ -150,4 +163,20 @@
 
 .markdown-body ol {
     list-style: decimal !important;
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%, 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%, 50% 50%;
+  }
+  100% {
+    background-position: 0% 50%, 0% 50%;
+  }
+}
+
+.animate-aurora {
+  animation: aurora 15s linear infinite;
 }
