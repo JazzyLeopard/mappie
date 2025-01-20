@@ -5,7 +5,14 @@ const nextConfig = {
     },
     reactStrictMode: true,
     images: {
-        remotePatterns: [{ hostname: 'img.clerk.com' }],
+        remotePatterns: [
+            { hostname: 'img.clerk.com' },
+            { 
+                hostname: 'adventurous-dalmatian-872.convex.cloud',
+                protocol: 'https',
+                pathname: '/api/storage/**'
+            }
+        ],
     },
     experimental: {
         optimizeCss: true,
@@ -28,7 +35,7 @@ const nextConfig = {
           }
         }
         return config
-      },
+    },
     staticPageGenerationTimeout: 60000
 }
 

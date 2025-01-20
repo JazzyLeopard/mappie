@@ -63,6 +63,19 @@ export default defineSchema({
     .index("by_projectId", ["projectId"]) // Index to query documents by projectId  
     .index("by_createdAt", ["createdAt"]), // Index to query epics by creation time,
 
+  imageUpload: defineTable({
+    projectId: v.id("projects"),
+    imageStorageId: v.id("_storage"),
+    content: v.string(),
+    itemType: v.string(),
+    itemId: v.string(),
+    filename: v.string(),
+    createdAt: v.int64(),
+    updatedAt: v.int64(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_createdAt", ["createdAt"]),
+
   messages: defineTable({
     itemId: v.string(),
     itemType: v.string(),

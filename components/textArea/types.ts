@@ -42,6 +42,8 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
         isWaitingForTool: boolean;
     };
     variant?: 'default' | 'chat';
+    selectedItemId?: string;
+    selectedItemType?: string;
     projectId?: Id<"projects">;
 }
 

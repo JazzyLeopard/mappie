@@ -18,6 +18,7 @@ import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } fr
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import { ItemIndicator } from '@radix-ui/react-select';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -194,6 +195,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
   toggleCollapse,
   projectId
 }: AIStoryCreatorProps) {
+
+  console.log("selectedItemId", selectedItemId, selectedItemType)
   const [parsedContent, setParsedContent] = useState<any>(null);
   const [streamState, setStreamState] = useState({
     isGenerating: false,
@@ -462,6 +465,8 @@ const AIStoryCreator = memo(function AIStoryCreator({
                 <div className="relative">
                   <Textarea
                     projectId={projectId as Id<"projects">}
+                    selectedItemId={selectedItemId}
+                    selectedItemType={selectedItemType}
                     value={chat.input}
                     onChange={(e) => {
                       chat.handleInputChange(e)

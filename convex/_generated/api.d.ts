@@ -16,6 +16,7 @@ import type {
 import type * as documents from "../documents.js";
 import type * as epics from "../epics.js";
 import type * as functionalRequirements from "../functionalRequirements.js";
+import type * as imageUpload from "../imageUpload.js";
 import type * as messages from "../messages.js";
 import type * as projects from "../projects.js";
 import type * as shareLink from "../shareLink.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   epics: typeof epics;
   functionalRequirements: typeof functionalRequirements;
+  imageUpload: typeof imageUpload;
   messages: typeof messages;
   projects: typeof projects;
   shareLink: typeof shareLink;
