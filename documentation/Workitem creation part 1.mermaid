@@ -1,0 +1,63 @@
+graph TD
+    classDef menuNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef typeNode fill:#f8bbd0,stroke:#880e4f,stroke-width:2px
+    classDef optionNode fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef aiNode fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef templateNode fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef blankNode fill:#fafafa,stroke:#424242,stroke-width:2px
+    classDef contextNode fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+
+    Start["+Create Work Item"]:::menuNode
+    Click["User clicks + button"]
+    TypeSelect["Select Item Type"]:::typeNode
+
+    %% Types with hierarchy info
+    Epic["Epic\n(Top-level item)"]:::typeNode
+    Feature["Feature\n(Can be child of Epic)"]:::typeNode
+    Story["Story\n(Can be child of Epic/Feature)"]:::typeNode
+    Task["Task\n(Can be child of Epic/Feature/Story)"]:::typeNode
+
+    %% Context Selection
+    EpicContext["Select Context\n(Knowledge Base only)"]:::contextNode
+    FeatureContext["Select Context\n(Epic + KB if parent exists\nKB only if no parent)"]:::contextNode
+    StoryContext["Select Context\n(Parent + KB if parent exists\nKB only if no parent)"]:::contextNode
+    TaskContext["Select Context\n(Parent + KB if parent exists\nKB only if no parent)"]:::contextNode
+
+    %% Creation Methods
+    AI["Generate with AI"]:::aiNode
+    Template["Use Template"]:::templateNode
+    Blank["Create Blank"]:::blankNode
+
+    %% Flow
+    Start --> Click
+    Click --> TypeSelect
+    TypeSelect --> Epic
+    TypeSelect --> Feature
+    TypeSelect --> Story
+    TypeSelect --> Task
+
+    %% Paths per type
+    Epic --> EpicContext
+    Feature --> FeatureContext
+    Story --> StoryContext
+    Task --> TaskContext
+
+    %% Creation methods
+    EpicContext --> AI
+    EpicContext --> Template
+    EpicContext --> Blank
+
+    FeatureContext --> AI
+    FeatureContext --> Template
+    FeatureContext --> Blank
+
+    StoryContext --> AI
+    StoryContext --> Template
+    StoryContext --> Blank
+
+    TaskContext --> AI
+    TaskContext --> Template
+    TaskContext --> Blank
+
+    %% Styling
+    linkStyle default stroke-width:2px

@@ -1,0 +1,69 @@
+graph TD
+    classDef menuNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef typeNode fill:#f8bbd0,stroke:#880e4f,stroke-width:2px
+    classDef aiNode fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef templateNode fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef blankNode fill:#fafafa,stroke:#424242,stroke-width:2px
+    classDef kbNode fill:#ffecb3,stroke:#ff6f00,stroke-width:2px
+    classDef outputNode fill:#e0e0e0,stroke:#424242,stroke-width:2px
+
+    Start["Epic Creation"]:::typeNode
+
+    %% AI Path
+    AI["Generate with AI"]:::aiNode
+    KBSelect["Select Knowledge Base Items"]:::kbNode
+    KBMulti["Multiple items can be selected"]:::kbNode
+    AIPrompt["AI Generation Options"]:::aiNode
+    AIOptions["1. Generate single Epic\n2. Generate multiple related Epics\n3. Generate Epic with Feature suggestions"]:::aiNode
+    AIReview["Review AI Output"]:::aiNode
+    AIEdit["Edit/Refine Output"]:::aiNode
+
+    %% Template Path
+    Template["Use Template"]:::templateNode
+    TempSelect["Select Epic Template"]:::templateNode
+    TempPreview["Preview Template"]:::templateNode
+    TempFill["Fill Template Fields"]:::templateNode
+    TempAI["Optional: Use AI to\nComplete Template"]:::aiNode
+
+    %% Blank Path
+    Blank["Create Blank"]:::blankNode
+    BlankTitle["Enter Epic Title"]:::blankNode
+    BlankEditor["Open Rich Text Editor"]:::blankNode
+    BlankAI["Optional: Use AI Assistant\nfor Content Help"]:::aiNode
+
+    %% Common Output
+    Output["Created Epic"]:::outputNode
+    Features["Optional: Continue to\nFeature Creation"]:::typeNode
+
+    %% Flows
+    Start --> AI
+    Start --> Template
+    Start --> Blank
+
+    %% AI Flow
+    AI --> KBSelect
+    KBSelect --> KBMulti
+    KBMulti --> AIPrompt
+    AIPrompt --> AIOptions
+    AIOptions --> AIReview
+    AIReview --> AIEdit
+    AIEdit --> Output
+
+    %% Template Flow
+    Template --> TempSelect
+    TempSelect --> TempPreview
+    TempPreview --> TempFill
+    TempFill --> TempAI
+    TempAI --> Output
+
+    %% Blank Flow
+    Blank --> BlankTitle
+    BlankTitle --> BlankEditor
+    BlankEditor --> BlankAI
+    BlankAI --> Output
+
+    %% Continue Flow
+    Output --> Features
+
+    %% Styling
+    linkStyle default stroke-width:2px 

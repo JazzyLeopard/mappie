@@ -72,7 +72,7 @@ export default function Hero() {
             </div>
             <div className="relative rounded-xl overflow-hidden">
               <Image
-                src="/images-landing/Epics/Home.gif"
+                src="/images-landing/Epics/ai-chat.png"
                 alt="AI-powered documentation editor"
                 width={1920}
                 height={1080}

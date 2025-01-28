@@ -20,6 +20,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { Badge } from '@/components/ui/badge';
 import AiGenerationIconWhite from '@/icons/AI-Generation-White';
+import { Id } from '@/convex/_generated/dataModel';
 
 interface AIStoryCreatorProps {
   onInsertMarkdown: (markdown: string) => void;
@@ -31,7 +32,7 @@ interface AIStoryCreatorProps {
   selectedItemTitle?: string;
   isCollapsed?: boolean;
   toggleCollapse?: () => void;
-  projectId: string | null;
+  workspaceId: Id<"workspaces"> | null;
 }
 
 interface StreamStatus {
@@ -194,7 +195,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
   selectedItemTitle,
   isCollapsed = false,
   toggleCollapse,
-  projectId
+  workspaceId
 }: AIStoryCreatorProps) {
   const [parsedContent, setParsedContent] = useState<any>(null);
   const [streamState, setStreamState] = useState({
@@ -208,10 +209,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   const storeChatHistory = useMutation(api.messages.storeChatHistory);
   const chatHistory = useQuery(api.messages.getChatHistory,
-    selectedItemId && parsedContent?.projectId ? {
-      itemId: selectedItemId,
+    selectedItemId && parsedContent?.workspaceId ? {
+      itemId: selectedItemId as Id<"workItems">,
       itemType: selectedItemType,
-      projectId: parsedContent.projectId,
+      workspaceId: parsedContent.workspaceId as Id<"workspaces">,
     } : "skip"
   );
 
@@ -296,7 +297,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   // Debounced chat history update with duplicate prevention
   const debouncedUpdateHistory = useMemo(() =>
-    debounce(async (messages, itemId, itemType, projectId) => {
+    debounce(async (messages, itemId, itemType, workspaceId) => {
       if (messages.length === 0) return;
 
       // Get the last message ID from the current messages
@@ -311,7 +312,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
         await storeChatHistory({
           itemId,
           itemType,
-          projectId,
+          workspaceId,
           messages: messages.map((msg: any) => ({
             role: msg.role,
             content: msg.content,
@@ -337,18 +338,18 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   // Chat history update effect
   useEffect(() => {
-    if (!selectedItemId || !selectedItemType || !parsedContent?.projectId || chat.messages.length === 0) return;
+    if (!selectedItemId || !selectedItemType || !parsedContent?.workspaceId || chat.messages.length === 0) return;
 
     // Only call the update if we have new messages
     const lastMessageId = chat.messages[chat.messages.length - 1].id;
     if (lastMessageId !== lastSavedMessageIdRef.current) {
-      debouncedUpdateHistory(chat.messages, selectedItemId, selectedItemType, parsedContent.projectId);
+      debouncedUpdateHistory(chat.messages, selectedItemId, selectedItemType, parsedContent.workspaceId);
     }
 
     return () => {
       debouncedUpdateHistory.cancel();
     };
-  }, [chat.messages, selectedItemId, selectedItemType, parsedContent?.projectId]);
+  }, [chat.messages, selectedItemId, selectedItemType, parsedContent?.workspaceId]);
 
   // Reset the lastSavedMessageId when switching items
   useEffect(() => {
@@ -357,7 +358,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   // Content parsing effect
   useEffect(() => {
-    if (!projectId) return;
+    if (!workspaceId) return;
 
     try {
       const editorState = typeof selectedItemContent === 'string'
@@ -366,17 +367,17 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
       setParsedContent({
         content: editorState,
-        projectId,
+        workspaceId,
         type: selectedItemType
       });
     } catch (e) {
       setParsedContent((prev: any) => ({
         ...prev,
-        projectId,
+        workspaceId,
         type: selectedItemType
       }));
     }
-  }, [projectId, selectedItemType, selectedItemContent]);
+  }, [workspaceId, selectedItemType, selectedItemContent]);
 
   const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

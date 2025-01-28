@@ -15,26 +15,27 @@ import { useSettings } from './context/SettingsContext';
 import { SuggestionCardNode } from './plugins/AiEditPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import { TRANSFORMERS } from '@lexical/markdown';
-import { ENHANCED_TRANSFORMERS } from './plugins/MarkdownTransformers';
 
 type LexicalEditorProps = {
   onBlur: () => Promise<void>;
   attribute: string;
-  projectDetails: any;
-  setProjectDetails: (value: any) => void;
+  documentDetails: any;
+  setDocumentDetails: (value: any) => void;
   isRichText: boolean;
-  context: 'project' | 'useCase' | 'functionalRequirement' | 'epics' | 'userStories';
+  context: 'project' | 'useCase' | 'functionalRequirement' | 'epics' | 'userStories' | 'document';
   itemId: string;
+  showTableOfContents: boolean;
 };
 
 function LexicalEditor({
   onBlur,
   attribute,
-  projectDetails,
-  setProjectDetails,
+  documentDetails,
+  setDocumentDetails,
   isRichText,
   context,
   itemId,
+  showTableOfContents,
 }: LexicalEditorProps): JSX.Element {
   const {settings: {isCollab, emptyEditor}} = useSettings();
   
@@ -56,12 +57,13 @@ function LexicalEditor({
               <div className="editor-shell">
                 <Editor
                   attribute={attribute}
-                setProjectDetails={setProjectDetails}
-                initialContent={projectDetails?.[attribute]}
-                context={context}
-                itemId={itemId}
-              />
-            </div>
+                  setDocumentDetails={setDocumentDetails}
+                  initialContent={documentDetails?.[attribute]}
+                  context={context}
+                  itemId={itemId}
+                  showTableOfContents={showTableOfContents}
+                />
+              </div>
           </SharedAutocompleteContext>
         </TableContext>
       </SharedHistoryContext>

@@ -156,27 +156,63 @@ module.exports = {
   				}
   			},
   			'progress-top': {
-  				'0%': { transform: 'translateX(0%)', width: '3px' },
-  				'12.5%': { transform: 'translateX(100%)', width: '100%' },
-  				'12.51%, 100%': { transform: 'translateX(100%)', width: '3px' },
+  				'0%': {
+  					transform: 'translateX(0%)',
+  					width: '3px'
+  				},
+  				'12.5%': {
+  					transform: 'translateX(100%)',
+  					width: '100%'
+  				},
+  				'12.51%, 100%': {
+  					transform: 'translateX(100%)',
+  					width: '3px'
+  				}
   			},
   			'progress-right': {
-  				'0%, 12.5%': { transform: 'translateY(0%)', height: '3px' },
-  				'25%': { transform: 'translateY(100%)', height: '100%' },
-  				'25.01%, 100%': { transform: 'translateY(100%)', height: '3px' },
+  				'0%, 12.5%': {
+  					transform: 'translateY(0%)',
+  					height: '3px'
+  				},
+  				'25%': {
+  					transform: 'translateY(100%)',
+  					height: '100%'
+  				},
+  				'25.01%, 100%': {
+  					transform: 'translateY(100%)',
+  					height: '3px'
+  				}
   			},
   			'progress-bottom': {
-  				'0%, 25%': { transform: 'translateX(0%)', width: '3px' },
-  				'37.5%': { transform: 'translateX(-100%)', width: '100%' },
-  				'37.51%, 100%': { transform: 'translateX(-100%)', width: '3px' },
+  				'0%, 25%': {
+  					transform: 'translateX(0%)',
+  					width: '3px'
+  				},
+  				'37.5%': {
+  					transform: 'translateX(-100%)',
+  					width: '100%'
+  				},
+  				'37.51%, 100%': {
+  					transform: 'translateX(-100%)',
+  					width: '3px'
+  				}
   			},
   			'progress-left': {
-  				'0%, 37.5%': { transform: 'translateY(0%)', height: '3px' },
-  				'50%': { transform: 'translateY(-100%)', height: '100%' },
-  				'50.01%, 100%': { transform: 'translateY(-100%)', height: '3px' },
+  				'0%, 37.5%': {
+  					transform: 'translateY(0%)',
+  					height: '3px'
+  				},
+  				'50%': {
+  					transform: 'translateY(-100%)',
+  					height: '100%'
+  				},
+  				'50.01%, 100%': {
+  					transform: 'translateY(-100%)',
+  					height: '3px'
+  				}
   			},
   			'progress-line': {
-  				'0%': { 
+  				'0%': {
   					transform: 'translateX(0%) translateY(0%)',
   					width: '100%',
   					height: '3px',
@@ -251,6 +287,16 @@ module.exports = {
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				foreground: 'hsl(var(--sidebar-foreground))',
+  				primary: 'hsl(var(--sidebar-primary))',
+  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+  				border: 'hsl(var(--sidebar-border))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
   		animation: {

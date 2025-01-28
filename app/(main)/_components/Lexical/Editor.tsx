@@ -70,11 +70,12 @@ import { List, ListItem } from "@/components/ui/list"
 
 
 type EditorProps = {
-  attribute: string;
-  setProjectDetails: (value: any) => void;
-  initialContent?: string;
-  context: string;
+  setDocumentDetails: (value: any) => void;
+  initialContent: string;
+  context: 'project' | 'useCase' | 'functionalRequirement' | 'epics' | 'userStories' | 'document';
   itemId: string;
+  attribute: string;
+  showTableOfContents: boolean;
 };
 
 function EditorOnChangePlugin({ onChange }: { onChange: (markdown: string) => void }) {
@@ -138,9 +139,12 @@ const KeyboardShortcut = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function Editor({
-  setProjectDetails,
+  setDocumentDetails,
   initialContent,
   context,
+  itemId,
+  attribute,
+  showTableOfContents
 }: EditorProps): JSX.Element {
   const { historyState } = useSharedHistoryContext();
   const {
@@ -151,7 +155,6 @@ export default function Editor({
       hasLinkAttributes,
       isCharLimitUtf8,
       isRichText,
-      showTableOfContents,
       shouldUseLexicalContextMenu,
       tableCellMerge,
       tableCellBackgroundColor,
@@ -167,8 +170,8 @@ export default function Editor({
   // Get mutations
 
   const handleChange = useCallback((markdown: string) => {
-    setProjectDetails(markdown);
-  }, [setProjectDetails]);
+    setDocumentDetails(markdown);
+  }, [setDocumentDetails]);
 
   // Initialize editor with markdown content
   useEffect(() => {
@@ -263,9 +266,9 @@ export default function Editor({
       editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
 
       // Also update the project details
-      setProjectDetails(markdown);
+      setDocumentDetails(markdown);
     });
-  }, [editor, setProjectDetails]);
+  }, [editor, setDocumentDetails]);
 
   // Add a command listener for updates
   useEffect(() => {

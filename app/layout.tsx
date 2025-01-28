@@ -39,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={inter.className} style={{ backgroundColor: '#f8fafc' }}>
         <Script 
           src="https://analytics.ahrefs.com/analytics.js" 
           data-key="pvIEoJvCQ4UcZCKAfeUXEQ"

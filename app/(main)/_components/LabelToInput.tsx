@@ -4,15 +4,19 @@ import { input } from "@nextui-org/react";
 import { Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 
+interface LabelToInputProps {
+  value: string;
+  setValue: (val: string) => void;
+  onBlur: () => void;
+  onEnter?: (value: string) => void;
+}
+
 export default function LabelToInput({
   value,
   setValue,
   onBlur,
-}: {
-  value: string;
-  setValue: (val: string) => void;
-  onBlur: () => void;
-}) {
+  onEnter,
+}: LabelToInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
 
@@ -34,8 +38,8 @@ export default function LabelToInput({
     if (e.key === "Enter") {
       e.preventDefault();
       setIsEditing(false);
-      setValue(inputValue)
-      onBlur();
+      setValue(inputValue);
+      onEnter?.(inputValue);
     }
   };
 
