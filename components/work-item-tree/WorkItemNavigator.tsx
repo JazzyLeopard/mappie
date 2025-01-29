@@ -40,7 +40,11 @@ interface WorkItemNavigatorProps {
   index: number
   parentId: string
   onReorder: (itemId: string, newParentId: string, newOrder: number) => void
+  isExpanded?: boolean
 }
+
+const BASE_ORDER = 1000 // Make this consistent with your existing data
+const MIN_GAP = 100    // Smaller gap to match the scale
 
 export function WorkItemNavigator({
   item,
@@ -53,22 +57,32 @@ export function WorkItemNavigator({
   parentIsOpen = true,
   index,
   parentId,
-  onReorder
+  onReorder,
+  isExpanded = false
 }: WorkItemNavigatorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const [isOverTop, setIsOverTop] = useState(true)
   const [isOverShallow, setIsOverShallow] = useState(true)
+  const [isDragStarted, setIsDragStarted] = useState(false)
 
   const [{ isDragging }, drag] = useDrag({
     type: 'WORK_ITEM',
-    item: () => ({
-      id: item.id,
-      type: item.type,
-      index,
-      parentId
-    }),
+    item: () => {
+      setIsDragStarted(true)
+      return {
+        id: item.id,
+        type: item.type,
+        index,
+        parentId
+      }
+    },
+    end: () => {
+      setTimeout(() => {
+        setIsDragStarted(false)
+      }, 100)
+    },
     collect: (monitor) => ({
       isDragging: monitor.isDragging()
     })
@@ -104,9 +118,6 @@ export function WorkItemNavigator({
     drop: (draggedItem) => {
       if (!isOver || !canDrop) return
       
-      const BASE_ORDER = 65536 // 2^16
-      const MIN_GAP = 1024 // Minimum gap between items
-      
       // Determine target parent ID
       const targetParentId = draggedItem.type === item.type ? parentId : item.id
       
@@ -124,7 +135,7 @@ export function WorkItemNavigator({
             newOrder = item.order - BASE_ORDER
           } else {
             // Between prev and current
-            newOrder = prevItem.order + Math.max(MIN_GAP, (item.order - prevItem.order) / 2)
+            newOrder = prevItem.order + Math.floor((item.order - prevItem.order) / 2)
           }
         } else {
           // Dropping below current item
@@ -134,7 +145,7 @@ export function WorkItemNavigator({
             newOrder = item.order + BASE_ORDER
           } else {
             // Between current and next
-            newOrder = item.order + Math.max(MIN_GAP, (nextItem.order - item.order) / 2)
+            newOrder = item.order + Math.floor((nextItem.order - item.order) / 2)
           }
         }
       } else {
@@ -149,8 +160,9 @@ export function WorkItemNavigator({
         }
       }
       
-      // Handle number overflow
-      if (newOrder > Number.MAX_SAFE_INTEGER / 2) {
+      // Handle number overflow or too small gaps
+      if (newOrder > Number.MAX_SAFE_INTEGER / 2 || 
+          Math.abs(newOrder - item.order) < MIN_GAP) {
         // Normalize all sibling orders
         const normalizedOrder = siblings.reduce((acc, sibling, idx) => {
           const normalizedPos = BASE_ORDER * (idx + 1)
@@ -188,9 +200,21 @@ export function WorkItemNavigator({
     [item.items],
   )
 
-  const handleItemClick = useCallback(() => {
+  const handleItemClick = useCallback((e: React.MouseEvent) => {
+    // Don't trigger selection if we're dragging or just finished dragging
+    if (isDragging || isDragStarted) return
+    
+    // Check if we're clicking on a button or action menu
+    const target = e.target as HTMLElement
+    if (
+      target.closest('button') || 
+      target.closest('[role="menuitem"]')
+    ) {
+      return
+    }
+    
     onSelect(item)
-  }, [item, onSelect])
+  }, [item, onSelect, isDragging, isDragStarted])
 
   const handleRename = useCallback(
     (newName: string) => {
@@ -291,7 +315,7 @@ export function WorkItemNavigator({
 
   return (
     <div ref={ref} className="relative">
-      {/* Separator for reordering - only visual indicator */}
+      {/* Separator for reordering */}
       {isOver && canDrop && draggedItem?.type === item.type && (
         <div 
           className="absolute left-0 right-0 h-0.5 bg-blue-500 pointer-events-none" 
@@ -299,17 +323,23 @@ export function WorkItemNavigator({
         />
       )}
       
-      <div className={cn(
-        "rounded-lg",
-        "cursor-grab active:cursor-grabbing",
-        // Only dim the original dragged item
-        item.id === draggedItem?.id && isDragging && "opacity-50",
-        // Show nesting indicator backgrounds
-        isOver && draggedItem && draggedItem.type !== item.type && (
-          canDrop ? "bg-emerald-100/50" : "bg-red-100/50"
-        )
-      )}>
-        <div 
+      <motion.div 
+        layout // Enable layout animations
+        transition={{ 
+          layout: { duration: 0.2 },
+          opacity: { duration: 0.2 }
+        }}
+        className={cn(
+          "rounded-lg",
+          "cursor-grab active:cursor-grabbing",
+          item.id === draggedItem?.id && isDragging && "opacity-50",
+          isOver && draggedItem && draggedItem.type !== item.type && (
+            canDrop ? "bg-emerald-100/50" : "bg-red-100/50"
+          )
+        )}
+      >
+        <motion.div 
+          layout="position"
           className={cn(
             "flex items-center gap-2 rounded-lg p-2",
             isSelected ? "bg-slate-200" : "hover:bg-slate-200",
@@ -317,7 +347,7 @@ export function WorkItemNavigator({
           )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => onSelect(item)}
+          onClick={handleItemClick}
         >
           <button className="p-0.5 focus:outline-none" onClick={handleIconClick}>
             <ItemIcon />
@@ -343,27 +373,36 @@ export function WorkItemNavigator({
               <WorkItemActionMenu onRename={handleRename} onMoveToTrash={handleMoveToTrash} />
             </>
           )}
-        </div>
+        </motion.div>
 
-        {isOpen && item.items && item.items.length > 0 && (
-          <div className="pl-6">
-            {item.items.map((child, index) => (
-              <WorkItemNavigator
-                key={child.id}
-                item={child}
-                index={index}
-                parentId={item.id}
-                onSelect={onSelect}
-                onRename={onRename}
-                onMoveToTrash={onMoveToTrash}
-                onAddItem={onAddItem}
-                selectedItemId={selectedItemId}
-                onReorder={onReorder}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        <AnimatePresence>
+          {isOpen && item.items && item.items.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="pl-6 overflow-hidden"
+            >
+              {item.items.map((child, index) => (
+                <WorkItemNavigator
+                  key={child.id}
+                  item={child}
+                  index={index}
+                  parentId={item.id}
+                  onSelect={onSelect}
+                  onRename={onRename}
+                  onMoveToTrash={onMoveToTrash}
+                  onAddItem={onAddItem}
+                  selectedItemId={selectedItemId}
+                  onReorder={onReorder}
+                  isExpanded={isExpanded}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       {/* Ghost item that follows cursor */}
       {isDragging && item.id === draggedItem?.id && (

@@ -2,10 +2,10 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { FileText, GitPullRequest, ListTodo, Target, ArrowRight, Paperclip, Send, Plus, Check, ChevronRight } from "lucide-react"
+import { FileText, GitPullRequest, ListTodo, Target, ArrowRight, Paperclip, Send, Plus, Check, ChevronRight, Puzzle, BookOpen } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { SYSTEM_TEMPLATES } from "@/convex/utils/systemTemplates"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -162,21 +162,88 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
     }
   }, [isOpen, parentItem])
 
-  const options = [
-    { type: "epic", icon: Target, label: "Epic", description: "Large body of work that can be broken down" },
-    { type: "feature", icon: GitPullRequest, label: "Feature", description: "Deliverable piece of functionality" },
-    { type: "story", icon: FileText, label: "Story", description: "User-centric piece of value" },
-    { type: "task", icon: ListTodo, label: "Task", description: "Small, specific piece of work" },
-  ]
+  // Determine valid options based on parent type
+  const validOptions = useMemo(() => {
+    if (parentItem?.type === "epic") {
+      return [
+        {
+          type: "feature",
+          label: "Feature",
+          icon: Puzzle,
+          description: "A significant piece of functionality that delivers business value"
+        },
+        {
+          type: "story",
+          label: "Story",
+          icon: BookOpen,
+          description: "A user-focused description of a feature or requirement"
+        }
+      ]
+    }
+    
+    // Default options when no parent or other parent types
+    return [
+      {
+        type: "epic",
+        label: "Epic",
+        icon: Target,
+        description: "A large body of work that can be broken down into features"
+      },
+      {
+        type: "feature",
+        label: "Feature",
+        icon: Puzzle,
+        description: "A significant piece of functionality that delivers business value"
+      }
+    ]
+  }, [parentItem])
 
-  const validOptions = parentItem
-    ? options.filter((option) => {
-        if (parentItem.type === "epic") return option.type === "feature"
-        if (parentItem.type === "feature") return option.type === "story"
-        if (parentItem.type === "story") return option.type === "task"
-        return false
-      })
-    : options
+  const handleTypeSelection = (type: WorkItemType) => {
+    setSelectedType(type)
+  }
+
+  const handleCreationMethodSelect = (method: CreationMethod) => {
+    setCreationMethod(method)  // Set the method first
+    
+    // If parent is already known, skip parent selection and set it directly
+    if (parentItem) {
+      if (method === "ai") {
+        // For AI generation, go straight to options/prompt
+        if (selectedType === "feature") {
+          setAIGenerationStep("options")
+        } else {
+          setAIGenerationStep("prompt")
+        }
+      } else {
+        // For template or blank, create with parent directly
+        const workItem = {
+          type: selectedType!,
+          title: `Untitled ${selectedType}`,
+          description: method === "template" ? getTemplateContent(selectedType!) : "",
+          parentId: parentItem.id,
+          status: "todo"
+        }
+        onCreateWorkItem(workItem)
+        onClose()
+      }
+    } else {
+      // Rest of the existing logic for when there's no parent
+      if (selectedType === "epic") {
+        if (method === "ai") {
+          setAIGenerationStep("prompt")
+        } else {
+          handleParentSelection("")
+        }
+      } else {
+        setCreationMethod("select-parent")
+        if (method === "ai") {
+          setSelectedParentId("ai")
+        } else if (method === "template") {
+          setSelectedParentId("template")
+        }
+      }
+    }
+  }
 
   const handleBack = () => {
     setSelectedType(null)
@@ -184,11 +251,10 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
 
   const handleParentSelection = useCallback((parentId: string) => {
     if (selectedParentId === "ai") {
-      // Coming from AI generation flow
+      // AI generation flow remains the same
       setSelectedParentId(parentId)
       setCreationMethod("ai")
       
-      // For features, always show options first
       if (selectedType === "feature") {
         setAIGenerationStep("options")
       } else {
@@ -196,9 +262,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       }
     } else {
       // Normal template/blank flow
-      const useTemplate = creationMethod !== "select-parent" && 
-        creationMethod === "template" // Only use template when explicitly selected
-
+      const useTemplate = creationMethod === "template" // This is correct
       const workItem = {
         type: selectedType!,
         title: `Untitled ${selectedType}`,
@@ -219,9 +283,11 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       case "feature":
         return SYSTEM_TEMPLATES.feature.content
       case "story":
-        return SYSTEM_TEMPLATES.userStory.content
+        return SYSTEM_TEMPLATES.userStory.content // Changed from story to userStory to match template key
       case "task":
         return "# Task\n\n## Description\n\n## Acceptance Criteria\n"
+      default:
+        return ""
     }
   }
 
@@ -364,7 +430,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
           <DialogHeader>
             <DialogTitle>
               {parentItem 
-                ? `Add ${parentItem.type === "epic" ? "Feature to Epic" : "Work Item"}`
+                ? `Add to ${parentItem.type.charAt(0).toUpperCase() + parentItem.type.slice(1)}`
                 : "Create New Work Item"
               }
             </DialogTitle>
@@ -375,7 +441,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
                 key={option.type}
                 variant="outline"
                 className="w-full justify-start h-auto p-4"
-                onClick={() => setSelectedType(option.type as WorkItemType)}
+                onClick={() => handleTypeSelection(option.type as WorkItemType)}
               >
                 <option.icon className="h-5 w-5 mr-3" />
                 <div className="text-left">
@@ -404,22 +470,14 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
               ← Back
             </Button>
             <DialogTitle className="text-center">
-              Create {selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}
+              Create {selectedType?.charAt(0).toUpperCase() + selectedType?.slice(1)}
             </DialogTitle>
           </DialogHeader>
 
           <div className="relative flex justify-center items-center gap-6 mt-8 px-4">
             {/* Use Template */}
             <div
-              onClick={() => {
-                if (selectedType === "epic") {
-                  setCreationMethod("template")
-                  handleParentSelection("")
-                } else {
-                  setCreationMethod("select-parent")
-                  setSelectedParentId("template")
-                }
-              }}
+              onClick={() => handleCreationMethodSelect("template")}
               className="w-full max-w-[280px] transform -rotate-3 transition-transform hover:-translate-y-1"
             >
               <Card className="relative overflow-hidden cursor-pointer">
@@ -431,17 +489,9 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
               </Card>
             </div>
 
-            {/* Generate with AI (Middle) */}
+            {/* Generate with AI */}
             <div
-              onClick={() => {
-                if (selectedType === "epic") {
-                  setCreationMethod("ai")
-                  setAIGenerationStep("prompt")
-                } else {
-                  setCreationMethod("select-parent")
-                  setSelectedParentId("ai")
-                }
-              }}
+              onClick={() => handleCreationMethodSelect("ai")}
               className="w-full max-w-[320px] z-10 transform transition-transform hover:-translate-y-1"
             >
               <Card className="relative overflow-hidden border-2 cursor-pointer">
@@ -458,14 +508,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
 
             {/* Start from blank */}
             <div
-              onClick={() => {
-                if (selectedType === "epic") {
-                  setCreationMethod("blank")
-                  handleParentSelection("")
-                } else {
-                  setCreationMethod("select-parent")
-                }
-              }}
+              onClick={() => handleCreationMethodSelect("blank")}
               className="w-full max-w-[280px] transform rotate-3 transition-transform hover:-translate-y-1"
             >
               <Card className="relative overflow-hidden cursor-pointer">

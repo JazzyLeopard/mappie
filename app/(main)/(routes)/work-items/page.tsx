@@ -358,7 +358,10 @@ export default function WorkItemsPage() {
 
       const newParentId = destination.droppableId === "root" ? undefined : destination.droppableId;
       
-      // Calculate new order
+      const BASE_ORDER = 1000;
+      const MIN_GAP = 100;
+      
+      // Get all items at the destination level, sorted by order
       const itemsInDestination = workItems
         .filter(item => 
           (newParentId ? item.parentId === newParentId : !item.parentId) && 
@@ -366,17 +369,41 @@ export default function WorkItemsPage() {
         )
         .sort((a, b) => a.order - b.order);
 
+      // Normalize orders if they're too close together or if there are duplicates
+      const needsNormalization = itemsInDestination.some((item, index) => 
+        index > 0 && (
+          item.order === itemsInDestination[index - 1].order || 
+          item.order - itemsInDestination[index - 1].order < MIN_GAP
+        )
+      );
+
+      if (needsNormalization) {
+        // Normalize all orders first
+        await Promise.all(itemsInDestination.map((item, index) => 
+          updateWorkItem({
+            id: item._id as Id<"workItems">,
+            order: (index + 1) * BASE_ORDER
+          })
+        ));
+        
+        // Refresh itemsInDestination with new orders
+        itemsInDestination.forEach((item, index) => {
+          item.order = (index + 1) * BASE_ORDER;
+        });
+      }
+
+      // Calculate new order
       let newOrder: number;
       if (itemsInDestination.length === 0) {
-        newOrder = 1000;
+        newOrder = BASE_ORDER;
       } else if (destination.index === 0) {
-        newOrder = itemsInDestination[0].order - 1000;
+        newOrder = itemsInDestination[0].order - BASE_ORDER;
       } else if (destination.index >= itemsInDestination.length) {
-        newOrder = itemsInDestination[itemsInDestination.length - 1].order + 1000;
+        newOrder = itemsInDestination[itemsInDestination.length - 1].order + BASE_ORDER;
       } else {
         const prevOrder = itemsInDestination[destination.index - 1].order;
         const nextOrder = itemsInDestination[destination.index].order;
-        newOrder = (prevOrder + nextOrder) / 2;
+        newOrder = prevOrder + Math.floor((nextOrder - prevOrder) / 2);
       }
 
       await updateWorkItem({
@@ -390,6 +417,9 @@ export default function WorkItemsPage() {
       toast.error("Failed to move work item");
     }
   }, [workItems, updateWorkItem]);
+
+  // When showing the expanded view (no item selected), we should still highlight the item from URL
+  const urlSelectedItemId = searchParams?.get('id');
 
   // Early return with loading spinner if data isn't ready
   if (isLoading || !workspace) {
@@ -416,18 +446,28 @@ export default function WorkItemsPage() {
         <motion.div 
           initial={{ width: "20%" }}
           animate={{ width: "100%" }}
-          transition={{ duration: 0.7 }}
-          className="p-3 h-full"
+          transition={{ 
+            duration: 0.3,
+            ease: [0.32, 0.72, 0, 1]
+          }}
+          className="px-3 pb-3 pt-2 h-full"
         >
-          <div className="h-full p-3 bg-slate-100 rounded-lg">
+          <motion.div 
+            layout
+            className="h-full p-2 bg-slate-100 rounded-lg"
+          >
             <div className="flex flex-row justify-between">
-              <h2 className="text-xl pb-2 font-semibold">Work Items</h2>
+              <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
             </div>
             <div className="space-y-0.5">
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="root">
                   {(provided) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                    <div 
+                      ref={provided.innerRef} 
+                      {...provided.droppableProps}
+                      className="space-y-0.5"
+                    >
                       {workItemTree.map((item, index) => (
                         <WorkItemNavigator
                           key={item.id}
@@ -438,8 +478,9 @@ export default function WorkItemsPage() {
                           onRename={handleRenameWorkItem}
                           onMoveToTrash={handleMoveToTrash}
                           onAddItem={handleAddWorkItem}
-                          selectedItemId={selectedItem?.id}
+                          selectedItemId={urlSelectedItemId || undefined}
                           onReorder={handleReorder}
+                          isExpanded={true}
                         />
                       ))}
                       {provided.placeholder}
@@ -449,7 +490,7 @@ export default function WorkItemsPage() {
                 <AddWorkItemButton onAddItem={() => setIsCreatingWorkItem(true)} />
               </DragDropContext>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         <WorkItemCreationDialog
@@ -471,14 +512,14 @@ export default function WorkItemsPage() {
         initial={{ width: "100%" }}
         animate={{ width: "100%" }}
         transition={{ 
-          duration: 0.7,
+          duration: 0.3,
           ease: [0.32, 0.72, 0, 1]
         }}
         className="h-full w-full flex flex-col"
       >
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20} minSize={15} className="px-3 pb-3 pt-2"> 
-            <div className="h-full rounded-lg p-2 bg-slate-100">
+            <motion.div layout className="h-full rounded-lg p-2 bg-slate-100">
               <div className="flex flex-row justify-between">
                 <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
                 <div className="flex flex-row gap-1">
@@ -512,6 +553,7 @@ export default function WorkItemsPage() {
                             onAddItem={handleAddWorkItem}
                             selectedItemId={selectedItem?.id}
                             onReorder={handleReorder}
+                            isExpanded={isExpanded}
                           />
                         ))}
                         {provided.placeholder}
@@ -521,14 +563,21 @@ export default function WorkItemsPage() {
                 </DragDropContext>
                 <AddWorkItemButton onAddItem={() => setIsCreatingWorkItem(true)} />
               </div>
-            </div>
+            </motion.div>
           </ResizablePanel>
 
           <ResizableHandle />
 
           <ResizablePanel defaultSize={50} minSize={30} className="h-full pt-2 pb-3">
             <div className="h-full rounded-lg border border-slate-100 scrollbar-thin max-h-full overflow-hidden">
-              <h2 className="text-md px-3 pb-1 pt-2 font-semibold">{selectedItem?.name}</h2>
+              <div className="px-3 pb-1 pt-2">
+                <LabelToInput
+                  value={selectedItem?.name || ""}
+                  setValue={(newName) => handleRenameWorkItem(selectedItem, newName)}
+                  onBlur={() => {}}
+                  variant="workitem"
+                />
+              </div>
               <ScrollArea className="h-full px-3 pb-3 pt-2">
                 {workItemDetails ? (
                   <LexicalEditor

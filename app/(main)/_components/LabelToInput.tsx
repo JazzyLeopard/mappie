@@ -1,14 +1,15 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { input } from "@nextui-org/react";
 import { Edit } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface LabelToInputProps {
   value: string;
   setValue: (val: string) => void;
   onBlur: () => void;
   onEnter?: (value: string) => void;
+  variant?: "default" | "workitem";
 }
 
 export default function LabelToInput({
@@ -16,6 +17,7 @@ export default function LabelToInput({
   setValue,
   onBlur,
   onEnter,
+  variant = "default"
 }: LabelToInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -43,6 +45,19 @@ export default function LabelToInput({
     }
   };
 
+  const styles = {
+    default: {
+      input: "border-gray-300 rounded-md px-3 py-2 text-2xl font-semibold",
+      label: "text-gray-700 group-hover:text-gray-900 text-2xl font-semibold mr-2",
+      icon: "h-5 w-5 text-gray-300 group-hover:text-gray-600"
+    },
+    workitem: {
+      input: "border-gray-300 rounded-md px-3 py-1 text-sm font-semibold",
+      label: "text-gray-700 group-hover:text-gray-900 text-sm font-semibold mr-1",
+      icon: "h-4 w-4 text-gray-300 group-hover:text-gray-600"
+    }
+  };
+
   return (
     <div className="flex items-center w-full">
       {isEditing ? (
@@ -51,7 +66,7 @@ export default function LabelToInput({
           onChange={handleChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="border-gray-300 rounded-md px-3 py-2 text-2xl font-semibold"
+          className={styles[variant].input}
           autoFocus
         />
       ) : (
@@ -59,13 +74,14 @@ export default function LabelToInput({
           onClick={handleClick}
           className="flex items-center cursor-pointer group"
         >
-          <Label
-            className="text-gray-700 group-hover:text-gray-900 text-2xl font-semibold mr-2"
-          >
+          <Label className={styles[variant].label}>
             {value || "Click to edit"}
           </Label>
           <Edit
-            className="h-5 w-5 text-gray-300 group-hover:text-gray-600 transition-colors duration-200"
+            className={cn(
+              styles[variant].icon,
+              "transition-colors duration-200"
+            )}
           />
         </div>
       )}
