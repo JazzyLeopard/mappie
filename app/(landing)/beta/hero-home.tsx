@@ -1,143 +1,158 @@
 "use client";
 
-import PageIllustration from "../components-landing/page-illustration";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import TransitioningTitle from '../components/TransitioningTitle'
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@clerk/clerk-react";
-import Link from "next/link";
-import { useUserCount } from "@/app/hooks/useUserCount";
-import { SignUpButton } from "@clerk/clerk-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { sendBetaInterest } from '@/actions/send-beta-interest'
 
-export default function BetaHero() {
-  const { isSignedIn } = useUser();
-  const { userCount, loading } = useUserCount();
-  
-  const spotsRemaining = 100 - (userCount || 0);
-  const spotsClaimed = userCount || 0;
+export default function Hero() {
+  const [counter, setCounter] = useState(39);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formState, setFormState] = useState({
+    email: '',
+    name: '',
+    company: '',
+    useCase: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCounter((prev) => (prev === 0 ? 39 : prev - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      Object.entries(formState).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      const result = await sendBetaInterest(formData);
+
+      if (!result.success) throw new Error('Submission failed');
+
+      setSubmitStatus('success');
+      setTimeout(() => setIsModalOpen(false), 2000);
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <section className="relative">
-      <PageIllustration />
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="pb-12 pt-32 md:pb-20 md:pt-40">
-          <div className="pb-12 text-center md:pb-16">
-            {/* Beta Badge */}
-            <div 
-              className="inline-block px-3 py-1 mb-6 text-sm font-semibold rounded-full bg-gradient-to-r from-[#F596D3] to-[#A855D8] text-white"
-              data-aos="zoom-y-out"
-              data-aos-delay={100}
-            >
-              Beta Access Now Open • Increased to 200 Spots
+    <section className="min-h-screen pt-24 flex flex-col items-center justify-center px-6 md:px-8">
+      <div className="max-w-7xl mx-auto w-full flex flex-col items-center">
+        <TransitioningTitle />
+        <p className="mt-6 text-xl text-center text-gray-600 max-w-2xl px-4 md:px-6">
+          Transform your product documentation into clear, dev-ready specifications that your team will actually want to read.
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-8 w-full">
+          <div className="relative w-full max-w-[800px] shadow-[0_20px_70px_-15px_rgba(0,0,0,0.3)] rounded-xl mx-auto">
+            {/* Timer Circle */}
+            <div className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-white shadow-lg z-20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-blue-300 flex items-center justify-center">
+                <span className="text-white font-mono text-sm font-bold">
+                  {counter}
+                </span>
+              </div>
             </div>
-
-            <h1
-              className="mb-6 border-y text-3xl sm:text-4xl lg:text-6xl font-bold [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1]"
-              data-aos="zoom-y-out"
-              data-aos-delay={150}
-            >
-              <span className="bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] mr-2 text-transparent bg-clip-text">Transform messy</span>
-              <br className="max-lg:hidden" />
-              <span className="bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] mr-2 text-transparent bg-clip-text">requirements into</span>
-              <br className="max-lg:hidden" />
-              <span className="bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] text-transparent bg-clip-text">dev-ready stories</span>
-            </h1>
-
-            <div className="mx-auto max-w-3xl">
-              <div className="mb-8 text-lg text-center text-gray-700">
-                <p>Join our beta pioneers 🚀 transforming project planning</p>
-                <p>by letting Mappie turn vague requirements ✏️ into clear specs.</p>
-              </div>
-
-              {/* Centered Beta Button */}
-              <div
-                className="flex justify-center mb-12"
-                data-aos="zoom-y-out"
-                data-aos-delay={450}
-              >
-                {isSignedIn ? (
-                  <Button className="group text-white shadow hover:bg-[length:100%_150%]">
-                    <span className="relative inline-flex items-center">
-                      <Link href="/epics">Enter Mappie</Link>{" "}
-                      <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
-                        →
-                      </span>
-                    </span>
-                  </Button>
-                ) : (
-                  <SignUpButton mode="modal" forceRedirectUrl={"/epics"}>
-                    <Button className="group text-white shadow hover:bg-[length:100%_150%]">
-                      <span className="relative inline-flex items-center">
-                        Join Beta Users{" "}
-                        <span className="ml-1 tracking-normal text-purple-200 transition-transform group-hover:translate-x-0.5">
-                          →
-                        </span>
-                      </span>
-                    </Button>
-                  </SignUpButton>
-                )}
-              </div>
-
-              {/* Beta Stats */}
-              <div 
-                className="flex flex-col items-center justify-center mb-8"
-                data-aos="zoom-y-out"
-                data-aos-delay={600}
-              >
-                {/* Counter */}
-                <div className="relative mb-10">
-                  <div className="absolute -inset-6 rounded-lg bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] opacity-20 blur-lg"></div>
-                  <div className="relative flex items-center justify-center space-x-4 rounded-lg bg-white/50 px-12 py-6 backdrop-blur-sm">
-                    <div className="text-center">
-                      <div className="text-5xl font-bold bg-gradient-to-r from-[#F596D3] via-[#A855D8] to-[#39aed8] text-transparent bg-clip-text">
-                        {loading ? (
-                          <span className="text-gray-400 text-2xl">
-                            <span className="animate-pulse">.</span>
-                            <span className="animate-pulse delay-200">.</span>
-                            <span className="animate-pulse delay-400">.</span>
-                          </span>
-                        ) : (
-                          <span>{spotsClaimed}</span>
-                        )}
-                        <span className="text-3xl text-gray-400">/500</span>
-                      </div>
-                      <div className="mt-1 text-lg text-gray-600">spots claimed</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional Stats */}
-                <div className="flex items-center justify-center space-x-8 text-sm text-gray-600">
-                  <div>⭐️ Free 3-month access for the first 100 users post-release</div>
-                  <div>🔥 Direct access to the founders</div>
-                </div>
-              </div>
-
-              {/* See How It Works - Bottom Section */}
-              <div className="text-center pt-8 border-t [border-image:linear-gradient(to_right,transparent,theme(colors.purple.300/.8),transparent)1]">
-                <p className="text-gray-600 mb-4">Want to see Mappie in action?</p>
-                <Button 
-                  variant="outline" 
-                  className="group"
-                  data-aos="zoom-y-out"
-                  data-aos-delay={750}
-                  onClick={() => {
-                    document.getElementById('video-demos')?.scrollIntoView({ 
-                      behavior: 'smooth',
-                      block: 'start'
-                    });
-                  }}
-                >
-                  <span className="relative inline-flex items-center">
-                    See How It Works{" "}
-                    <span className="ml-1 tracking-normal text-purple-500 transition-transform group-hover:translate-y-0.5">
-                      ↓
-                    </span>
-                  </span>
-                </Button>
-              </div>
+            <div className="relative rounded-xl overflow-hidden">
+              <Image
+                src="/images-landing/Epics/ai-chat.png"
+                alt="AI-powered documentation editor"
+                width={1920}
+                height={1080}
+                className="rounded-xl w-full h-auto"
+                priority
+              />
             </div>
           </div>
+          <InteractiveHoverButton
+            text="Request Access"
+            className="w-48 bg-gradient-to-r from-pink-500 to-blue-300 text-white"
+            onClick={() => setIsModalOpen(true)}
+          />
         </div>
       </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Request Beta Access</DialogTitle>
+          </DialogHeader>
+
+          {submitStatus === 'success' ? (
+            <div className="text-center py-6">
+              <h3 className="text-lg font-semibold text-green-600">Thank you for your interest!</h3>
+              <p className="mt-2">We'll review your request and send an invitation if there's a good fit.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Name *</label>
+                <Input
+                  required
+                  value={formState.name}
+                  onChange={e => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Your full name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Work Email *</label>
+                <Input
+                  type="email"
+                  required
+                  value={formState.email}
+                  onChange={e => setFormState(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="you@company.com"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Company</label>
+                <Input
+                  value={formState.company}
+                  onChange={e => setFormState(prev => ({ ...prev, company: e.target.value }))}
+                  placeholder="Your organization"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">How will you use our product?</label>
+                <Textarea
+                  value={formState.useCase}
+                  onChange={e => setFormState(prev => ({ ...prev, useCase: e.target.value }))}
+                  placeholder="Tell us a bit about your needs..."
+                  rows={3}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-pink-500 to-blue-300 text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Request'}
+              </Button>
+              {submitStatus === 'error' && (
+                <p className="text-red-500 text-sm text-center">
+                  Something went wrong. Please try again.
+                </p>
+              )}
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
-  );
+  )
 }

@@ -70,11 +70,12 @@ import { List, ListItem } from "@/components/ui/list"
 
 
 type EditorProps = {
-  attribute: string;
-  setProjectDetails: (value: any) => void;
-  initialContent?: string;
-  context: string;
+  setDocumentDetails: (value: any) => void;
+  initialContent: string;
+  context: 'project' | 'useCase' | 'functionalRequirement' | 'epics' | 'userStories' | 'document';
   itemId: string;
+  attribute: string;
+  showTableOfContents: boolean;
 };
 
 function EditorOnChangePlugin({ onChange }: { onChange: (markdown: string) => void }) {
@@ -138,9 +139,12 @@ const KeyboardShortcut = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default function Editor({
-  setProjectDetails,
+  setDocumentDetails,
   initialContent,
   context,
+  itemId,
+  attribute,
+  showTableOfContents
 }: EditorProps): JSX.Element {
   const { historyState } = useSharedHistoryContext();
   const {
@@ -151,7 +155,6 @@ export default function Editor({
       hasLinkAttributes,
       isCharLimitUtf8,
       isRichText,
-      showTableOfContents,
       shouldUseLexicalContextMenu,
       tableCellMerge,
       tableCellBackgroundColor,
@@ -167,8 +170,8 @@ export default function Editor({
   // Get mutations
 
   const handleChange = useCallback((markdown: string) => {
-    setProjectDetails(markdown);
-  }, [setProjectDetails]);
+    setDocumentDetails(markdown);
+  }, [setDocumentDetails]);
 
   // Initialize editor with markdown content
   useEffect(() => {
@@ -224,31 +227,31 @@ export default function Editor({
         <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
           <div className="text-sm text-muted-foreground text-left space-y-2 w-full px-4">
             <p className="break-words pr-4">
-                📝 Start inserting elements by typing the <KeyboardShortcut>/</KeyboardShortcut> key!
-              </p>
-            </div>
+              📝 Start inserting elements by typing the <KeyboardShortcut>/</KeyboardShortcut> key!
+            </p>
           </div>
-          <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
-            <div className="space-y-2 text-muted-foreground">
-              <h1 className="text-lg font-bold">Chatbot guidelines</h1>
-              <p className="break-words pr-4">
-                🧠 The chatbot on the right is context-aware. 
-              </p>
-              <List className="pl-8">
-                <ListItem>
-                  Ask it to help you write or edit your content. 💭
-                </ListItem>
-                <ListItem>
-                  You can refer to specific sections of your content. 📚
-                </ListItem>
-                <ListItem>
-                  Then simply click the <KeyboardShortcut>Copy</KeyboardShortcut> button and paste it into your document. 🤖
-                </ListItem>
-                <ListItem>
-                  Or use the <KeyboardShortcut>Replace</KeyboardShortcut> button to replace the content completely. 📋
-                </ListItem>
-              </List>
-            </div>
+        </div>
+        <div className="flex flex-col items-center justify-start gap-4 px-4 py-6 bg-slate-100 shadow-[0_0_2px_rgba(0,0,0,0.1)] rounded-xl">
+          <div className="space-y-2 text-muted-foreground">
+            <h1 className="text-lg font-bold">Chatbot guidelines</h1>
+            <p className="break-words pr-4">
+              🧠 The chatbot on the right is context-aware.
+            </p>
+            <List className="pl-8">
+              <ListItem>
+                Ask it to help you write or edit your content. 💭
+              </ListItem>
+              <ListItem>
+                You can refer to specific sections of your content. 📚
+              </ListItem>
+              <ListItem>
+                Then simply click the <KeyboardShortcut>Copy</KeyboardShortcut> button and paste it into your document. 🤖
+              </ListItem>
+              <ListItem>
+                Or use the <KeyboardShortcut>Replace</KeyboardShortcut> button to replace the content completely. 📋
+              </ListItem>
+            </List>
+          </div>
         </div>
       </div>
     );
@@ -263,9 +266,9 @@ export default function Editor({
       editor.dispatchCommand(UPDATE_EDITOR_COMMAND, undefined);
 
       // Also update the project details
-      setProjectDetails(markdown);
+      setDocumentDetails(markdown);
     });
-  }, [editor, setProjectDetails]);
+  }, [editor, setDocumentDetails]);
 
   // Add a command listener for updates
   useEffect(() => {
@@ -294,10 +297,10 @@ export default function Editor({
 
         // More comprehensive markdown detection regex
         const hasMarkdown = /^(#{1,6} |\* |- |\d+\. |> |`{1,3}|---|===|\[.*?\]\(.*?\)|<.*?>)|\n(#{1,6} |\* |- |\d+\. |> |`{1,3})/.test(pastedText);
-        
+
         if (hasMarkdown) {
           event.preventDefault();
-          
+
           editor.update(() => {
             const selection = $getSelection();
             if (!selection || !$isRangeSelection(selection)) return false;
@@ -305,7 +308,7 @@ export default function Editor({
             try {
               // First try to convert the markdown to nodes
               const nodes = $convertFromMarkdownString(pastedText, ENHANCED_TRANSFORMERS);
-              
+
               if (nodes as unknown as LexicalNode[]) {
                 // Insert at current selection
                 selection.insertNodes(nodes as unknown as LexicalNode[]);
@@ -317,10 +320,10 @@ export default function Editor({
               selection.insertText(pastedText);
             }
           });
-          
+
           return true;
         }
-        
+
         // Let the default paste handler handle non-markdown text
         return false;
       },
@@ -453,7 +456,7 @@ function MarkdownInsertionPlugin({
             if (Array.isArray(nodes)) {
               // Use $insertNodes instead of direct append
               $insertNodes(nodes);
-              
+
               // Ensure proper selection
               const selection = $getSelection();
               if ($isRangeSelection(selection)) {
