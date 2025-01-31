@@ -5,13 +5,13 @@ import { api } from "@/convex/_generated/api";
 import { useSearchParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileIcon, Undo2 } from "lucide-react";
@@ -19,9 +19,9 @@ import { FileIcon, Undo2 } from "lucide-react";
 export default function TrashPage() {
   const searchParams = useSearchParams();
   const rawWorkspaceId = searchParams?.get('workspace');
-  
+
   console.log("Workspace ID from URL:", rawWorkspaceId); // Debug log
-  
+
   if (!rawWorkspaceId) {
     return (
       <div className="p-6">
@@ -54,7 +54,7 @@ export default function TrashPage() {
   }
 
   return (
-    <div className="p-6 space-y-4 p-12">
+    <div className="space-y-4 p-12">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Trash</h1>
         <p className="text-sm text-muted-foreground">

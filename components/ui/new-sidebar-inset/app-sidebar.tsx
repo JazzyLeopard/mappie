@@ -1,21 +1,5 @@
 "use client"
 
-import * as React from "react"
-import { usePathname } from "next/navigation"
-import {
-  FileText,
-  FolderKanban,
-  Home,
-  Command,
-  Settings2,
-  BookOpen,
-  FileCode,
-  ListTodo,
-  Trash2
-} from "lucide-react"
-import { useQuery } from "convex/react"
-import { api } from "@/convex/_generated/api"
-
 import { NavMain } from "@/components/ui/new-sidebar-inset/nav-main"
 import { NavSecondary } from "@/components/ui/new-sidebar-inset/nav-secondary"
 import { NavUser } from "@/components/ui/new-sidebar-inset/nav-user"
@@ -28,99 +12,148 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
+import { useQuery } from "convex/react"
+import {
+  BookOpen,
+  Command,
+  FileCode,
+  FolderKanban,
+  Home,
+  ListTodo,
+  Settings2,
+  Trash2
+} from "lucide-react"
+import Link from 'next/link'
+import { usePathname, useRouter } from "next/navigation"
+import * as React from "react"
+import { useEffect, useState } from "react"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter()
   const pathname = usePathname()
   const workspaces = useQuery(api.workspaces.getWorkspaces)
-  const workspace = workspaces?.[0]
+  const [selectedWorkspace, setSelectedWorkspace] = useState<String | null>(null)
+
+  const currentWorkspace = useQuery(api.workspaces.getWorkspaceById,
+    selectedWorkspace ? { workspaceId: selectedWorkspace as Id<"workspaces"> } : "skip"
+  )
+
+  console.log(currentWorkspace);
+
+  useEffect(() => {
+    const updateSelectedProject = () => {
+      const pathParts = pathname?.split('/') || [];
+      const workspaceIdFromUrl = pathParts[pathParts.indexOf('w') + 1];
+
+      if (workspaceIdFromUrl && workspaces) {
+        const matchingWorkspace = workspaces.find((w: any) => w._id === workspaceIdFromUrl);
+        if (matchingWorkspace) {
+          setSelectedWorkspace(matchingWorkspace._id);
+        }
+      } else if (workspaces && workspaces.length > 0 && !selectedWorkspace) {
+        setSelectedWorkspace(workspaces[0]._id);
+      }
+    };
+
+    updateSelectedProject();
+  }, [workspaces, pathname]);
+
+  useEffect(() => {
+    router.refresh();
+  }, [pathname]);
 
   const getNavItems = () => {
+    // Convert currentWorkspace to string if it exists
+    const workspaceIdString = currentWorkspace ? String(currentWorkspace._id) : '';
+
     return [
       {
         title: "Overview",
-        url: "/workspace",
+        url: "/w",
         icon: Home,
-        isActive: pathname === "/workspace",
+        isActive: pathname === "/w",
       },
       {
         title: "Knowledge Base",
-        url: "/knowledge-base",
+        url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base` : "/w",
         icon: BookOpen,
-        isActive: pathname?.startsWith("/knowledge-base") ?? false,
+        isActive: pathname?.startsWith(`/w/${workspaceIdString}/knowledge-base`) ?? false,
         items: [
           {
             title: "Documents",
-            url: "/knowledge-base/documents",
-            isActive: pathname === "/knowledge-base/documents",
+            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/documents` : "/w",
+            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/documents`,
           },
           {
             title: "Templates",
-            url: workspace?._id ? `/knowledge-base/templates?workspace=${workspace._id}` : "/knowledge-base/templates",
-            isActive: pathname === "/knowledge-base/templates",
+            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/templates` : "/w",
+            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/templates`,
           },
           {
             title: "Files",
-            url: "/knowledge-base/files",
-            isActive: pathname === "/knowledge-base/files",
+            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/files` : "/w",
+            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/files`,
           }
         ],
       },
       {
         title: "Work Items",
-        url: "/work-items",
+        url: `/w/${workspaceIdString}/work-items`,
         icon: FolderKanban,
-        isActive: pathname?.startsWith("/work-items") ?? false,
+        isActive: pathname?.startsWith(`/w/${workspaceIdString}/work-items`) ?? false,
         items: [
           {
             title: "Epics",
-            url: "/work-items/epics",
-            isActive: pathname === "/work-items/epics",
+            url: `/w/${workspaceIdString}/work-items/epics`,
+            isActive: pathname === `/w/${workspaceIdString}/work-items/epics`,
           },
           {
             title: "Features",
-            url: "/work-items/features",
-            isActive: pathname === "/work-items/features",
+            url: `/w/${workspaceIdString}/work-items/features`,
+            isActive: pathname === `/w/${workspaceIdString}/work-items/features`,
           },
           {
             title: "Stories",
-            url: "/work-items/stories",
-            isActive: pathname === "/work-items/stories",
+            url: `/w/${workspaceIdString}/work-items/stories`,
+            isActive: pathname === `/w/${workspaceIdString}/work-items/stories`,
           },
           {
             title: "Tasks",
-            url: "/work-items/tasks",
-            isActive: pathname === "/work-items/tasks",
+            url: `/w/${workspaceIdString}/work-items/tasks`,
+            isActive: pathname === `/w/${workspaceIdString}/work-items/tasks`,
           }
         ],
       },
       {
         title: "Settings",
-        url: "/settings",
+        url: `/w/${workspaceIdString}/settings`,
         icon: Settings2,
-        isActive: pathname?.startsWith("/settings") ?? false,
+        isActive: pathname?.startsWith(`/w/${workspaceIdString}/settings`) ?? false,
         items: [
           {
             title: "Workspace",
-            url: "/settings/workspace",
-            isActive: pathname === "/settings/workspace",
+            url: `/w/${workspaceIdString}/settings/workspace`,
+            isActive: pathname === `/w/${workspaceIdString}/settings/workspace`,
           },
           {
             title: "Templates",
-            url: "/settings/templates",
-            isActive: pathname === "/settings/templates",
+            url: `/w/${workspaceIdString}/settings/templates`,
+            isActive: pathname === `/w/${workspaceIdString}/settings/templates`,
           },
           {
             title: "Team",
-            url: "/settings/team",
-            isActive: pathname === "/settings/team",
+            url: `/w/${workspaceIdString}/settings/team`,
+            isActive: pathname === `/w/${workspaceIdString}/settings/team`,
           }
         ],
       },
       {
         title: "Trash",
-        url: workspace?._id ? `/trash?workspace=${workspace._id}` : "/trash",
+        url: workspaceIdString ? `/w/${workspaceIdString}/trash` : "/trash",
         icon: Trash2,
-        isActive: pathname === "/trash",
+        isActive: pathname === `/w/${workspaceIdString}/trash`,
       },
     ]
   }
@@ -154,19 +187,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu className="">
           <SidebarMenuItem className="">
             <SidebarMenuButton size="lg" asChild>
-              <a href="/workspace">
+              <Link href="/workspace">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {workspace?.name || "Workspace"}
+                    {currentWorkspace?.name || "Workspace"}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     Project Workspace
                   </span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

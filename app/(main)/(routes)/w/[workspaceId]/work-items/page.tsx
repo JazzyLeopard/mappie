@@ -22,7 +22,7 @@ import { AddWorkItemButton } from "@/components/work-item-tree/WorkItemNavigator
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Item } from "yjs";
-import LabelToInput from "../../_components/LabelToInput";
+import LabelToInput from "../../../../_components/LabelToInput";
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
 import { isValidDropTarget } from '@/components/work-items/WorkItemHierarchy';
 
@@ -47,19 +47,19 @@ export default function WorkItemsPage() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isCreatingWorkItem, setIsCreatingWorkItem] = useState(false)
   const [creationParentItem, setCreationParentItem] = useState<WorkItem | null>(null)
-  
+
   const createWorkItem = useMutation(api.workItems.createWorkItem);
   const updateWorkItem = useMutation(api.workItems.updateWorkItem);
   const deleteWorkItem = useMutation(api.workItems.deleteWorkItem);
   const updateWorkItemContent = useMutation(api.workItems.update);
-  
+
   const workItemId = searchParams?.get('id');
 
   const workItems = useQuery(
-    api.workItems.getWorkItems, 
+    api.workItems.getWorkItems,
     workspace ? { workspaceId: workspace._id } : "skip"
   );
-  
+
   const workItemDetails = useQuery(
     api.workItems.get,
     selectedItem ? { id: selectedItem.id as Id<"workItems"> } : "skip"
@@ -122,7 +122,7 @@ export default function WorkItemsPage() {
         description: workItem.description || "",
         status: "todo",
       })
-      
+
       // Select the newly created item to open the editor view
       setSelectedItem({
         id: newItem,
@@ -131,7 +131,7 @@ export default function WorkItemsPage() {
         order: 0,
         parentId: workItem.parentId
       })
-      
+
       toast.success("Work item created")
     } catch (error) {
       toast.error("Failed to create work item")
@@ -170,13 +170,13 @@ export default function WorkItemsPage() {
       await deleteWorkItem({
         id: item.id as Id<"workItems">,
       });
-      
+
       // If the deleted item was selected, clear selection first
       if (selectedItem?.id === item.id) {
         setSelectedItem(null)
         router.push('/work-items')
       }
-      
+
       toast.success("Moved work item to trash");
     } catch (error) {
       if (error instanceof Error) {
@@ -258,16 +258,16 @@ export default function WorkItemsPage() {
         description: workItem.description || "",
         status: "todo",
       });
-      
+
       setIsCreatingWorkItem(false);
-      
+
       // Create the new item object
       const newItem = {
         id: newItemId,
         name: workItem.title,
         type: workItem.type
       };
-      
+
       // Select the newly created item
       setSelectedItem({
         id: newItemId,
@@ -276,10 +276,10 @@ export default function WorkItemsPage() {
         order: 0,
         parentId: workItem.parentId
       });
-      
+
       // Update URL to show the new item
       router.push(`/work-items?id=${newItemId}`);
-      
+
       toast.success("Work item created");
     } catch (error) {
       console.error("Error creating work item:", error);
@@ -290,7 +290,7 @@ export default function WorkItemsPage() {
   // Add handler for editor changes
   const handleEditorChange = useCallback(async (value: string) => {
     if (!selectedItem?.id) return;
-    
+
     try {
       setContent(value); // Update local state first
       await updateWorkItemContent({
@@ -357,35 +357,35 @@ export default function WorkItemsPage() {
       if (!draggedItem) return;
 
       const newParentId = destination.droppableId === "root" ? undefined : destination.droppableId;
-      
+
       const BASE_ORDER = 1000;
       const MIN_GAP = 100;
-      
+
       // Get all items at the destination level, sorted by order
       const itemsInDestination = workItems
-        .filter(item => 
-          (newParentId ? item.parentId === newParentId : !item.parentId) && 
+        .filter(item =>
+          (newParentId ? item.parentId === newParentId : !item.parentId) &&
           item._id !== draggableId
         )
         .sort((a, b) => a.order - b.order);
 
       // Normalize orders if they're too close together or if there are duplicates
-      const needsNormalization = itemsInDestination.some((item, index) => 
+      const needsNormalization = itemsInDestination.some((item, index) =>
         index > 0 && (
-          item.order === itemsInDestination[index - 1].order || 
+          item.order === itemsInDestination[index - 1].order ||
           item.order - itemsInDestination[index - 1].order < MIN_GAP
         )
       );
 
       if (needsNormalization) {
         // Normalize all orders first
-        await Promise.all(itemsInDestination.map((item, index) => 
+        await Promise.all(itemsInDestination.map((item, index) =>
           updateWorkItem({
             id: item._id as Id<"workItems">,
             order: (index + 1) * BASE_ORDER
           })
         ));
-        
+
         // Refresh itemsInDestination with new orders
         itemsInDestination.forEach((item, index) => {
           item.order = (index + 1) * BASE_ORDER;
@@ -443,16 +443,16 @@ export default function WorkItemsPage() {
   if (workItemTree.length === 0 || !selectedItem) {
     return (
       <>
-        <motion.div 
+        <motion.div
           initial={{ width: "20%" }}
           animate={{ width: "100%" }}
-          transition={{ 
+          transition={{
             duration: 0.3,
             ease: [0.32, 0.72, 0, 1]
           }}
           className="px-3 pb-3 pt-2 h-full"
         >
-          <motion.div 
+          <motion.div
             layout
             className="h-full p-2 bg-slate-100 rounded-lg"
           >
@@ -463,8 +463,8 @@ export default function WorkItemsPage() {
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="root">
                   {(provided) => (
-                    <div 
-                      ref={provided.innerRef} 
+                    <div
+                      ref={provided.innerRef}
                       {...provided.droppableProps}
                       className="space-y-0.5"
                     >
@@ -508,27 +508,27 @@ export default function WorkItemsPage() {
 
   return (
     <>
-      <motion.div 
+      <motion.div
         initial={{ width: "100%" }}
         animate={{ width: "100%" }}
-        transition={{ 
+        transition={{
           duration: 0.3,
           ease: [0.32, 0.72, 0, 1]
         }}
         className="h-full w-full flex flex-col"
       >
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={20} minSize={15} className="px-3 pb-3 pt-2"> 
+          <ResizablePanel defaultSize={20} minSize={15} className="px-3 pb-3 pt-2">
             <motion.div layout className="h-full rounded-lg p-2 bg-slate-100">
               <div className="flex flex-row justify-between">
                 <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
                 <div className="flex flex-row gap-1">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     onClick={handleToggleExpand}
                     className="text-xs text-slate-200 h-8 py-2 px-1 hover:bg-white hover:text-slate-800"
                   >
-                    <PanelLeftOpen className="text-slate-500 hover:text-slate-800" /> 
+                    <PanelLeftOpen className="text-slate-500 hover:text-slate-800" />
                   </Button>
                 </div>
               </div>
@@ -536,8 +536,8 @@ export default function WorkItemsPage() {
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId="root">
                     {(provided) => (
-                      <div 
-                        ref={provided.innerRef} 
+                      <div
+                        ref={provided.innerRef}
                         {...provided.droppableProps}
                         className="space-y-0.5"
                       >
@@ -574,7 +574,7 @@ export default function WorkItemsPage() {
                 <LabelToInput
                   value={selectedItem?.name || ""}
                   setValue={(newName) => handleRenameWorkItem(selectedItem, newName)}
-                  onBlur={() => {}}
+                  onBlur={() => { }}
                   variant="workitem"
                 />
               </div>
@@ -582,7 +582,7 @@ export default function WorkItemsPage() {
                 {workItemDetails ? (
                   <LexicalEditor
                     key={selectedItem.id}
-                    onBlur={async () => {}}
+                    onBlur={async () => { }}
                     attribute="description"
                     documentDetails={{ description: content }}
                     setDocumentDetails={(value) => {
@@ -611,11 +611,11 @@ export default function WorkItemsPage() {
                 selectedItemId={selectedItem.id as Id<"workItems">}
                 selectedItemType={selectedItem.type}
                 selectedItemContent=""
-                onInsertMarkdown={() => {}}
+                onInsertMarkdown={() => { }}
                 workspaceId={null}
                 selectedEpic={null}
                 isCollapsed={false}
-                toggleCollapse={() => {}}
+                toggleCollapse={() => { }}
               />
             </div>
           </ResizablePanel>

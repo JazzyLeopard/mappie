@@ -159,7 +159,7 @@
     "typescript": "5.1.6",
     "usehooks-ts": "^3.1.0",
     "uuid": "^11.0.3",
-    "vercel": "^39.2.2",
+    "vercel": "^32.3.0",
     "vitest": "^2.1.5",
     "y-prosemirror": "^1.2.12",
     "y-protocols": "^1.0.6",

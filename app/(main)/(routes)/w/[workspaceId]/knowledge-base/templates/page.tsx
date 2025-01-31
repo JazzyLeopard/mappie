@@ -13,12 +13,12 @@ export default function TemplatesPage() {
   const tab = searchParams?.get('tab');
   const workspaces = useQuery(api.workspaces.getWorkspaces);
 
-  // Redirect to system tab if no tab is specified
-  useEffect(() => {
-    if (!tab) {
-      router.push('/knowledge-base/templates?tab=system');
-    }
-  }, [tab, router]);
+  // // Redirect to system tab if no tab is specified
+  // useEffect(() => {
+  //   if (!tab) {
+  //     router.push('/knowledge-base/templates?tab=system');
+  //   }
+  // }, [tab, router]);
 
   // Don't render anything until we have workspace data
   if (!workspaces) {

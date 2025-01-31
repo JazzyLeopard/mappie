@@ -50,7 +50,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
           try {
             // Fetch project details
-            const project = await convex.query(api.projects.getProjectById, { projectId: projectId as any });
             return NextResponse.next();
           } catch (error) {
             console.error('Error fetching project details:', error);

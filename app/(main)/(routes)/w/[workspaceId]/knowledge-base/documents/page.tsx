@@ -7,14 +7,31 @@ import { DocumentList } from "@/components/knowledge-base/document-list";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import { PageTransition } from "@/components/transitions/page-transition";
+import { useEffect, useState } from "react";
 
-export default function DocumentsPage() {
+interface DocumentsPageProps {
+  params: Promise<{
+    workspaceId: Id<"workspaces">
+  }>
+}
+
+export default function DocumentsPage({ params }: DocumentsPageProps) {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
-  
-  const workspaces = useQuery(api.workspaces.getWorkspaces);
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null)
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      console.log(params);
+
+      setWorkspaceId(resolvedParams.workspaceId);
+    };
+    resolveParams();
+  }, [params]);
+
   const documents = useQuery(api.documents.getDocuments, {
-    workspaceId: workspaces?.[0]._id as Id<"workspaces">
+    workspaceId: workspaceId as Id<"workspaces">
   });
 
   if (!isLoaded || !isSignedIn) return null;
@@ -22,13 +39,13 @@ export default function DocumentsPage() {
   return (
     <PageTransition>
       <div className="h-full flex-1 flex flex-col items-start gap-5 p-6 px-12">
-        <DocumentList 
+        <DocumentList
           documents={documents || []}
-          onSelect={(id) => router.push(`/knowledge-base/documents/${id}?workspace=${workspaces?.[0]?._id}`)}
+          onSelect={(id) => router.push(`/w/${workspaceId}/knowledge-base/documents/${id}`)}
           showHeader={true}
           title="Documents"
           variant="documents"
-          onNewDocument={() => router.push("/knowledge-base/new")}
+          onNewDocument={() => router.push(`/w/${workspaceId}/knowledge-base/new`)}
         />
       </div>
     </PageTransition>
