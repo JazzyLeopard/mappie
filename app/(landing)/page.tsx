@@ -3,9 +3,8 @@ export const metadata = {
   description: "Transform messy requirements into precise, dev-ready epics, features and stories.",
 };
 
-import Hero from "@/app/(landing)/beta/hero-home";
 import ContactSection from "@/app/(landing)/beta/contact";
-import FeatureShowcaseCarousel from "@/app/(landing)/beta/feature-showcase-carousel";
+import Hero from "@/app/(landing)/beta/hero-home";
 import { BentoDemo } from "@/components/ui/bento/index";
 
 export default function Home() {

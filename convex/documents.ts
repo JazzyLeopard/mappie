@@ -5,7 +5,7 @@ export const generateUploadUrl = mutation({
     handler: async (ctx) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) throw new Error("Not authenticated");
-        
+
         return await ctx.storage.generateUploadUrl();
     }
 });
@@ -48,13 +48,6 @@ export const saveUploadedFile = mutation({
             createdAt: BigInt(Date.now()),
             updatedAt: BigInt(Date.now())
         });
-    }
-});
-
-export const getFileUrl = query({
-    args: { storageId: v.id("_storage") },
-    handler: async (ctx, args) => {
-        return await ctx.storage.getUrl(args.storageId);
     }
 });
 
@@ -139,7 +132,7 @@ export const getDocuments = query({
         const documents = await ctx.db
             .query("knowledgeBase")
             .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-            .filter((q) => 
+            .filter((q) =>
                 q.or(
                     q.eq(q.field("isDeleted"), false),
                     q.eq(q.field("isDeleted"), undefined)
@@ -147,7 +140,7 @@ export const getDocuments = query({
             )
             .order("desc")
             .collect();
-        
+
         return documents;
     },
 });
@@ -158,9 +151,9 @@ export const getSummaryByProjectId = query({
     },
     handler: async (ctx, args) => {
         const documents = await ctx.db
-        .query("knowledgeBase")
-        .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
-        .collect();
+            .query("knowledgeBase")
+            .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+            .collect();
 
         return Promise.all(
             documents.map(async (document) => ({
@@ -249,7 +242,7 @@ export const searchDocuments = query({
         const documents = await ctx.db
             .query("knowledgeBase")
             .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-            .filter((q) => 
+            .filter((q) =>
                 q.or(
                     q.eq(q.field("title"), args.searchTerm),
                     q.eq(q.field("content"), args.searchTerm)

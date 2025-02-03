@@ -77,9 +77,9 @@ const BreadcrumbSeparator = ({
   className,
   ...props
 }: React.ComponentProps<"span">) => (
-  <span 
-    role="presentation" 
-    aria-hidden="true" 
+  <span
+    role="presentation"
+    aria-hidden="true"
     className={cn(
       "inline-flex items-center gap-1.5",
       className

@@ -15,9 +15,9 @@ export const getChatHistory = query({
     // Get the most recent chat history for this item
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_itemId_and_type", (q) => 
+      .withIndex("by_itemId_and_type", (q) =>
         q.eq("itemId", itemId)
-         .eq("itemType", itemType)
+          .eq("itemType", itemType)
       )
       .order("desc")
       .first();
@@ -64,9 +64,9 @@ export const storeChatHistory = mutation({
     // Get existing chat history
     const existing = await ctx.db
       .query("messages")
-      .withIndex("by_itemId_and_type", (q) => 
+      .withIndex("by_itemId_and_type", (q) =>
         q.eq("itemId", itemId)
-         .eq("itemType", itemType)
+          .eq("itemType", itemType)
       )
       .first();
 

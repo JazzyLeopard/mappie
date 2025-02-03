@@ -33,17 +33,17 @@ export default function Hero() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const formData = new FormData();
       Object.entries(formState).forEach(([key, value]) => {
         formData.append(key, value);
       });
-      
+
       const result = await sendBetaInterest(formData);
-      
+
       if (!result.success) throw new Error('Submission failed');
-      
+
       setSubmitStatus('success');
       setTimeout(() => setIsModalOpen(false), 2000);
     } catch (error) {
@@ -93,7 +93,7 @@ export default function Hero() {
           <DialogHeader>
             <DialogTitle>Request Beta Access</DialogTitle>
           </DialogHeader>
-          
+
           {submitStatus === 'success' ? (
             <div className="text-center py-6">
               <h3 className="text-lg font-semibold text-green-600">Thank you for your interest!</h3>
@@ -137,8 +137,8 @@ export default function Hero() {
                   rows={3}
                 />
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-pink-500 to-blue-300 text-white"
                 disabled={isSubmitting}
               >

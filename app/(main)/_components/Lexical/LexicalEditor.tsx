@@ -37,8 +37,8 @@ function LexicalEditor({
   itemId,
   showTableOfContents,
 }: LexicalEditorProps): JSX.Element {
-  const {settings: {isCollab, emptyEditor}} = useSettings();
-  
+  const { settings: { isCollab, emptyEditor } } = useSettings();
+
   const initialConfig = useMemo(() => ({
     namespace: 'MyEditor',
     theme: PlaygroundEditorTheme,
@@ -53,17 +53,17 @@ function LexicalEditor({
       <SharedHistoryContext>
         <TableContext>
           <SharedAutocompleteContext>
-            <MarkdownShortcutPlugin transformers={TRANSFORMERS}/>
-              <div className="editor-shell">
-                <Editor
-                  attribute={attribute}
-                  setDocumentDetails={setDocumentDetails}
-                  initialContent={documentDetails?.[attribute]}
-                  context={context}
-                  itemId={itemId}
-                  showTableOfContents={showTableOfContents}
-                />
-              </div>
+            <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+            <div className="editor-shell">
+              <Editor
+                attribute={attribute}
+                setDocumentDetails={setDocumentDetails}
+                initialContent={documentDetails?.[attribute]}
+                context={context}
+                itemId={itemId}
+                showTableOfContents={showTableOfContents}
+              />
+            </div>
           </SharedAutocompleteContext>
         </TableContext>
       </SharedHistoryContext>

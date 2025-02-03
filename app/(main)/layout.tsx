@@ -56,7 +56,7 @@ export default function MainLayout({
   const isDocumentPage = paths.includes('documents');
   const isWorkItemsPage = paths.includes('work-items');
   const documentId = isDocumentPage ? paths[paths.length - 1] : null;
-  
+
   // Get work item ID from URL if we're on work items page
   const workItemId = isWorkItemsPage ? new URLSearchParams(window.location.search).get('id') : null;
 
@@ -74,9 +74,9 @@ export default function MainLayout({
 
   // Only query if documentId is a valid Convex ID
   const document = useQuery(
-    api.documents.getDocumentById, 
-    documentId && documentId.startsWith("k") ? 
-      { documentId: documentId as Id<"knowledgeBase"> } : 
+    api.documents.getDocumentById,
+    documentId && documentId.startsWith("k") ?
+      { documentId: documentId as Id<"knowledgeBase"> } :
       "skip"
   );
 
@@ -89,15 +89,15 @@ export default function MainLayout({
     const breadcrumbs = paths.map((path, index) => {
       const url = `/${paths.slice(0, index + 1).join('/')}`;
       let label = path;
-      
+
       // Format the label
       label = path
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
-      
+
       const isLast = index === paths.length - 1;
-      
+
       return {
         label,
         url,
