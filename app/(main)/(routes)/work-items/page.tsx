@@ -2,7 +2,6 @@
 
 import { WorkItemNavigator } from "@/components/work-item-tree/WorkItemNavigator";
 import LexicalEditor from "@/app/(main)/_components/Lexical/LexicalEditor";
-import AIChat from "@/ai/ai-chat";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ResizableHandle,
@@ -450,7 +449,7 @@ export default function WorkItemsPage() {
             duration: 0.3,
             ease: [0.32, 0.72, 0, 1]
           }}
-          className="px-3 pb-3 pt-2 h-full"
+          className="px-2 pb-2 pt-2 h-full"
         >
           <motion.div 
             layout
@@ -518,7 +517,7 @@ export default function WorkItemsPage() {
         className="h-full w-full flex flex-col"
       >
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={20} minSize={15} className="px-3 pb-3 pt-2"> 
+          <ResizablePanel defaultSize={20} minSize={15} className="px-2 pb-2 pt-2"> 
             <motion.div layout className="h-full rounded-lg p-2 bg-slate-100">
               <div className="flex flex-row justify-between">
                 <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
@@ -568,7 +567,7 @@ export default function WorkItemsPage() {
 
           <ResizableHandle />
 
-          <ResizablePanel defaultSize={50} minSize={30} className="h-full pt-2 pb-3">
+          <ResizablePanel defaultSize={80} minSize={30} className="h-full pt-2 pb-2 mr-2">
             <div className="h-full rounded-lg border border-slate-100 scrollbar-thin max-h-full overflow-hidden">
               <div className="px-3 pb-1 pt-2">
                 <LabelToInput
@@ -600,23 +599,6 @@ export default function WorkItemsPage() {
                   </div>
                 )}
               </ScrollArea>
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle />
-
-          <ResizablePanel defaultSize={30} minSize={15} className="h-full">
-            <div className="h-full pb-3 px-3 pt-2 rounded-lg">
-              <AIChat
-                selectedItemId={selectedItem.id as Id<"workItems">}
-                selectedItemType={selectedItem.type}
-                selectedItemContent=""
-                onInsertMarkdown={() => {}}
-                workspaceId={null}
-                selectedEpic={null}
-                isCollapsed={false}
-                toggleCollapse={() => {}}
-              />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

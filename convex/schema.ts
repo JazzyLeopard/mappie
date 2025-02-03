@@ -79,7 +79,11 @@ export default defineSchema({
     .index("by_type", ["workspaceId", "type"])
     .index("by_createdAt", ["createdAt"])
     .index("by_order", ["order"])
-    .index("by_workspace_and_order", ["workspaceId", "order"]),
+    .index("by_workspace_and_order", ["workspaceId", "order"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["workspaceId"]
+    }),
 
   // Knowledge base (templates, documents)
   knowledgeBase: defineTable({
@@ -128,7 +132,11 @@ export default defineSchema({
     .index("by_workspace", ["workspaceId"])
     .index("by_type", ["workspaceId", "type"])
     .index("by_template", ["isSystemTemplate", "templateType"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_createdAt", ["createdAt"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["workspaceId"]
+    }),
 
   // AI chat messages
   messages: defineTable({

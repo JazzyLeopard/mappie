@@ -26,6 +26,15 @@ import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { motion } from "framer-motion";
+
+// Create a motion-enabled version of ResizablePanel
+const MotionResizablePanel = motion(ResizablePanel);
 
 export default function MainLayout({
   children,
@@ -35,6 +44,7 @@ export default function MainLayout({
   const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
   const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
+  const [previousSize, setPreviousSize] = useState(35);
   const initializeTemplates = useMutation(api.templates.initializeSystemTemplates);
 
   useEffect(() => {
@@ -69,6 +79,10 @@ export default function MainLayout({
       { documentId: documentId as Id<"knowledgeBase"> } : 
       "skip"
   );
+
+  // Get the workspace
+  const workspaces = useQuery(api.workspaces.getWorkspaces);
+  const workspace = workspaces?.[0];
 
   // Generate breadcrumb items based on pathname and work item hierarchy
   const getBreadcrumbs = () => {
@@ -122,6 +136,48 @@ export default function MainLayout({
     return breadcrumbs;
   };
 
+  // Modify the getAIChatProps to handle no selection case
+  const getAIChatProps = () => {
+    if (isWorkItemsPage) {
+      if (workItem) {
+        return {
+          selectedItemId: workItem._id,
+          selectedItemType: workItem.type,
+          selectedItemContent: workItem.description || "",
+          workspaceId: workspace?._id ?? null,
+          selectedEpic: null,
+        };
+      }
+      // Default props for work items page with no selection
+      return {
+        selectedItemId: "",
+        selectedItemType: "task", // or any default type you prefer
+        selectedItemContent: "",
+        workspaceId: workspace?._id ?? null,
+        selectedEpic: null,
+      };
+    }
+
+    // Default props for document pages
+    return {
+      selectedItemContent: "",
+      selectedItemType: "document",
+      selectedItemId: "",
+      workspaceId: workspace?._id ?? null,
+      selectedEpic: null,
+    };
+  };
+
+  // Modify showAIChat to be true for the entire work-items route
+  const showAIChat = pathname?.includes('/documents/') || pathname?.includes('/work-items');
+
+  // Set initial collapsed state based on route
+  useEffect(() => {
+    if (pathname?.includes('/work-items')) {
+      setIsAIChatCollapsed(!workItemId); // Collapse if no item selected
+    }
+  }, [pathname, workItemId]);
+
   if (!isLoaded) {
     return null;
   }
@@ -130,66 +186,86 @@ export default function MainLayout({
     return redirect("/");
   }
 
-  const showAIChat = pathname?.includes('/documents/') || pathname?.includes('/work-items/');
   const breadcrumbs = getBreadcrumbs();
 
   return (
     <DndProvider backend={HTML5Backend}>
       <SidebarProvider className="h-screen overflow-hidden">
         <AppSidebar className="bg-slate-200"/>
-        <SidebarInset className={cn(
-          showAIChat ? (isAIChatCollapsed ? "flex-[0.95]" : "flex-[0.7]") : "flex-1",
-          "transition-all duration-300 rounded-xl flex flex-col bg-white"
-        )}>
-          <header className="flex h-10 shrink-0 items-center gap-2">
-            <div className="flex items-center gap-2 px-4">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  {breadcrumbs.map((crumb, index) => (
-                    <BreadcrumbItem key={crumb.url}>
-                      {!crumb.isLast ? (
-                        <>
-                          <BreadcrumbLink asChild>
-                            <Link href={crumb.url}>{crumb.label}</Link>
-                          </BreadcrumbLink>
-                          <BreadcrumbSeparator />
-                        </>
-                      ) : (
-                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                      )}
-                    </BreadcrumbItem>
-                  ))}
-                </BreadcrumbList>
-              </Breadcrumb>
+        
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel 
+            defaultSize={75} 
+            minSize={50}
+            className={cn(
+              "transition-all duration-300 rounded-xl flex flex-col bg-white m-2"
+            )}
+          >
+            <header className="flex h-10 shrink-0 items-center gap-2">
+              <div className="flex items-center gap-2 px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    {breadcrumbs.map((crumb, index) => (
+                      <BreadcrumbItem key={crumb.url}>
+                        {!crumb.isLast ? (
+                          <>
+                            <BreadcrumbLink asChild>
+                              <Link href={crumb.url}>{crumb.label}</Link>
+                            </BreadcrumbLink>
+                            <BreadcrumbSeparator />
+                          </>
+                        ) : (
+                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        )}
+                      </BreadcrumbItem>
+                    ))}
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+            </header>
+            <div className="flex-1 overflow-auto relative min-h-0">
+              {children}
             </div>
-          </header>
-          <div className="flex-1 overflow-auto relative min-h-0">
-            {children}
-          </div>
-        </SidebarInset>
+          </ResizablePanel>
 
-        {showAIChat && (
-          <div className={cn(
-            "flex-[0.3] max-w-[600px] min-w-[400px] bg-slate-100 transition-all duration-300 h-full pr-2 pt-2 pb-2",
-            isAIChatCollapsed && "!flex-[0.05] !min-w-[80px] !max-w-[80px]"
-          )}>
-            <AIStoryCreator
-              onInsertMarkdown={async (markdown: string) => {
-                // Implement insert logic
-                console.log("Inserting markdown:", markdown);
-              }}
-              selectedItemContent=""
-              selectedItemType="document"
-              selectedItemId=""
-              selectedEpic={null}
-              isCollapsed={isAIChatCollapsed}
-              toggleCollapse={() => setIsAIChatCollapsed(!isAIChatCollapsed)}
-              workspaceId={null}
-            />
-          </div>
-        )}
+          {showAIChat && (
+            <>
+              <ResizableHandle />
+              <MotionResizablePanel 
+                defaultSize={isAIChatCollapsed ? 5 : previousSize} 
+                minSize={isAIChatCollapsed ? 5 : 20}
+                maxSize={isAIChatCollapsed ? 5 : 50}
+                onResize={(size) => {
+                  if (!isAIChatCollapsed) {
+                    setPreviousSize(size);
+                  }
+                }}
+                animate={{ 
+                  flex: isAIChatCollapsed ? "0 0 80px" : `0 0 ${previousSize}%`
+                }}
+                transition={{ 
+                  duration: 0.3,
+                  ease: [0.32, 0.72, 0, 1]
+                }}
+                className={cn(
+                  "bg-slate-100 m-2 ml-0",
+                  isAIChatCollapsed && "!w-[80px]"
+                )}
+              >
+                <AIStoryCreator
+                  onInsertMarkdown={async (markdown: string) => {
+                    console.log("Inserting markdown:", markdown);
+                  }}
+                  {...getAIChatProps()}
+                  isCollapsed={isAIChatCollapsed}
+                  toggleCollapse={() => setIsAIChatCollapsed(!isAIChatCollapsed)}
+                />
+              </MotionResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
       </SidebarProvider>
     </DndProvider>
   )

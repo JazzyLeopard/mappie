@@ -9,7 +9,7 @@ interface LabelToInputProps {
   setValue: (val: string) => void;
   onBlur: () => void;
   onEnter?: (value: string) => void;
-  variant?: "default" | "workitem";
+  variant?: "default" | "workitem" | "chat";
 }
 
 export default function LabelToInput({
@@ -47,7 +47,7 @@ export default function LabelToInput({
 
   const styles = {
     default: {
-      input: "border-gray-300 rounded-md px-3 py-2 text-2xl font-semibold",
+      input: "border-gray-300 rounded-md px-3 py-1 text-2xl font-semibold",
       label: "text-gray-700 group-hover:text-gray-900 text-2xl font-semibold mr-2",
       icon: "h-5 w-5 text-gray-300 group-hover:text-gray-600"
     },
@@ -55,6 +55,11 @@ export default function LabelToInput({
       input: "border-gray-300 rounded-md px-3 py-1 text-sm font-semibold",
       label: "text-gray-700 group-hover:text-gray-900 text-sm font-semibold mr-1",
       icon: "h-4 w-4 text-gray-300 group-hover:text-gray-600"
+    },
+    chat: {
+      input: "border-gray-300 rounded-md px-2 py-0.5 text-sm font-medium",
+      label: "text-gray-700 group-hover:text-gray-900 py-0.5 text-sm font-medium mr-1",
+      icon: "h-3.5 w-3.5 text-gray-300 group-hover:text-gray-600"
     }
   };
 
@@ -67,6 +72,7 @@ export default function LabelToInput({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className={styles[variant].input}
+          variant={variant}
           autoFocus
         />
       ) : (
