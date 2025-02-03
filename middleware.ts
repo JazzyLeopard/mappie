@@ -6,7 +6,7 @@ import { ConvexHttpClient } from 'convex/browser';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const isProtectedRoute = createRouteMatcher(["/projects(.*)", "/workspace(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/workspace(.*)"]);
 const restrictedRoutes = ['knowledge-base', 'work-items', 'settings'];
 const publicRoutes = ['/sign-in', '/sign-up', '/onboarding'];
 
@@ -45,14 +45,14 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
         // Check if the current route is restricted
         if (restrictedRoutes.some(route => pathname.includes(route))) {
-          // Extract project ID from the URL
-          const projectId = pathname.split('/')[2];
+          // Extract workspace ID from the URL
+          const workspaceId = pathname.split('/')[2];
 
           try {
-            // Fetch project details
+            // Fetch workspace details
             return NextResponse.next();
           } catch (error) {
-            console.error('Error fetching project details:', error);
+            console.error('Error fetching workspace details:', error);
             return NextResponse.redirect(new URL('/workspace', req.url));
           }
         }

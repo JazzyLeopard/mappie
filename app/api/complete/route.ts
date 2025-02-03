@@ -1,6 +1,5 @@
 import { generateText } from 'ai';
 import { anthropic } from "@ai-sdk/anthropic";
-import { useContextChecker } from '@/utils/useContextChecker';
 import { Id } from '@/convex/_generated/dataModel';
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
@@ -14,7 +13,7 @@ const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 export async function POST(request: NextRequest) {
   try {
     const { userId } = getAuth(request);
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Authentication failed' },
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const headersList = await headers();
     const authHeader = headersList.get("authorization");
-    
+
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Invalid authorization header' },
@@ -35,39 +34,15 @@ export async function POST(request: NextRequest) {
     const token = authHeader.split(' ')[1];
     convex.setAuth(token);
 
-    const { 
-      prompt, 
-      projectId, 
-      selectedText = '', 
-      selectedItemContent = '', 
-      selectedItemType = '', 
-      selectedEpic = null 
+    const {
+      prompt,
+      projectId,
+      selectedText = '',
+      selectedItemContent = '',
+      selectedItemType = '',
+      selectedEpic = null
     } = await request.json();
 
-    const convexProjectId = projectId as Id<"projects">;
-
-    const project = await convex.query(api.projects.getProjectById, {
-      projectId: convexProjectId
-    });
-
-    if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
-    }
-
-    if (project.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Unauthorized access to project' },
-        { status: 403 }
-      );
-    }
-
-    const context = await useContextChecker({ 
-      projectId: convexProjectId, 
-      token 
-    });
 
     if (!prompt || !projectId) {
       return NextResponse.json(
