@@ -13,7 +13,7 @@ import setupEnv from './setupEnv';
 import './index.css';
 
 import * as React from 'react';
-import {createRoot} from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 
 import LexicalEditor from './LexicalEditor';
 
@@ -36,7 +36,7 @@ const showErrorOverlay = (err: Event) => {
 };
 
 window.addEventListener('error', showErrorOverlay);
-window.addEventListener('unhandledrejection', ({reason}) =>
+window.addEventListener('unhandledrejection', ({ reason }) =>
   showErrorOverlay(reason),
 );
 
@@ -45,10 +45,11 @@ createRoot(document.getElementById('root') as HTMLElement).render(
     <LexicalEditor
       onBlur={() => Promise.resolve()}
       attribute="description"
-      projectDetails={{}}
-      setProjectDetails={() => Promise.resolve()}
       context="epics"
       isRichText={true}
+      documentDetails={null}
+      setDocumentDetails={() => null}
+      showTableOfContents={false}
       itemId=""
     />
   </React.StrictMode>,

@@ -11,7 +11,7 @@ export type MenuItemType = {
 }
 
 export type Project = {
-  _id: Id<"projects">; // Unique identifier for the project
+  _id: any; // Unique identifier for the project
   userId: string; // ID of the user who owns the project
   onboarding: number; // Onboarding step number
   title: string; // Title of the project
@@ -50,8 +50,8 @@ export type UseCase = {
 };
 
 export interface FunctionalRequirement {
-  _id: Id<"functionalRequirements">;
-  projectId: Id<"projects">;
+  _id: any;
+  projectId: any;
   title: string;
   description: string;
   createdAt: number;
@@ -81,9 +81,9 @@ export interface Entity {
   icon?: React.ElementType;
   subitems?: Entity[];
   userStories?: Array<{
-    _id: Id<"userStories">;
+    _id: any;
     description: string;
-    epicId: Id<"epics">;
+    epicId: any;
     createdAt: bigint;
     _creationTime: number;
     title?: string;

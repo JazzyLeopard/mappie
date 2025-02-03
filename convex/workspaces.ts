@@ -14,6 +14,58 @@ export const getWorkspaces = query({
   },
 });
 
+export const getWorkspaceById = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+
+    const workspace = await ctx.db
+      .query("workspaces")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("_id"), args.workspaceId),
+          q.eq(q.field("userId"), userId)
+        )
+      )
+      .first();
+
+    if (!workspace) {
+      throw new Error("Workspace not found or access denied");
+    }
+
+    return workspace;
+  },
+});
+
+export const getWorkspaceNameById = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx: any, { workspaceId }: any) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Not Authenticated");
+    }
+
+    if (!workspaceId) {
+      throw new Error("Project ID is required");
+    }
+
+    const workspace = await ctx.db.get(workspaceId);
+
+    if (!workspace) {
+      throw new Error("workspace not found");
+    }
+
+    return workspace.title;
+  },
+});
+
 export const updateWorkspace = mutation({
   args: {
     id: v.id("workspaces"),

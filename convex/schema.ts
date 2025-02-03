@@ -1,6 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { SYSTEM_TEMPLATES } from "./utils/systemTemplates";
 
 // Types
 export type WorkItemType = "epic" | "feature" | "story" | "task";
