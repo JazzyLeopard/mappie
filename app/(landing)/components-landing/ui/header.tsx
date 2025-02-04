@@ -33,7 +33,7 @@ export default function Header() {
                   className="flex items-center text-gray-700 transition hover:text-gray-900"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById('video-demos')?.scrollIntoView({ 
+                    document.getElementById('video-demos')?.scrollIntoView({
                       behavior: 'smooth',
                       block: 'start'
                     });
@@ -48,7 +48,7 @@ export default function Header() {
                   className="flex items-center text-gray-700 transition hover:text-gray-900"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById('contact')?.scrollIntoView({ 
+                    document.getElementById('contact')?.scrollIntoView({
                       behavior: 'smooth',
                       block: 'start'
                     });
@@ -64,16 +64,16 @@ export default function Header() {
           {isSignedIn ? (
             <div className="w-32 flex items-center justify-end gap-x-6">
               <Button variant="default" className="h-7 md:h-7 lg:h-9" asChild>
-                <Link href="/epics">Enter Mappie</Link>
+                <Link href="/w">Enter Mappie</Link>
               </Button>
               <UserButton afterSignOutUrl="/" />
             </div>
           ) : (
             <ul className="w-32 flex items-center justify-end gap-3">
               <li>
-                <SignInButton mode="modal" forceRedirectUrl={"/epics"}>
-                  <Button 
-                    variant="ghost" 
+                <SignInButton mode="modal" forceRedirectUrl={"/w"}>
+                  <Button
+                    variant="ghost"
                     className="bg-white text-gray-800 shadow hover:bg-gray-50"
                   >
                     Login
@@ -81,8 +81,8 @@ export default function Header() {
                 </SignInButton>
               </li>
               <li>
-                <SignUpButton mode="modal" forceRedirectUrl={"/epics"}>
-                  <Button 
+                <SignUpButton mode="modal" forceRedirectUrl={"/w"}>
+                  <Button
                     className="bg-gray-800 text-gray-200 shadow hover:bg-gray-900"
                   >
                     Register

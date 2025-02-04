@@ -18,7 +18,7 @@ import {
 export default function OnboardingPage() {
   const router = useRouter();
   const initializeWorkspace = useMutation(api.workspaces.initializeWorkspace);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -31,9 +31,9 @@ export default function OnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      await initializeWorkspace({
+      const workspaceId = await initializeWorkspace({
         name: formData.name,
         description: formData.description,
         projectType: formData.projectType as "software" | "hardware" | "service" | "other",
@@ -46,8 +46,8 @@ export default function OnboardingPage() {
           }
         }
       });
-      
-      router.push("/workspace");
+
+      router.push(`/w/${workspaceId}`);
     } catch (error) {
       console.error("Failed to create workspace:", error);
     }
@@ -56,7 +56,7 @@ export default function OnboardingPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Create Your Project Workspace</h1>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block mb-2">Project Name</label>
@@ -95,7 +95,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Add more form fields for industry, objectives, stakeholders, etc. */}
-        
+
         <Button type="submit" className="w-full">
           Create Workspace
         </Button>

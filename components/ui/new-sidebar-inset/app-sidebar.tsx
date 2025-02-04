@@ -40,8 +40,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     selectedWorkspace ? { workspaceId: selectedWorkspace as Id<"workspaces"> } : "skip"
   )
 
-  console.log(currentWorkspace);
-
   useEffect(() => {
     const updateSelectedProject = () => {
       const pathParts = pathname?.split('/') || [];
@@ -71,9 +69,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return [
       {
         title: "Overview",
-        url: "/w",
+        url: `/w/${workspaceIdString}`,
         icon: Home,
-        isActive: pathname === "/w",
+        isActive: pathname === `/w/${workspaceIdString}`,
       },
       {
         title: "Knowledge Base",
@@ -103,28 +101,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: `/w/${workspaceIdString}/work-items`,
         icon: FolderKanban,
         isActive: pathname?.startsWith(`/w/${workspaceIdString}/work-items`) ?? false,
-        items: [
-          {
-            title: "Epics",
-            url: `/w/${workspaceIdString}/work-items/epics`,
-            isActive: pathname === `/w/${workspaceIdString}/work-items/epics`,
-          },
-          {
-            title: "Features",
-            url: `/w/${workspaceIdString}/work-items/features`,
-            isActive: pathname === `/w/${workspaceIdString}/work-items/features`,
-          },
-          {
-            title: "Stories",
-            url: `/w/${workspaceIdString}/work-items/stories`,
-            isActive: pathname === `/w/${workspaceIdString}/work-items/stories`,
-          },
-          {
-            title: "Tasks",
-            url: `/w/${workspaceIdString}/work-items/tasks`,
-            isActive: pathname === `/w/${workspaceIdString}/work-items/tasks`,
-          }
-        ],
       },
       {
         title: "Settings",
@@ -187,7 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu className="">
           <SidebarMenuItem className="">
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/workspace">
+              <Link href="/w">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>

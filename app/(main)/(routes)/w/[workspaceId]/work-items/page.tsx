@@ -1,30 +1,27 @@
 "use client";
 
-import { WorkItemNavigator } from "@/components/work-item-tree/WorkItemNavigator";
-import LexicalEditor from "@/app/(main)/_components/Lexical/LexicalEditor";
 import AIChat from "@/ai/ai-chat";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import LexicalEditor from "@/app/(main)/_components/Lexical/LexicalEditor";
+import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
-import { PanelLeftOpen, PlusIcon, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQuery } from "convex/react";
-import { toast } from "react-hot-toast";
-import { api } from "@/convex/_generated/api";
-import { WorkItemCreationDialog } from "@/components/work-items/WorkItemCreationDialog"
-import { EmptyWorkItems } from "@/components/work-items/EmptyWorkItems"
-import { AddWorkItemButton } from "@/components/work-item-tree/WorkItemNavigator"
-import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Item } from "yjs";
+import { AddWorkItemButton, WorkItemNavigator } from "@/components/work-item-tree/WorkItemNavigator";
+import { EmptyWorkItems } from "@/components/work-items/EmptyWorkItems";
+import { WorkItemCreationDialog } from "@/components/work-items/WorkItemCreationDialog";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
+import { useMutation, useQuery } from "convex/react";
+import { motion } from "framer-motion";
+import { Loader2, PanelLeftOpen } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 import LabelToInput from "../../../../_components/LabelToInput";
-import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
-import { isValidDropTarget } from '@/components/work-items/WorkItemHierarchy';
 
 type WorkItemType = "epic" | "feature" | "story" | "task";
 
@@ -37,11 +34,17 @@ type WorkItem = {
   parentId?: string;
 };
 
-export default function WorkItemsPage() {
+interface WorkItemsPageProps {
+  params: Promise<{
+    workspaceId: Id<"workspaces">
+  }>
+}
+
+export default function WorkItemsPage({ params }: WorkItemsPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const workspaces = useQuery(api.workspaces.getWorkspaces);
-  const workspace = workspaces?.[0];
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null)
   const [selectedItem, setSelectedItem] = useState<WorkItem | null>(null);
   const [content, setContent] = useState("");
   const [isExpanded, setIsExpanded] = useState(true);
@@ -55,11 +58,18 @@ export default function WorkItemsPage() {
 
   const workItemId = searchParams?.get('id');
 
-  const workItems = useQuery(
-    api.workItems.getWorkItems,
-    workspace ? { workspaceId: workspace._id } : "skip"
-  );
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setWorkspaceId(resolvedParams.workspaceId);
+    };
+    resolveParams();
+  }, [params]);
 
+  // Check if workspaceId is valid before querying
+  const workItems = useQuery(api.workItems.getWorkItems, {
+    workspaceId: workspaceId as Id<"workspaces">, // Type assertion
+  });
   const workItemDetails = useQuery(
     api.workItems.get,
     selectedItem ? { id: selectedItem.id as Id<"workItems"> } : "skip"
@@ -109,14 +119,14 @@ export default function WorkItemsPage() {
   }, [workItemDetails, selectedItem, router])
 
   const handleStartCreation = async (workItem?: any) => {
-    if (!workspace?._id) {
+    if (!workspaceId) {
       toast.error("No workspace selected")
       return
     }
 
     try {
       const newItem = await createWorkItem({
-        workspaceId: workspace._id,
+        workspaceId: workspaceId,
         type: workItem.type,
         title: workItem.title,
         description: workItem.description || "",
@@ -222,6 +232,9 @@ export default function WorkItemsPage() {
     return buildWorkItemTree(workItems || []);
   }, [workItems, buildWorkItemTree]);
 
+  console.log("workItemTree", workItemTree);
+
+
   // Reset selected item when there are no items
   useEffect(() => {
     if (workItemTree.length === 0) {
@@ -235,14 +248,14 @@ export default function WorkItemsPage() {
   };
 
   const handleCreateWorkItem = async (workItem: any) => {
-    if (!workspace?._id) {
+    if (!workspaceId) {
       toast.error("No workspace selected");
       return;
     }
 
     try {
       console.log("Creating work item with full details:", {
-        workspaceId: workspace._id,
+        workspaceId: workspaceId,
         parentId: workItem.parentId,
         type: workItem.type,
         title: workItem.title,
@@ -251,7 +264,7 @@ export default function WorkItemsPage() {
       });
 
       const newItemId = await createWorkItem({
-        workspaceId: workspace._id,
+        workspaceId: workspaceId,
         parentId: workItem.parentId ? (workItem.parentId as Id<"workItems">) : undefined,
         type: workItem.type,
         title: workItem.title,
@@ -278,7 +291,7 @@ export default function WorkItemsPage() {
       });
 
       // Update URL to show the new item
-      router.push(`/work-items?id=${newItemId}`);
+      router.push(`/w/${workspaceId}/work-items?id=${newItemId}`);
 
       toast.success("Work item created");
     } catch (error) {
@@ -308,8 +321,9 @@ export default function WorkItemsPage() {
     // Reset content before setting new selected item
     setContent("");
     setSelectedItem(item);
-    router.push(`/work-items?id=${item.id}`);
-  }, [router]);
+    debugger
+    router.push(`/w/${workspaceId}/work-items?id=${item.id}`);
+  }, [router, workspaceId]);
 
   // Separate effect for content updates to avoid race conditions
   useEffect(() => {
@@ -422,7 +436,7 @@ export default function WorkItemsPage() {
   const urlSelectedItemId = searchParams?.get('id');
 
   // Early return with loading spinner if data isn't ready
-  if (isLoading || !workspace) {
+  if (isLoading || !workspaces) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />

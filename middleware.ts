@@ -6,7 +6,7 @@ import { ConvexHttpClient } from 'convex/browser';
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
-const isProtectedRoute = createRouteMatcher(["/workspace(.*)"]);
+const isProtectedRoute = createRouteMatcher(["/w(.*)"]);
 const restrictedRoutes = ['knowledge-base', 'work-items', 'settings'];
 const publicRoutes = ['/sign-in', '/sign-up', '/onboarding'];
 
@@ -53,7 +53,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
             return NextResponse.next();
           } catch (error) {
             console.error('Error fetching workspace details:', error);
-            return NextResponse.redirect(new URL('/workspace', req.url));
+            return NextResponse.redirect(new URL('/w', req.url));
           }
         }
       } catch (error) {

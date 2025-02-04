@@ -99,7 +99,7 @@ export const deleteDocument = mutation({
 
 export const saveDocument = mutation({
     args: {
-        projectId: v.id("projects"),
+        workspaceId: v.id("workspaces"),
         storageId: v.id("_storage"),
         summaryId: v.id("_storage"),
         size: v.number(),
@@ -113,7 +113,7 @@ export const saveDocument = mutation({
         }
 
         const document = await ctx.db.insert("documents", {
-            projectId: args.projectId,
+            workspaceId: args.workspaceId,
             storageId: args.storageId,
             summaryId: args.summaryId,
             filename: args.filename || "",
