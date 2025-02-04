@@ -44,18 +44,18 @@ interface TemplateGridProps {
 export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid' }: TemplateGridProps) {
   // 1. All useContext hooks
   const router = useRouter();
-  
+
   // 2. All useState hooks
   const [previewTemplate, setPreviewTemplate] = useState<any>(null);
   const [templateToDelete, setTemplateToDelete] = useState<any>(null);
-  
+
   // 3. All useQuery/useMutation hooks
-  const systemTemplates = useQuery(api.templates.getSystemTemplates, 
+  const systemTemplates = useQuery(api.templates.getSystemTemplates,
     templateSource === 'system' ? {} : { type }
   );
-  const workspaceTemplates = workspaceId ? useQuery(api.templates.getWorkspaceTemplates, { 
-    workspaceId, 
-    type: type as any 
+  const workspaceTemplates = workspaceId ? useQuery(api.templates.getWorkspaceTemplates, {
+    workspaceId,
+    type: type as any
   }) : null;
   const createDocument = useMutation(api.documents.createDocument);
   const createBlankTemplate = useMutation(api.templates.createBlankTemplate);
@@ -63,7 +63,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
 
   // 4. All useMemo/useCallback hooks
   const handleCreateTemplate = useCallback(() => {
-    router.push('/knowledge-base/templates/new-template');
+    router.push(`/w/${workspaceId}/knowledge-base/templates/new-template`);
   }, [router]);
 
   const handleDeleteTemplate = useCallback(async (templateId: Id<"templates">) => {
@@ -91,7 +91,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
         }
       });
 
-      router.push(`/knowledge-base/documents/${newDoc}`);
+      router.push(`/w/${workspaceId}/knowledge-base/documents/${newDoc}`);
     } catch (error) {
       console.error("Error creating document from template:", error);
     }
@@ -102,7 +102,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
       const newTemplate = await createBlankTemplate({
         workspaceId,
       });
-      router.push(`/knowledge-base/templates/${newTemplate}`);
+      router.push(`/w/${workspaceId}/knowledge-base/templates/${newTemplate}`);
     } catch (error) {
       console.error("Error creating blank template:", error);
     }
@@ -131,7 +131,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
                       variant="ghost"
                       size="sm"
                       className="w-full justify-start"
-                      onClick={() => router.push(`/knowledge-base/templates/${template._id}`)}
+                      onClick={() => router.push(`/w/${workspaceId}/knowledge-base/templates/${template._id}`)}
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
@@ -164,8 +164,8 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="h-9"
             onClick={() => handleUseTemplate(template)}
@@ -187,11 +187,10 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
 
   return (
     <>
-      <div className={`${
-        layout === 'grid' 
-          ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' 
-          : 'space-y-4'
-      }`}>
+      <div className={`${layout === 'grid'
+        ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+        : 'space-y-4'
+        }`}>
         {templateSource === 'system' ? (
           systemTemplates?.length ? (
             systemTemplates.map((template) => (
@@ -214,7 +213,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
                 <PatternCard className="h-full border-dashed">
                   <PatternCardBody className="flex flex-col items-center justify-center h-full">
                     <PlusCircle className="w-12 h-12 text-muted-foreground mb-4" />
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={handleCreateTemplate}
                     >

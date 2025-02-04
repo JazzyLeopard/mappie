@@ -1,24 +1,26 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, FileText, Sparkles, Plus } from 'lucide-react'
-import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
-import { useRouter } from "next/navigation";
-import { Id } from "@/convex/_generated/dataModel";
+import { Card, CardContent } from "@/components/ui/card"
+import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
+import { useMutation, useQuery } from "convex/react"
+import { ArrowRight } from 'lucide-react'
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-export function CreateNewDoc() {
+interface CreateNewDocProps {
+  workspaceId: Id<"workspaces">
+}
+
+export function CreateNewDoc({ workspaceId }: CreateNewDocProps) {
+
   const router = useRouter();
-  const workspaces = useQuery(api.workspaces.getWorkspaces);
   const createDocument = useMutation(api.documents.createDocument);
 
   const handleCreateBlankDocument = async () => {
-    if (!workspaces?.[0]?._id) return;
-    
+    if (!workspaceId) return;
+
     const documentId = await createDocument({
-      workspaceId: workspaces[0]._id,
+      workspaceId: workspaceId,
       title: "Untitled Document",
       content: "",
       type: "document",
@@ -29,7 +31,13 @@ export function CreateNewDoc() {
     }) as Id<"knowledgeBase">;
 
     // Redirect to the new document
-    router.push(`/knowledge-base/documents/${documentId}?workspace=${workspaces[0]._id}`);
+    router.push(`/w/${workspaceId}/knowledge-base/documents/${documentId}`);
+  };
+
+  const handleUseTemplate = () => {
+    if (!workspaceId) return;
+
+    router.push(`/w/${workspaceId}/knowledge-base/templates/#system`);
   };
 
   return (
@@ -47,7 +55,7 @@ export function CreateNewDoc() {
           {/* Cards Grid */}
           <div className="relative flex justify-center items-center gap-6 mt-8 px-4">
             {/* Use Template */}
-            <Link href="#" className="w-full max-w-[280px] transform -rotate-3 transition-transform hover:-translate-y-1">
+            <div onClick={handleUseTemplate} className="w-full max-w-[280px] transform -rotate-3 transition-transform hover:-translate-y-1">
               <Card className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-pink-100">
                   <div className="absolute inset-0 opacity-50 bg-[url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-zAvuVlWQNWI5aCxXe0bIcdzozL79vz.png')] bg-contain bg-center bg-no-repeat" />
@@ -60,7 +68,7 @@ export function CreateNewDoc() {
                   <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-gray-400" />
                 </CardContent>
               </Card>
-            </Link>
+            </div>
 
             {/* Generate with AI */}
             <Link href="#" className="w-full max-w-[320px] z-10 transform transition-transform hover:-translate-y-1">

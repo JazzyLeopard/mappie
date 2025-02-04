@@ -86,8 +86,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Templates",
-            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/templates` : "/w",
-            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/templates`,
+            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/templates/#system` : "/w",
+            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/templates/#system`,
           },
           {
             title: "Files",
