@@ -20,6 +20,7 @@ import type * as init from "../init.js";
 import type * as knowledgeBase from "../knowledgeBase.js";
 import type * as messages from "../messages.js";
 import type * as projects from "../projects.js";
+import type * as search from "../search.js";
 import type * as shareLink from "../shareLink.js";
 import type * as templates from "../templates.js";
 import type * as useCases from "../useCases.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   knowledgeBase: typeof knowledgeBase;
   messages: typeof messages;
   projects: typeof projects;
+  search: typeof search;
   shareLink: typeof shareLink;
   templates: typeof templates;
   useCases: typeof useCases;
