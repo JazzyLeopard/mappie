@@ -1,13 +1,8 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import LexicalEditor from "@/app/(main)/_components/Lexical/LexicalEditor";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ArrowLeft, EditIcon, Save, Sparkles, FileText } from "lucide-react";
 import LabelToInput from "@/app/(main)/_components/LabelToInput";
+import LexicalEditor from "@/app/(main)/_components/Lexical/LexicalEditor";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +12,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Toast } from "@/components/ui/toast";
+import { useMutation, useQuery } from "convex/react";
+import { ArrowLeft, FileText, Save, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export default function NewTemplatePage() {
+interface NewTemplatePageProps {
+  params: Promise<{
+    workspaceId: Id<"workspaces">
+  }>
+}
+
+export default function NewTemplatePage({ params }: NewTemplatePageProps) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -31,15 +36,23 @@ export default function NewTemplatePage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null)
   const createTemplate = useMutation(api.templates.createTemplate);
   const updateTemplate = useMutation(api.templates.updateTemplate);
   const workspaces = useQuery(api.workspaces.getWorkspaces);
-  const workspaceId = workspaces?.[0]?._id;
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setWorkspaceId(resolvedParams.workspaceId);
+    };
+    resolveParams();
+  }, [params]);
 
   const handleSave = async () => {
     if (!workspaceId || isLoading) return;
-    
+
     setIsLoading(true);
     try {
       const newTemplate = await createTemplate({
@@ -57,7 +70,7 @@ export default function NewTemplatePage() {
           status: "draft",
         }
       });
-      
+
       setSavedTemplateId(newTemplate);
       setShowDialog(true);
     } catch (error) {
@@ -96,10 +109,10 @@ export default function NewTemplatePage() {
         templateId: savedTemplateId as Id<"templates">,
         aiPrompt,
       });
-      
+
       toast.success("Template created successfully");
-      
-      router.push('/knowledge-base/templates?tab=personal');
+
+      router.push(`/w/${workspaceId}/knowledge-base/templates#personal`);
     } catch (error) {
       console.error("Error updating template with AI prompt:", error);
       toast.error("Error saving template");
@@ -111,7 +124,7 @@ export default function NewTemplatePage() {
       setDialogStep('ai');
     } else {
       toast.success("Template created successfully");
-      router.push('/knowledge-base/templates?tab=personal');
+      router.push(`/w/${workspaceId}/knowledge-base/templates#personal`);
     }
   };
 
@@ -124,17 +137,17 @@ export default function NewTemplatePage() {
       <div className="h-full flex-1 flex-col space-y-8 p-8 flex">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
-              onClick={() => router.push('/knowledge-base/templates')}
+              onClick={() => router.push(`/w/${workspaceId}/knowledge-base/templates#personal`)}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <LabelToInput
               value={title}
               setValue={setTitle}
-              onBlur={() => {}}
+              onBlur={() => { }}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -161,7 +174,7 @@ export default function NewTemplatePage() {
         <div className="rounded-lg border-t border-gray-200 p-6">
           <div className="h-full">
             <LexicalEditor
-              onBlur={async () => {}}
+              onBlur={async () => { }}
               attribute="content"
               documentDetails={{ content }}
               setDocumentDetails={(value) => setContent(value)}
