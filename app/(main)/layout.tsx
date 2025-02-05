@@ -20,7 +20,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import AIStoryCreator from "@/ai/ai-chat";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
@@ -43,33 +43,17 @@ interface MainLayoutProps {
   children: React.ReactNode
 }
 
-export default function MainLayout({ children, params }: MainLayoutProps) {
+function LayoutContent({ children, workspaceId, isMounted }: {
+  children: React.ReactNode;
+  workspaceId: Id<"workspaces"> | null;
+  isMounted: boolean;
+}) {
   const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
   const [previousSize, setPreviousSize] = useState(35);
   const initializeTemplates = useMutation(api.templates.initializeSystemTemplates);
-
-  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const resolveParams = async () => {
-      const resolvedParams = await params;
-      setWorkspaceId(resolvedParams.workspaceId);
-    };
-    resolveParams();
-  }, [params]);
-
-  useEffect(() => {
-    // Initialize system templates when the main layout mounts
-    initializeTemplates();
-  }, [initializeTemplates]);
 
   const paths = pathname?.split('/').filter(Boolean) || [];
   const isDocumentPage = paths.includes('documents');
@@ -288,4 +272,44 @@ export default function MainLayout({ children, params }: MainLayoutProps) {
       </SidebarProvider>
     </DndProvider>
   )
+}
+
+export default function MainLayout({ children, params }: MainLayoutProps) {
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const initializeTemplates = useMutation(api.templates.initializeSystemTemplates);
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setWorkspaceId(resolvedParams.workspaceId);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (isMounted) {
+      initializeTemplates();
+    }
+  }, [initializeTemplates, isMounted]);
+
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center">
+        <span className="text-muted-foreground">Loading...</span>
+      </div>
+    }>
+      <LayoutContent
+        workspaceId={workspaceId}
+        isMounted={isMounted}
+      >
+        {children}
+      </LayoutContent>
+    </Suspense>
+  );
 }

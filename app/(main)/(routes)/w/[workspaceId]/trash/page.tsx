@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useSearchParams } from "next/navigation";
@@ -16,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileIcon, Undo2 } from "lucide-react";
 
-export default function TrashPage() {
+function TrashContent() {
   const searchParams = useSearchParams();
   const rawWorkspaceId = searchParams?.get('workspace');
 
@@ -111,5 +112,18 @@ export default function TrashPage() {
         </Table>
       </div>
     </div>
+  );
+}
+
+// Main component wrapped with Suspense
+export default function TrashPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6">
+        <span className="text-muted-foreground">Loading...</span>
+      </div>
+    }>
+      <TrashContent />
+    </Suspense>
   );
 } 

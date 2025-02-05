@@ -2,13 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SharePopover } from "@/components/share-popover";
-import { cn } from '@/lib/utils';
-import LabelToInput from "../LabelToInput";
-import LexicalEditor from "../Lexical/LexicalEditor";
 import { Id } from '@/convex/_generated/dataModel';
 import { useState } from 'react';
-import AIStoryCreator from "@/ai/ai-chat";
+import LabelToInput from "../LabelToInput";
+import LexicalEditor from "../Lexical/LexicalEditor";
 
 interface DocumentLayoutProps {
     data: {
