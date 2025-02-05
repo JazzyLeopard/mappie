@@ -1,9 +1,9 @@
 "use client"
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -18,12 +18,23 @@ import { Button } from "@/components/ui/button";
 import { FileIcon, Undo2 } from "lucide-react";
 
 function TrashContent() {
-  const searchParams = useSearchParams();
-  const rawWorkspaceId = searchParams?.get('workspace');
+  const params = useParams();
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null);
+  const trashedItems = useQuery(
+    api.documents.getTrashItems,
+    workspaceId ? { workspaceId } : "skip"
+  );
+  const restoreDocument = useMutation(api.documents.restoreFromTrash);
 
-  console.log("Workspace ID from URL:", rawWorkspaceId); // Debug log
+  useEffect(() => {
+    // Get workspaceId from route params instead of search params
+    const rawWorkspaceId = params?.workspaceId;
+    if (rawWorkspaceId && typeof rawWorkspaceId === 'string') {
+      setWorkspaceId(rawWorkspaceId as Id<"workspaces">);
+    }
+  }, [params]);
 
-  if (!rawWorkspaceId) {
+  if (!workspaceId) {
     return (
       <div className="p-6">
         <span className="text-muted-foreground">
@@ -32,10 +43,6 @@ function TrashContent() {
       </div>
     );
   }
-
-  const workspaceId = rawWorkspaceId as Id<"workspaces">;
-  const trashedItems = useQuery(api.documents.getTrashItems, { workspaceId });
-  const restoreDocument = useMutation(api.documents.restoreFromTrash);
 
   const handleRestore = async (documentId: Id<"knowledgeBase">) => {
     try {
