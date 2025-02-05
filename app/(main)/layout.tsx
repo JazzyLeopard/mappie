@@ -3,7 +3,7 @@
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useUser } from "@clerk/clerk-react";
-import { redirect, usePathname } from "next/navigation";
+import { redirect, usePathname, useSearchParams } from "next/navigation";
 import { AppSidebar } from "@/components/ui/new-sidebar-inset/app-sidebar"
 import {
   Breadcrumb,
@@ -34,18 +34,37 @@ import {
 import { motion } from "framer-motion";
 
 // Create a motion-enabled version of ResizablePanel
-const MotionResizablePanel = motion(ResizablePanel);
+const MotionResizablePanel = motion.create(ResizablePanel);
 
-export default function MainLayout({
-  children,
-}: {
+interface MainLayoutProps {
+  params: Promise<{
+    workspaceId: Id<"workspaces">
+  }>
   children: React.ReactNode
-}) {
+}
+
+export default function MainLayout({ children, params }: MainLayoutProps) {
   const { isSignedIn, isLoaded } = useUser();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
   const [previousSize, setPreviousSize] = useState(35);
   const initializeTemplates = useMutation(api.templates.initializeSystemTemplates);
+
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setWorkspaceId(resolvedParams.workspaceId);
+    };
+    resolveParams();
+  }, [params]);
 
   useEffect(() => {
     // Initialize system templates when the main layout mounts
@@ -57,8 +76,8 @@ export default function MainLayout({
   const isWorkItemsPage = paths.includes('work-items');
   const documentId = isDocumentPage ? paths[paths.length - 1] : null;
 
-  // Get work item ID from URL if we're on work items page
-  const workItemId = isWorkItemsPage ? new URLSearchParams(window.location.search).get('id') : null;
+  // Get work item ID from URL using useSearchParams
+  const workItemId = isWorkItemsPage && isMounted ? searchParams?.get('id') : null;
 
   // Query for work item details if we have an ID
   const workItem = useQuery(
@@ -116,7 +135,7 @@ export default function MainLayout({
       if (parentWorkItem) {
         breadcrumbs.push({
           label: parentWorkItem.title,
-          url: `/work-items?id=${parentWorkItem._id}`,
+          url: `/w/${workspaceId}/work-items?id=${parentWorkItem._id}`,
           isLast: false
         });
       }
@@ -124,7 +143,7 @@ export default function MainLayout({
       // Add current work item
       breadcrumbs.push({
         label: workItem.title,
-        url: `/work-items?id=${workItem._id}`,
+        url: `/w/${workspaceId}/work-items?id=${parentWorkItem?._id}`,
         isLast: true
       });
     }
@@ -178,7 +197,7 @@ export default function MainLayout({
     }
   }, [pathname, workItemId]);
 
-  if (!isLoaded) {
+  if (!isMounted || !isLoaded) {
     return null;
   }
 
@@ -191,11 +210,11 @@ export default function MainLayout({
   return (
     <DndProvider backend={HTML5Backend}>
       <SidebarProvider className="h-screen overflow-hidden">
-        <AppSidebar className="bg-slate-200"/>
-        
+        <AppSidebar className="bg-slate-200" />
+
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel 
-            defaultSize={75} 
+          <ResizablePanel
+            defaultSize={75}
             minSize={50}
             className={cn(
               "transition-all duration-300 rounded-xl flex flex-col bg-white m-2"
@@ -233,8 +252,8 @@ export default function MainLayout({
           {showAIChat && (
             <>
               <ResizableHandle />
-              <MotionResizablePanel 
-                defaultSize={isAIChatCollapsed ? 5 : previousSize} 
+              <MotionResizablePanel
+                defaultSize={isAIChatCollapsed ? 5 : previousSize}
                 minSize={isAIChatCollapsed ? 5 : 20}
                 maxSize={isAIChatCollapsed ? 5 : 50}
                 onResize={(size) => {
@@ -242,10 +261,10 @@ export default function MainLayout({
                     setPreviousSize(size);
                   }
                 }}
-                animate={{ 
+                animate={{
                   flex: isAIChatCollapsed ? "0 0 80px" : `0 0 ${previousSize}%`
                 }}
-                transition={{ 
+                transition={{
                   duration: 0.3,
                   ease: [0.32, 0.72, 0, 1]
                 }}
