@@ -12,7 +12,7 @@ export const WORK_ITEM_HIERARCHY: Record<WorkItemType, WorkItemType[]> = {
 } as const;
 
 export const isValidParentChild = (parentType: WorkItemType | undefined, childType: WorkItemType): boolean => {
-  if (!parentType) return childType === "epic"; // Only epics can be root items
+  if (!parentType) return true; // Allow any type to be a root item
   return WORK_ITEM_HIERARCHY[childType].includes(parentType);
 };
 

@@ -177,13 +177,13 @@ export function MarkdownCard({ content, metadata, onInsert, onReplace, isLoading
           rehypePlugins={[rehypeRaw]}
           components={{
             h1: ({ node, ...props }) => (
-              <h1 className="text-3xl font-bold mb-6 border-b pb-2" {...props} />
+              <h1 className="text-2xl font-bold mb-6 border-b pb-2" {...props} />
             ),
             h2: ({ node, ...props }) => (
-              <h2 className="text-2xl font-bold mb-4 mt-6" {...props} />
+              <h2 className="text-xl font-bold mb-4 mt-6" {...props} />
             ),
             h3: ({ node, ...props }) => (
-              <h3 className="text-xl font-semibold mb-3 mt-4" {...props} />
+              <h3 className="text-lg font-semibold mb-3 mt-4" {...props} />
             ),
             h4: ({ node, ...props }) => (
               <h4 className="text-xs uppercase font-extrabold mb-2 mt-4" {...props} />

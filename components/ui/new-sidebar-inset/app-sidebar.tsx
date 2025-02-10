@@ -75,9 +75,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Knowledge Base",
-        url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base` : "/w",
+        url: "#",
         icon: BookOpen,
         isActive: pathname?.startsWith(`/w/${workspaceIdString}/knowledge-base`) ?? false,
+        defaultExpanded: true,
         items: [
           {
             title: "Documents",
@@ -91,8 +92,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: "Files",
-            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/files` : "/w",
-            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/files`,
+            url: workspaceIdString ? `/w/${workspaceIdString}/knowledge-base/uploads` : "/w",
+            isActive: pathname === `/w/${workspaceIdString}/knowledge-base/uploads`,
           }
         ],
       },

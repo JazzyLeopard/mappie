@@ -105,7 +105,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
                 ref={combinedRef}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                  "flex min-h-[80px] w-full rounded-md border border-input bg-slate-100 px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                  "flex min-h-[80px] max-h-[120px] w-full lg:max-w-80% rounded-md border border-input bg-slate-100 px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                   contextLabels?.length > 0 ? "pt-10" : "pt-3",
                   "pb-14",
                   className

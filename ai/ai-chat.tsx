@@ -3,7 +3,7 @@
 import { MarkdownCard } from '@/app/(main)/_components/layout/markdown-card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area-1";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from '@/convex/_generated/api';
@@ -13,7 +13,7 @@ import { Message } from 'ai';
 import { useChat } from 'ai/react';
 import { useMutation, useQuery, useAction } from 'convex/react';
 import { debounce } from 'lodash-es';
-import { AlertTriangle, Loader2, PanelLeftOpen, User, X, History, Trash2, Plus, Edit2, Search, FileText, Folder, ListTodo } from 'lucide-react';
+import { AlertTriangle, Loader2, PanelLeftOpen, User, X, History, Trash2, Plus, Edit2, Search, FileText, Folder, ListTodo, PanelRightOpen, Maximize2 } from 'lucide-react';
 import { FormEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -40,6 +40,9 @@ interface AIStoryCreatorProps {
   isCollapsed?: boolean;
   toggleCollapse?: () => void;
   workspaceId: Id<"workspaces"> | null;
+  onRetry?: (messageId: string) => void;
+  togglePopOut?: () => void;
+  isPopped?: boolean;
 }
 
 interface StreamStatus {
@@ -71,21 +74,6 @@ export function ChatMessage({
   isEditingPreviousMessage,
   editingMessageId 
 }: ChatMessageProps) {
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleEdit = () => {
-    setIsEditing(true);
-    chat.setInput(message.content);
-  };
-
-  const handleSubmit = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
-      e.preventDefault();
-      setIsEditing(false);
-      onRetry(message.id);
-    }
-  };
-
   const isBeingEdited = message.id === editingMessageId;
   const isAfterEditedMessage = editingMessageId ? message.id > editingMessageId : false;
 
@@ -98,29 +86,19 @@ export function ChatMessage({
         "flex-1",
         message.role === 'user' ? "ml-auto max-w-[80%]" : "mr-auto max-w-[80%]"
       )}>
-        {isEditing ? (
-          <Textarea
-            value={chat.input}
-            onChange={(e) => chat.setInput(e.target.value)}
-            onKeyDown={handleSubmit}
-            placeholder="Edit your message..."
-            rows={3}
-            className="resize-none w-full"
-            disabled={streamState.isGenerating}
-            variant='chat'
-          />
-        ) : (
-          <div className="relative group gap-1">
-            <div className={cn(
-              "px-3 py-2 rounded-lg bg-slate-100 text-slate-900 text-sm",
-              message.role === 'user' 
-                ? "bg-slate-100 text-slate-900 rounded-tr-none" 
-                : "bg-transparent rounded-tl-none"
-            )}>
-              {message.content}
-              {message.role === 'user' && (
-                <div className="mt-1 text-xs opacity-80">
-                  <span className="inline-flex items-center gap-1 rounded-md bg-primary-foreground/10 px-2 py-0.5 text-xs font-medium ring-1 ring-inset ring-primary-foreground/20">
+        <div className="relative group gap-1">
+          <div className={cn(
+            "px-3 py-2 rounded-lg text-sm",
+            message.role === 'user' 
+              ? "bg-slate-100 text-slate-900 rounded-tr-none" 
+              : "bg-transparent rounded-tl-none",
+            isBeingEdited && "ring-2 ring-primary"
+          )}>
+            {message.content}
+            {message.role === 'user' && (
+              <div className="my-1 text-xs">
+                <div className="inline-flex items-center gap-1 text-xs bg-slate-700 px-2 py-1 rounded-md">
+                  <span className="text-slate-700">
                     {(() => {
                       if (selectedItemType === 'epic') {
                         return selectedEpic?.name || 'Untitled Feature';
@@ -133,31 +111,24 @@ export function ChatMessage({
                       }
                       return 'Untitled';
                     })()}
-                    <button
-                      onClick={() => {
-                        setSelectedItemId(null);
-                        setSelectedItemTitle(null);
-                        setSelectedItemType(null);
-                      }}
-                      className="ml-1 hover:text-primary-foreground/80"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
                   </span>
                 </div>
-              )}
-            </div>
-            
-            {isEditable && !isEditingPreviousMessage && (
-              <button
-                onClick={handleEdit}
-                className="opacity-0 group-hover:opacity-100 absolute right-2 top-2 p-1 hover:bg-accent/10 rounded-md transition-opacity"
-              >
-                <Edit2 className="h-4 w-4 text-primary-foreground" />
-              </button>
+              </div>
             )}
           </div>
-        )}
+          
+          {isEditable && !isEditingPreviousMessage && (
+            <button
+              onClick={() => {
+                chat.setInput(message.content);
+                chat.setEditingMessageId(message.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 absolute right-2 top-2 p-1 rounded-md transition-opacity"
+            >
+              <Edit2 className="h-4 w-4 text-slate-600" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -394,7 +365,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
   selectedItemTitle,
   isCollapsed = false,
   toggleCollapse,
-  workspaceId
+  workspaceId,
+  onRetry,
+  togglePopOut,
+  isPopped = false
 }: AIStoryCreatorProps) {
   const [parsedContent, setParsedContent] = useState<any>(null);
   const [streamState, setStreamState] = useState({
@@ -417,6 +391,9 @@ const AIStoryCreator = memo(function AIStoryCreator({
 
   // Add a ref to track initialization
   const isInitialized = useRef(false);
+
+  // Add state for tracking editing message
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
 
   // Modify the chat configuration
   const chat = useChat({
@@ -472,7 +449,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
           error: error.message
         }
       }));
-    }, [])
+    }, []),
+    onFinish: () => {
+      setEditingMessageId(null);
+    }
   });
 
   // Reset initialization when itemId changes
@@ -578,44 +558,39 @@ const AIStoryCreator = memo(function AIStoryCreator({
     }
   }, [workspaceId, selectedItemType, selectedItemContent]);
 
-  const handleSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Add this near the top of the AIStoryCreator component
+  const handleReplace = useCallback(async (content: string): Promise<void> => {
+    return Promise.resolve(onInsertMarkdown(content));
+  }, [onInsertMarkdown]);
 
-    // Add validation
-    if (!chat.input?.trim()) {
-      return;
+  // Modify handleSubmit to handle both new messages and edits
+  const handleSubmit = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
+      e.preventDefault();
+      
+      if (editingMessageId) {
+        // Find the index of the edited message
+        const editedMessageIndex = chat.messages.findIndex(msg => msg.id === editingMessageId);
+        
+        // Keep only messages before the edited message
+        const newMessages = chat.messages.slice(0, editedMessageIndex);
+        
+        chat.setMessages(newMessages);
+        setEditingMessageId(null);
+        
+        // Submit the edited content as a new message
+        chat.handleSubmit(e);
+      } else {
+        chat.handleSubmit(e);  // Normal submission
+      }
     }
+  };
 
-    if (streamState.isGenerating || streamState.isWaitingForTool) return;
-
-    try {
-      setStreamState(prev => ({
-        ...prev,
-        isGenerating: true,
-        hasToolError: false,
-        isWaitingForTool: false
-      }));
-
-      await chat.handleSubmit(e);
-    } catch (error) {
-      // Add error logging
-      console.error('Chat submission error:', {
-        error,
-        input: chat.input,
-        state: streamState
-      });
-      setStreamState(prev => ({
-        ...prev,
-        hasToolError: true
-      }));
-    } finally {
-      setStreamState(prev => ({
-        ...prev,
-        isGenerating: false,
-        isWaitingForTool: false
-      }));
-    }
-  }, [chat, streamState.isGenerating, streamState.isWaitingForTool]);
+  // Handle canceling edit
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    chat.setInput('');
+  };
 
   // Add new state for chat management
   const [chats, setChats] = useState<Chat[]>([]);
@@ -708,24 +683,6 @@ const AIStoryCreator = memo(function AIStoryCreator({
       setActiveChat(newChat);
     }
   }, [chat.input, activeChat, selectedItemId, selectedItemType, selectedItemTitle]);
-
-  // In AIStoryCreator, track which message is being edited
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-
-  const handleStartEdit = (messageId: string, content: string) => {
-    setEditingMessageId(messageId);
-    chat.setInput(content);
-  };
-
-  const handleRetryFromMessage = useCallback((messageId: string) => {
-    const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
-    if (messageIndex === -1) return;
-    
-    const truncatedMessages = chat.messages.slice(0, messageIndex);
-    chat.setMessages(truncatedMessages);
-    setEditingMessageId(null);
-    handleSubmit(new Event('submit') as any);
-  }, [chat, handleSubmit]);
 
   // Initialize the search query
   const searchResults = useQuery(api.search.searchItems, 
@@ -839,7 +796,10 @@ const AIStoryCreator = memo(function AIStoryCreator({
   }, [showMentionSearch]);
 
   return (
-    <Card className="p-0 bg-white rounded-xl h-full flex flex-col w-full overflow-hidden">
+    <Card className={cn(
+      "p-0 bg-white rounded-xl h-full flex flex-col overflow-hidden",
+      isCollapsed ? "w-[80px]" : "w-full"
+    )}>
       <div className="flex h-full flex-col">
         <div className={cn("p-4", isCollapsed ? "flex flex-col items-center gap-4" : "flex items-center justify-between")}>
           {isCollapsed ? (
@@ -857,7 +817,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                     activeChat={activeChat}
                     onSelectChat={(chat) => {
                       setActiveChat(chat);
-                      toggleCollapse();
+                      toggleCollapse?.();
                     }}
                     onCreateChat={handleCreateChat}
                     onDeleteChat={handleDeleteChat}
@@ -869,18 +829,20 @@ const AIStoryCreator = memo(function AIStoryCreator({
               <button 
                 onClick={() => {
                   handleCreateChat();
-                  toggleCollapse();
+                  toggleCollapse?.();
                 }}
                 className="p-1 hover:bg-accent rounded-md"
               >
                 <Plus className="h-5 w-5 text-muted-foreground" />
               </button>
-              <button 
-                onClick={toggleCollapse}
-                className="p-1 hover:bg-accent rounded-md"
-              >
-                <PanelLeftOpen className="h-5 w-5 text-muted-foreground" />
-              </button>
+              {!isPopped && (
+                <button 
+                  onClick={togglePopOut}
+                  className="p-1 hover:bg-accent rounded-md"
+                >
+                  <Maximize2 className="h-5 w-5 text-muted-foreground" />
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -923,12 +885,22 @@ const AIStoryCreator = memo(function AIStoryCreator({
                   </div>
                 )}
               </div>
-              <button 
-                onClick={toggleCollapse} 
-                className="p-1 hover:bg-accent rounded-md"
-              >
-                <PanelLeftOpen className="h-5 w-5 text-muted-foreground" />
-              </button>
+              <div className="flex items-center gap-2">
+                {!isPopped && (
+                  <button 
+                    onClick={togglePopOut}
+                    className="p-1 hover:bg-accent rounded-md"
+                  >
+                    <Maximize2 className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                )}
+                <button 
+                  onClick={toggleCollapse} 
+                  className="p-1 hover:bg-accent rounded-md"
+                >
+                  <PanelLeftOpen className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </div>
             </>
           )}
         </div>
@@ -941,7 +913,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
               className="flex-1 overflow-y-auto w-full"
             >
               {activeChat && (
-                <div className="space-y-6 p-4 pb-8 w-full">
+                <div className="space-y-6 p-4 pb-8 w-full max-w-3xl mx-auto">
                   {chat.messages.map((message) => (
                     <div key={message.id} className={cn(
                       "flex gap-2 relative group",
@@ -957,7 +929,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                         {editingMessageId === message.id ? (
                           <form onSubmit={(e) => {
                             e.preventDefault();
-                            handleRetryFromMessage(message.id);
+                            handleSubmit(e as any);
                           }}>
                             <div className="relative">
                               <Textarea
@@ -967,7 +939,7 @@ const AIStoryCreator = memo(function AIStoryCreator({
                                 onKeyDown={handleKeyDown}
                                 placeholder="Edit your message..."
                                 rows={3}
-                                className="resize-none w-full pr-8"
+                                className="resize-none w-full"
                                 disabled={streamState.isGenerating}
                                 contextLabels={[
                                   {
@@ -1007,11 +979,14 @@ const AIStoryCreator = memo(function AIStoryCreator({
                                 streamState={streamState}
                               />
                               <button
-                                type="button"
-                                onClick={() => setEditingMessageId(null)}
-                                className="absolute right-2 top-2 p-1 hover:bg-accent/10 rounded-md text-muted-foreground"
+                                onClick={() => {
+                                  console.log('Current chat.input:', chat.input);
+                                  setEditingMessageId(null);
+                                  chat.setInput('');
+                                }}
+                                className="absolute right-2 top-2 p-1 hover:bg-accent/10 rounded-md"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-4 w-4 text-muted-foreground" />
                               </button>
                             </div>
                           </form>
@@ -1024,41 +999,95 @@ const AIStoryCreator = memo(function AIStoryCreator({
                                 : "bg-transparent rounded-tl-none px-1"
                             )}>
                               {message.role === 'user' && (
-                                <div className="my-1 text-xs opacity-80">
-                                  <span className="inline-flex items-center rounded-sm bg-slate-300 px-2 py-0.5 text-xs">
-                                    {(() => {
-                                      if (selectedItemType === 'epic') {
-                                        return selectedEpic?.name || 'Untitled Feature';
-                                      } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
-                                        return selectedUserStory?.title || 'Untitled';
-                                      } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
-                                        return selectedItemTitle;
-                                      } else if (selectedItemType === 'Project') {
-                                        return 'Overview';
-                                      }
-                                      return 'Untitled';
-                                    })()}
-                                    <button
-                                      onClick={() => {
-                                        setSelectedItemId(null);
-                                        setSelectedItemTitle(null);
-                                        setSelectedItemType(null);
-                                      }}
-                                      className="ml-1 hover:text-primary-foreground/80"
-                                    >
-                                    </button>
-                                  </span>
+                                <div className="my-1 text-xs">
+                                  <div className="inline-flex items-center gap-1 text-xs bg-slate-200 px-2 py-1 rounded-md">
+                                    <span className="text-slate-700">
+                                      {(() => {
+                                        if (selectedItemType === 'epic') {
+                                          return selectedEpic?.name || 'Untitled Feature';
+                                        } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
+                                          return selectedUserStory?.title || 'Untitled';
+                                        } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
+                                          return selectedItemTitle;
+                                        } else if (selectedItemType === 'Project') {
+                                          return 'Overview';
+                                        }
+                                        return 'Untitled';
+                                      })()}
+                                    </span>
+                                  </div>
                                 </div>
                               )}
-                              {message.content}
+                              <ReactMarkdown
+                                className="text-sm leading-relaxed break-words overflow-hidden max-w-full"
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                                components={{
+                                  h1: ({ node, ...props }) => (
+                                    <h1 className="text-2xl font-bold mb-6 border-b pb-2" {...props} />
+                                  ),
+                                  h2: ({ node, ...props }) => (
+                                    <h2 className="text-xl font-bold mb-4 mt-6" {...props} />
+                                  ),
+                                  h3: ({ node, ...props }) => (
+                                    <h3 className="text-lg font-semibold mb-3 mt-4" {...props} />
+                                  ),
+                                  h4: ({ node, ...props }) => (
+                                    <h4 className="text-base font-medium mb-2 mt-4" {...props} />
+                                  ),
+                                  p: ({ node, ...props }) => (
+                                    <p className="text-gray-600 leading-relaxed" {...props} />
+                                  ),
+                                  ul: ({ node, ...props }) => (
+                                    <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+                                  ),
+                                  ol: ({ node, ...props }) => (
+                                    <ol className="list-decimal pl-6 mb-4 space-y-2 text-gray-600" {...props} />
+                                  ),
+                                  li: ({ node, ...props }) => (
+                                    <li className="leading-relaxed" {...props} />
+                                  ),
+                                  code: ({ node, ...props }) => (
+                                    <code className="bg-gray-100 text-pink-500 px-1 py-0.5 rounded text-sm" {...props} />
+                                  ),
+                                  blockquote: ({ node, ...props }) => (
+                                    <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600 mb-4" {...props} />
+                                  ),
+                                  pre: ({ node, ...props }) => (
+                                    <pre className="overflow-x-auto max-w-full p-4 bg-gray-100 rounded-lg mb-4" {...props} />
+                                  ),
+                                  table: ({ node, ...props }) => (
+                                    <div className="overflow-x-auto max-w-full">
+                                      <table className="min-w-full" {...props} />
+                                    </div>
+                                  ),
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+
+                              {message.toolInvocations?.map((tool, index) => (
+                                <div key={`${message.id}-tool-${index}`} className="w-full first:mt-0 overflow-hidden">
+                                  <MemoizedMarkdownCard
+                                    content={tool.state === 'result' ? tool.result?.content : undefined}
+                                    metadata={tool.state === 'result' ? tool.result?.metadata : undefined}
+                                    onInsert={onInsertMarkdown}
+                                    isLoading={tool.state === 'call'}
+                                    onReplace={handleReplace}
+                                  />
+                                </div>
+                              ))}
                             </div>
                             
                             {message.role === 'user' && !editingMessageId && (
                               <button
-                                onClick={() => handleStartEdit(message.id, message.content)}
-                                className="opacity-0 group-hover:opacity-100 absolute right-2 top-2 p-1 hover:bg-accent/10 rounded-md transition-opacity"
+                                onClick={() => {
+                                  chat.setInput(message.content);
+                                  setEditingMessageId(message.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 absolute right-2 top-2 p-1 rounded-md transition-opacity"
                               >
-                                <Edit2 className="h-4 w-4 text-muted-foreground" />
+                                <Edit2 className="h-4 w-4 text-slate-600" />
                               </button>
                             )}
                           </div>
@@ -1084,84 +1113,69 @@ const AIStoryCreator = memo(function AIStoryCreator({
               )}
             </ScrollArea>
 
-            <div className="space-y-2 p-2">
-              {!editingMessageId && (
-                <div className="sticky bottom-0 p-2 bg-background">
-                  <div className="relative">
-                    <Textarea
-                      ref={textareaRef}
-                      value={chat.input}
-                      onChange={handleInputChange}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Ask me to improve or generate content..."
-                      rows={3}
-                      className="resize-none w-full"
-                      disabled={streamState.isGenerating}
-                      contextLabels={[
-                        {
-                          name: (() => {
-                            if (selectedItemType === 'epic') {
-                              return selectedEpic?.name || 'Untitled Feature';
-                            } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
-                              return selectedUserStory?.title || 'Untitled';
-                            } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
-                              return selectedItemTitle;
-                            } else if (selectedItemType === 'Project') {
-                              return 'Overview';
-                            }
-                            return 'Untitled';
-                          })(),
-                          onRemove: () => {
-                            setSelectedItemId(null);
-                            setSelectedItemTitle(null);
-                            setSelectedItemType(null);
-                          }
-                        }
-                      ]}
-                      workspaceId={workspaceId ?? undefined}
-                      onSelectItem={(item) => {
-                        setSelectedItemId(item.id);
-                        setSelectedItemType(item.type);
-                        setSelectedItemTitle(item.title);
-                      }}
-                      selectedItems={selectedItemId ? [{
-                        id: selectedItemId,
-                        type: selectedItemType as any,
-                        title: selectedItemTitle || 'Untitled',
-                      }] : []}
-                      variant='chat'
-                      onMentionSelect={handleMentionSelect}
-                      streamState={streamState}
-                    />
-                    {showMentionSearch && workspaceId && (
-                      <div 
-                        style={{
-                          position: 'absolute',
-                          top: mentionSearchPosition.top,
-                          left: mentionSearchPosition.left,
-                          zIndex: 1000
-                        }}
-                      >
-                        <SearchPopoverContent
-                          workspaceId={workspaceId}
-                          onSelectItem={(item) => {
-                            handleMentionSelect(item);
-                            setShowMentionSearch(false);
-                            setMentionQuery('');
-                            setMentionStartIndex(null);
-                          }}
-                          selectedItems={selectedItemId ? [{
-                            id: selectedItemId,
-                            type: selectedItemType as any,
-                            title: selectedItemTitle || 'Untitled',
-                          }] : []}
-                          initialQuery={mentionQuery}
-                        />
-                      </div>
+            <div className="space-y-2 p-2 pt-0">
+              <div className="sticky bottom-0 p-2 pt-0 bg-background">
+                <div className="relative">
+                  <Textarea
+                    ref={textareaRef}
+                    value={chat.input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={editingMessageId 
+                      ? "Edit your message..." 
+                      : "Ask me to improve or generate content..."}
+                    rows={3}
+                    className={cn(
+                      "resize-none w-full",
+                      editingMessageId && "ring-2 ring-primary"
                     )}
-                  </div>
+                    disabled={streamState.isGenerating}
+                    contextLabels={[
+                      {
+                        name: (() => {
+                          if (selectedItemType === 'epic') {
+                            return selectedEpic?.name || 'Untitled Feature';
+                          } else if (selectedItemType === 'userStory' && selectedUserStory?.title) {
+                            return selectedUserStory?.title || 'Untitled';
+                          } else if (selectedItemType === 'useCase' || selectedItemType === 'functionalRequirement') {
+                            return selectedItemTitle;
+                          } else if (selectedItemType === 'Project') {
+                            return 'Overview';
+                          }
+                          return 'Untitled';
+                        })(),
+                        onRemove: () => {
+                          setSelectedItemId(null);
+                          setSelectedItemTitle(null);
+                          setSelectedItemType(null);
+                        }
+                      }
+                    ]}
+                    workspaceId={workspaceId ?? undefined}
+                    onSelectItem={(item) => {
+                      setSelectedItemId(item.id);
+                      setSelectedItemType(item.type);
+                      setSelectedItemTitle(item.title);
+                    }}
+                    selectedItems={selectedItemId ? [{
+                      id: selectedItemId,
+                      type: selectedItemType as any,
+                      title: selectedItemTitle || 'Untitled',
+                    }] : []}
+                    variant='chat'
+                    onMentionSelect={handleMentionSelect}
+                    streamState={streamState}
+                  />
+                  {editingMessageId && (
+                    <button
+                      onClick={handleCancelEdit}
+                      className="absolute right-2 top-2 p-1 hover:bg-accent/10 rounded-md"
+                    >
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
               <div className="flex items-center justify-start gap-2 text-xs text-muted-foreground mt-2">
                 <AlertTriangle className="h-3 w-3" />
                 AI responses may be inaccurate

@@ -7,7 +7,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area-1";
 import { AddWorkItemButton, WorkItemNavigator } from "@/components/work-item-tree/WorkItemNavigator";
 import { EmptyWorkItems } from "@/components/work-items/EmptyWorkItems";
 import { WorkItemCreationDialog } from "@/components/work-items/WorkItemCreationDialog";
@@ -25,12 +25,12 @@ import LabelToInput from "../../../../_components/LabelToInput";
 type WorkItemType = "epic" | "feature" | "story" | "task";
 
 type WorkItem = {
-  id: string;
+  id: Id<"workItems">;
   name: string;
   type: WorkItemType;
-  items?: WorkItem[];
+  items: WorkItem[];
   order: number;
-  parentId?: string;
+  parentId?: Id<"workItems">;
 };
 
 interface WorkItemsPageProps {
@@ -96,6 +96,7 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
           id: item._id,
           name: item.title,
           type: item.type,
+          items: [],
           order: item.order,
           parentId: item.parentId
         });
@@ -110,13 +111,17 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     }
   }, [workspaces, workItems]);
 
-  // Add this effect to clear selection if item is deleted
+  // Update the effect that handles deletion detection
   useEffect(() => {
     if (selectedItem && workItemDetails === null) {
-      setSelectedItem(null)
-      router.push('/work-items')
+      setSelectedItem(null);
+      
+      // If we have the workspace ID, use it in the navigation
+      if (workspaceId) {
+        router.push(`/w/${workspaceId}/work-items`);
+      }
     }
-  }, [workItemDetails, selectedItem, router])
+  }, [workItemDetails, selectedItem, router, workspaceId]);
 
   const handleStartCreation = async (workItem?: any) => {
     if (!workspaceId) {
@@ -138,6 +143,7 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
         id: newItem,
         name: workItem.title,
         type: workItem.type,
+        items: [],
         order: 0,
         parentId: workItem.parentId
       })
@@ -175,16 +181,48 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     }
   }, [updateWorkItem]);
 
+  const handleUpdateParent = useCallback(async (itemId: Id<"workItems">, newParentId: Id<"workItems"> | undefined) => {
+    try {
+      await updateWorkItem({
+        id: itemId,
+        parentId: newParentId
+      });
+      toast.success("Parent updated successfully");
+    } catch (error) {
+      console.error("Error updating parent:", error);
+      toast.error("Failed to update parent");
+    }
+  }, [updateWorkItem]);
+
   const handleMoveToTrash = useCallback(async (item: WorkItem) => {
     try {
+      // Check if item has children
+      if (item.items && item.items.length > 0) {
+        toast.error(
+          "This item has child items. Please unlink or delete the child items first.",
+          {
+            duration: 4000,
+            icon: '⚠️'
+          }
+        );
+        return;
+      }
+
       await deleteWorkItem({
         id: item.id as Id<"workItems">,
       });
 
-      // If the deleted item was selected, clear selection first
+      // If the deleted item was selected, clear selection and navigate properly
       if (selectedItem?.id === item.id) {
-        setSelectedItem(null)
-        router.push('/work-items')
+        setSelectedItem(null);
+        
+        // If item has a parent, navigate to parent
+        if (item.parentId) {
+          router.push(`/w/${workspaceId}/work-items?id=${item.parentId}`);
+        } else {
+          // Otherwise, go to workspace root
+          router.push(`/w/${workspaceId}/work-items`);
+        }
       }
 
       toast.success("Moved work item to trash");
@@ -196,33 +234,92 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
       }
       console.error(error);
     }
-  }, [deleteWorkItem, selectedItem, router]);
+  }, [deleteWorkItem, selectedItem, router, workspaceId]);
 
   const buildWorkItemTree = useCallback((items: any[]) => {
-    const itemMap = new Map();
+    if (!items || !Array.isArray(items)) return [];
+    
+    console.log('Raw items:', items); // Debug log
+
+    // Create a map of parent IDs to their children
+    const childrenMap = new Map<string, any[]>();
     const rootItems: WorkItem[] = [];
 
-    items?.forEach(item => {
-      itemMap.set(item._id, {
-        id: item._id,
-        name: item.title,
-        type: item.type,
-        items: [],
-        order: item.order,
-        parentId: item.parentId,
-      });
+    // First, group all items by their parentId
+    items.forEach(item => {
+      if (!item?._id) {
+        console.warn('Item without _id found:', item);
+        return;
+      }
+      
+      // Validate required fields
+      if (!item.title || !item.type) {
+        console.warn('Item missing required fields:', item);
+        return;
+      }
+      
+      const parentId = item.parentId?.toString();
+      if (parentId) {
+        // Validate that parent exists
+        const parentExists = items.some(i => i._id === parentId);
+        if (!parentExists) {
+          console.warn('Item references non-existent parent:', item);
+          return;
+        }
+
+        if (!childrenMap.has(parentId)) {
+          childrenMap.set(parentId, []);
+        }
+        childrenMap.get(parentId)?.push(item);
+      }
     });
 
-    items?.forEach(item => {
-      const workItem = itemMap.get(item._id);
-      if (item.parentId) {
-        const parent = itemMap.get(item.parentId);
-        if (parent) {
-          parent.items.push(workItem);
-        }
-      } else {
-        rootItems.push(workItem);
-      }
+    // Function to create a WorkItem with its children
+    const createWorkItem = (item: any): WorkItem => {
+      const children = childrenMap.get(item._id) || [];
+      
+      // Deduplicate children array
+      const uniqueChildren = children.filter((child, index, self) =>
+        index === self.findIndex((t) => t._id === child._id)
+      );
+      
+      const workItem: WorkItem = {
+        id: item._id,
+        name: item.title || 'Untitled',
+        type: item.type,
+        items: uniqueChildren
+          .sort((a, b) => a.order - b.order)
+          .map(child => createWorkItem(child))
+          .filter(Boolean), // Remove any null/undefined items
+        order: typeof item.order === 'number' ? item.order : 0,
+        parentId: item.parentId,
+      };
+
+      console.log('Created work item:', {
+        id: workItem.id,
+        name: workItem.name,
+        childCount: workItem.items.length,
+        childIds: workItem.items.map(i => i.id)
+      });
+
+      return workItem;
+    };
+
+    // Create root items (items without parents)
+    const rootItemsTemp = items
+      .filter(item => !item.parentId)
+      .sort((a, b) => a.order - b.order)
+      .map(item => createWorkItem(item))
+      .filter(Boolean); // Remove any null/undefined items
+
+    rootItems.push(...rootItemsTemp);
+
+    console.log('Built work item tree:', {
+      rootItems,
+      itemCount: items.length,
+      rootCount: rootItems.length,
+      childrenMapSize: childrenMap.size,
+      childrenMapContents: Array.from(childrenMap.entries())
     });
 
     return rootItems;
@@ -239,10 +336,14 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     }
   }, [workItemTree]);
 
-  const handleToggleExpand = () => {
+  const handleToggleExpand = useCallback(() => {
     setSelectedItem(null);
     setIsExpanded(!isExpanded);
-  };
+    // Clear the URL when collapsing/expanding
+    if (workspaceId) {
+      router.push(`/w/${workspaceId}/work-items`);
+    }
+  }, [isExpanded, workspaceId, router]);
 
   const handleCreateWorkItem = async (workItem: any) => {
     if (!workspaceId) {
@@ -251,45 +352,32 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     }
 
     try {
-      console.log("Creating work item with full details:", {
-        workspaceId: workspaceId,
-        parentId: workItem.parentId,
-        type: workItem.type,
-        title: workItem.title,
-        description: workItem.description,
-        status: "todo"
-      });
+      console.log('Creating work item:', workItem); // Debug log
 
       const newItemId = await createWorkItem({
         workspaceId: workspaceId,
         parentId: workItem.parentId ? (workItem.parentId as Id<"workItems">) : undefined,
         type: workItem.type,
-        title: workItem.title,
+        title: workItem.title || 'Untitled',
         description: workItem.description || "",
         status: "todo",
       });
 
       setIsCreatingWorkItem(false);
 
-      // Create the new item object
-      const newItem = {
+      const newItem: WorkItem = {
         id: newItemId,
-        name: workItem.title,
-        type: workItem.type
-      };
-
-      // Select the newly created item
-      setSelectedItem({
-        id: newItemId,
-        name: workItem.title,
+        name: workItem.title || 'Untitled',
         type: workItem.type,
+        items: [], // Initialize with empty array
         order: 0,
         parentId: workItem.parentId
-      });
+      };
 
-      // Update URL to show the new item
+      console.log('Created new item:', newItem); // Debug log
+
+      setSelectedItem(newItem);
       router.push(`/w/${workspaceId}/work-items?id=${newItemId}`);
-
       toast.success("Work item created");
     } catch (error) {
       console.error("Error creating work item:", error);
@@ -314,11 +402,16 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
   }, [selectedItem?.id, updateWorkItemContent]);
 
   // Update URL when selected item changes
-  const handleSelectItem = useCallback((item: WorkItem) => {
-    // Reset content before setting new selected item
+  const handleSelectItem = useCallback(async (item: WorkItem | null) => {
     setContent("");
     setSelectedItem(item);
-    router.push(`/w/${workspaceId}/work-items?id=${item.id}`);
+    
+    if (item) {
+      router.push(`/w/${workspaceId}/work-items?id=${item.id}`);
+    } else {
+      // If no item is selected, remove the id from the URL
+      router.push(`/w/${workspaceId}/work-items`);
+    }
   }, [router, workspaceId]);
 
   // Separate effect for content updates to avoid race conditions
@@ -344,18 +437,22 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     router.push('/work-items');
   }, [router]);
 
-  const handleReorder = async (itemId: string, newParentId: string, newOrder: number) => {
+  const handleReorder = useCallback(async (
+    draggedItemId: Id<"workItems">, 
+    targetParentId: Id<"workItems"> | undefined, 
+    newOrder: number
+  ) => {
     try {
       await updateWorkItem({
-        id: itemId as Id<"workItems">,
-        parentId: newParentId === "root" ? undefined : newParentId as Id<"workItems">,
+        id: draggedItemId,
+        parentId: targetParentId,
         order: newOrder
       });
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to reorder item");
+      console.error("Error moving work item:", error);
+      toast.error("Failed to move work item");
     }
-  };
+  }, [updateWorkItem]);
 
   const handleDragEnd = useCallback(async (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -453,19 +550,9 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
   if (workItemTree.length === 0 || !selectedItem) {
     return (
       <>
-        <motion.div
-          initial={{ width: "20%" }}
-          animate={{ width: "100%" }}
-          transition={{
-            duration: 0.3,
-            ease: [0.32, 0.72, 0, 1]
-          }}
-          className="px-3 pb-3 pt-2 h-full"
+        <div
+          className="px-3 pb-3 pt-2 h-full w-full"
         >
-          <motion.div
-            layout
-            className="h-full p-2 bg-slate-100 rounded-lg"
-          >
             <div className="flex flex-row justify-between">
               <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
             </div>
@@ -488,9 +575,11 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
                           onRename={handleRenameWorkItem}
                           onMoveToTrash={handleMoveToTrash}
                           onAddItem={handleAddWorkItem}
-                          selectedItemId={urlSelectedItemId || undefined}
+                          selectedItemId={urlSelectedItemId ? (urlSelectedItemId as Id<"workItems">) : undefined}
                           onReorder={handleReorder}
                           isExpanded={true}
+                          onUpdateParent={handleUpdateParent}
+                          availableParents={workItems?.map(transformToWorkItem)}
                         />
                       ))}
                       {provided.placeholder}
@@ -499,9 +588,8 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
                 </Droppable>
                 <AddWorkItemButton onAddItem={() => setIsCreatingWorkItem(true)} />
               </DragDropContext>
-            </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         <WorkItemCreationDialog
           isOpen={isCreatingWorkItem}
@@ -518,18 +606,12 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
 
   return (
     <>
-      <motion.div
-        initial={{ width: "100%" }}
-        animate={{ width: "100%" }}
-        transition={{
-          duration: 0.3,
-          ease: [0.32, 0.72, 0, 1]
-        }}
+      <div
         className="h-full w-full flex flex-col"
       >
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={20} minSize={15} className="px-3 pb-3 pt-2">
-            <motion.div layout className="h-full rounded-lg p-2 bg-slate-100">
+        <ResizablePanelGroup direction="horizontal" className="h-full w-full">
+          <ResizablePanel defaultSize={20} minSize={15} className="pl-3 pr-2 pb-3 pt-2">
+            <div className="h-full rounded-lg p-2 bg-slate-100">
               <div className="flex flex-row justify-between">
                 <h2 className="text-sm p-1 pb-4 font-semibold">Work Items</h2>
                 <div className="flex flex-row gap-1">
@@ -542,45 +624,36 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
                   </Button>
                 </div>
               </div>
-              <div className="h-[calc(100%-48px)]">
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="root">
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="space-y-0.5"
-                      >
-                        {workItemTree.map((item, index) => (
-                          <WorkItemNavigator
-                            key={item.id}
-                            item={item}
-                            index={index}
-                            parentId="root"
-                            onSelect={handleSelectItem}
-                            onRename={handleRenameWorkItem}
-                            onMoveToTrash={handleMoveToTrash}
-                            onAddItem={handleAddWorkItem}
-                            selectedItemId={selectedItem?.id}
-                            onReorder={handleReorder}
-                            isExpanded={isExpanded}
-                          />
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
+              <div className="h-full">
+                <div>
+                  {workItemTree.map((item, index) => (
+                    <WorkItemNavigator
+                      key={item.id}
+                      item={item}
+                      index={index}
+                      parentId="root"
+                      onSelect={handleSelectItem}
+                      onRename={handleRenameWorkItem}
+                      onMoveToTrash={handleMoveToTrash}
+                      onAddItem={handleAddWorkItem}
+                      selectedItemId={selectedItem?.id}
+                      onReorder={handleReorder}
+                      isExpanded={isExpanded}
+                      onUpdateParent={handleUpdateParent}
+                      availableParents={workItems?.map(transformToWorkItem)}
+                    />
+                  ))}
+                </div>
                 <AddWorkItemButton onAddItem={() => setIsCreatingWorkItem(true)} />
               </div>
-            </motion.div>
+            </div>
           </ResizablePanel>
 
           <ResizableHandle />
 
-          <ResizablePanel defaultSize={50} minSize={30} className="h-full pt-2 pb-3">
-            <div className="h-full rounded-lg border border-slate-100 scrollbar-thin max-h-full overflow-hidden">
-              <div className="px-3 pb-1 pt-2">
+          <ResizablePanel defaultSize={50} minSize={30} className="h-full pt-2 pb-3 mr-2 mb-2">
+            <div className="flex flex-col h-full border border-slate-100 rounded-lg z-10">
+              <div className="flex-none px-3 pb-2 pt-2 border-b border-slate-100">
                 <LabelToInput
                   value={selectedItem?.name || ""}
                   setValue={(newName) => handleRenameWorkItem(selectedItem, newName)}
@@ -588,7 +661,7 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
                   variant="workitem"
                 />
               </div>
-              <ScrollArea className="h-full px-3 pb-3 pt-2">
+              <ScrollArea className="flex-1 px-3 pb-3 pt-2">
                 {workItemDetails ? (
                   <LexicalEditor
                     key={selectedItem.id}
@@ -612,10 +685,8 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
               </ScrollArea>
             </div>
           </ResizablePanel>
-
-          <ResizableHandle />
         </ResizablePanelGroup>
-      </motion.div>
+      </div>
 
       <WorkItemCreationDialog
         isOpen={isCreatingWorkItem}
@@ -628,4 +699,14 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
       />
     </>
   );
-} 
+}
+
+const transformToWorkItem = (item: any): WorkItem => ({
+  id: item._id,
+  name: item.title,
+  type: item.type,
+  items: [],
+  order: item.order,
+  parentId: item.parentId
+});
+

@@ -8,6 +8,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import { PageTransition } from "@/components/transitions/page-transition";
 import { useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area-1";
 
 interface DocumentsPageProps {
   params: Promise<{
@@ -18,36 +19,55 @@ interface DocumentsPageProps {
 export default function DocumentsPage({ params }: DocumentsPageProps) {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
-  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null)
+  const [isMounted, setIsMounted] = useState(false);
+  const [workspaceId, setWorkspaceId] = useState<Id<"workspaces"> | null>(null);
 
   useEffect(() => {
     const resolveParams = async () => {
       const resolvedParams = await params;
-      console.log(params);
-
       setWorkspaceId(resolvedParams.workspaceId);
     };
     resolveParams();
   }, [params]);
 
-  const documents = useQuery(api.documents.getDocuments, {
-    workspaceId: workspaceId as Id<"workspaces">
-  });
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
-  if (!isLoaded || !isSignedIn) return null;
+  const documents = useQuery(
+    api.documents.getDocuments,
+    workspaceId ? {
+      workspaceId: workspaceId
+    } : "skip"
+  );
 
-  return (
-    <PageTransition>
-      <div className="h-full flex-1 flex flex-col items-start gap-5 p-6 px-12">
+  // Don't render anything until we're mounted and have a workspaceId
+  if (!isMounted || !workspaceId) {
+    return (
+      <ScrollArea className="h-full flex-1 flex flex-col items-start gap-5 p-6 px-12">
         <DocumentList
-          documents={documents || []}
-          onSelect={(id) => router.push(`/w/${workspaceId}/knowledge-base/documents/${id}`)}
+          documents={[]}
+          onSelect={() => {}}
           showHeader={true}
           title="Documents"
           variant="documents"
-          onNewDocument={() => router.push(`/w/${workspaceId}/knowledge-base/new`)}
+          onNewDocument={() => {}}
         />
-      </div>
-    </PageTransition>
+      </ScrollArea>
+    );
+  }
+
+  return (
+    <ScrollArea className="h-full flex-1 flex flex-col items-start gap-5 p-6 px-12">
+      <DocumentList
+        documents={documents || []}
+        onSelect={(id) => router.push(`/w/${workspaceId}/knowledge-base/documents/${id}`)}
+        showHeader={true}
+        title="Documents"
+        variant="documents"
+        onNewDocument={() => router.push(`/w/${workspaceId}/knowledge-base/new`)}
+      />
+    </ScrollArea>
   );
 } 

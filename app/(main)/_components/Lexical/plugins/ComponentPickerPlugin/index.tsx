@@ -50,7 +50,7 @@ import {InsertTableDialog} from '../TablePlugin';
 import {AI_EDIT_COMMAND} from '../AiEditPlugin';
 import { AI_WRITER_COMMAND } from '../AIWriterPlugin';
 import AiGenerationIcon from '@/icons/AI-Generation';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area-1";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { 

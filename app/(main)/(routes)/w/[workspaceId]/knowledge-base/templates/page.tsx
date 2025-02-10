@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TemplateGrid } from "@/components/ui/templates/TemplateGrid";
 import { Id } from "@/convex/_generated/dataModel";
+import { ScrollArea } from "@/components/ui/default-scroll-area";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -48,40 +49,49 @@ export default function TemplatesPage({ params }: TemplatesPageProps) {
   if (!workspaceId) return null;
 
   return (
-    <div className="h-full flex-1 flex-col space-y-6 p-12 flex">
-      <div className="flex flex-col space-y-2">
+    <ScrollArea className="h-full flex flex-col">
+      <div className="px-12 pt-6 space-y-2 sticky top-0 bg-background z-10">
         <h1 className="text-2xl font-bold">Templates</h1>
-        <p className="text-sm text-muted-foreground">
-          Templates are used to generate content for your workspace.
+        <p className="text-sm text-muted-foreground py-2 pb-6">
+          Pick a template to start creating your document.
         </p>
       </div>
-      <div className="h-full flex-1 flex-col space-y-8 flex">
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => {
-            window.location.hash = value;
-          }}
-        >
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          window.location.hash = value;
+        }}
+        className="flex-1 flex flex-col pb-20"
+      >
+        <div className="px-12">
           <TabsList>
             <TabsTrigger value="system">System Templates</TabsTrigger>
             <TabsTrigger value="personal">Personal Templates</TabsTrigger>
           </TabsList>
-          <TabsContent value="system">
-            <TemplateGrid
-              workspaceId={workspaceId}
-              templateSource="system"
-              type="custom"
-            />
+        </div>
+        <div className="flex-1 px-12 overflow-hidden">
+          <TabsContent value="system" className="h-full mt-2">
+            <ScrollArea className="h-full">
+              <TemplateGrid
+                workspaceId={workspaceId}
+                templateSource="system"
+                type="custom"
+                columns={3}
+              />
+            </ScrollArea>
           </TabsContent>
-          <TabsContent value="personal">
-            <TemplateGrid
-              workspaceId={workspaceId}
-              templateSource="personal"
-              type="custom"
-            />
+          <TabsContent value="personal" className="h-full mt-2">
+            <ScrollArea className="h-full">
+              <TemplateGrid
+                workspaceId={workspaceId}
+                templateSource="personal"
+                type="custom"
+                columns={3}
+              />
+            </ScrollArea>
           </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+        </div>
+      </Tabs>
+    </ScrollArea>
   );
 }

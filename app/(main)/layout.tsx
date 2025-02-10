@@ -32,6 +32,11 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Maximize2, Minimize2, MoreHorizontal } from "lucide-react";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 // Create a motion-enabled version of ResizablePanel
 const MotionResizablePanel = motion.create(ResizablePanel);
@@ -52,7 +57,7 @@ function LayoutContent({ children, workspaceId, isMounted }: {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isAIChatCollapsed, setIsAIChatCollapsed] = useState(false);
-  const [previousSize, setPreviousSize] = useState(35);
+  const [isAIChatPopped, setIsAIChatPopped] = useState(false);
   const initializeTemplates = useMutation(api.templates.initializeSystemTemplates);
 
   const paths = pathname?.split('/').filter(Boolean) || [];
@@ -108,16 +113,25 @@ function LayoutContent({ children, workspaceId, isMounted }: {
       };
     });
 
+    // Filter out "Knowledge Base" from breadcrumbs
+    const filteredBreadcrumbs = breadcrumbs.filter(crumb => 
+      crumb.label !== "Knowledge Base"
+    ).map((crumb, index, array) => ({
+      ...crumb,
+      // Update isLast based on new array length
+      isLast: index === array.length - 1
+    }));
+
     // If we're on work items page and have a selected item
     if (isWorkItemsPage && workItem) {
       // Keep only the "Work Items" breadcrumb and modify its URL
-      breadcrumbs.splice(1);
-      breadcrumbs[0].url = '/work-items';
-      breadcrumbs[0].isLast = false;
+      filteredBreadcrumbs.splice(1);
+      filteredBreadcrumbs[0].url = '/work-items';
+      filteredBreadcrumbs[0].isLast = false;
 
       // Add parent work item if it exists
       if (parentWorkItem) {
-        breadcrumbs.push({
+        filteredBreadcrumbs.push({
           label: parentWorkItem.title,
           url: `/w/${workspaceId}/work-items?id=${parentWorkItem._id}`,
           isLast: false
@@ -125,7 +139,7 @@ function LayoutContent({ children, workspaceId, isMounted }: {
       }
 
       // Add current work item
-      breadcrumbs.push({
+      filteredBreadcrumbs.push({
         label: workItem.title,
         url: `/w/${workspaceId}/work-items?id=${parentWorkItem?._id}`,
         isLast: true
@@ -133,10 +147,10 @@ function LayoutContent({ children, workspaceId, isMounted }: {
     }
     // Handle document page case
     else if (isDocumentPage && document) {
-      breadcrumbs[breadcrumbs.length - 1].label = document.title || "Untitled";
+      filteredBreadcrumbs[filteredBreadcrumbs.length - 1].label = document.title || "Untitled";
     }
 
-    return breadcrumbs;
+    return filteredBreadcrumbs;
   };
 
   // Modify the getAIChatProps to handle no selection case
@@ -198,37 +212,81 @@ function LayoutContent({ children, workspaceId, isMounted }: {
 
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
-            defaultSize={75}
+            defaultSize={70}
             minSize={50}
             className={cn(
               "transition-all duration-300 rounded-xl flex flex-col bg-white m-2"
             )}
           >
-            <header className="flex h-10 shrink-0 items-center gap-2">
+            <header className="flex pt-2 shrink-0 items-center gap-2">
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <Breadcrumb>
                   <BreadcrumbList>
-                    {breadcrumbs.map((crumb, index) => (
-                      <BreadcrumbItem key={crumb.url}>
-                        {!crumb.isLast ? (
-                          <>
-                            <BreadcrumbLink asChild>
-                              <Link href={crumb.url}>{crumb.label}</Link>
-                            </BreadcrumbLink>
-                            <BreadcrumbSeparator />
-                          </>
-                        ) : (
-                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                        )}
-                      </BreadcrumbItem>
-                    ))}
+                    {breadcrumbs.length > 2 ? (
+                      <>
+                        <BreadcrumbItem>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-5 w-5"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-fit p-2">
+                              {breadcrumbs.slice(0, -2).map((crumb) => (
+                                <Link 
+                                  key={crumb.url} 
+                                  href={crumb.url}
+                                  className="block px-2 py-1 text-sm hover:bg-accent rounded-sm"
+                                >
+                                  {crumb.label}
+                                </Link>
+                              ))}
+                            </PopoverContent>
+                          </Popover>
+                          <BreadcrumbSeparator />
+                        </BreadcrumbItem>
+                        {breadcrumbs.slice(-2).map((crumb, index) => (
+                          <BreadcrumbItem key={crumb.url}>
+                            {!crumb.isLast ? (
+                              <>
+                                <BreadcrumbLink asChild>
+                                  <Link href={crumb.url}>{crumb.label}</Link>
+                                </BreadcrumbLink>
+                                <BreadcrumbSeparator />
+                              </>
+                            ) : (
+                              <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                            )}
+                          </BreadcrumbItem>
+                        ))}
+                      </>
+                    ) : (
+                      breadcrumbs.map((crumb, index) => (
+                        <BreadcrumbItem key={crumb.url}>
+                          {!crumb.isLast ? (
+                            <>
+                              <BreadcrumbLink asChild>
+                                <Link href={crumb.url}>{crumb.label}</Link>
+                              </BreadcrumbLink>
+                              <BreadcrumbSeparator />
+                            </>
+                          ) : (
+                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                          )}
+                        </BreadcrumbItem>
+                      ))
+                    )}
                   </BreadcrumbList>
                 </Breadcrumb>
               </div>
             </header>
-            <div className="flex-1 overflow-auto relative min-h-0">
+            <div className="flex-1 overflow-auto relative min-h-0 h-full">
               {children}
             </div>
           </ResizablePanel>
@@ -236,36 +294,55 @@ function LayoutContent({ children, workspaceId, isMounted }: {
           {showAIChat && (
             <>
               <ResizableHandle />
-              <MotionResizablePanel
-                defaultSize={isAIChatCollapsed ? 5 : previousSize}
-                minSize={isAIChatCollapsed ? 5 : 20}
-                maxSize={isAIChatCollapsed ? 5 : 50}
-                onResize={(size) => {
-                  if (!isAIChatCollapsed) {
-                    setPreviousSize(size);
-                  }
-                }}
-                animate={{
-                  flex: isAIChatCollapsed ? "0 0 80px" : `0 0 ${previousSize}%`
-                }}
-                transition={{
-                  duration: 0.3,
-                  ease: [0.32, 0.72, 0, 1]
-                }}
-                className={cn(
-                  "bg-slate-100 m-2 ml-0",
-                  isAIChatCollapsed && "!w-[80px]"
-                )}
-              >
-                <AIStoryCreator
-                  onInsertMarkdown={async (markdown: string) => {
-                    console.log("Inserting markdown:", markdown);
+              {!isAIChatPopped && (
+                <MotionResizablePanel
+                  defaultSize={30}
+                  animate={{
+                    width: isAIChatCollapsed ? "80px" : "30%",
+                    flex: isAIChatCollapsed ? "0 0 80px" : "0 0 30%"
                   }}
-                  {...getAIChatProps()}
-                  isCollapsed={isAIChatCollapsed}
-                  toggleCollapse={() => setIsAIChatCollapsed(!isAIChatCollapsed)}
-                />
-              </MotionResizablePanel>
+                  style={{
+                    width: isAIChatCollapsed ? "80px" : "30%",
+                    flex: isAIChatCollapsed ? "0 0 80px" : "0 0 30%",
+                    overflow: 'hidden'
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.32, 0.72, 0, 1]
+                  }}
+                  className={cn(
+                    "bg-slate-100 m-2 ml-0",
+                    isAIChatCollapsed && "!w-[80px]"
+                  )}
+                >
+                  <AIStoryCreator
+                    onInsertMarkdown={async (markdown: string) => {
+                      console.log("Inserting markdown:", markdown);
+                    }}
+                    {...getAIChatProps()}
+                    isCollapsed={isAIChatCollapsed}
+                    toggleCollapse={() => setIsAIChatCollapsed(!isAIChatCollapsed)}
+                    togglePopOut={() => setIsAIChatPopped(true)}
+                  />
+                </MotionResizablePanel>
+              )}
+              
+              <Dialog open={isAIChatPopped} onOpenChange={setIsAIChatPopped}>
+                <DialogContent className="max-w-[90vw] h-[90vh] p-0 gap-0">
+                  <VisuallyHidden>
+                    <DialogTitle>AI Chat Assistant</DialogTitle>
+                  </VisuallyHidden>
+                  <AIStoryCreator
+                    onInsertMarkdown={async (markdown: string) => {
+                      console.log("Inserting markdown:", markdown);
+                    }}
+                    {...getAIChatProps()}
+                    isCollapsed={false}
+                    togglePopOut={() => setIsAIChatPopped(false)}
+                    isPopped={true}
+                  />
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </ResizablePanelGroup>

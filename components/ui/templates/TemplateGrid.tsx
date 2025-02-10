@@ -39,9 +39,16 @@ interface TemplateGridProps {
   templateSource: 'system' | 'personal';
   type?: "epic" | "feature" | "prd" | "funcReq" | "useCase" | "userStory" | "custom" | "srs" | "techSpec" | "testPlan" | "releaseNotes";
   layout?: 'grid' | 'list';
+  columns?: number;
 }
 
-export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid' }: TemplateGridProps) {
+export function TemplateGrid({ 
+  workspaceId, 
+  type, 
+  templateSource, 
+  layout = 'grid',
+  columns = 4 
+}: TemplateGridProps) {
   // 1. All useContext hooks
   const router = useRouter();
 
@@ -105,6 +112,21 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
       router.push(`/w/${workspaceId}/knowledge-base/templates/${newTemplate}`);
     } catch (error) {
       console.error("Error creating blank template:", error);
+    }
+  };
+
+  const getGridColumns = () => {
+    switch (columns) {
+      case 1:
+        return 'grid-cols-1';
+      case 2:
+        return 'grid-cols-1 sm:grid-cols-2';
+      case 3:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+      case 4:
+        return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+      default:
+        return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
     }
   };
 
@@ -188,7 +210,7 @@ export function TemplateGrid({ workspaceId, type, templateSource, layout = 'grid
   return (
     <>
       <div className={`${layout === 'grid'
-        ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+        ? `grid ${getGridColumns()} gap-4`
         : 'space-y-4'
         }`}>
         {templateSource === 'system' ? (

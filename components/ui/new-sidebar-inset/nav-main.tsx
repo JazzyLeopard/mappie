@@ -27,6 +27,7 @@ export function NavMain({
     url: string
     icon: LucideIcon
     isActive?: boolean
+    defaultExpanded?: boolean
     items?: {
       title: string
       url: string
@@ -39,7 +40,7 @@ export function NavMain({
       <SidebarGroupLabel>Workspace</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive} className="items-center">
+          <Collapsible key={item.title} asChild defaultOpen={item.defaultExpanded || item.isActive} className="items-center">
             <SidebarMenuItem className="items-center">
               <div
                 className={cn(
@@ -48,22 +49,43 @@ export function NavMain({
                   item.isActive && "font-semibold relative before:absolute before:left-1 before:top-1/2 before:-translate-y-1/2 before:h-6 before:w-1 before:rounded-full before:bg-gradient-to-b from-blue-400 to-pink-400 text-primary"
                 )}
               >
-                <Link href={item.url} className="flex items-center justify-center">
-                  <item.icon
-                    className={cn(
-                      "h-5 w-5 mr-2",
-                      "hover:[&>path]:stroke-[url(#blue-pink-gradient)]",
-                      item.isActive && "[&>path]:stroke-[url(#blue-pink-gradient)]"
-                    )}
-                  />
-                  <svg width="0" height="0">
-                    <linearGradient id="blue-pink-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#60A5FA" />
-                      <stop offset="100%" stopColor="#EC4899" />
-                    </linearGradient>
-                  </svg>
-                  <span>{item.title}</span>
-                </Link>
+                {item.url === "#" ? (
+                  // Render without Link for Knowledge Base
+                  <div className="flex items-center justify-center">
+                    <item.icon
+                      className={cn(
+                        "h-5 w-5 mr-2",
+                        "hover:[&>path]:stroke-[url(#blue-pink-gradient)]",
+                        item.isActive && "[&>path]:stroke-[url(#blue-pink-gradient)]"
+                      )}
+                    />
+                    <svg width="0" height="0">
+                      <linearGradient id="blue-pink-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#60A5FA" />
+                        <stop offset="100%" stopColor="#EC4899" />
+                      </linearGradient>
+                    </svg>
+                    <span>{item.title}</span>
+                  </div>
+                ) : (
+                  // Render with Link for other items
+                  <Link href={item.url} className="flex items-center justify-center">
+                    <item.icon
+                      className={cn(
+                        "h-5 w-5 mr-2",
+                        "hover:[&>path]:stroke-[url(#blue-pink-gradient)]",
+                        item.isActive && "[&>path]:stroke-[url(#blue-pink-gradient)]"
+                      )}
+                    />
+                    <svg width="0" height="0">
+                      <linearGradient id="blue-pink-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#60A5FA" />
+                        <stop offset="100%" stopColor="#EC4899" />
+                      </linearGradient>
+                    </svg>
+                    <span>{item.title}</span>
+                  </Link>
+                )}
                 {item.items?.length ? (
                   <CollapsibleTrigger asChild>
                     <SidebarMenuAction className="h-5 w-5 transition-transform data-[state=open]:rotate-90">

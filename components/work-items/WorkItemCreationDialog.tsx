@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "react-hot-toast"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area-1"
 import { Id } from "@/convex/_generated/dataModel"
 import { Switch } from "@/components/ui/switch"
 import { ResourceSelector } from "@/components/work-items/ResourceSelector"
@@ -214,12 +214,23 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
         } else {
           setAIGenerationStep("prompt")
         }
-      } else {
-        // For template or blank, create with parent directly
+      } else if (method === "template") {
+        // Create with template content
         const workItem = {
           type: selectedType!,
           title: `Untitled ${selectedType}`,
-          description: method === "template" ? getTemplateContent(selectedType!) : "",
+          description: getTemplateContent(selectedType!),
+          parentId: parentItem.id,
+          status: "todo"
+        }
+        onCreateWorkItem(workItem)
+        onClose()
+      } else if (method === "blank") {
+        // Create blank work item
+        const workItem = {
+          type: selectedType!,
+          title: `Untitled ${selectedType}`,
+          description: "",
           parentId: parentItem.id,
           status: "todo"
         }
@@ -231,6 +242,8 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       if (selectedType === "epic") {
         if (method === "ai") {
           setAIGenerationStep("prompt")
+        } else if (method === "template") {
+          handleParentSelection("")
         } else {
           handleParentSelection("")
         }
@@ -240,6 +253,8 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
           setSelectedParentId("ai")
         } else if (method === "template") {
           setSelectedParentId("template")
+        } else if (method === "blank") {
+          setSelectedParentId("blank")
         }
       }
     }
@@ -260,17 +275,26 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       } else {
         setAIGenerationStep("prompt")
       }
-    } else {
-      // Normal template/blank flow
-      const useTemplate = creationMethod === "template" // This is correct
+    } else if (selectedParentId === "template") {
+      // Template flow
       const workItem = {
         type: selectedType!,
         title: `Untitled ${selectedType}`,
-        description: useTemplate ? getTemplateContent(selectedType!) : "",
+        description: getTemplateContent(selectedType!),
         parentId: parentId || undefined,
         status: "todo"
       }
-
+      onCreateWorkItem(workItem)
+      onClose()
+    } else if (selectedParentId === "blank") {
+      // Blank flow
+      const workItem = {
+        type: selectedType!,
+        title: `Untitled ${selectedType}`,
+        description: "",
+        parentId: parentId || undefined,
+        status: "todo"
+      }
       onCreateWorkItem(workItem)
       onClose()
     }
@@ -426,7 +450,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
   if (!selectedType) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
               {parentItem 
@@ -436,21 +460,48 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {validOptions.map((option) => (
+            {[
+              {
+                type: "epic",
+                label: "Epic",
+                icon: Target,
+                description: "A large body of work that can be broken down into features"
+              },
+              {
+                type: "feature",
+                label: "Feature",
+                icon: Puzzle,
+                description: "A significant piece of functionality that delivers business value"
+              },
+              {
+                type: "story",
+                label: "Story",
+                icon: BookOpen,
+                description: "A user-focused description of a feature or requirement"
+              },
+              {
+                type: "task",
+                label: "Task",
+                icon: ListTodo,
+                description: "A small, specific piece of work that needs to be completed"
+              }
+            ].map((option) => (
               <Button
                 key={option.type}
                 variant="outline"
                 className="w-full justify-start h-auto p-4"
                 onClick={() => handleTypeSelection(option.type as WorkItemType)}
               >
-                <option.icon className="h-5 w-5 mr-3" />
-                <div className="text-left">
-                  <div className="font-medium">{option.label}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {parentItem 
-                      ? `Create a new ${option.label.toLowerCase()} under this ${parentItem.type}`
-                      : option.description
-                    }
+                <div className="flex items-start gap-3 w-full">
+                  <option.icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div className="text-left flex-1 min-w-0">
+                    <div className="font-medium">{option.label}</div>
+                    <div className="text-sm text-muted-foreground break-words">
+                      {parentItem 
+                        ? `Create a new ${option.label.toLowerCase()} under this ${parentItem.type}`
+                        : option.description
+                      }
+                    </div>
                   </div>
                 </div>
               </Button>

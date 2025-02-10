@@ -15,7 +15,7 @@ import {useEffect, useRef, useState} from 'react';
 import {Menu} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import { TOCIcon } from './TOCIcon';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area-1';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
@@ -88,7 +88,7 @@ function TableOfContentsList({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <nav className="bg-slate-50 shadow-lg rounded-lg px-2 py-4 min-w-[20rem]">
+          <nav className="bg-slate-50 shadow-lg rounded-lg px-2 py-4 min-w-[20rem] z-999 max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <div className="text-lg font-semibold mb-3 px-2 flex items-center">
               Table of Contents
             </div>

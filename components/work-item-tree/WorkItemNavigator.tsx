@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { ChevronRight, Plus } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { WorkItemActionMenu } from "@/components/work-item-tree/WorkItemActionMenu"
@@ -8,21 +8,22 @@ import { Button } from "@/components/ui/button"
 import { toast } from "react-hot-toast"
 import { useDrag, useDrop } from 'react-dnd'
 import { cn } from '@/lib/utils'
-import { isValidDropTarget } from '@/components/work-items/WorkItemHierarchy'
+import { Id } from "@/convex/_generated/dataModel"
+import { usePathname } from "next/navigation"
 
 type WorkItemType = "epic" | "feature" | "story" | "task"
 
-type WorkItem = {
-  id: string
+export type WorkItem = {
+  id: Id<"workItems">
   name: string
   type: WorkItemType
-  items?: WorkItem[]
+  items: WorkItem[]
   order: number
-  parentId?: string
+  parentId?: Id<"workItems">
 }
 
 interface DragItem {
-  id: string
+  id: Id<"workItems">
   type: WorkItemType
   index: number
   parentId: string
@@ -35,16 +36,60 @@ interface WorkItemNavigatorProps {
   onRename: (item: WorkItem, newName: string) => void
   onMoveToTrash: (item: WorkItem) => void
   onAddItem: (parentItem?: WorkItem) => void
-  selectedItemId?: string
+  selectedItemId?: Id<"workItems"> | undefined
   parentIsOpen?: boolean
   index: number
   parentId: string
-  onReorder: (itemId: string, newParentId: string, newOrder: number) => void
+  onReorder: (itemId: Id<"workItems">, newParentId: Id<"workItems"> | undefined, newOrder: number) => void
   isExpanded?: boolean
+  onUpdateParent: (itemId: Id<"workItems">, newParentId: Id<"workItems"> | undefined) => void
+  availableParents?: WorkItem[]
 }
 
 const BASE_ORDER = 1000 // Make this consistent with your existing data
 const MIN_GAP = 100    // Smaller gap to match the scale
+const DROP_ZONE_THRESHOLD = 0.25; // 25% of the item height for top/bottom zones
+
+const getValidChildTypes = (parentType: WorkItemType): WorkItemType[] => {
+  switch (parentType) {
+    case "epic":
+      return ["feature", "story"]
+    case "feature":
+      return ["story"]
+    case "story":
+      return ["task"]
+    default:
+      return []
+  }
+}
+
+const canDropItem = (draggedItem: DragItem, targetItem: WorkItem | null, targetParentId: string) => {
+  console.log('canDropItem check:', {
+    draggedItem,
+    targetItem,
+    targetParentId,
+  });
+
+  if (!draggedItem) return false;
+  if (draggedItem.id === targetItem?.id) return false;
+
+  // Allow dropping at root level for any item
+  if (targetParentId === "root") {
+    return true;  // Always allow dropping at root
+  }
+
+  // For nested items, check parent-child relationship
+  if (targetItem) {
+    const validChildTypes = getValidChildTypes(targetItem.type);
+    console.log('Checking child types:', {
+      validChildTypes,
+      draggedType: draggedItem.type
+    });
+    return validChildTypes.includes(draggedItem.type);
+  }
+
+  return true;  // Allow dropping if no specific conditions are met
+}
 
 export function WorkItemNavigator({
   item,
@@ -58,14 +103,40 @@ export function WorkItemNavigator({
   index,
   parentId,
   onReorder,
-  isExpanded = false
+  isExpanded = false,
+  onUpdateParent,
+  availableParents
 }: WorkItemNavigatorProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(() => {
+    if (item.items?.some(child => child.id === selectedItemId)) {
+      return true
+    }
+    return false
+  })
+
+  useEffect(() => {
+    if (item.items?.some(child => child.id === selectedItemId)) {
+      setIsOpen(true)
+    }
+  }, [selectedItemId, item.items])
+
+  useEffect(() => {
+    const hasSelectedChild = item.items?.some(child => {
+      return child.id === selectedItemId || 
+        child.items?.some(grandChild => grandChild.id === selectedItemId)
+    })
+
+    if (hasSelectedChild) {
+      setIsOpen(true)
+    }
+  }, [item.items, selectedItemId])
+
   const [isHovered, setIsHovered] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const [isOverTop, setIsOverTop] = useState(true)
-  const [isOverShallow, setIsOverShallow] = useState(true)
   const [isDragStarted, setIsDragStarted] = useState(false)
+  const [dropZone, setDropZone] = useState<'top' | 'bottom' | 'inside' | null>(null)
 
   const [{ isDragging }, drag] = useDrag({
     type: 'WORK_ITEM',
@@ -75,7 +146,7 @@ export function WorkItemNavigator({
         id: item.id,
         type: item.type,
         index,
-        parentId
+        parentId: parentId || "root"
       }
     },
     end: () => {
@@ -89,94 +160,61 @@ export function WorkItemNavigator({
   })
 
   const [{ isOver, canDrop, draggedItem }, drop] = useDrop<DragItem, void, { 
-    isOver: boolean; 
-    canDrop: boolean;
-    draggedItem: DragItem | null;
+    isOver: boolean
+    canDrop: boolean
+    draggedItem: DragItem | null 
   }>({
     accept: 'WORK_ITEM',
     canDrop: (draggedItem) => {
-      if (draggedItem.type === 'epic') {
-        return item.type === 'epic'
-      }
-      const validChildTypes = getValidChildTypes(item.type)
-      return (validChildTypes.includes(draggedItem.type) || draggedItem.type === item.type) 
-             && draggedItem.id !== item.id
+      const result = canDropItem(draggedItem, item, parentId);
+      console.log('canDrop result:', result);
+      return result;
     },
     hover: (_, monitor) => {
-      if (!monitor.isOver({ shallow: true })) return
+      if (!monitor.isOver({ shallow: true }) || !ref.current) return;
 
-      const clientOffset = monitor.getClientOffset()
-      if (!clientOffset || !ref.current) return
+      const clientOffset = monitor.getClientOffset();
+      if (!clientOffset) return;
 
-      const hoverBoundingRect = ref.current.getBoundingClientRect()
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-      const hoverClientY = clientOffset.y - hoverBoundingRect.top
+      const hoverBoundingRect = ref.current.getBoundingClientRect();
+      console.log('Hover position:', {
+        clientOffset,
+        hoverRect: hoverBoundingRect,
+        dropZone
+      });
+      const hoverHeight = hoverBoundingRect.bottom - hoverBoundingRect.top
+      
+      // Calculate position relative to the item
+      const relativeY = clientOffset.y - hoverBoundingRect.top
+      const relativePosition = relativeY / hoverHeight
 
-      setIsOverTop(hoverClientY < hoverMiddleY)
-      setIsOverShallow(true)
-    },
-    drop: (draggedItem) => {
-      if (!isOver || !canDrop) return
-      
-      // Determine target parent ID
-      const targetParentId = draggedItem.type === item.type ? parentId : item.id
-      
-      // Get all siblings at the target level
-      const siblings = item.items || []
-      let newOrder: number
-      
-      if (draggedItem.type === item.type) {
-        // Same level reordering
-        if (isOverTop) {
-          // Dropping above current item
-          const prevItem = siblings[index - 1]
-          if (!prevItem) {
-            // First position
-            newOrder = item.order - BASE_ORDER
-          } else {
-            // Between prev and current
-            newOrder = prevItem.order + Math.floor((item.order - prevItem.order) / 2)
-          }
-        } else {
-          // Dropping below current item
-          const nextItem = siblings[index + 1]
-          if (!nextItem) {
-            // Last position
-            newOrder = item.order + BASE_ORDER
-          } else {
-            // Between current and next
-            newOrder = item.order + Math.floor((nextItem.order - item.order) / 2)
-          }
-        }
+      // Determine drop zone based on position
+      if (relativePosition < DROP_ZONE_THRESHOLD) {
+        setDropZone('top')
+      } else if (relativePosition > (1 - DROP_ZONE_THRESHOLD)) {
+        setDropZone('bottom')
       } else {
-        // Nesting as child
-        if (siblings.length === 0) {
-          // First child
-          newOrder = BASE_ORDER
-        } else {
-          // Add to end of children
-          const lastChild = siblings[siblings.length - 1]
-          newOrder = lastChild.order + BASE_ORDER
-        }
+        setDropZone('inside')
+      }
+    },
+    drop: (draggedItem, monitor) => {
+      if (!isOver || !canDrop || !draggedItem) return;
+      
+      // Convert parentId to undefined when dropping at root
+      const targetParentId = dropZone === 'inside' ? 
+        (parentId === 'root' ? undefined : item.id) : 
+        undefined;
+      
+      let newOrder: number;
+      if (dropZone === 'inside') {
+        const siblings = item.items || [];
+        newOrder = siblings.length === 0 ? BASE_ORDER : (siblings[siblings.length - 1].order + MIN_GAP);
+      } else {
+        newOrder = dropZone === 'top' ? item.order - MIN_GAP : item.order + MIN_GAP;
       }
       
-      // Handle number overflow or too small gaps
-      if (newOrder > Number.MAX_SAFE_INTEGER / 2 || 
-          Math.abs(newOrder - item.order) < MIN_GAP) {
-        // Normalize all sibling orders
-        const normalizedOrder = siblings.reduce((acc, sibling, idx) => {
-          const normalizedPos = BASE_ORDER * (idx + 1)
-          onReorder(sibling.id, targetParentId, normalizedPos)
-          return normalizedPos
-        }, BASE_ORDER)
-        
-        // Place the dragged item in the correct position
-        newOrder = isOverTop ? 
-          normalizedOrder - BASE_ORDER : 
-          normalizedOrder + BASE_ORDER
-      }
-      
-      onReorder(draggedItem.id, targetParentId, newOrder)
+      onReorder(draggedItem.id, targetParentId, newOrder);
+      setDropZone(null);
     },
     collect: (monitor) => ({
       isOver: monitor.isOver({ shallow: true }),
@@ -185,20 +223,27 @@ export function WorkItemNavigator({
     })
   })
 
-  // Combine drag and drop refs
+  // Clear drop zone when not hovering
+  useEffect(() => {
+    if (!isOver) {
+      setDropZone(null)
+    }
+  }, [isOver])
+
   drag(drop(ref))
 
   const isSelected = selectedItemId === item.id
 
   const handleIconClick = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (item.items?.length) {
-        setIsOpen((prev) => !prev)
+      e.stopPropagation();
+      if (selectedItemId === item.id) {
+        onSelect(null as any); // Deselect the current item
       }
+      setIsOpen(prev => !prev);
     },
-    [item.items],
-  )
+    [item.id, selectedItemId, onSelect],
+  );
 
   const handleItemClick = useCallback((e: React.MouseEvent) => {
     // Don't trigger selection if we're dragging or just finished dragging
@@ -224,21 +269,15 @@ export function WorkItemNavigator({
   )
 
   const handleMoveToTrash = useCallback(() => {
+    // Find parent item before deletion
+    const parentItem = item.parentId ? item : null
     onMoveToTrash(item)
-  }, [item, onMoveToTrash])
-
-  const getValidChildTypes = (parentType: WorkItemType): WorkItemType[] => {
-    switch (parentType) {
-      case "epic":
-        return ["feature", "story"];
-      case "feature":
-        return ["story"];
-      case "story":
-        return ["task"];
-      default:
-        return [];
+    
+    // If this was a child item, keep parent expanded
+    if (parentItem) {
+      setIsOpen(true)
     }
-  };
+  }, [item, onMoveToTrash])
 
   const canAddChild = useCallback((parentType: WorkItemType) => {
     return getValidChildTypes(parentType).length > 0;
@@ -258,14 +297,15 @@ export function WorkItemNavigator({
   );
 
   const ItemIcon = () => {
-    const showChevron = isHovered && item.items && item.items.length > 0
+    const hasItems = item?.items && Array.isArray(item.items) && item.items.length > 0
+    const showChevron = (isHovered || isOpen) && hasItems
 
     return (
       <div className="relative w-4 h-4">
-        <AnimatePresence initial={false} mode="wait" key={`icon-presence-${item.id}`}>
+        <AnimatePresence initial={false} mode="wait">
           {showChevron ? (
             <motion.span
-              key="chevron"
+              key={`chevron-${item.id}`}
               initial={{ opacity: 0, rotate: isOpen ? 90 : 0 }}
               animate={{ opacity: 1, rotate: isOpen ? 90 : 0 }}
               exit={{ opacity: 0 }}
@@ -276,7 +316,7 @@ export function WorkItemNavigator({
             </motion.span>
           ) : (
             <motion.span
-              key="icon"
+              key={`icon-${item.id}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -288,47 +328,90 @@ export function WorkItemNavigator({
           )}
         </AnimatePresence>
       </div>
-    )
+    ) 
   }
 
   const getItemIcon = (type: WorkItemType) => {
-    const style = { fontSize: "14px" }
+    const acronymStyles = "flex items-center justify-center p-2 w-7 h-6 rounded text-xs font-semibold";
+    
     switch (type) {
       case "epic":
-        return <span style={style}>🏆</span>
+        return <span className={`${acronymStyles} bg-purple-100 text-purple-700`}>EP</span>
       case "feature":
-        return <span style={style}>🌟</span>
+        return <span className={`${acronymStyles} bg-blue-100 text-blue-700`}>FT</span>
       case "story":
-        return <span style={style}>📖</span>
+        return <span className={`${acronymStyles} bg-green-100 text-green-700`}>US</span>
       case "task":
-        return <span style={style}>✅</span>
+        return <span className={`${acronymStyles} bg-orange-100 text-orange-700`}>TA</span>
     }
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const isTop = e.clientY - rect.top < rect.height / 2
-    setIsOverTop(isTop)
-  }
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Item opened:', {
+        id: item.id,
+        name: item.name,
+        hasItems: Boolean(item?.items),
+        itemsLength: item?.items?.length,
+        isArray: Array.isArray(item?.items)
+      });
+    }
+  }, [isOpen, item]);
+
+  useEffect(() => {
+    console.log('WorkItemNavigator mounted/updated:', {
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      hasItems: Boolean(item?.items),
+      itemsCount: item?.items?.length,
+      parentId: item.parentId,
+      isOpen
+    });
+  }, [item, isOpen]);
+
+  const generateUniqueKey = (parentId: Id<"workItems">, childId: Id<"workItems">, index: number) => {
+    return `parent-${parentId}-child-${childId}-index-${index}`;
+  };
+
+  const getValidParents = (itemType: WorkItemType, allParents: WorkItem[]): WorkItem[] => {
+    switch (itemType) {
+      case "epic":
+        return []; // Epics can't have parents
+      case "feature":
+        return allParents.filter(p => p.type === "epic");
+      case "story":
+        return allParents.filter(p => ["epic", "feature"].includes(p.type));
+      case "task":
+        return allParents.filter(p => ["epic", "feature", "story"].includes(p.type));
+      default:
+        return [];
+    }
+  };
 
   if (!parentIsOpen) return null
 
   return (
-    <div ref={ref} className="relative">
-      {/* Separator for reordering */}
-      {isOver && canDrop && draggedItem?.type === item.type && (
-        <div 
-          className="absolute left-0 right-0 h-0.5 bg-blue-500 pointer-events-none" 
-          style={{ top: isOverTop ? '-1px' : 'calc(100% - 1px)' }} 
-        />
+    <div ref={ref} className="relative py-0.25">
+      {/* Drop zone indicators */}
+      {isOver && canDrop && (
+        <>
+          {dropZone === 'top' && (
+            <div className="absolute left-0 right-0 h-0.5 -top-[2px] bg-blue-500 z-10" />
+          )}
+          {dropZone === 'bottom' && (
+            <div className="absolute left-0 right-0 h-0.5 -bottom-[2px] bg-blue-500 z-10" />
+          )}
+          {dropZone === 'inside' && (
+            <div className={cn(
+              "absolute inset-0 rounded-lg border-2 border-blue-500 pointer-events-none",
+              "bg-blue-50/20"
+            )} />
+          )}
+        </>
       )}
       
-      <motion.div 
-        layout // Enable layout animations
-        transition={{ 
-          layout: { duration: 0.2 },
-          opacity: { duration: 0.2 }
-        }}
+      <div 
         className={cn(
           "rounded-lg",
           "cursor-grab active:cursor-grabbing",
@@ -338,8 +421,7 @@ export function WorkItemNavigator({
           )
         )}
       >
-        <motion.div 
-          layout="position"
+        <div 
           className={cn(
             "flex items-center gap-2 rounded-lg p-2",
             isSelected ? "bg-slate-200" : "hover:bg-slate-200",
@@ -370,41 +452,70 @@ export function WorkItemNavigator({
                   <Plus className="h-4 w-4" />
                 </Button>
               )}
-              <WorkItemActionMenu onRename={handleRename} onMoveToTrash={handleMoveToTrash} />
+              <WorkItemActionMenu 
+                item={item}
+                onRename={handleRename}
+                onUpdateParent={(newParentId) => {
+                  if (onUpdateParent) {
+                    onUpdateParent(item.id, newParentId as Id<"workItems"> | undefined);
+                  }
+                }}
+                onMoveToTrash={handleMoveToTrash}
+                hasChildren={Boolean(item.items && item.items.length > 0)}
+                availableParents={getValidParents(item.type, availableParents || [])}
+              />
             </>
           )}
-        </motion.div>
+        </div>
 
-        <AnimatePresence>
-          {isOpen && item.items && item.items.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="pl-6 overflow-hidden"
-            >
-              {item.items.map((child, index) => (
-                <WorkItemNavigator
-                  key={child.id}
-                  item={child}
-                  index={index}
-                  parentId={item.id}
-                  onSelect={onSelect}
-                  onRename={onRename}
-                  onMoveToTrash={onMoveToTrash}
-                  onAddItem={onAddItem}
-                  selectedItemId={selectedItemId}
-                  onReorder={onReorder}
-                  isExpanded={isExpanded}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+        {isOpen && item.items && item.items.length > 0 && (
+          <div className="pl-6 overflow-hidden py-0.25">
+            {item.items
+              .filter((child, index, self) => 
+                index === self.findIndex((t) => t.id === child.id)
+              )
+              .filter(child => {
+                if (!child?.id) {
+                  console.warn('Invalid child found:', child);
+                  return false;
+                }
+                return true;
+              })
+              .map((child, index) => {
+                const uniqueKey = generateUniqueKey(item.id, child.id, index);
+                
+                console.log('Rendering child:', {
+                  parentId: item.id,
+                  childId: child.id,
+                  key: uniqueKey,
+                  index,
+                  childType: child.type,
+                  childName: child.name
+                });
+                
+                return (
+                  <WorkItemNavigator
+                    key={uniqueKey}
+                    item={child}
+                    index={index}
+                    parentId={item.id.toString()}
+                    onSelect={onSelect}
+                    onRename={onRename}
+                    onMoveToTrash={onMoveToTrash}
+                    onAddItem={onAddItem}
+                    selectedItemId={selectedItemId}
+                    onReorder={onReorder}
+                    isExpanded={isExpanded}
+                    parentIsOpen={isOpen}
+                    onUpdateParent={onUpdateParent}
+                    availableParents={availableParents}
+                  />
+                );
+            })}
+          </div>
+        )}
+      </div>
 
-      {/* Ghost item that follows cursor */}
       {isDragging && item.id === draggedItem?.id && (
         <div
           style={{

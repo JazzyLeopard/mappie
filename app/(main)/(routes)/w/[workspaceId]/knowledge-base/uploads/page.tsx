@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@clerk/nextjs";
 import { PageTransition } from "@/components/transitions/page-transition";
 import { DocumentList } from "@/components/knowledge-base/document-list";
+import { ScrollArea } from "@/components/ui/default-scroll-area";
 
 export default function UploadsPage() {
   const router = useRouter();
@@ -21,17 +22,15 @@ export default function UploadsPage() {
   if (!isLoaded || !isSignedIn) return null;
 
   return (
-    <PageTransition>
-      <div className="h-full flex-1 flex flex-col items-start gap-5 p-6">
-        <DocumentList 
-          documents={uploads || []}
-          onSelect={(id) => router.push(`/knowledge-base/uploads/${id}?workspace=${workspaces?.[0]?._id}`)}
-          showFilter={true}
-          showHeader={true}
-          title="Uploads"
-          onUpload={() => router.push("/knowledge-base/uploads/new")}
-        />
-      </div>
-    </PageTransition>
+    <ScrollArea className="h-full flex-1 flex flex-col items-start gap-5 p-6 px-12">
+      <DocumentList 
+            documents={uploads || []}
+            onSelect={(id) => router.push(`/w/${workspaces?.[0]?._id}/knowledge-base/uploads/${id}`)}
+            showFilter={true}
+            showHeader={true}
+            title="Uploads"
+            onUpload={() => router.push(`/w/${workspaces?.[0]?._id}/knowledge-base/uploads/new`)}
+      />
+    </ScrollArea>
   );
 } 

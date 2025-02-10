@@ -55,13 +55,16 @@ export const createWorkItem = mutation({
 export const getWorkItems = query({
   args: { workspaceId: v.id("workspaces") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    // Get all work items for the workspace
+    const items = await ctx.db
       .query("workItems")
-      .withIndex("by_workspace_and_order", (q) => 
+      .withIndex("by_workspace", (q) => 
         q.eq("workspaceId", args.workspaceId)
       )
-      .order("asc")
       .collect();
+
+    // Sort by order to ensure consistent ordering
+    return items.sort((a, b) => a.order - b.order);
   },
 });
 
@@ -131,32 +134,25 @@ export const updateWorkItem = mutation({
 });
 
 export const deleteWorkItem = mutation({
-  args: {
-    id: v.id("workItems"),
-  },
+  args: { id: v.id("workItems") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
+    // Check if the item exists
     const item = await ctx.db.get(args.id);
     if (!item) {
       throw new Error("Work item not found");
     }
 
-    await validateWorkspaceAccess(ctx.db, identity.subject, item.workspaceId);
-
-    // Check if work item has children
-    const children = await ctx.db
+    // Check for child items
+    const childItems = await ctx.db
       .query("workItems")
       .withIndex("by_parent", (q) => q.eq("parentId", args.id))
       .collect();
 
-    if (children.length > 0) {
-      throw new Error("Cannot delete work item with children");
+    if (childItems.length > 0) {
+      throw new Error("Cannot delete item with child items. Please remove child items first.");
     }
 
+    // Proceed with deletion
     await ctx.db.delete(args.id);
   },
 });
