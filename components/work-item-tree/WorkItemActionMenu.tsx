@@ -63,7 +63,7 @@ export function WorkItemActionMenu({
         onRename(editForm.name.trim())
       }
       const newParentId = editForm.parentId === "none" ? undefined : editForm.parentId
-      if (newParentId !== item.parentId?.toString()) {
+      if (newParentId !== item.parentId?.toString() || editForm.parentId === "none") {
         onUpdateParent(newParentId)
       }
       setIsEditDialogOpen(false)

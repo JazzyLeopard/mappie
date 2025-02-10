@@ -51,7 +51,7 @@ export default defineSchema({
   // Work items (epics, features, stories, tasks)
   workItems: defineTable({
     workspaceId: v.id("workspaces"),
-    parentId: v.optional(v.id("workItems")),
+    parentId: v.optional(v.union(v.id("workItems"), v.null())),
     type: v.union(
       v.literal("epic"),
       v.literal("feature"),

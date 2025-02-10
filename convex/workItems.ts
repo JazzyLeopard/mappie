@@ -53,17 +53,32 @@ export const createWorkItem = mutation({
 });
 
 export const getWorkItems = query({
-  args: { workspaceId: v.id("workspaces") },
+  args: { 
+    workspaceId: v.id("workspaces"),
+    parentId: v.optional(v.union(v.id("workItems"), v.null()))
+  },
   handler: async (ctx, args) => {
-    // Get all work items for the workspace
-    const items = await ctx.db
+    // Query builder
+    let query = ctx.db
       .query("workItems")
       .withIndex("by_workspace", (q) => 
         q.eq("workspaceId", args.workspaceId)
-      )
-      .collect();
+      );
 
-    // Sort by order to ensure consistent ordering
+    // Add parentId filter if provided
+    if ('parentId' in args) {
+      // For root items (parentId is null)
+      if (args.parentId === null) {
+        query = query.filter((q) => q.eq(q.field("parentId"), null));
+      } 
+      // For items with a specific parent
+      else if (args.parentId) {
+        query = query.filter((q) => q.eq(q.field("parentId"), args.parentId));
+      }
+    }
+
+    // Get items and sort by order
+    const items = await query.collect();
     return items.sort((a, b) => a.order - b.order);
   },
 });
@@ -92,7 +107,7 @@ export const updateWorkItem = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     status: v.optional(v.string()),
-    parentId: v.optional(v.id("workItems")),
+    parentId: v.optional(v.union(v.id("workItems"), v.null())),
     order: v.optional(v.number()),
     metadata: v.optional(v.object({
       priority: v.optional(v.string()),
@@ -109,27 +124,30 @@ export const updateWorkItem = mutation({
       throw new Error("Not authenticated");
     }
 
-    const item = await ctx.db.get(args.id);
+    const { id, ...updates } = args;
+    
+    const item = await ctx.db.get(id);
     if (!item) {
       throw new Error("Work item not found");
     }
 
     await validateWorkspaceAccess(ctx.db, identity.subject, item.workspaceId);
 
-    // If parentId is being updated, validate the hierarchy
-    if (args.parentId !== undefined) {
-      await validateWorkItemHierarchy(ctx.db, args.parentId, item.type);
+    // If updating parent, validate hierarchy
+    if (updates.parentId !== undefined) {
+      if (updates.parentId !== null) {
+        await validateWorkItemHierarchy(ctx.db, updates.parentId, item.type);
+      }
     }
 
-    return await ctx.db.patch(args.id, {
-      ...(args.title && { title: args.title }),
-      ...(args.description && { description: args.description }),
-      ...(args.status && { status: args.status }),
-      ...(args.parentId !== undefined && { parentId: args.parentId }),
-      ...(args.order !== undefined && { order: args.order }),
-      ...(args.metadata && { metadata: args.metadata }),
+    // Create update object
+    const updateObj = {
+      ...updates,
       updatedAt: BigInt(Date.now()),
-    });
+    };
+
+    // Update the item
+    return await ctx.db.patch(id, updateObj);
   },
 });
 

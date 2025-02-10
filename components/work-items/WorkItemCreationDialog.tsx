@@ -25,9 +25,9 @@ type CreationMethod = "template" | "ai" | "blank" | "select-parent" | null
 
 // Add new types for AI generation
 type AIGenerationOptions = {
-  generateMultiple: boolean
-  includeUserStories: boolean
-}
+  generateMultiple: boolean;
+  includeChildren: boolean; // Changed from includeUserStories to be more generic
+};
 
 interface WorkItemCreationDialogProps {
   isOpen: boolean
@@ -47,22 +47,29 @@ interface ParentSelectionProps {
 }
 
 function ParentSelection({ selectedType, onSelect, onBack, workspaceId }: ParentSelectionProps) {
+  const [selectedParentId, setSelectedParentId] = useState<string>("")
   const workItems = useQuery(api.workItems.getWorkItems, { workspaceId: workspaceId as Id<"workspaces"> })
-  const [selectedParentId, setSelectedParentId] = useState<string | null>(null)
 
   const handleContinue = () => {
-    if (selectedParentId || selectedType !== "task") {
-      onSelect(selectedParentId || "")
+    console.log('ParentSelection - handleContinue:', {
+      selectedParentId,
+      selectedType
+    });
+    
+    // For tasks, require a parent. For others, allow empty parent
+    if (selectedType === "task" && !selectedParentId) {
+      toast.error("Please select a parent story");
+      return;
     }
+
+    // Call onSelect with the selected parent ID
+    onSelect(selectedParentId);
   }
 
-  useEffect(() => {
-    console.log("Current selectedParentId:", selectedParentId)
-  }, [selectedParentId])
-
+  // Filter valid parents based on the selected type
   const validParents = workItems?.filter(item => {
     if (selectedType === "feature") return item.type === "epic"
-    if (selectedType === "story") return item.type === "epic" || item.type === "feature"
+    if (selectedType === "story") return ["epic", "feature"].includes(item.type)
     if (selectedType === "task") return item.type === "story"
     return false
   })
@@ -74,52 +81,34 @@ function ParentSelection({ selectedType, onSelect, onBack, workspaceId }: Parent
           ← Back
         </Button>
         <DialogTitle className="text-center">
-          Select Parent {selectedType === "feature" ? "Epic" : 
-                       selectedType === "story" ? "Epic or Feature" : 
-                       "Story"}
+          Select Parent {selectedType?.charAt(0).toUpperCase() + selectedType?.slice(1)}
         </DialogTitle>
       </DialogHeader>
 
       <ScrollArea className="max-h-[400px] mt-4">
         <div className="grid gap-2 p-2">
-          {validParents?.length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground p-4">
-              No valid parent items found. {selectedType === "task" 
-                ? "Please create a Story first." 
-                : `You can create this ${selectedType} without a parent.`}
-            </div>
-          ) : (
-            validParents?.map((item) => (
-              <Button
-                key={item._id}
-                variant="outline"
-                className={`w-full justify-between h-auto p-4 ${
-                  selectedParentId === item._id ? 'border-primary' : ''
-                }`}
-                onClick={() => {
-                  console.log("Setting parent ID to:", item._id)
-                  setSelectedParentId(item._id)
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{item.title}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                  </Badge>
-                </div>
-                {selectedParentId === item._id && <Check className="h-4 w-4" />}
-              </Button>
-            ))
-          )}
+          {validParents?.map((item) => (
+            <Button
+              key={item._id}
+              variant="outline"
+              className={`w-full justify-between h-auto p-4 ${
+                selectedParentId === item._id ? 'border-primary' : ''
+              }`}
+              onClick={() => setSelectedParentId(item._id)}
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{item.title}</span>
+                <Badge variant="secondary" className="text-xs">
+                  {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                </Badge>
+              </div>
+              {selectedParentId === item._id && <Check className="h-4 w-4" />}
+            </Button>
+          ))}
         </div>
       </ScrollArea>
 
       <div className="flex justify-end gap-2 mt-4">
-        {selectedType !== "task" && (
-          <Button variant="outline" onClick={() => onSelect("")}>
-            Skip
-          </Button>
-        )}
         <Button 
           onClick={handleContinue}
           disabled={selectedType === "task" && !selectedParentId}
@@ -128,13 +117,48 @@ function ParentSelection({ selectedType, onSelect, onBack, workspaceId }: Parent
         </Button>
       </div>
     </>
-  )
+  );
 }
+
+// Add this function before the WorkItemCreationDialog component
+const getTemplateContent = (type: WorkItemType): string => {
+  switch (type) {
+    case "epic":
+      return SYSTEM_TEMPLATES.epic.content;
+    case "feature":
+      return SYSTEM_TEMPLATES.feature.content;
+    case "story":
+      return SYSTEM_TEMPLATES.userStory.content;
+    case "task":
+      return `# Task\n\n## Description\n\n## Acceptance Criteria\n`;
+    default:
+      return "";
+  }
+};
+
+// Add helper function to check if a child type is valid for a parent
+const isValidChildType = (parentType: WorkItemType | undefined, childType: WorkItemType): boolean => {
+  if (!parentType) return true; // Root level - all types allowed
+  
+  switch (parentType) {
+    case "epic":
+      return ["feature", "story"].includes(childType);
+    case "feature":
+      return childType === "story";
+    case "story":
+      return childType === "task";
+    case "task":
+      return false; // Tasks can't have children
+    default:
+      return false;
+  }
+};
 
 export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, parentItem }: WorkItemCreationDialogProps) {
   const [selectedType, setSelectedType] = useState<WorkItemType | null>(null)
   const [creationMethod, setCreationMethod] = useState<CreationMethod>(null)
   const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
   const [prompt, setPrompt] = useState("")
   const [selectedParentId, setSelectedParentId] = useState<string>("")
   const workspaces = useQuery(api.workspaces.getWorkspaces)
@@ -142,7 +166,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
   const [aiGenerationStep, setAIGenerationStep] = useState<"options" | "prompt" | null>(null)
   const [aiOptions, setAIOptions] = useState<AIGenerationOptions>({
     generateMultiple: false,
-    includeUserStories: false
+    includeChildren: false
   })
 
   useEffect(() => {
@@ -150,19 +174,20 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       setSelectedType(null)
       setCreationMethod(null)
       setTitle("")
+      setDescription("")
       setPrompt("")
       setSelectedParentId("")
       setAIGenerationStep(null)
       setAIOptions({
         generateMultiple: false,
-        includeUserStories: false
+        includeChildren: false
       })
     } else if (parentItem) {
       setSelectedParentId(parentItem.id)
     }
   }, [isOpen, parentItem])
 
-  // Determine valid options based on parent type
+  // Determine valid options based on parent
   const validOptions = useMemo(() => {
     if (parentItem?.type === "epic") {
       return [
@@ -203,77 +228,48 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
   }
 
   const handleCreationMethodSelect = (method: CreationMethod) => {
-    setCreationMethod(method)  // Set the method first
+    setCreationMethod(method);
     
-    // If parent is already known, skip parent selection and set it directly
-    if (parentItem) {
-      if (method === "ai") {
-        // For AI generation, go straight to options/prompt
-        if (selectedType === "feature") {
-          setAIGenerationStep("options")
-        } else {
-          setAIGenerationStep("prompt")
-        }
-      } else if (method === "template") {
-        // Create with template content
-        const workItem = {
-          type: selectedType!,
-          title: `Untitled ${selectedType}`,
-          description: getTemplateContent(selectedType!),
-          parentId: parentItem.id,
-          status: "todo"
-        }
-        onCreateWorkItem(workItem)
-        onClose()
-      } else if (method === "blank") {
-        // Create blank work item
-        const workItem = {
-          type: selectedType!,
-          title: `Untitled ${selectedType}`,
-          description: "",
-          parentId: parentItem.id,
-          status: "todo"
-        }
-        onCreateWorkItem(workItem)
-        onClose()
-      }
-    } else {
-      // Rest of the existing logic for when there's no parent
-      if (selectedType === "epic") {
-        if (method === "ai") {
-          setAIGenerationStep("prompt")
-        } else if (method === "template") {
-          handleParentSelection("")
-        } else {
-          handleParentSelection("")
-        }
-      } else {
-        setCreationMethod("select-parent")
-        if (method === "ai") {
-          setSelectedParentId("ai")
-        } else if (method === "template") {
-          setSelectedParentId("template")
-        } else if (method === "blank") {
-          setSelectedParentId("blank")
-        }
+    // If AI generation and needs parent selection
+    if (method === "ai" && selectedType !== "epic") {
+      setCreationMethod("select-parent");
+      setSelectedParentId("ai"); // This marks that we're in the AI flow
+    } else if (method === "ai" && selectedType === "epic") {
+      // For epics, go straight to AI options
+      setAIGenerationStep("options");
+    } else if (method === "blank" || method === "template") {
+      // For blank/template, if not epic, need parent selection
+      if (selectedType !== "epic") {
+        setCreationMethod("select-parent");
+        setSelectedParentId(method);
       }
     }
-  }
+  };
 
   const handleBack = () => {
     setSelectedType(null)
   }
 
   const handleParentSelection = useCallback((parentId: string) => {
+    console.log('handleParentSelection:', {
+      parentId,
+      selectedParentId,
+      creationMethod,
+      selectedType
+    });
+
+    // Store the actual parent ID
+    setSelectedParentId(parentId);
+
+    // Check the stored creation method in selectedParentId
     if (selectedParentId === "ai") {
-      // AI generation flow remains the same
-      setSelectedParentId(parentId)
-      setCreationMethod("ai")
-      
-      if (selectedType === "feature") {
-        setAIGenerationStep("options")
+      // We're in the AI flow
+      setCreationMethod("ai");
+      // Show options for features, stories, and tasks
+      if (selectedType === "feature" || selectedType === "story" || selectedType === "task") {
+        setAIGenerationStep("options");
       } else {
-        setAIGenerationStep("prompt")
+        setAIGenerationStep("prompt");
       }
     } else if (selectedParentId === "template") {
       // Template flow
@@ -283,9 +279,9 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
         description: getTemplateContent(selectedType!),
         parentId: parentId || undefined,
         status: "todo"
-      }
-      onCreateWorkItem(workItem)
-      onClose()
+      };
+      onCreateWorkItem(workItem);
+      onClose();
     } else if (selectedParentId === "blank") {
       // Blank flow
       const workItem = {
@@ -294,28 +290,13 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
         description: "",
         parentId: parentId || undefined,
         status: "todo"
-      }
-      onCreateWorkItem(workItem)
-      onClose()
+      };
+      onCreateWorkItem(workItem);
+      onClose();
     }
-  }, [selectedType, creationMethod, selectedParentId, onCreateWorkItem, onClose])
+  }, [selectedType, selectedParentId, onCreateWorkItem, onClose]);
 
-  const getTemplateContent = (type: WorkItemType): string => {
-    switch (type) {
-      case "epic":
-        return SYSTEM_TEMPLATES.epic.content
-      case "feature":
-        return SYSTEM_TEMPLATES.feature.content
-      case "story":
-        return SYSTEM_TEMPLATES.userStory.content // Changed from story to userStory to match template key
-      case "task":
-        return "# Task\n\n## Description\n\n## Acceptance Criteria\n"
-      default:
-        return ""
-    }
-  }
-
-  // New component for AI generation options
+  // Update the AIGenerationOptions component to handle tasks
   const AIGenerationOptions = () => (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -337,9 +318,9 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
 
         <div className="grid gap-6 py-4">
           <div className="space-y-6">
-            {/* Feature Generation Option */}
+            {/* Single vs Multiple Generation */}
             <div className="space-y-4">
-              <Label>Feature Generation</Label>
+              <Label>{selectedType === "task" ? "Task" : selectedType === "feature" ? "Feature" : "Story"} Generation</Label>
               <div className="grid grid-cols-2 gap-4">
                 <Button
                   variant="outline"
@@ -350,10 +331,12 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
                 >
                   <div className="flex w-full items-center">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-left">Single Feature</div>
+                      <div className="font-medium text-left">
+                        Single {selectedType === "task" ? "Task" : selectedType === "feature" ? "Feature" : "Story"}
+                      </div>
                       <div className="w-[85%]">
                         <p className="text-sm text-muted-foreground mt-1 text-left break-words">
-                          Generate one detailed feature
+                          Generate one detailed {selectedType === "task" ? "task" : selectedType === "feature" ? "feature" : "story"}
                         </p>
                       </div>
                     </div>
@@ -371,10 +354,12 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
                 >
                   <div className="flex w-full items-center">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-left">Multiple Features</div>
+                      <div className="font-medium text-left">
+                        Multiple {selectedType === "task" ? "Tasks" : selectedType === "feature" ? "Features" : "Stories"}
+                      </div>
                       <div className="w-[85%]">
                         <p className="text-sm text-muted-foreground mt-1 text-left break-words">
-                          Generate a set of related features
+                          Generate a set of related {selectedType === "task" ? "tasks" : selectedType === "feature" ? "features" : "stories"}
                         </p>
                       </div>
                     </div>
@@ -386,54 +371,60 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
               </div>
             </div>
 
-            {/* User Stories Option */}
-            <div className="space-y-4">
-              <Label>User Stories</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  className={`w-full h-auto py-4 px-6 ${
-                    !aiOptions.includeUserStories ? 'border-primary' : ''
-                  }`}
-                  onClick={() => setAIOptions(prev => ({ ...prev, includeUserStories: false }))}
-                >
-                  <div className="flex w-full items-center">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-left">Features Only</div>
-                      <div className="w-[85%]">
-                        <p className="text-sm text-muted-foreground mt-1 text-left break-words">
-                          Generate features without stories
-                        </p>
+            {/* Hide the Include Children option for tasks since they can't have children */}
+            {selectedType !== "task" && (
+              <div className="space-y-4">
+                <Label>{selectedType === "feature" ? "User Stories" : "Tasks"}</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant="outline"
+                    className={`w-full h-auto py-4 px-6 ${
+                      !aiOptions.includeChildren ? 'border-primary' : ''
+                    }`}
+                    onClick={() => setAIOptions(prev => ({ ...prev, includeChildren: false }))}
+                  >
+                    <div className="flex w-full items-center">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-left">
+                          {selectedType === "feature" ? "Features Only" : "Stories Only"}
+                        </div>
+                        <div className="w-[85%]">
+                          <p className="text-sm text-muted-foreground mt-1 text-left break-words">
+                            Generate {selectedType === "feature" ? "features without stories" : "stories without tasks"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-shrink-0">
+                        {!aiOptions.includeChildren && <Check className="h-4 w-4" />}
                       </div>
                     </div>
-                    <div className="ml-4 flex-shrink-0">
-                      {!aiOptions.includeUserStories && <Check className="h-4 w-4" />}
-                    </div>
-                  </div>
-                </Button>
-                <Button
-                  variant="outline"
-                  className={`w-full h-auto py-4 px-6 ${
-                    aiOptions.includeUserStories ? 'border-primary' : ''
-                  }`}
-                  onClick={() => setAIOptions(prev => ({ ...prev, includeUserStories: true }))}
-                >
-                  <div className="flex w-full items-center">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-left">Include Stories</div>
-                      <div className="w-[85%]">
-                        <p className="text-sm text-muted-foreground mt-1 text-left break-words">
-                          Generate stories for each feature
-                        </p>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`w-full h-auto py-4 px-6 ${
+                      aiOptions.includeChildren ? 'border-primary' : ''
+                    }`}
+                    onClick={() => setAIOptions(prev => ({ ...prev, includeChildren: true }))}
+                  >
+                    <div className="flex w-full items-center">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-left">
+                          Include {selectedType === "feature" ? "Stories" : "Tasks"}
+                        </div>
+                        <div className="w-[85%]">
+                          <p className="text-sm text-muted-foreground mt-1 text-left break-words">
+                            Generate {selectedType === "feature" ? "stories for each feature" : "tasks for each story"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-shrink-0">
+                        {aiOptions.includeChildren && <Check className="h-4 w-4" />}
                       </div>
                     </div>
-                    <div className="ml-4 flex-shrink-0">
-                      {aiOptions.includeUserStories && <Check className="h-4 w-4" />}
-                    </div>
-                  </div>
-                </Button>
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <Button 
@@ -446,6 +437,37 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
       </DialogContent>
     </Dialog>
   )
+
+  const handleBlankCreation = () => {
+    // Only validate title for non-epics
+    if (selectedType !== "epic" && !title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
+    onCreateWorkItem({
+      type: selectedType,
+      title: title.trim() || `Untitled ${selectedType}`, // Use default title if empty for epics
+      description: selectedType === "epic" ? "" : description.trim(), // No description for epics
+      parentId: parentItem?.id,
+      status: "todo"
+    });
+
+    // Reset form and close dialog
+    setTitle("");
+    setDescription("");
+    onClose();
+  };
+
+  const handleTemplateSelection = (template: any) => {
+    onCreateWorkItem({
+      type: selectedType,
+      title: template.title,
+      description: template.description,
+      parentId: parentItem?.id
+    })
+    onClose()
+  }
 
   if (!selectedType) {
     return (
@@ -485,27 +507,37 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
                 icon: ListTodo,
                 description: "A small, specific piece of work that needs to be completed"
               }
-            ].map((option) => (
-              <Button
-                key={option.type}
-                variant="outline"
-                className="w-full justify-start h-auto p-4"
-                onClick={() => handleTypeSelection(option.type as WorkItemType)}
-              >
-                <div className="flex items-start gap-3 w-full">
-                  <option.icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                  <div className="text-left flex-1 min-w-0">
-                    <div className="font-medium">{option.label}</div>
-                    <div className="text-sm text-muted-foreground break-words">
-                      {parentItem 
-                        ? `Create a new ${option.label.toLowerCase()} under this ${parentItem.type}`
-                        : option.description
-                      }
+            ].map((option) => {
+              const isValid = isValidChildType(parentItem?.type, option.type as WorkItemType);
+              
+              return (
+                <Button
+                  key={option.type}
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start h-auto p-4",
+                    !isValid && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={!isValid}
+                  onClick={() => isValid && handleTypeSelection(option.type as WorkItemType)}
+                >
+                  <div className="flex items-start gap-3 w-full">
+                    <option.icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-sm text-muted-foreground break-words">
+                        {!isValid 
+                          ? `Cannot create ${option.label.toLowerCase()} under ${parentItem?.type}`
+                          : parentItem 
+                            ? `Create a new ${option.label.toLowerCase()} under this ${parentItem.type}`
+                            : option.description
+                        }
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>
@@ -576,12 +608,11 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
     )
   }
 
-  if (creationMethod === "ai") {
-    // Show options for features regardless of parent
-    if (selectedType === "feature" && aiGenerationStep === "options") {
-      return <AIGenerationOptions />
-    }
+  if (creationMethod === "ai" && aiGenerationStep === "options") {
+    return <AIGenerationOptions />;
+  }
 
+  if (creationMethod === "ai" && aiGenerationStep === "prompt") {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[600px]">
@@ -684,7 +715,7 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
                 {selectedType === "epic"
                   ? "Provide clear context and objectives. Reference existing documents with @ for better results."
                   : parentItem 
-                    ? `AI will analyze the epic's context to generate ${aiOptions.generateMultiple ? 'features' : 'a feature'}${aiOptions.includeUserStories ? ' with user stories' : ''}. Use @ to reference additional context.`
+                    ? `AI will analyze the epic's context to generate ${aiOptions.generateMultiple ? 'features' : 'a feature'}${aiOptions.includeChildren ? ' with user stories' : ''}. Use @ to reference additional context.`
                     : "AI responses may be inaccurate"}
               </p>
             </div>
@@ -704,6 +735,99 @@ export function WorkItemCreationDialog({ isOpen, onClose, onCreateWorkItem, pare
             onBack={() => setCreationMethod(null)}
             workspaceId={workspace._id}
           />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  if (creationMethod === "blank") {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <Button variant="ghost" onClick={() => setCreationMethod(null)} className="absolute left-4 top-4">
+              ← Back
+            </Button>
+            <DialogTitle className="text-center">
+              Create {selectedType?.charAt(0).toUpperCase() + selectedType?.slice(1)}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">
+                Title {selectedType !== "epic" && <span className="text-red-500">*</span>}
+              </Label>
+              <Input
+                id="title"
+                placeholder={`Enter ${selectedType} title`}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            {selectedType !== "epic" && (
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder={`Enter ${selectedType} description`}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button 
+              onClick={handleBlankCreation}
+              disabled={selectedType !== "epic" && !title.trim()}
+            >
+              Create {selectedType}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  if (creationMethod === "template") {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <Button variant="ghost" onClick={() => setCreationMethod(null)} className="absolute left-4 top-4">
+              ← Back
+            </Button>
+            <DialogTitle className="text-center">
+              Select Template
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            {/* Use the correct template based on type */}
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto p-4"
+              onClick={() => handleTemplateSelection({
+                title: `New ${selectedType}`,
+                description: getTemplateContent(selectedType!),
+                type: selectedType
+              })}
+            >
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 mt-0.5" />
+                <div className="text-left">
+                  <div className="font-medium">Default Template</div>
+                  <div className="text-sm text-muted-foreground">
+                    Start with a standard {selectedType} template
+                  </div>
+                </div>
+              </div>
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     )

@@ -14,7 +14,7 @@ import { WorkItemCreationDialog } from "@/components/work-items/WorkItemCreation
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvex } from "convex/react";
 import { motion } from "framer-motion";
 import { Loader2, PanelLeftOpen } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -57,6 +57,8 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
 
   const workItemId = searchParams?.get('id');
 
+  const convex = useConvex();
+
   useEffect(() => {
     const resolveParams = async () => {
       const resolvedParams = await params;
@@ -98,7 +100,7 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
           type: item.type,
           items: [],
           order: item.order,
-          parentId: item.parentId
+          parentId: item.parentId || undefined
         });
       }
     }
@@ -183,16 +185,46 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
 
   const handleUpdateParent = useCallback(async (itemId: Id<"workItems">, newParentId: Id<"workItems"> | undefined) => {
     try {
+      console.log('Updating parent:', { itemId, newParentId });
+      
+      // Calculate new order
+      const BASE_ORDER = 1000;
+      let newOrder = BASE_ORDER;
+
+      if (newParentId) {
+        // If moving to a parent, get siblings under that parent
+        const siblings = await convex.query(api.workItems.getWorkItems, {
+          workspaceId: workspaceId as Id<"workspaces">,
+          parentId: newParentId
+        });
+        
+        if (siblings.length > 0) {
+          newOrder = Math.max(...siblings.map(item => item.order)) + BASE_ORDER;
+        }
+      } else {
+        // If moving to root, get root items
+        const rootItems = await convex.query(api.workItems.getWorkItems, {
+          workspaceId: workspaceId as Id<"workspaces">,
+          parentId: null
+        });
+        
+        if (rootItems.length > 0) {
+          newOrder = Math.max(...rootItems.map(item => item.order)) + BASE_ORDER;
+        }
+      }
+
       await updateWorkItem({
         id: itemId,
-        parentId: newParentId
+        parentId: newParentId || null,
+        order: newOrder
       });
-      toast.success("Parent updated successfully");
+      
+      toast.success(newParentId ? "Parent updated successfully" : "Moved to root level");
     } catch (error) {
       console.error("Error updating parent:", error);
       toast.error("Failed to update parent");
     }
-  }, [updateWorkItem]);
+  }, [updateWorkItem, workspaceId, convex]);
 
   const handleMoveToTrash = useCallback(async (item: WorkItem) => {
     try {
@@ -443,11 +475,20 @@ export default function WorkItemsPage({ params }: WorkItemsPageProps) {
     newOrder: number
   ) => {
     try {
+      console.log('Reordering:', {
+        draggedItemId,
+        targetParentId,
+        newOrder
+      });
+
       await updateWorkItem({
         id: draggedItemId,
-        parentId: targetParentId,
+        parentId: targetParentId || null,
         order: newOrder
       });
+
+      // Optionally refresh the data
+      // router.refresh();
     } catch (error) {
       console.error("Error moving work item:", error);
       toast.error("Failed to move work item");

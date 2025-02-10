@@ -53,43 +53,39 @@ const DROP_ZONE_THRESHOLD = 0.25; // 25% of the item height for top/bottom zones
 const getValidChildTypes = (parentType: WorkItemType): WorkItemType[] => {
   switch (parentType) {
     case "epic":
-      return ["feature", "story"]
+      return ["feature", "story"];
     case "feature":
-      return ["story"]
+      return ["story"];
     case "story":
-      return ["task"]
+      return ["task"];
     default:
-      return []
+      return [];
   }
-}
+};
 
 const canDropItem = (draggedItem: DragItem, targetItem: WorkItem | null, targetParentId: string) => {
-  console.log('canDropItem check:', {
-    draggedItem,
-    targetItem,
-    targetParentId,
-  });
-
   if (!draggedItem) return false;
   if (draggedItem.id === targetItem?.id) return false;
 
-  // Allow dropping at root level for any item
+  // Allow dropping at root level
   if (targetParentId === "root") {
-    return true;  // Always allow dropping at root
+    return true;
   }
 
-  // For nested items, check parent-child relationship
+  // For dropping inside a target item
   if (targetItem) {
     const validChildTypes = getValidChildTypes(targetItem.type);
-    console.log('Checking child types:', {
+    console.log('Drop validation:', {
+      draggedType: draggedItem.type,
+      targetType: targetItem.type,
       validChildTypes,
-      draggedType: draggedItem.type
+      isValid: validChildTypes.includes(draggedItem.type)
     });
     return validChildTypes.includes(draggedItem.type);
   }
 
-  return true;  // Allow dropping if no specific conditions are met
-}
+  return true;
+};
 
 export function WorkItemNavigator({
   item,
@@ -166,9 +162,27 @@ export function WorkItemNavigator({
   }>({
     accept: 'WORK_ITEM',
     canDrop: (draggedItem) => {
-      const result = canDropItem(draggedItem, item, parentId);
-      console.log('canDrop result:', result);
-      return result;
+      // Don't allow dropping on itself
+      if (draggedItem.id === item.id) return false;
+
+      // For inside drops, check parent-child relationship
+      if (dropZone === 'inside') {
+        const validChildTypes = getValidChildTypes(item.type);
+        const isValidChild = validChildTypes.includes(draggedItem.type);
+        
+        console.log('Drop validation:', {
+          draggedType: draggedItem.type,
+          targetType: item.type,
+          dropZone,
+          validChildTypes,
+          isValidChild
+        });
+        
+        return isValidChild;
+      }
+
+      // For top/bottom drops, check if they're at the same level
+      return true;
     },
     hover: (_, monitor) => {
       if (!monitor.isOver({ shallow: true }) || !ref.current) return;
@@ -177,34 +191,37 @@ export function WorkItemNavigator({
       if (!clientOffset) return;
 
       const hoverBoundingRect = ref.current.getBoundingClientRect();
-      console.log('Hover position:', {
-        clientOffset,
-        hoverRect: hoverBoundingRect,
-        dropZone
-      });
-      const hoverHeight = hoverBoundingRect.bottom - hoverBoundingRect.top
-      
-      // Calculate position relative to the item
-      const relativeY = clientOffset.y - hoverBoundingRect.top
-      const relativePosition = relativeY / hoverHeight
+      const hoverHeight = hoverBoundingRect.bottom - hoverBoundingRect.top;
+      const relativeY = clientOffset.y - hoverBoundingRect.top;
+      const relativePosition = relativeY / hoverHeight;
 
-      // Determine drop zone based on position
+      // Determine drop zone based on position and valid parent-child relationship
       if (relativePosition < DROP_ZONE_THRESHOLD) {
-        setDropZone('top')
+        setDropZone('top');
       } else if (relativePosition > (1 - DROP_ZONE_THRESHOLD)) {
-        setDropZone('bottom')
+        setDropZone('bottom');
       } else {
-        setDropZone('inside')
+        const draggedType = monitor.getItem<DragItem>().type;
+        const validChildTypes = getValidChildTypes(item.type);
+        const canBeParent = validChildTypes.includes(draggedType);
+        
+        setDropZone(canBeParent ? 'inside' : 'bottom');
       }
     },
     drop: (draggedItem, monitor) => {
       if (!isOver || !canDrop || !draggedItem) return;
+
+      console.log('Dropping:', {
+        draggedItem,
+        dropZone,
+        parentId,
+        itemId: item.id
+      });
       
-      // Convert parentId to undefined when dropping at root
       const targetParentId = dropZone === 'inside' ? 
-        (parentId === 'root' ? undefined : item.id) : 
-        undefined;
-      
+        item.id : 
+        parentId === 'root' ? undefined : item.parentId;
+
       let newOrder: number;
       if (dropZone === 'inside') {
         const siblings = item.items || [];
@@ -280,7 +297,18 @@ export function WorkItemNavigator({
   }, [item, onMoveToTrash])
 
   const canAddChild = useCallback((parentType: WorkItemType) => {
-    return getValidChildTypes(parentType).length > 0;
+    switch (parentType) {
+      case "epic":
+        return true; // Epics can have features and stories
+      case "feature":
+        return true; // Features can have stories
+      case "story":
+        return true; // Stories can have tasks
+      case "task":
+        return false; // Tasks can't have children
+      default:
+        return false;
+    }
   }, []);
 
   const handleAddItem = useCallback(
@@ -298,7 +326,7 @@ export function WorkItemNavigator({
 
   const ItemIcon = () => {
     const hasItems = item?.items && Array.isArray(item.items) && item.items.length > 0
-    const showChevron = (isHovered || isOpen) && hasItems
+    const showChevron = isHovered && hasItems // Only show chevron on hover if has children
 
     return (
       <div className="relative w-4 h-4">
@@ -323,7 +351,7 @@ export function WorkItemNavigator({
               transition={{ duration: 0.2 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              {getItemIcon(item.type)}
+              {getItemTypeIcon(item.type)}
             </motion.span>
           )}
         </AnimatePresence>
@@ -331,20 +359,20 @@ export function WorkItemNavigator({
     ) 
   }
 
-  const getItemIcon = (type: WorkItemType) => {
-    const acronymStyles = "flex items-center justify-center p-2 w-7 h-6 rounded text-xs font-semibold";
+  const getItemTypeIcon = (type: WorkItemType) => {
+    const iconStyles = "flex items-center justify-center p-1 rounded text-xs font-semibold";
     
     switch (type) {
       case "epic":
-        return <span className={`${acronymStyles} bg-purple-100 text-purple-700`}>EP</span>
+        return <span className={`${iconStyles} bg-purple-100 text-purple-700`}>EP</span>;
       case "feature":
-        return <span className={`${acronymStyles} bg-blue-100 text-blue-700`}>FT</span>
+        return <span className={`${iconStyles} bg-blue-100 text-blue-700`}>FT</span>;
       case "story":
-        return <span className={`${acronymStyles} bg-green-100 text-green-700`}>US</span>
+        return <span className={`${iconStyles} bg-green-100 text-green-700`}>US</span>;
       case "task":
-        return <span className={`${acronymStyles} bg-orange-100 text-orange-700`}>TA</span>
+        return <span className={`${iconStyles} bg-orange-100 text-orange-700`}>TA</span>;
     }
-  }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -440,16 +468,16 @@ export function WorkItemNavigator({
           {isHovered && (
             <>
               {canAddChild(item.type) && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-4 w-4 p-0" 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onAddItem(item)
-                  }}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-4 w-4 opacity-0 group-hover:opacity-100",
+                    isHovered && "opacity-100"
+                  )}
+                  onClick={handleAddItem}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3 w-3" />
                 </Button>
               )}
               <WorkItemActionMenu 
